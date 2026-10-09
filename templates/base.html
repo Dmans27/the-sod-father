@@ -29,5 +29,27 @@
   <footer class="site-footer">
     <p>The Sod Father &mdash; a fun side project, not a real publication (yet).</p>
   </footer>
+
+  <script>
+    // No-op on a regular browser visit -- window.Capacitor only exists when
+    // this page is loaded inside the iOS app's native shell. There,
+    // capacitor.config.ts turns off the splash screen's timer-based
+    // auto-hide (Render's free tier can take 50s+ to wake from a cold
+    // start, so a fixed timer would hide it too early or too late) and
+    // this tells it to hide once the page has actually finished loading.
+    // The setTimeout is a safety net so a slow or failed load event can
+    // never leave the splash screen stuck on-screen forever.
+    (function () {
+      function hideSplash() {
+        try {
+          if (window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.SplashScreen) {
+            window.Capacitor.Plugins.SplashScreen.hide();
+          }
+        } catch (e) {}
+      }
+      window.addEventListener('load', hideSplash);
+      setTimeout(hideSplash, 8000);
+    })();
+  </script>
 </body>
 </html>
