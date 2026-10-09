@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}{{ article.title }} — The Sod Father{% endblock %}
+
+{% block content %}
+{% set cat = categories[article.category] %}
+<article class="article">
+  <div class="article__hero" style="background: linear-gradient(135deg, {{ cat.color }} 0%, {{ cat.color }}cc 100%);">
+    <span class="article__hero-emoji">{{ cat.emoji }}</span>
+  </div>
+
+  <div class="article__body">
+    <a href="/category/{{ article.category }}" class="article__pill">{{ cat.label }}</a>
+    <h1 class="article__title">{{ article.title }}</h1>
+    <p class="article__dek">{{ article.dek }}</p>
+    <p class="article__meta">{{ article.author }} &middot; {{ article.published_at }} &middot; {{ article.read_minutes }} min read</p>
+
+    <div class="article__content">
+      {% for paragraph in article.body %}
+        <p>{{ paragraph }}</p>
+      {% endfor %}
+    </div>
+
+    <a href="/" class="article__back">&larr; Back to all articles</a>
+  </div>
+</article>
+
+{% if related %}
+<section class="related">
+  <h2 class="related__title">Read next</h2>
+  <div class="card-grid card-grid--compact">
+    {% for a in related %}
+      {% set rcat = categories[a.category] %}
+      <a href="/article/{{ a.slug }}" class="card">
+        <div class="card__media" style="background: linear-gradient(135deg, {{ rcat.color }} 0%, {{ rcat.color }}cc 100%);">
+          <span class="card__media-emoji">{{ rcat.emoji }}</span>
+          <div class="card__scrim"></div>
+          <div class="card__overlay">
+            <span class="card__pill">{{ rcat.label }}</span>
+            <h2 class="card__title">{{ a.title }}</h2>
+            <p class="card__meta">{{ a.read_minutes }} min read</p>
+          </div>
+        </div>
+      </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
+{% endblock %}

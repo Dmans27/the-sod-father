@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}The Sod Father{% if active_category %} — {{ categories[active_category].label }}{% endif %}{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1 class="hero__title">
+    {% if active_category %}{{ categories[active_category].label }}{% else %}Golf, written by people who actually play it{% endif %}
+  </h1>
+  <p class="hero__sub">
+    {% if active_category %}
+      Every {{ categories[active_category].label|lower }} story, newest first.
+    {% else %}
+      Equipment, instruction, course guides, tour news, and everything in between.
+    {% endif %}
+  </p>
+</section>
+
+<section class="card-grid">
+  {% for article in articles %}
+    {% set cat = categories[article.category] %}
+    <a href="/article/{{ article.slug }}" class="card">
+      <div class="card__media" style="background: linear-gradient(135deg, {{ cat.color }} 0%, {{ cat.color }}cc 100%);">
+        <span class="card__media-emoji">{{ cat.emoji }}</span>
+        <div class="card__scrim"></div>
+        <div class="card__overlay">
+          <span class="card__pill">{{ cat.label }}</span>
+          <h2 class="card__title">{{ article.title }}</h2>
+          <p class="card__meta">{{ article.author }} &middot; {{ article.read_minutes }} min read</p>
+        </div>
+      </div>
+    </a>
+  {% else %}
+    <p class="empty-state">No articles in this category yet.</p>
+  {% endfor %}
+</section>
+{% endblock %}

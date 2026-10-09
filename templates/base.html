@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}The Sod Father{% endblock %}</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="site-header__inner">
+      <a href="/" class="site-brand">
+        <span class="site-brand__mark">⛳</span>
+        <span class="site-brand__text">The Sod Father</span>
+      </a>
+      <nav class="site-nav">
+        <a href="/" class="site-nav__link {% if not active_category %}is-active{% endif %}">All</a>
+        {% for key, cat in categories.items() %}
+          <a href="/category/{{ key }}" class="site-nav__link {% if active_category == key %}is-active{% endif %}">{{ cat.label }}</a>
+        {% endfor %}
+      </nav>
+    </div>
+  </header>
+
+  <main class="site-main">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <p>The Sod Father &mdash; a fun side project, not a real publication (yet).</p>
+  </footer>
+</body>
+</html>

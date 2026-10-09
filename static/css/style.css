@@ -1,0 +1,260 @@
+/* The Sod Father -- a golf media site built around the same "card that opens
+   into more detail" idea as Dony's map cards, minus the map. Palette is
+   fairway green + cream + a small gold accent instead of Dony's green/white,
+   so the two projects don't feel like reskins of each other. */
+
+:root {
+  --ink: #1b2a1f;
+  --ink-soft: rgba(27, 42, 31, 0.64);
+  --ink-faint: rgba(27, 42, 31, 0.42);
+  --cream: #faf6ec;
+  --cream-deep: #f1ead8;
+  --line: rgba(27, 42, 31, 0.1);
+  --fairway: #2d6a4f;
+  --fairway-deep: #1b4332;
+  --gold: #b8860b;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+}
+
+a { color: inherit; }
+
+/* ── Header ── */
+.site-header {
+  background: var(--fairway-deep);
+  border-bottom: 1px solid rgba(0,0,0,0.15);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.site-header__inner {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.site-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: #fff;
+  font-weight: 800;
+  font-size: 18px;
+  letter-spacing: -0.01em;
+}
+.site-brand__mark { font-size: 20px; }
+
+.site-nav {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.site-nav__link {
+  text-decoration: none;
+  color: rgba(255,255,255,0.68);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 7px 12px;
+  border-radius: 999px;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+.site-nav__link:hover { color: #fff; background: rgba(255,255,255,0.08); }
+.site-nav__link.is-active { color: var(--fairway-deep); background: var(--gold); }
+
+/* ── Hero ── */
+.site-main { max-width: 1080px; margin: 0 auto; padding: 0 20px 60px; }
+.hero { padding: 40px 0 28px; }
+.hero__title {
+  font-size: 30px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  margin: 0 0 8px;
+  color: var(--fairway-deep);
+}
+.hero__sub {
+  font-size: 15px;
+  color: var(--ink-soft);
+  margin: 0;
+}
+.hero__sub a { color: var(--fairway); font-weight: 700; text-decoration: none; }
+.hero__sub a:hover { text-decoration: underline; }
+
+/* ── Card grid ── */
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+.card-grid--compact { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+
+.card {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 2px 14px rgba(27,42,31,0.14);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(27,42,31,0.2); }
+
+.card__media {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.card__media-emoji { font-size: 44px; opacity: 0.9; }
+.card__scrim {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  height: 75%;
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.18) 35%, rgba(0,0,0,0.78) 100%);
+}
+.card__overlay {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 14px 16px;
+}
+.card__pill {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: #fff;
+  background: rgba(255,255,255,0.22);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+  border-radius: 7px;
+  padding: 3px 8px;
+  margin-bottom: 7px;
+}
+.card__title {
+  font-size: 16.5px;
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: #fff;
+  margin: 0 0 4px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.35);
+}
+.card__meta {
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.88);
+  margin: 0;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.35);
+}
+
+.empty-state {
+  color: var(--ink-faint);
+  font-size: 14px;
+  padding: 30px 0;
+}
+
+/* ── Article page ── */
+.article { max-width: 720px; margin: 0 auto; }
+.article__hero {
+  aspect-ratio: 21 / 9;
+  border-radius: 20px;
+  margin-top: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.article__hero-emoji { font-size: 64px; opacity: 0.92; }
+
+.article__body { padding: 28px 4px 10px; }
+.article__pill {
+  display: inline-block;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--fairway-deep);
+  background: rgba(45,106,79,0.1);
+  border-radius: 7px;
+  padding: 4px 9px;
+  margin-bottom: 14px;
+}
+.article__title {
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.015em;
+  line-height: 1.2;
+  margin: 0 0 10px;
+  color: var(--fairway-deep);
+}
+.article__dek {
+  font-size: 17px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
+.article__meta {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin: 0 0 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+.article__content p {
+  font-size: 17px;
+  line-height: 1.75;
+  color: var(--ink);
+  margin: 0 0 20px;
+}
+.article__back {
+  display: inline-block;
+  margin-top: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--fairway);
+  text-decoration: none;
+}
+.article__back:hover { text-decoration: underline; }
+
+/* ── Related ── */
+.related { margin-top: 56px; padding-top: 32px; border-top: 1px solid var(--line); }
+.related__title {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--ink-faint);
+  margin: 0 0 16px;
+}
+
+/* ── Footer ── */
+.site-footer {
+  text-align: center;
+  padding: 30px 20px 50px;
+  color: var(--ink-faint);
+  font-size: 12.5px;
+}
+
+@media (max-width: 560px) {
+  .article__title { font-size: 25px; }
+  .article__dek { font-size: 15.5px; }
+  .article__content p { font-size: 16px; }
+}
