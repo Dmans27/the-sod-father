@@ -137,6 +137,7 @@
       }
 
       function renderSheet(article) {
+        var cat = window.CATEGORIES_DATA[article.category] || {};
         var short = truncateBlocks(article.blocks || [], WORD_LIMIT);
         // No cover photo -> skip the hero block entirely (no colored
         // placeholder either), same as the real article page.
