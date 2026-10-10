@@ -274,89 +274,76 @@ body.site-menu-open { overflow: hidden; }
    override here. */
 .hero-story--plain { box-shadow: 0 2px 14px rgba(27,42,31,0.14); }
 
-/* ── Card grid ── */
-.card-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 20px;
+/* ── Story list ──
+   A single continuous list, divided by hairline borders rather than
+   individual cards -- no boxes, no shadows, one shared page background,
+   closer to how The Atlantic or the NYT lay out a list of stories. Each
+   row is text (pill/title/meta) with an optional small thumbnail on the
+   side when the story has a cover photo; a story with no photo just
+   leaves that side empty rather than showing any placeholder. */
+.story-list {
+  display: flex;
+  flex-direction: column;
+  max-width: 720px;
+  margin: 0 auto;
 }
-.card-grid--compact { grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-
-.card {
-  display: block;
+.story-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 22px 0;
+  border-bottom: 1px solid var(--line);
   text-decoration: none;
   color: inherit;
-  border-radius: 18px;
-  overflow: hidden;
-  box-shadow: 0 2px 14px rgba(27,42,31,0.14);
-  transition: transform 0.15s, box-shadow 0.15s;
 }
-.card:hover { transform: translateY(-3px); box-shadow: 0 8px 24px rgba(27,42,31,0.2); }
-
-.card__media {
-  position: relative;
-  aspect-ratio: 16 / 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.card__media-emoji { font-size: 44px; opacity: 0.9; }
-.card__scrim {
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  height: 75%;
-  background: linear-gradient(to bottom, rgba(0,0,0,0) 0%, rgba(0,0,0,0.18) 35%, rgba(0,0,0,0.78) 100%);
-}
-.card__overlay {
-  position: absolute;
-  left: 0; right: 0; bottom: 0;
-  padding: 14px 16px;
-}
-.card__pill {
+.story-list > .story-row:first-child { padding-top: 0; }
+.story-list > .story-row:last-child { border-bottom: none; }
+.story-row__body { flex: 1; min-width: 0; }
+.story-row__pill {
   display: inline-block;
   font-size: 10.5px;
   font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 0.4px;
-  color: #fff;
-  background: rgba(255,255,255,0.22);
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
-  border-radius: 7px;
-  padding: 3px 8px;
-  margin-bottom: 7px;
-}
-.card__title {
-  font-size: 16.5px;
-  font-weight: 800;
-  line-height: 1.25;
-  letter-spacing: -0.01em;
-  color: #fff;
-  margin: 0 0 4px;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.35);
-}
-.card__meta {
-  font-size: 12px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.88);
-  margin: 0;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.35);
-}
-
-/* ── "Plain" card -- a story with no cover photo skips the colored/emoji
-   placeholder entirely (no .card__media at all) and shows a clean
-   text-only header instead: pill, title and meta in normal site colors,
-   stacked in flow rather than overlaid on an image. ── */
-.card--plain { background: #fff; border: 1px solid var(--line); }
-.card--plain .card__overlay { position: static; padding: 16px 16px 18px; }
-.card--plain .card__pill {
   color: var(--fairway-deep);
   background: rgba(45,106,79,0.1);
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
+  border-radius: 6px;
+  padding: 3px 8px;
+  margin-bottom: 8px;
 }
-.card--plain .card__title { color: var(--ink); text-shadow: none; }
-.card--plain .card__meta { color: var(--ink-soft); text-shadow: none; }
+.story-row__title {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 0 0 6px;
+}
+.story-row:hover .story-row__title { color: var(--fairway-deep); }
+.story-row__meta {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink-faint);
+  margin: 0;
+}
+.story-row__thumb {
+  flex-shrink: 0;
+  width: 92px;
+  height: 92px;
+  border-radius: 8px;
+  background-color: var(--cream-deep);
+}
+@media (max-width: 420px) {
+  .story-row__thumb { width: 72px; height: 72px; }
+  .story-row__title { font-size: 16.5px; }
+}
+
+/* Slightly smaller heading for the compact "Read next" list at the
+   bottom of an article -- same markup, just a lower-emphasis variant. */
+.story-list--compact .story-row { padding: 16px 0; gap: 14px; }
+.story-list--compact .story-row__title { font-size: 16px; }
+.story-list--compact .story-row__thumb { width: 72px; height: 72px; }
 
 .empty-state {
   color: var(--ink-faint);

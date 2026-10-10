@@ -3,7 +3,16 @@
 
 {% block content %}
 <section class="hero">
-
+  <h1 class="hero__title">
+    {% if active_category %}{{ categories[active_category].label }}{% else %}Golf, written by people who actually play it{% endif %}
+  </h1>
+  <p class="hero__sub">
+    {% if active_category %}
+      Every {{ categories[active_category].label|lower }} story, newest first.
+    {% else %}
+      Equipment, instruction, course guides, tour news, and everything in between.
+    {% endif %}
+  </p>
 </section>
 
 {% if featured %}
@@ -23,29 +32,21 @@
   </a>
 {% endif %}
 
-<section class="card-grid" id="card-grid">
+<div class="story-list" id="card-grid">
   {% for article in articles %}
     {% set cat = categories[article.category] %}
-    <a href="/article/{{ article.slug }}" class="card{% if not article.cover_image %} card--plain{% endif %}" data-slug="{{ article.slug }}">
+    <a href="/article/{{ article.slug }}" class="story-row" data-slug="{{ article.slug }}">
+      <div class="story-row__body">
+        <span class="story-row__pill">{{ cat.label }}</span>
+        <h2 class="story-row__title">{{ article.title }}</h2>
+        <p class="story-row__meta">{{ article.author }} &middot; {{ article.read_minutes }} min read</p>
+      </div>
       {% if article.cover_image %}
-        <div class="card__media" style="background-image: url('{{ article.cover_image }}'); background-size: cover; background-position: center;">
-          <div class="card__scrim"></div>
-          <div class="card__overlay">
-            <span class="card__pill">{{ cat.label }}</span>
-            <h2 class="card__title">{{ article.title }}</h2>
-            <p class="card__meta">{{ article.author }} &middot; {{ article.read_minutes }} min read</p>
-          </div>
-        </div>
-      {% else %}
-        <div class="card__overlay">
-          <span class="card__pill">{{ cat.label }}</span>
-          <h2 class="card__title">{{ article.title }}</h2>
-          <p class="card__meta">{{ article.author }} &middot; {{ article.read_minutes }} min read</p>
-        </div>
+        <div class="story-row__thumb" style="background-image: url('{{ article.cover_image }}'); background-size: cover; background-position: center;"></div>
       {% endif %}
     </a>
   {% endfor %}
-</section>
+</div>
 
 {% if not articles and not featured %}
   <p class="empty-state">No articles in this category yet.</p>

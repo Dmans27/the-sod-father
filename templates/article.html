@@ -48,25 +48,17 @@
 {% if related %}
 <section class="related">
   <h2 class="related__title">Read next</h2>
-  <div class="card-grid card-grid--compact">
+  <div class="story-list story-list--compact">
     {% for a in related %}
       {% set rcat = categories[a.category] %}
-      <a href="/article/{{ a.slug }}" class="card{% if not a.cover_image %} card--plain{% endif %}">
+      <a href="/article/{{ a.slug }}" class="story-row">
+        <div class="story-row__body">
+          <span class="story-row__pill">{{ rcat.label }}</span>
+          <h2 class="story-row__title">{{ a.title }}</h2>
+          <p class="story-row__meta">{{ a.read_minutes }} min read</p>
+        </div>
         {% if a.cover_image %}
-          <div class="card__media" style="background-image: url('{{ a.cover_image }}'); background-size: cover; background-position: center;">
-            <div class="card__scrim"></div>
-            <div class="card__overlay">
-              <span class="card__pill">{{ rcat.label }}</span>
-              <h2 class="card__title">{{ a.title }}</h2>
-              <p class="card__meta">{{ a.read_minutes }} min read</p>
-            </div>
-          </div>
-        {% else %}
-          <div class="card__overlay">
-            <span class="card__pill">{{ rcat.label }}</span>
-            <h2 class="card__title">{{ a.title }}</h2>
-            <p class="card__meta">{{ a.read_minutes }} min read</p>
-          </div>
+          <div class="story-row__thumb" style="background-image: url('{{ a.cover_image }}'); background-size: cover; background-position: center;"></div>
         {% endif %}
       </a>
     {% endfor %}
