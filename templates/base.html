@@ -51,5 +51,115 @@
       setTimeout(hideSplash, 8000);
     })();
   </script>
+
+  <script>
+    // Card-grid pages (the homepage and category pages) embed
+    // window.ARTICLES_DATA / window.CATEGORIES_DATA and the sheet markup
+    // from index.html. This no-ops harmlessly on any other page (the
+    // article page, 404, etc.) where those don't exist.
+    (function () {
+      var overlay = document.getElementById('article-sheet-overlay');
+      var inner = document.getElementById('article-sheet-inner');
+      var grid = document.getElementById('card-grid');
+      if (!overlay || !inner || !grid || !window.ARTICLES_DATA) return;
+
+      var articlesBySlug = {};
+      window.ARTICLES_DATA.forEach(function (a) { articlesBySlug[a.slug] = a; });
+
+      var WORD_LIMIT = 150;
+
+      function truncateParagraphs(paragraphs, limit) {
+        var used = 0, out = [], truncated = false;
+        for (var i = 0; i < paragraphs.length; i++) {
+          var words = paragraphs[i].split(/\s+/);
+          if (used + words.length <= limit) {
+            out.push(paragraphs[i]);
+            used += words.length;
+          } else {
+            var remaining = limit - used;
+            if (remaining > 0) {
+              out.push(words.slice(0, remaining).join(' ') + '…');
+            } else if (out.length === 0) {
+              out.push(words.slice(0, limit).join(' ') + '…');
+            }
+            truncated = true;
+            break;
+          }
+        }
+        return { paragraphs: out, truncated: truncated };
+      }
+
+      function paragraphsHtml(paragraphs) {
+        return paragraphs.map(function (p) { return '<p>' + p + '</p>'; }).join('');
+      }
+
+      function renderSheet(article) {
+        var cat = window.CATEGORIES_DATA[article.category] || {};
+        var short = truncateParagraphs(article.body, WORD_LIMIT);
+
+        inner.innerHTML =
+          '<div class="article-sheet__hero" style="background: linear-gradient(135deg, ' + cat.color + ' 0%, ' + cat.color + 'cc 100%);">' +
+            '<span class="article-sheet__hero-emoji">' + cat.emoji + '</span>' +
+          '</div>' +
+          '<div class="article-sheet__body">' +
+            '<span class="article__pill">' + cat.label + '</span>' +
+            '<h1 class="article__title">' + article.title + '</h1>' +
+            '<p class="article__dek">' + article.dek + '</p>' +
+            '<p class="article__meta">' + article.author + ' &middot; ' + article.published_at + ' &middot; ' + article.read_minutes + ' min read</p>' +
+            '<div class="article__content" id="article-sheet-content">' + paragraphsHtml(short.paragraphs) + '</div>' +
+            (short.truncated ? '<button type="button" class="article-sheet__readmore" id="article-sheet-readmore">Read more</button>' : '') +
+          '</div>';
+
+        if (short.truncated) {
+          document.getElementById('article-sheet-readmore').addEventListener('click', function () {
+            document.getElementById('article-sheet-content').innerHTML = paragraphsHtml(article.body);
+            this.remove();
+          });
+        }
+      }
+
+      function openSheet(slug, opts) {
+        var article = articlesBySlug[slug];
+        if (!article) return;
+        renderSheet(article);
+        overlay.classList.add('is-open');
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('article-sheet-open');
+        if (!opts || opts.pushState !== false) {
+          history.pushState({ articleSheet: slug }, '', '/article/' + slug);
+        }
+      }
+
+      function closeSheet(opts) {
+        overlay.classList.remove('is-open');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('article-sheet-open');
+        if (!opts || opts.goBack !== false) {
+          if (history.state && history.state.articleSheet) {
+            history.back();
+          }
+        }
+      }
+
+      grid.addEventListener('click', function (e) {
+        var link = e.target.closest('a.card[data-slug]');
+        if (!link) return;
+        e.preventDefault();
+        openSheet(link.getAttribute('data-slug'));
+      });
+
+      Array.prototype.forEach.call(overlay.querySelectorAll('[data-sheet-close]'), function (el) {
+        el.addEventListener('click', function () { closeSheet(); });
+      });
+
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeSheet();
+      });
+
+      window.addEventListener('popstate', function () {
+        if (overlay.classList.contains('is-open')) closeSheet({ goBack: false });
+      });
+    })();
+  </script>
 </body>
 </html>
