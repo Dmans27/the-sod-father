@@ -124,3 +124,13 @@ def get_related(article, limit=3):
     same_category = [a for a in others if a["category"] == article["category"]]
     different_category = [a for a in others if a["category"] != article["category"]]
     return (same_category + different_category)[:limit]
+
+
+def get_featured(articles):
+    """The homepage's hero story -- picked by hand in the admin portal (the
+    "Feature this story" checkbox) rather than any ranking. `articles` is
+    expected already sorted newest-first (get_articles() does that), so if
+    more than one story is checked -- easy to forget to uncheck the old
+    one -- the most recently published one wins, not an arbitrary one."""
+    featured = [a for a in articles if a.get("featured")]
+    return featured[0] if featured else None

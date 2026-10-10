@@ -20,7 +20,7 @@ from flask import (
     Blueprint, abort, flash, redirect, render_template, request, session, url_for,
 )
 
-from content import BLOCK_TYPES, CATEGORIES, estimate_read_minutes, get_article, get_articles
+from content import BLOCK_TYPES, CATEGORIES, estimate_read_minutes, get_article, get_articles, get_featured
 from authors import get_author, get_authors
 import story_store
 
@@ -71,10 +71,13 @@ def logout():
 @admin_bp.get("/")
 @login_required
 def dashboard():
+    articles = get_articles()
+    featured = get_featured(articles)
     return render_template(
         "admin/dashboard.html",
-        articles=get_articles(),
+        articles=articles,
         categories=CATEGORIES,
+        featured_slug=featured["slug"] if featured else None,
     )
 
 
@@ -238,6 +241,7 @@ def _build_doc_from_form(form, files, slug, existing):
         "author_photo": author_photo,
         "published_at": published_at,
         "cover_image": cover_image,
+        "featured": form.get("featured") == "1",
         "blocks": blocks,
         "read_minutes": estimate_read_minutes(blocks),
     }

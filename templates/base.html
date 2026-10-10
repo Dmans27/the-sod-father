@@ -189,9 +189,13 @@
         }
       }
 
-      grid.addEventListener('click', function (e) {
-        var link = e.target.closest('a.card[data-slug]');
+      // Delegated on document, not just the grid -- the homepage's hero
+      // story link sits outside #card-grid (it's rendered above it), but
+      // should open the same inline sheet a regular card does.
+      document.addEventListener('click', function (e) {
+        var link = e.target.closest('a[data-slug]');
         if (!link) return;
+        if (!grid.contains(link) && link.className.indexOf('hero-story') === -1) return;
         e.preventDefault();
         openSheet(link.getAttribute('data-slug'));
       });

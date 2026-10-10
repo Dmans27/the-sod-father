@@ -60,6 +60,14 @@
     </label>
   </div>
 
+  <label class="admin-field admin-field--checkbox">
+    <span><input type="checkbox" name="featured" value="1" {% if a.get('featured') %}checked{% endif %}> Feature this story on the homepage</span>
+  </label>
+  <p class="admin-hint" style="margin-top:-12px;">
+    Shows big, up top, above the regular story grid. Only one story is featured at a time —
+    if more than one is checked, the most recently published one wins.
+  </p>
+
   <label class="admin-field">
     <span>Cover photo {% if a.get('cover_image') %}(currently set — upload a new one to replace it){% endif %}</span>
     {% if a.get('cover_image') %}

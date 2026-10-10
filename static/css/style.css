@@ -191,6 +191,83 @@ body.site-menu-open { overflow: hidden; }
 .hero__sub a { color: var(--fairway); font-weight: 700; text-decoration: none; }
 .hero__sub a:hover { text-decoration: underline; }
 
+/* ── Hero story ──
+   The homepage's featured story (picked by hand in the admin portal, not
+   ranked automatically -- see content.py's get_featured). Deliberately
+   built differently from a regular .card: text sits below the image
+   instead of overlaid on it, and the headline switches to a serif, so the
+   one story getting the "big story" treatment actually reads as distinct
+   from the grid below it, not just a bigger version of the same card. */
+.hero-story {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(27,42,31,0.18);
+  margin-bottom: 28px;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.hero-story:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(27,42,31,0.24); }
+.hero-story__media {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.hero-story__emoji { font-size: 64px; opacity: 0.9; }
+.hero-story__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(0,0,0,0) 60%, rgba(0,0,0,0.15) 100%);
+}
+.hero-story__content {
+  background: #fff;
+  padding: 22px 22px 26px;
+}
+.hero-story__pill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: var(--fairway-deep);
+  background: rgba(45,106,79,0.1);
+  border-radius: 7px;
+  padding: 4px 9px;
+  margin-bottom: 12px;
+}
+.hero-story__title {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.22;
+  letter-spacing: -0.005em;
+  color: var(--fairway-deep);
+  margin: 0 0 10px;
+}
+.hero-story__dek {
+  font-size: 16px;
+  color: var(--ink-soft);
+  line-height: 1.5;
+  margin: 0 0 12px;
+}
+.hero-story__meta {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin: 0;
+}
+@media (min-width: 640px) {
+  .hero-story__title { font-size: 38px; }
+}
+@media (max-width: 420px) {
+  .hero-story__title { font-size: 24px; }
+}
+
 /* ── Card grid ── */
 .card-grid {
   display: grid;

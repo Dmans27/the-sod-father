@@ -15,6 +15,22 @@
   </p>
 </section>
 
+{% if featured %}
+  {% set fcat = categories[featured.category] %}
+  <a href="/article/{{ featured.slug }}" class="hero-story" data-slug="{{ featured.slug }}">
+    <div class="hero-story__media" style="{% if featured.cover_image %}background-image: url('{{ featured.cover_image }}'); background-size: cover; background-position: center;{% else %}background: linear-gradient(135deg, {{ fcat.color }} 0%, {{ fcat.color }}cc 100%);{% endif %}">
+      {% if not featured.cover_image %}<span class="hero-story__emoji">{{ fcat.emoji }}</span>{% endif %}
+      <div class="hero-story__scrim"></div>
+    </div>
+    <div class="hero-story__content">
+      <span class="hero-story__pill">{{ fcat.label }}</span>
+      <h2 class="hero-story__title">{{ featured.title }}</h2>
+      <p class="hero-story__dek">{{ featured.dek }}</p>
+      <p class="hero-story__meta">{{ featured.author }} &middot; {{ featured.read_minutes }} min read</p>
+    </div>
+  </a>
+{% endif %}
+
 <section class="card-grid" id="card-grid">
   {% for article in articles %}
     {% set cat = categories[article.category] %}
@@ -29,10 +45,12 @@
         </div>
       </div>
     </a>
-  {% else %}
-    <p class="empty-state">No articles in this category yet.</p>
   {% endfor %}
 </section>
+
+{% if not articles and not featured %}
+  <p class="empty-state">No articles in this category yet.</p>
+{% endif %}
 
 <!--
   Article sheet: clicking a card above opens the full article right here,
@@ -59,7 +77,7 @@
   // card is instant -- no extra request to a backend that might be cold
   // (Render's free tier can take 50s+ to wake up, same issue the splash
   // screen works around on the app side).
-  window.ARTICLES_DATA = {{ articles|tojson }};
+  window.ARTICLES_DATA = {{ all_articles|tojson }};
   window.CATEGORIES_DATA = {{ categories|tojson }};
 </script>
 {% endblock %}

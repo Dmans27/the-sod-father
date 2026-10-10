@@ -17,7 +17,10 @@
           {% if not article.cover_image %}{{ categories[article.category].emoji }}{% endif %}
         </div>
         <div class="admin-row__main">
-          <div class="admin-row__title">{{ article.title }}</div>
+          <div class="admin-row__title">
+            {{ article.title }}
+            {% if article.slug == featured_slug %}<span class="admin-row__badge">★ Featured</span>{% endif %}
+          </div>
           <div class="admin-row__meta">
             {{ categories[article.category].label }} &middot; {{ article.published_at }} &middot; by {{ article.author }}
           </div>
