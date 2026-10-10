@@ -13,14 +13,31 @@
         <span class="site-brand__mark">⛳</span>
         <span class="site-brand__text">The Sod Father</span>
       </a>
-      <nav class="site-nav">
-        <a href="/" class="site-nav__link {% if not active_category %}is-active{% endif %}">All</a>
-        {% for key, cat in categories.items() %}
-          <a href="/category/{{ key }}" class="site-nav__link {% if active_category == key %}is-active{% endif %}">{{ cat.label }}</a>
-        {% endfor %}
-      </nav>
+      <button type="button" class="site-menu-toggle" id="site-menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="site-menu-overlay">
+        <span class="site-menu-toggle__bar"></span>
+        <span class="site-menu-toggle__bar"></span>
+        <span class="site-menu-toggle__bar"></span>
+      </button>
     </div>
   </header>
+
+  <!-- Hamburger drawer: replaces the old inline nav row (it used to wrap
+       onto a second line on narrow screens, and sat right under the
+       status bar in the iOS app). Same tabs, just tucked behind the menu
+       button, same pattern as the other app. -->
+  <div class="site-menu-overlay" id="site-menu-overlay" aria-hidden="true">
+    <div class="site-menu-overlay__scrim" data-menu-close></div>
+    <nav class="site-menu" aria-label="Categories">
+      <div class="site-menu__header">
+        <span class="site-menu__title">Browse</span>
+        <button type="button" class="site-menu__close" data-menu-close aria-label="Close menu">&times;</button>
+      </div>
+      <a href="/" class="site-menu__link {% if not active_category %}is-active{% endif %}">All</a>
+      {% for key, cat in categories.items() %}
+        <a href="/category/{{ key }}" class="site-menu__link {% if active_category == key %}is-active{% endif %}">{{ cat.emoji }} {{ cat.label }}</a>
+      {% endfor %}
+    </nav>
+  </div>
 
   <main class="site-main">
     {% block content %}{% endblock %}
@@ -158,6 +175,39 @@
 
       window.addEventListener('popstate', function () {
         if (overlay.classList.contains('is-open')) closeSheet({ goBack: false });
+      });
+    })();
+  </script>
+
+  <script>
+    // Hamburger menu drawer, present on every page (it's in base.html, not
+    // index.html) since the header is shared site-wide.
+    (function () {
+      var toggle = document.getElementById('site-menu-toggle');
+      var overlay = document.getElementById('site-menu-overlay');
+      if (!toggle || !overlay) return;
+
+      function openMenu() {
+        overlay.classList.add('is-open');
+        overlay.setAttribute('aria-hidden', 'false');
+        toggle.setAttribute('aria-expanded', 'true');
+        document.body.classList.add('site-menu-open');
+      }
+      function closeMenu() {
+        overlay.classList.remove('is-open');
+        overlay.setAttribute('aria-hidden', 'true');
+        toggle.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('site-menu-open');
+      }
+
+      toggle.addEventListener('click', function () {
+        if (overlay.classList.contains('is-open')) closeMenu(); else openMenu();
+      });
+      Array.prototype.forEach.call(overlay.querySelectorAll('[data-menu-close]'), function (el) {
+        el.addEventListener('click', closeMenu);
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeMenu();
       });
     })();
   </script>
