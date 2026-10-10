@@ -1,0 +1,8 @@
+{
+  "slug": "daniel-mansfield-2",
+  "name": "Daniel Mansfield",
+  "email": "daniel.mansfield1227@gmail.com",
+  "password_hash": "scrypt:32768:8:1$EAWyN1qqAaOQ24ZB$9ec81c2e6804131317c80a3145aa3d23e45837f0250932d0a4a267fad8389ed31acf925445aa2ba6d2be8c1bce4b3cf0867014684d2f57bd4947c63bb36f0ec4",
+  "photo": "/static/uploads/authors/daniel-mansfield-2/photo.jpg",
+  "bio": ""
+}
