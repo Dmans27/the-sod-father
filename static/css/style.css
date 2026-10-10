@@ -174,7 +174,7 @@ a { color: inherit; }
 body.site-menu-open { overflow: hidden; }
 
 /* ── Hero ── */
-.site-main { max-width: 1080px; margin: 0 auto; padding: 0 20px 60px; color:#fff; }
+.site-main { max-width: 1080px; margin: 0 auto; padding: 0 20px 60px; background:#fff; }
 .hero { padding: 40px 0 28px; }
 .hero__title {
   font-size: 30px;
