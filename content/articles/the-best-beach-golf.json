@@ -1,0 +1,20 @@
+{
+  "slug": "the-best-beach-golf",
+  "title": "The best beach golf",
+  "dek": "Play where the water meets you",
+  "category": "lifestyle",
+  "author": "Daniel Mansfield",
+  "author_slug": "daniel-mansfield",
+  "author_photo": "/static/uploads/authors/daniel-mansfield/photo.jpg",
+  "published_at": "2026-10-10",
+  "template": "standard",
+  "cover_image": "/static/uploads/the-best-beach-golf/cover_image.jpg",
+  "body": [
+    "Every golf trip starts the same way: someone drops a course list in the group chat, everyone reacts with a thumbs up, and then nothing happens for six weeks. The idea isn't the hard part. Getting from “we should do this” to an actual tee time on an actual calendar is where most trips quietly die.",
+    "The single biggest unlock is picking the date before picking anything else — including the course. A trip with a date but no finalized course still happens. A trip with a dream course but no committed date almost never does, because there's always a reason to wait one more week before locking it in.",
+    "Once the date exists, assign one person to own logistics, not by committee. Group trips planned “together” tend to stall on small decisions — which course, what time, who's driving — because nobody wants to be the one who makes the call. One person owning it, with everyone else just confirming, moves noticeably faster.",
+    "Budget the conversation early and directly, even though it's the least fun part. A trip that quietly assumes everyone's comfortable with the same green fees and lodging tier is the most common way a group trip turns awkward later. Thirty seconds of directness up front saves a lot of passive-aggressive group chat messages afterward.",
+    "None of this is complicated, which is sort of the point — the trips that actually happen aren't the ones with the best course list, they're the ones where somebody just made the decisions instead of waiting for consensus."
+  ],
+  "read_minutes": 1
+}
