@@ -77,10 +77,19 @@
   <label class="admin-field">
     <span>Cover photo {% if a.get('cover_image') %}(currently set — upload a new one to replace it){% endif %}</span>
     {% if a.get('cover_image') %}
-      <img class="admin-thumb" src="{{ a.cover_image }}" alt="Current cover photo">
+      <img class="admin-thumb" src="{{ a.cover_image }}" alt="Current cover photo" id="current-cover-thumb">
     {% endif %}
-    <input type="file" name="cover_image" accept="image/*">
+    <input type="file" name="cover_image" accept="image/*" id="cover-input">
   </label>
+  {% if a.get('cover_image') %}
+    <label class="admin-field admin-field--checkbox" style="margin-top:-12px;">
+      <span><input type="checkbox" name="remove_cover_image" value="1" id="remove-cover-checkbox"> Remove cover photo — just show the header, no photo</span>
+    </label>
+  {% endif %}
+  <p class="admin-hint" style="margin-top:-12px;">
+    Cover photo is optional. Leave it blank (or check "Remove" above) and the story shows a
+    clean text-only header instead of a photo.
+  </p>
 
   <section class="admin-builder">
     <div class="admin-builder__head">
@@ -373,6 +382,7 @@
     var categorySelect = document.querySelector('select[name="category"]');
     var featuredCheckbox = document.querySelector('input[name="featured"]');
     var coverInput = document.querySelector('input[name="cover_image"]');
+    var removeCoverCheckbox = document.getElementById('remove-cover-checkbox');
     var authorSelectEl = document.getElementById('author-select');
     var authorCustomEl = document.getElementById('author-custom');
     var blocksContainer = document.getElementById('blocks-container');
@@ -386,7 +396,12 @@
     }
 
     function currentCoverUrl() {
-      return coverBlobUrl || existingCoverImage || '';
+      // A freshly chosen file always wins; otherwise fall back to the
+      // existing cover -- unless "Remove cover photo" is checked, which
+      // clears it (mirrors admin.py's save logic exactly).
+      if (coverBlobUrl) return coverBlobUrl;
+      if (removeCoverCheckbox && removeCoverCheckbox.checked) return '';
+      return existingCoverImage || '';
     }
 
     function currentAuthorName() {
@@ -419,18 +434,19 @@
       var authorName = currentAuthorName();
       var coverUrl = currentCoverUrl();
 
-      var mediaStyle = coverUrl
-        ? "background-image: url('" + coverUrl + "'); background-size: cover; background-position: center;"
-        : 'background: linear-gradient(135deg, ' + cat.color + ' 0%, ' + cat.color + 'cc 100%);';
-
+      // No cover photo -> the "plain" variant (card--plain / hero-story--plain):
+      // no media box at all, just the pill/title/meta as a clean text-only
+      // header, matching index.html and article.html exactly.
       var html;
       if (isFeatured) {
-        html =
-          '<div class="hero-story">' +
-            '<div class="hero-story__media" style="' + mediaStyle + '">' +
-              (coverUrl ? '' : '<span class="hero-story__emoji">' + cat.emoji + '</span>') +
+        var heroMedia = coverUrl
+          ? '<div class="hero-story__media" style="background-image: url(\'' + coverUrl + '\'); background-size: cover; background-position: center;">' +
               '<div class="hero-story__scrim"></div>' +
-            '</div>' +
+            '</div>'
+          : '';
+        html =
+          '<div class="hero-story' + (coverUrl ? '' : ' hero-story--plain') + '">' +
+            heroMedia +
             '<div class="hero-story__content">' +
               '<span class="hero-story__pill">' + cat.label + '</span>' +
               '<h2 class="hero-story__title">' + escapeHtml(title) + '</h2>' +
@@ -440,18 +456,20 @@
           '</div>';
         label.textContent = 'This is how it will look as the homepage hero:';
       } else {
-        html =
-          '<div class="card">' +
-            '<div class="card__media" style="' + mediaStyle + '">' +
-              (coverUrl ? '' : '<span class="card__media-emoji">' + cat.emoji + '</span>') +
-              '<div class="card__scrim"></div>' +
-              '<div class="card__overlay">' +
-                '<span class="card__pill">' + cat.label + '</span>' +
-                '<h2 class="card__title">' + escapeHtml(title) + '</h2>' +
-                '<p class="card__meta">' + escapeHtml(authorName) + ' &middot; ' + readMinutes + ' min read</p>' +
-              '</div>' +
-            '</div>' +
+        var overlay =
+          '<div class="card__overlay">' +
+            '<span class="card__pill">' + cat.label + '</span>' +
+            '<h2 class="card__title">' + escapeHtml(title) + '</h2>' +
+            '<p class="card__meta">' + escapeHtml(authorName) + ' &middot; ' + readMinutes + ' min read</p>' +
           '</div>';
+        html = coverUrl
+          ? '<div class="card">' +
+              '<div class="card__media" style="background-image: url(\'' + coverUrl + '\'); background-size: cover; background-position: center;">' +
+                '<div class="card__scrim"></div>' +
+                overlay +
+              '</div>' +
+            '</div>'
+          : '<div class="card card--plain">' + overlay + '</div>';
         label.textContent = 'This is how it will look in the story grid (check "Feature this story" above to preview the hero instead):';
       }
       mount.innerHTML = html;
@@ -465,8 +483,22 @@
       if (coverBlobUrl) URL.revokeObjectURL(coverBlobUrl);
       var file = coverInput.files && coverInput.files[0];
       coverBlobUrl = file ? URL.createObjectURL(file) : null;
+      // Choosing a new photo overrides any earlier "remove" choice.
+      if (file && removeCoverCheckbox) removeCoverCheckbox.checked = false;
       renderPreview();
     });
+    if (removeCoverCheckbox) {
+      removeCoverCheckbox.addEventListener('change', function () {
+        // Checking "remove" while a new file is already staged doesn't
+        // make sense -- the new file would win on save anyway -- so clear
+        // it to keep the preview (and the eventual save) unambiguous.
+        if (removeCoverCheckbox.checked && coverInput.files && coverInput.files.length) {
+          coverInput.value = '';
+          if (coverBlobUrl) { URL.revokeObjectURL(coverBlobUrl); coverBlobUrl = null; }
+        }
+        renderPreview();
+      });
+    }
     blocksContainer.addEventListener('input', renderPreview);
 
     toggleBtn.addEventListener('click', function () {

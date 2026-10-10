@@ -137,18 +137,16 @@
       }
 
       function renderSheet(article) {
-        var cat = window.CATEGORIES_DATA[article.category] || {};
         var short = truncateBlocks(article.blocks || [], WORD_LIMIT);
-        var heroStyle = article.cover_image
-          ? "background-image: url('" + article.cover_image + "'); background-size: cover; background-position: center;"
-          : 'background: linear-gradient(135deg, ' + cat.color + ' 0%, ' + cat.color + 'cc 100%);';
-        var heroEmoji = article.cover_image ? '' : '<span class="article-sheet__hero-emoji">' + cat.emoji + '</span>';
+        // No cover photo -> skip the hero block entirely (no colored
+        // placeholder either), same as the real article page.
+        var heroHtml = article.cover_image
+          ? '<div class="article-sheet__hero" style="background-image: url(\'' + article.cover_image + '\'); background-size: cover; background-position: center;"></div>'
+          : '';
         var avatar = article.author_photo ? '<img class="article__avatar" src="' + article.author_photo + '" alt="">' : '';
 
         inner.innerHTML =
-          '<div class="article-sheet__hero" style="' + heroStyle + '">' +
-            heroEmoji +
-          '</div>' +
+          heroHtml +
           '<div class="article-sheet__body">' +
             '<span class="article__pill">' + cat.label + '</span>' +
             '<h1 class="article__title">' + article.title + '</h1>' +

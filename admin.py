@@ -223,6 +223,15 @@ def _build_doc_from_form(form, files, slug, existing):
         return keep_existing_path
 
     existing_cover = existing.get("cover_image") if existing else None
+    # The "Remove cover photo" checkbox only matters when no new photo was
+    # uploaded this save -- a fresh upload always wins, same as before.
+    # (A FileStorage with no file chosen is still a truthy object, so this
+    # checks .filename rather than the object itself -- same test
+    # story_store.process_image uses.)
+    new_cover_file = files.get("cover_image")
+    has_new_cover = bool(new_cover_file and new_cover_file.filename)
+    if form.get("remove_cover_image") == "1" and not has_new_cover:
+        existing_cover = None
     cover_image = handle_image("cover_image", existing_cover)
 
     blocks, block_images = _build_blocks_from_form(form, files, slug)

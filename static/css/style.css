@@ -268,6 +268,12 @@ body.site-menu-open { overflow: hidden; }
   .hero-story__title { font-size: 24px; }
 }
 
+/* A featured story with no cover photo skips .hero-story__media entirely --
+   .hero-story__content already reads as a clean text-only header on its
+   own (white background, dark serif title), so there's nothing else to
+   override here. */
+.hero-story--plain { box-shadow: 0 2px 14px rgba(27,42,31,0.14); }
+
 /* ── Card grid ── */
 .card-grid {
   display: grid;
@@ -337,13 +343,32 @@ body.site-menu-open { overflow: hidden; }
   text-shadow: 0 1px 3px rgba(0,0,0,0.35);
 }
 
+/* ── "Plain" card -- a story with no cover photo skips the colored/emoji
+   placeholder entirely (no .card__media at all) and shows a clean
+   text-only header instead: pill, title and meta in normal site colors,
+   stacked in flow rather than overlaid on an image. ── */
+.card--plain { background: #fff; border: 1px solid var(--line); }
+.card--plain .card__overlay { position: static; padding: 16px 16px 18px; }
+.card--plain .card__pill {
+  color: var(--fairway-deep);
+  background: rgba(45,106,79,0.1);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.card--plain .card__title { color: var(--ink); text-shadow: none; }
+.card--plain .card__meta { color: var(--ink-soft); text-shadow: none; }
+
 .empty-state {
   color: var(--ink-faint);
   font-size: 14px;
   padding: 30px 0;
 }
 
-/* ── Article page ── */
+/* ── Article page ──
+   A story with no cover photo skips .article__hero entirely (no markup at
+   all, not even a colored placeholder) -- .article__body's own top
+   padding below already provides the same breathing room from the header,
+   so the pill/title just starts the page cleanly. */
 .article { max-width: 720px; margin: 0 auto; }
 .article__hero {
   aspect-ratio: 21 / 9;

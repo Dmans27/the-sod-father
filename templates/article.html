@@ -6,10 +6,6 @@
 <article class="article">
   {% if article.cover_image %}
     <div class="article__hero" style="background-image: url('{{ article.cover_image }}'); background-size: cover; background-position: center;"></div>
-  {% else %}
-    <div class="article__hero" style="background: linear-gradient(135deg, {{ cat.color }} 0%, {{ cat.color }}cc 100%);">
-      <span class="article__hero-emoji">{{ cat.emoji }}</span>
-    </div>
   {% endif %}
 
   <div class="article__body">
@@ -55,16 +51,23 @@
   <div class="card-grid card-grid--compact">
     {% for a in related %}
       {% set rcat = categories[a.category] %}
-      <a href="/article/{{ a.slug }}" class="card">
-        <div class="card__media" style="{% if a.cover_image %}background-image: url('{{ a.cover_image }}'); background-size: cover; background-position: center;{% else %}background: linear-gradient(135deg, {{ rcat.color }} 0%, {{ rcat.color }}cc 100%);{% endif %}">
-          {% if not a.cover_image %}<span class="card__media-emoji">{{ rcat.emoji }}</span>{% endif %}
-          <div class="card__scrim"></div>
+      <a href="/article/{{ a.slug }}" class="card{% if not a.cover_image %} card--plain{% endif %}">
+        {% if a.cover_image %}
+          <div class="card__media" style="background-image: url('{{ a.cover_image }}'); background-size: cover; background-position: center;">
+            <div class="card__scrim"></div>
+            <div class="card__overlay">
+              <span class="card__pill">{{ rcat.label }}</span>
+              <h2 class="card__title">{{ a.title }}</h2>
+              <p class="card__meta">{{ a.read_minutes }} min read</p>
+            </div>
+          </div>
+        {% else %}
           <div class="card__overlay">
             <span class="card__pill">{{ rcat.label }}</span>
             <h2 class="card__title">{{ a.title }}</h2>
             <p class="card__meta">{{ a.read_minutes }} min read</p>
           </div>
-        </div>
+        {% endif %}
       </a>
     {% endfor %}
   </div>

@@ -13,9 +13,9 @@
   <div class="admin-table">
     {% for article in articles %}
       <a href="{{ url_for('admin.story_edit', slug=article.slug) }}" class="admin-row">
-        <div class="admin-row__thumb" style="{% if article.cover_image %}background-image: url('{{ article.cover_image }}'); background-size: cover; background-position: center;{% else %}background: {{ categories[article.category].color }};{% endif %}">
-          {% if not article.cover_image %}{{ categories[article.category].emoji }}{% endif %}
-        </div>
+        {% if article.cover_image %}
+          <div class="admin-row__thumb" style="background-image: url('{{ article.cover_image }}'); background-size: cover; background-position: center;"></div>
+        {% endif %}
         <div class="admin-row__main">
           <div class="admin-row__title">
             {{ article.title }}
