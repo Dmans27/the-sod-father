@@ -34,14 +34,19 @@ a { color: inherit; }
    and, in the iOS app, sat right under the status bar. padding-top here
    uses the same env(safe-area-inset-top) pattern the article sheet uses
    for the bottom safe area, so the bar grows to clear the notch/status
-   bar in the native app (falls back to 0, so it's a no-op on the web). */
+   bar in the native app (falls back to 0, so it's a no-op on the web).
+   env(safe-area-inset-top) only reports a real value when the page's
+   viewport meta tag includes viewport-fit=cover (see base.html) -- without
+   it WKWebView always reports 0, which is why this padding alone wasn't
+   enough before. max(...) also guarantees at least 20px of clearance even
+   on a device that reports a tiny or zero inset. */
 .site-header {
   background: var(--fairway-deep);
   border-bottom: 1px solid rgba(0,0,0,0.15);
   position: sticky;
   top: 0;
   z-index: 10;
-  padding-top: env(safe-area-inset-top);
+  padding-top: max(env(safe-area-inset-top), 20px);
 }
 .site-header__inner {
   max-width: 1080px;
