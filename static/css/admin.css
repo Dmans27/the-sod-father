@@ -243,6 +243,20 @@
 .admin-builder__add { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
 .admin-builder__add-label { font-size: 13px; font-weight: 700; color: var(--ink-faint); margin-right: 2px; }
 
+/* ── Homepage preview panel ──
+   Mirrors the public site's .card / .hero-story markup (style.css, loaded
+   on every admin page already) so this shows exactly what the real
+   homepage would render, at roughly phone width since that's primarily
+   how the site's read. */
+.admin-preview {
+  background: var(--cream-deep);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 18px;
+  margin-bottom: 22px;
+}
+.admin-preview #homepage-preview-mount { max-width: 400px; margin: 0 auto; }
+
 .admin-thumb { display: block; max-width: 220px; border-radius: 8px; margin-bottom: 4px; }
 .admin-thumb--small { max-width: 120px; }
 .admin-thumb--avatar { width: 44px; height: 44px; max-width: none; border-radius: 50%; object-fit: cover; margin: 0; }

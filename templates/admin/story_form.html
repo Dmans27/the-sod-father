@@ -7,6 +7,12 @@
 
 <div class="admin-page-head">
   <h1>{% if mode == 'new' %}New story{% else %}Edit story{% endif %}</h1>
+  <button type="button" class="admin-btn" id="preview-toggle">👁 Preview on homepage</button>
+</div>
+
+<div class="admin-preview" id="homepage-preview-panel" style="display:none;">
+  <p class="admin-hint" id="homepage-preview-label"></p>
+  <div id="homepage-preview-mount"></div>
 </div>
 
 {% if errors %}
@@ -262,6 +268,7 @@
         return el.dataset.blockId;
       });
       orderInput.value = ids.join(',');
+      if (window.updateHomepagePreview) window.updateHomepagePreview(); // read_minutes shifts as blocks are added/removed
     }
 
     // Native HTML5 drag-and-drop, started only from each block's handle so
@@ -342,6 +349,135 @@
     }
     authorSelect.addEventListener('change', sync);
     sync();
+  })();
+
+  (function () {
+    // Live homepage preview -- mirrors the same markup/CSS classes
+    // index.html uses for a grid card (.card) and the hero story
+    // (.hero-story), so it looks exactly like the real thing without
+    // needing to save (which, on the real site, means a GitHub commit and
+    // a 1-2 minute Render redeploy -- far too slow to check "does this
+    // headline wrap weird" against). Nothing here is ever uploaded or
+    // saved; a new cover photo is shown via a local blob: URL that only
+    // exists in this browser tab.
+    var CATEGORIES_DATA = {{ categories|tojson }};
+    var existingCoverImage = {{ (a.get('cover_image') or '')|tojson }};
+
+    var toggleBtn = document.getElementById('preview-toggle');
+    var panel = document.getElementById('homepage-preview-panel');
+    var mount = document.getElementById('homepage-preview-mount');
+    var label = document.getElementById('homepage-preview-label');
+
+    var titleInput = document.querySelector('input[name="title"]');
+    var dekInput = document.querySelector('input[name="dek"]');
+    var categorySelect = document.querySelector('select[name="category"]');
+    var featuredCheckbox = document.querySelector('input[name="featured"]');
+    var coverInput = document.querySelector('input[name="cover_image"]');
+    var authorSelectEl = document.getElementById('author-select');
+    var authorCustomEl = document.getElementById('author-custom');
+    var blocksContainer = document.getElementById('blocks-container');
+
+    var coverBlobUrl = null;
+
+    function escapeHtml(str) {
+      return String(str || '').replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function currentCoverUrl() {
+      return coverBlobUrl || existingCoverImage || '';
+    }
+
+    function currentAuthorName() {
+      if (authorSelectEl.value === '__other__') {
+        return authorCustomEl.value.trim() || 'Author';
+      }
+      var opt = authorSelectEl.options[authorSelectEl.selectedIndex];
+      return (opt && opt.value) ? opt.textContent : 'Author';
+    }
+
+    function estimateReadMinutes() {
+      var words = 0;
+      Array.prototype.forEach.call(blocksContainer.querySelectorAll('.admin-block'), function (block) {
+        var type = block.dataset.blockType;
+        if (type === 'paragraph' || type === 'quote' || type === 'subheading') {
+          var textEl = block.querySelector('.admin-block__text');
+          var text = textEl ? textEl.value.trim() : '';
+          if (text) words += text.split(/\s+/).length;
+        }
+      });
+      return Math.max(1, Math.round(words / 200));
+    }
+
+    function renderPreview() {
+      var title = titleInput.value.trim() || 'Untitled story';
+      var dek = dekInput.value.trim();
+      var cat = CATEGORIES_DATA[categorySelect.value] || { label: 'Category', color: '#5C6B73', emoji: '⛳' };
+      var isFeatured = featuredCheckbox.checked;
+      var readMinutes = estimateReadMinutes();
+      var authorName = currentAuthorName();
+      var coverUrl = currentCoverUrl();
+
+      var mediaStyle = coverUrl
+        ? "background-image: url('" + coverUrl + "'); background-size: cover; background-position: center;"
+        : 'background: linear-gradient(135deg, ' + cat.color + ' 0%, ' + cat.color + 'cc 100%);';
+
+      var html;
+      if (isFeatured) {
+        html =
+          '<div class="hero-story">' +
+            '<div class="hero-story__media" style="' + mediaStyle + '">' +
+              (coverUrl ? '' : '<span class="hero-story__emoji">' + cat.emoji + '</span>') +
+              '<div class="hero-story__scrim"></div>' +
+            '</div>' +
+            '<div class="hero-story__content">' +
+              '<span class="hero-story__pill">' + cat.label + '</span>' +
+              '<h2 class="hero-story__title">' + escapeHtml(title) + '</h2>' +
+              '<p class="hero-story__dek">' + escapeHtml(dek) + '</p>' +
+              '<p class="hero-story__meta">' + escapeHtml(authorName) + ' &middot; ' + readMinutes + ' min read</p>' +
+            '</div>' +
+          '</div>';
+        label.textContent = 'This is how it will look as the homepage hero:';
+      } else {
+        html =
+          '<div class="card">' +
+            '<div class="card__media" style="' + mediaStyle + '">' +
+              (coverUrl ? '' : '<span class="card__media-emoji">' + cat.emoji + '</span>') +
+              '<div class="card__scrim"></div>' +
+              '<div class="card__overlay">' +
+                '<span class="card__pill">' + cat.label + '</span>' +
+                '<h2 class="card__title">' + escapeHtml(title) + '</h2>' +
+                '<p class="card__meta">' + escapeHtml(authorName) + ' &middot; ' + readMinutes + ' min read</p>' +
+              '</div>' +
+            '</div>' +
+          '</div>';
+        label.textContent = 'This is how it will look in the story grid (check "Feature this story" above to preview the hero instead):';
+      }
+      mount.innerHTML = html;
+    }
+
+    [titleInput, dekInput, categorySelect, featuredCheckbox, authorSelectEl, authorCustomEl].forEach(function (el) {
+      el.addEventListener('input', renderPreview);
+      el.addEventListener('change', renderPreview);
+    });
+    coverInput.addEventListener('change', function () {
+      if (coverBlobUrl) URL.revokeObjectURL(coverBlobUrl);
+      var file = coverInput.files && coverInput.files[0];
+      coverBlobUrl = file ? URL.createObjectURL(file) : null;
+      renderPreview();
+    });
+    blocksContainer.addEventListener('input', renderPreview);
+
+    toggleBtn.addEventListener('click', function () {
+      var isHidden = panel.style.display === 'none';
+      panel.style.display = isHidden ? '' : 'none';
+      toggleBtn.textContent = isHidden ? '👁 Hide homepage preview' : '👁 Preview on homepage';
+      if (isHidden) renderPreview();
+    });
+
+    window.updateHomepagePreview = renderPreview;
+    renderPreview();
   })();
 </script>
 {% endblock %}
