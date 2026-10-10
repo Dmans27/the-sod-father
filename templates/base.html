@@ -85,34 +85,60 @@
 
       var WORD_LIMIT = 150;
 
-      function truncateParagraphs(paragraphs, limit) {
+      // Stories are a sequence of typed blocks (paragraph/photo/quote/
+      // subheading/embed) added in the admin story builder. The preview
+      // sheet shows as many blocks as fit in the word budget before
+      // showing "Read more" -- only text-bearing blocks count against that
+      // budget, so a story that opens with a photo doesn't get cut off
+      // before any text has even shown.
+      function blockWords(block) {
+        if (block.type === 'paragraph' || block.type === 'quote' || block.type === 'subheading') {
+          return (block.text || '').split(/\s+/).filter(Boolean).length;
+        }
+        return 0;
+      }
+
+      function blockHtml(block) {
+        if (block.type === 'paragraph') return '<p>' + block.text + '</p>';
+        if (block.type === 'subheading') return '<h2 class="article__subheading">' + block.text + '</h2>';
+        if (block.type === 'quote') {
+          return '<blockquote class="article__quote"><p>' + block.text + '</p>' +
+            (block.attribution ? '<cite>' + block.attribution + '</cite>' : '') + '</blockquote>';
+        }
+        if (block.type === 'photo') {
+          return '<figure class="article__photo"><img src="' + block.image + '" alt="' + (block.caption || '') + '" loading="lazy">' +
+            (block.caption ? '<figcaption>' + block.caption + '</figcaption>' : '') + '</figure>';
+        }
+        if (block.type === 'embed') return '<div class="article__embed">' + block.html + '</div>';
+        return '';
+      }
+
+      function blocksHtml(blocks) {
+        return blocks.map(blockHtml).join('');
+      }
+
+      function truncateBlocks(blocks, limit) {
         var used = 0, out = [], truncated = false;
-        for (var i = 0; i < paragraphs.length; i++) {
-          var words = paragraphs[i].split(/\s+/);
-          if (used + words.length <= limit) {
-            out.push(paragraphs[i]);
-            used += words.length;
+        for (var i = 0; i < blocks.length; i++) {
+          var words = blockWords(blocks[i]);
+          if (words === 0) {
+            out.push(blocks[i]);
+            continue;
+          }
+          if (used + words <= limit) {
+            out.push(blocks[i]);
+            used += words;
           } else {
-            var remaining = limit - used;
-            if (remaining > 0) {
-              out.push(words.slice(0, remaining).join(' ') + '…');
-            } else if (out.length === 0) {
-              out.push(words.slice(0, limit).join(' ') + '…');
-            }
             truncated = true;
             break;
           }
         }
-        return { paragraphs: out, truncated: truncated };
-      }
-
-      function paragraphsHtml(paragraphs) {
-        return paragraphs.map(function (p) { return '<p>' + p + '</p>'; }).join('');
+        return { blocks: out, truncated: truncated };
       }
 
       function renderSheet(article) {
         var cat = window.CATEGORIES_DATA[article.category] || {};
-        var short = truncateParagraphs(article.body, WORD_LIMIT);
+        var short = truncateBlocks(article.blocks || [], WORD_LIMIT);
         var heroStyle = article.cover_image
           ? "background-image: url('" + article.cover_image + "'); background-size: cover; background-position: center;"
           : 'background: linear-gradient(135deg, ' + cat.color + ' 0%, ' + cat.color + 'cc 100%);';
@@ -128,13 +154,13 @@
             '<h1 class="article__title">' + article.title + '</h1>' +
             '<p class="article__dek">' + article.dek + '</p>' +
             '<div class="article__byline">' + avatar + '<p class="article__meta">' + article.author + ' &middot; ' + article.published_at + ' &middot; ' + article.read_minutes + ' min read</p></div>' +
-            '<div class="article__content" id="article-sheet-content">' + paragraphsHtml(short.paragraphs) + '</div>' +
+            '<div class="article__content" id="article-sheet-content">' + blocksHtml(short.blocks) + '</div>' +
             (short.truncated ? '<button type="button" class="article-sheet__readmore" id="article-sheet-readmore">Read more</button>' : '') +
           '</div>';
 
         if (short.truncated) {
           document.getElementById('article-sheet-readmore').addEventListener('click', function () {
-            document.getElementById('article-sheet-content').innerHTML = paragraphsHtml(article.body);
+            document.getElementById('article-sheet-content').innerHTML = blocksHtml(article.blocks || []);
             this.remove();
           });
         }
@@ -166,11 +192,6 @@
       grid.addEventListener('click', function (e) {
         var link = e.target.closest('a.card[data-slug]');
         if (!link) return;
-        // Only "standard" articles open in the inline sheet -- a photo
-        // gallery or a listicle is built to be its own page (more room for
-        // photos / numbered items than a 150-word teaser can show), so
-        // those just navigate normally via the real href.
-        if (link.dataset.template && link.dataset.template !== 'standard') return;
         e.preventDefault();
         openSheet(link.getAttribute('data-slug'));
       });

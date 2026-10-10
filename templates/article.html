@@ -21,40 +21,28 @@
       <p class="article__meta">{{ article.author }} &middot; {{ article.published_at }} &middot; {{ article.read_minutes }} min read</p>
     </div>
 
-    {% if article.body %}
+    {% if article.blocks %}
       <div class="article__content">
-        {% for paragraph in article.body %}
-          <p>{{ paragraph }}</p>
+        {% for block in article.blocks %}
+          {% if block.type == 'paragraph' %}
+            <p>{{ block.text }}</p>
+          {% elif block.type == 'subheading' %}
+            <h2 class="article__subheading">{{ block.text }}</h2>
+          {% elif block.type == 'quote' %}
+            <blockquote class="article__quote">
+              <p>{{ block.text }}</p>
+              {% if block.attribution %}<cite>{{ block.attribution }}</cite>{% endif %}
+            </blockquote>
+          {% elif block.type == 'photo' %}
+            <figure class="article__photo">
+              <img src="{{ block.image }}" alt="{{ block.caption or article.title }}" loading="lazy">
+              {% if block.caption %}<figcaption>{{ block.caption }}</figcaption>{% endif %}
+            </figure>
+          {% elif block.type == 'embed' %}
+            <div class="article__embed">{{ block.html | safe }}</div>
+          {% endif %}
         {% endfor %}
       </div>
-    {% endif %}
-
-    {% if article.template == 'gallery' %}
-      <div class="gallery">
-        {% for photo in article.photos %}
-          <figure class="gallery__item">
-            <img class="gallery__image" src="{{ photo.image }}" alt="{{ photo.caption or article.title }}" loading="lazy">
-            {% if photo.caption %}<figcaption class="gallery__caption">{{ photo.caption }}</figcaption>{% endif %}
-          </figure>
-        {% endfor %}
-      </div>
-    {% elif article.template == 'listicle' %}
-      <ol class="listicle">
-        {% for item in article['items'] %}
-          <li class="listicle__item">
-            <div class="listicle__number">{{ loop.index }}</div>
-            <div class="listicle__item-body">
-              <h2 class="listicle__heading">{{ item.heading }}</h2>
-              {% if item.image %}
-                <img class="listicle__image" src="{{ item.image }}" alt="{{ item.heading }}" loading="lazy">
-              {% endif %}
-              {% for paragraph in item.body %}
-                <p>{{ paragraph }}</p>
-              {% endfor %}
-            </div>
-          </li>
-        {% endfor %}
-      </ol>
     {% endif %}
 
     <a href="/" class="article__back">&larr; Back to all articles</a>

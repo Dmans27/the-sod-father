@@ -18,7 +18,7 @@
 <section class="card-grid" id="card-grid">
   {% for article in articles %}
     {% set cat = categories[article.category] %}
-    <a href="/article/{{ article.slug }}" class="card" data-slug="{{ article.slug }}" data-template="{{ article.template or 'standard' }}">
+    <a href="/article/{{ article.slug }}" class="card" data-slug="{{ article.slug }}">
       <div class="card__media" style="{% if article.cover_image %}background-image: url('{{ article.cover_image }}'); background-size: cover; background-position: center;{% else %}background: linear-gradient(135deg, {{ cat.color }} 0%, {{ cat.color }}cc 100%);{% endif %}">
         {% if not article.cover_image %}<span class="card__media-emoji">{{ cat.emoji }}</span>{% endif %}
         <div class="card__scrim"></div>

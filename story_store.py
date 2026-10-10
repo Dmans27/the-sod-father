@@ -71,7 +71,7 @@ def save_record(record_path, doc, images, message):
 def save_story(doc, images, is_update=False):
     """doc: the fully-built article dict (matches content.py's schema).
     images: {repo_path: bytes} for any photos this save includes (cover +
-    template-specific). Writes content/articles/<slug>.json plus those
+    any photo blocks). Writes content/articles/<slug>.json plus those
     image files as one atomic publish."""
     verb = "Update" if is_update else "Add"
     message = f"{verb} story: {doc['title']}"

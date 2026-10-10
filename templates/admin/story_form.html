@@ -3,8 +3,7 @@
 
 {% block admin_content %}
 {% set a = article or {} %}
-{% set existing_photos = a.get('photos', []) %}
-{% set existing_items = a.get('items', []) %}
+{% set existing_blocks = a.get('blocks', []) %}
 
 <div class="admin-page-head">
   <h1>{% if mode == 'new' %}New story{% else %}Edit story{% endif %}</h1>
@@ -59,15 +58,6 @@
       <span>Published date</span>
       <input type="date" name="published_at" value="{{ a.get('published_at', '') }}" required>
     </label>
-
-    <label class="admin-field">
-      <span>Story type</span>
-      <select name="template" id="template-select">
-        {% for key, label in templates.items() %}
-          <option value="{{ key }}" {% if a.get('template', 'standard') == key %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-      </select>
-    </label>
   </div>
 
   <label class="admin-field">
@@ -78,67 +68,25 @@
     <input type="file" name="cover_image" accept="image/*">
   </label>
 
-  <section class="admin-template-section" data-template="standard">
-    <label class="admin-field">
-      <span>Story</span>
-      <textarea name="body" rows="14" placeholder="Write your story here. Leave a blank line between paragraphs.">{{ a.get('body', [])|join('\n\n') }}</textarea>
-    </label>
-  </section>
+  <section class="admin-builder">
+    <div class="admin-builder__head">
+      <span class="admin-field-label">Story</span>
+      <p class="admin-hint">
+        Build the story block by block — add a paragraph, drop in a photo, pull out a quote,
+        whatever it needs, in whatever order. Drag a block by its <strong>⠿</strong> handle to
+        move it.
+      </p>
+    </div>
 
-  <section class="admin-template-section" data-template="gallery">
-    <label class="admin-field">
-      <span>Intro text (optional)</span>
-      <textarea name="gallery_intro" rows="4" placeholder="A short intro before the photos start, if you want one.">{{ a.get('body', [])|join('\n\n') if a.get('template') == 'gallery' else '' }}</textarea>
-    </label>
+    <input type="hidden" name="block_order" id="block-order">
+    <div id="blocks-container" class="admin-blocks"></div>
 
-    <p class="admin-hint">Add up to {{ max_photos }} photos, in order. Leave a slot's photo blank to keep what's already there.</p>
-    {% for i in range(1, max_photos + 1) %}
-      {% set p = existing_photos[i - 1] if i <= existing_photos|length else None %}
-      <div class="admin-repeat-row">
-        <div class="admin-repeat-row__num">{{ i }}</div>
-        <div class="admin-repeat-row__fields">
-          <label class="admin-field">
-            <span>Photo {{ i }}{% if p %} (currently set){% endif %}</span>
-            {% if p %}<img class="admin-thumb admin-thumb--small" src="{{ p.image }}" alt="">{% endif %}
-            <input type="file" name="photo_{{ i }}" accept="image/*">
-          </label>
-          <label class="admin-field">
-            <span>Caption (optional)</span>
-            <input type="text" name="caption_{{ i }}" value="{{ p.caption if p else '' }}">
-          </label>
-        </div>
-      </div>
-    {% endfor %}
-  </section>
-
-  <section class="admin-template-section" data-template="listicle">
-    <label class="admin-field">
-      <span>Intro text (optional)</span>
-      <textarea name="listicle_intro" rows="4" placeholder="A short intro before the list starts, if you want one.">{{ a.get('body', [])|join('\n\n') if a.get('template') == 'listicle' else '' }}</textarea>
-    </label>
-
-    <p class="admin-hint">Add up to {{ max_items }} items, in order. Only items with a heading are saved.</p>
-    {% for i in range(1, max_items + 1) %}
-      {% set it = existing_items[i - 1] if i <= existing_items|length else None %}
-      <div class="admin-repeat-row">
-        <div class="admin-repeat-row__num">{{ i }}</div>
-        <div class="admin-repeat-row__fields">
-          <label class="admin-field">
-            <span>Heading</span>
-            <input type="text" name="heading_{{ i }}" value="{{ it.heading if it else '' }}">
-          </label>
-          <label class="admin-field">
-            <span>Photo (optional){% if it and it.image %} (currently set){% endif %}</span>
-            {% if it and it.image %}<img class="admin-thumb admin-thumb--small" src="{{ it.image }}" alt="">{% endif %}
-            <input type="file" name="item_image_{{ i }}" accept="image/*">
-          </label>
-          <label class="admin-field">
-            <span>Text</span>
-            <textarea name="item_body_{{ i }}" rows="4">{{ it.body|join('\n\n') if it else '' }}</textarea>
-          </label>
-        </div>
-      </div>
-    {% endfor %}
+    <div class="admin-builder__add">
+      <span class="admin-builder__add-label">Add:</span>
+      {% for key, label in block_types.items() %}
+        <button type="button" class="admin-btn admin-block-add" data-block-type="{{ key }}">+ {{ label }}</button>
+      {% endfor %}
+    </div>
   </section>
 
   <div class="admin-form__actions">
@@ -147,17 +95,224 @@
   </div>
 </form>
 
+<!-- Block templates: one <template> per block type, cloned by JS below
+     whenever a block is added (by clicking "+ ..." or when loading an
+     existing story's blocks). Fields are left unnamed here -- addBlock()
+     is the one place that wires each one up with a name scoped to that
+     block's generated id, since the id isn't known until it's created. -->
+<template id="block-template-paragraph">
+  <div class="admin-block" data-block-type="paragraph">
+    <div class="admin-block__head">
+      <span class="admin-block__handle" draggable="true" title="Drag to reorder">⠿</span>
+      <span class="admin-block__label">Paragraph</span>
+      <button type="button" class="admin-block__remove" title="Remove block">&times;</button>
+    </div>
+    <div class="admin-block__body">
+      <textarea class="admin-block__text" rows="4" placeholder="Write a paragraph…"></textarea>
+    </div>
+  </div>
+</template>
+
+<template id="block-template-subheading">
+  <div class="admin-block" data-block-type="subheading">
+    <div class="admin-block__head">
+      <span class="admin-block__handle" draggable="true" title="Drag to reorder">⠿</span>
+      <span class="admin-block__label">Subheading</span>
+      <button type="button" class="admin-block__remove" title="Remove block">&times;</button>
+    </div>
+    <div class="admin-block__body">
+      <input type="text" class="admin-block__text" placeholder="Section heading">
+    </div>
+  </div>
+</template>
+
+<template id="block-template-quote">
+  <div class="admin-block" data-block-type="quote">
+    <div class="admin-block__head">
+      <span class="admin-block__handle" draggable="true" title="Drag to reorder">⠿</span>
+      <span class="admin-block__label">Quote</span>
+      <button type="button" class="admin-block__remove" title="Remove block">&times;</button>
+    </div>
+    <div class="admin-block__body">
+      <textarea class="admin-block__text" rows="2" placeholder="The quote itself"></textarea>
+      <input type="text" class="admin-block__attribution" placeholder="Attribution (optional) — who said it">
+    </div>
+  </div>
+</template>
+
+<template id="block-template-photo">
+  <div class="admin-block" data-block-type="photo">
+    <div class="admin-block__head">
+      <span class="admin-block__handle" draggable="true" title="Drag to reorder">⠿</span>
+      <span class="admin-block__label">Photo</span>
+      <button type="button" class="admin-block__remove" title="Remove block">&times;</button>
+    </div>
+    <div class="admin-block__body">
+      <img class="admin-block__preview admin-thumb admin-thumb--small" style="display:none;" alt="">
+      <input type="file" class="admin-block__photo" accept="image/*">
+      <input type="text" class="admin-block__caption" placeholder="Caption (optional)">
+    </div>
+  </div>
+</template>
+
+<template id="block-template-embed">
+  <div class="admin-block" data-block-type="embed">
+    <div class="admin-block__head">
+      <span class="admin-block__handle" draggable="true" title="Drag to reorder">⠿</span>
+      <span class="admin-block__label">Custom embed / code</span>
+      <button type="button" class="admin-block__remove" title="Remove block">&times;</button>
+    </div>
+    <div class="admin-block__body">
+      <textarea class="admin-block__text admin-block__text--code" rows="4" placeholder="Paste embed code here (e.g. a YouTube or tweet embed)"></textarea>
+      <p class="admin-hint">This renders exactly as pasted, on the live site — only paste code from sources you trust.</p>
+    </div>
+  </div>
+</template>
+
 <script>
   (function () {
-    var select = document.getElementById('template-select');
-    var sections = document.querySelectorAll('.admin-template-section');
-    function sync() {
-      sections.forEach(function (s) {
-        s.style.display = (s.dataset.template === select.value) ? '' : 'none';
+    var container = document.getElementById('blocks-container');
+    var orderInput = document.getElementById('block-order');
+    var existingBlocks = {{ existing_blocks|tojson }};
+    var seq = 0;
+
+    function newId() {
+      seq += 1;
+      return 'b' + Date.now().toString(36) + seq;
+    }
+
+    function fieldName(prefix, id) { return prefix + '_' + id; }
+
+    function addBlock(type, data) {
+      data = data || {};
+      var tpl = document.getElementById('block-template-' + type);
+      if (!tpl) return;
+      var id = newId();
+      var node = tpl.content.firstElementChild.cloneNode(true);
+      node.dataset.blockId = id;
+
+      var typeField = document.createElement('input');
+      typeField.type = 'hidden';
+      typeField.name = fieldName('block_type', id);
+      typeField.value = type;
+      node.appendChild(typeField);
+
+      if (type === 'paragraph' || type === 'subheading' || type === 'embed') {
+        var textEl = node.querySelector('.admin-block__text');
+        textEl.name = fieldName('block_text', id);
+        if (data.text) textEl.value = type === 'embed' ? data.html || data.text : data.text;
+      }
+
+      if (type === 'quote') {
+        var qText = node.querySelector('.admin-block__text');
+        qText.name = fieldName('block_text', id);
+        if (data.text) qText.value = data.text;
+        var qAttr = node.querySelector('.admin-block__attribution');
+        qAttr.name = fieldName('block_attribution', id);
+        if (data.attribution) qAttr.value = data.attribution;
+      }
+
+      if (type === 'photo') {
+        var fileEl = node.querySelector('.admin-block__photo');
+        fileEl.name = fieldName('block_photo', id);
+        var captionEl = node.querySelector('.admin-block__caption');
+        captionEl.name = fieldName('block_caption', id);
+        if (data.caption) captionEl.value = data.caption;
+
+        var existingField = document.createElement('input');
+        existingField.type = 'hidden';
+        existingField.name = fieldName('block_existing_image', id);
+        existingField.value = data.image || '';
+        node.appendChild(existingField);
+
+        var preview = node.querySelector('.admin-block__preview');
+        if (data.image) {
+          preview.src = data.image;
+          preview.style.display = '';
+        }
+        fileEl.addEventListener('change', function () {
+          if (fileEl.files && fileEl.files[0]) {
+            preview.src = URL.createObjectURL(fileEl.files[0]);
+            preview.style.display = '';
+          }
+        });
+      }
+
+      node.querySelector('.admin-block__remove').addEventListener('click', function () {
+        node.remove();
+        syncOrder();
+      });
+
+      wireDrag(node);
+      container.appendChild(node);
+      syncOrder();
+      return node;
+    }
+
+    function syncOrder() {
+      var ids = Array.prototype.map.call(container.querySelectorAll('.admin-block'), function (el) {
+        return el.dataset.blockId;
+      });
+      orderInput.value = ids.join(',');
+    }
+
+    // Native HTML5 drag-and-drop, started only from each block's handle so
+    // the rest of the block (text fields, buttons) stays normally
+    // interactive. Reordering just moves the real DOM node -- block_order
+    // is re-read from DOM order on drop, so there's nothing else to keep
+    // in sync.
+    var dragging = null;
+
+    function wireDrag(node) {
+      var handle = node.querySelector('.admin-block__handle');
+      handle.addEventListener('dragstart', function (e) {
+        dragging = node;
+        node.classList.add('is-dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', node.dataset.blockId); // Firefox requires this to start a drag at all
+      });
+      handle.addEventListener('dragend', function () {
+        node.classList.remove('is-dragging');
+        dragging = null;
+        syncOrder();
       });
     }
-    select.addEventListener('change', sync);
-    sync();
+
+    container.addEventListener('dragover', function (e) {
+      if (!dragging) return;
+      e.preventDefault();
+      var after = getDragAfterElement(e.clientY);
+      if (after == null) {
+        container.appendChild(dragging);
+      } else {
+        container.insertBefore(dragging, after);
+      }
+    });
+
+    function getDragAfterElement(y) {
+      var blocks = Array.prototype.slice.call(container.querySelectorAll('.admin-block:not(.is-dragging)'));
+      var closest = { offset: -Infinity, element: null };
+      blocks.forEach(function (child) {
+        var box = child.getBoundingClientRect();
+        var offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+          closest = { offset: offset, element: child };
+        }
+      });
+      return closest.element;
+    }
+
+    Array.prototype.forEach.call(document.querySelectorAll('.admin-block-add'), function (btn) {
+      btn.addEventListener('click', function () {
+        addBlock(btn.dataset.blockType);
+      });
+    });
+
+    existingBlocks.forEach(function (block) {
+      addBlock(block.type, block);
+    });
+
+    document.getElementById('story-form').addEventListener('submit', syncOrder);
   })();
 
   (function () {

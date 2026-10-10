@@ -23,13 +23,76 @@ CATEGORIES = {
     "lifestyle":   {"label": "Lifestyle",     "emoji": "⛳",            "color": "#5C6B73"},
 }
 
-# Known story layouts, offered as a picker in the admin form. Each key here
-# must have matching markup in templates/article.html.
-TEMPLATES = {
-    "standard": "Standard article",
-    "gallery": "Photo gallery",
-    "listicle": "Listicle / ranked list",
+# Block types the story builder (templates/admin/story_form.html) can add,
+# in the order offered as "+ ..." buttons. Each key here must have matching
+# render logic in templates/article.html, templates/base.html's renderSheet,
+# and the block-type <template> markup in story_form.html.
+BLOCK_TYPES = {
+    "paragraph": "Paragraph",
+    "photo": "Photo",
+    "quote": "Quote",
+    "subheading": "Subheading",
+    "embed": "Custom embed / code",
 }
+
+
+def _blocks_from_legacy(article):
+    """Stories written before the block-builder existed store their body as
+    a plain list of paragraph strings, plus -- for the old "gallery" and
+    "listicle" story types -- a separate photos/items list. This turns any
+    of those shapes into the same blocks list new stories use, so
+    article.html, the inline preview sheet, and the admin edit form only
+    ever have to deal with one format.
+
+    Nothing on disk is rewritten by this -- it runs again on every read --
+    until the story is next saved through the builder, at which point it's
+    written back out as real blocks and this stops being needed for it."""
+    template = article.get("template", "standard")
+    blocks = []
+
+    for paragraph in article.get("body") or []:
+        blocks.append({"type": "paragraph", "text": paragraph})
+
+    if template == "gallery":
+        for photo in article.get("photos") or []:
+            blocks.append({
+                "type": "photo",
+                "image": photo.get("image"),
+                "caption": photo.get("caption", ""),
+            })
+    elif template == "listicle":
+        for item in article.get("items") or []:
+            if item.get("heading"):
+                blocks.append({"type": "subheading", "text": item["heading"]})
+            if item.get("image"):
+                blocks.append({"type": "photo", "image": item["image"], "caption": ""})
+            for paragraph in item.get("body") or []:
+                blocks.append({"type": "paragraph", "text": paragraph})
+
+    return blocks
+
+
+def _with_blocks(article):
+    """Ensures an article dict has a `blocks` list, synthesizing one from
+    legacy fields the first time an older story is read."""
+    if article is None:
+        return None
+    if "blocks" not in article:
+        article = dict(article)
+        article["blocks"] = _blocks_from_legacy(article)
+    return article
+
+
+def words_in_blocks(blocks):
+    words = 0
+    for block in blocks:
+        if block.get("type") in ("paragraph", "quote", "subheading"):
+            words += len((block.get("text") or "").split())
+    return words
+
+
+def estimate_read_minutes(blocks):
+    return max(1, round(words_in_blocks(blocks) / 200))
 
 
 def get_articles():
@@ -43,7 +106,7 @@ def get_articles():
         return articles
     for path in CONTENT_DIR.glob("*.json"):
         with open(path, encoding="utf-8") as f:
-            articles.append(json.load(f))
+            articles.append(_with_blocks(json.load(f)))
     articles.sort(key=lambda a: a.get("published_at", ""), reverse=True)
     return articles
 
@@ -53,7 +116,7 @@ def get_article(slug):
     if not path.exists():
         return None
     with open(path, encoding="utf-8") as f:
-        return json.load(f)
+        return _with_blocks(json.load(f))
 
 
 def get_related(article, limit=3):

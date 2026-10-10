@@ -16,9 +16,26 @@ Then open http://localhost:5050
 
 ## Writing stories: the admin portal
 
-Stories are written at `/admin` instead of by editing code. It supports
-three story types (standard article, photo gallery, listicle), photo
-uploads, and is password-protected.
+Stories are written at `/admin` instead of by editing code, with a
+block-by-block story builder, photo uploads, and the whole thing is
+password-protected.
+
+**The story builder:** instead of picking a fixed layout up front, a story
+is just a stack of blocks you add in whatever order the story needs --
+paragraph, photo (with a caption), pull quote (with an attribution), a
+subheading to break up a longer piece, or a custom embed/code block for
+pasting in something like a YouTube or tweet embed. Click "+ Paragraph",
+"+ Photo", etc. to add a block, drag it by its `⠿` handle to move it
+anywhere, or hit the `×` to remove it. A photo gallery is just several
+photo blocks in a row; a ranked list is a subheading + photo + paragraph
+repeated -- there's no separate "gallery" or "listicle" mode to pick
+anymore, the builder just does both (and anything in between) directly.
+
+A quick caution on the custom embed block: whatever you paste there
+renders exactly as-is on the live site, so only paste code from sources
+you trust (it's the same trust level as editing a story's JSON file by
+hand -- fine since you're the only one with `/admin` access, just don't
+paste something you haven't looked at).
 
 **How saving works:** there's no database and Render's free tier has no
 persistent disk, so a save doesn't write to a local file that would just
@@ -29,6 +46,14 @@ commit triggers the usual Render auto-deploy, so a save takes about 1-2
 minutes to actually go live. Run locally without `GITHUB_TOKEN` set, saves
 just write to the local `content/`/`static/uploads/` folders instead, so
 you can try the portal out without touching the real site.
+
+Stories written before the block builder existed (the old "standard
+article" / "photo gallery" / "listicle" types) still work exactly as
+before -- they're automatically converted to blocks when read, so they
+display and open for editing in the builder the same as anything written
+natively in it. Nothing on disk needs to change by hand; the first time
+you re-save one of those older stories through `/admin`, it's written back
+out in the new block format.
 
 ## Authors: bylines with a real photo
 
@@ -95,7 +120,8 @@ This repo is ready to deploy as-is:
   read-only authors list
 - `author_auth.py` -- the `/authors` portal: sign up, sign in, edit profile
 - `content.py` -- reads articles from `content/articles/*.json` (categories
-  and the list of story types also live here)
+  and the block types the story builder offers also live here), and
+  converts any pre-block-builder story to the current block format on read
 - `authors.py` -- reads author profiles from `content/authors/*.json`
 - `content/articles/*.json` -- the actual story content, one file per
   story. Written by the admin portal; fine to hand-edit too if you ever
@@ -110,9 +136,10 @@ This repo is ready to deploy as-is:
 - `static/uploads/` -- photos stories and author profiles use, organized
   one subfolder per story slug (and `static/uploads/authors/<slug>/` for
   profile photos)
-- `templates/` -- homepage card grid, the three article layouts (standard /
-  gallery / listicle), shared site layout, `templates/admin/` for the admin
-  portal, `templates/authors/` for author sign-up/sign-in/profile
+- `templates/` -- homepage card grid, the article page (renders a story's
+  blocks in order), shared site layout, `templates/admin/` for the admin
+  portal (`story_form.html` is the block builder itself), `templates/authors/`
+  for author sign-up/sign-in/profile
 - `static/css/style.css` -- the public site's visual design (forest green /
   cream / gold); `static/css/admin.css` -- the admin and author portal look
 
@@ -128,6 +155,8 @@ This repo is ready to deploy as-is:
   `/admin`. Giving each author a restricted version of the story form
   (their own stories only) is the natural next step if this grows past a
   one-person operation.
-- **Raise the photo-gallery/listicle cap** -- currently capped at 8
-  photos/items per story in the form (`MAX_GALLERY_PHOTOS` /
-  `MAX_LISTICLE_ITEMS` in `admin.py`); easy to bump if you need more.
+- **More block types** -- the builder currently offers paragraph, photo,
+  quote, subheading, and custom embed; adding another (a pull-out stat box,
+  a video block, etc.) just means a new entry in `BLOCK_TYPES` in
+  `content.py`, a render case in `templates/article.html` and
+  `renderSheet()` in `base.html`, and a `<template>` in `story_form.html`.

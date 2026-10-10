@@ -20,14 +20,11 @@ from flask import (
     Blueprint, abort, flash, redirect, render_template, request, session, url_for,
 )
 
-from content import CATEGORIES, TEMPLATES, get_article, get_articles
+from content import BLOCK_TYPES, CATEGORIES, estimate_read_minutes, get_article, get_articles
 from authors import get_author, get_authors
 import story_store
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
-
-MAX_GALLERY_PHOTOS = 8
-MAX_LISTICLE_ITEMS = 8
 
 
 # ── Auth ──────────────────────────────────────────────────────────────────
@@ -78,7 +75,6 @@ def dashboard():
         "admin/dashboard.html",
         articles=get_articles(),
         categories=CATEGORIES,
-        templates=TEMPLATES,
     )
 
 
@@ -109,44 +105,80 @@ def unique_slug(base_slug, taken_slugs):
     return f"{base_slug}-{n}"
 
 
-def paragraphs_from_textarea(text):
-    """Splits on blank lines into a list of paragraph strings -- the same
-    plain-text convention the seed content already uses, so there's nothing
-    new to learn: write normally, leave a blank line between paragraphs."""
-    if not text:
-        return []
-    blocks = re.split(r"\n\s*\n", text.strip())
-    return [b.strip() for b in blocks if b.strip()]
-
-
-def estimate_read_minutes(paragraph_lists):
-    words = sum(len(p.split()) for paragraphs in paragraph_lists for p in paragraphs)
-    return max(1, round(words / 200))
-
-
 def _image_repo_path(slug, field_name, original_filename):
     ext = ".jpg"  # story_store.process_image always re-encodes as JPEG
     safe_field = re.sub(r"[^a-z0-9_-]+", "-", field_name.lower())
     return f"static/uploads/{slug}/{safe_field}{ext}"
 
 
+def _build_blocks_from_form(form, files, slug):
+    """The story builder (story_form.html) lets Danny add paragraph, photo,
+    quote, subheading, and custom-embed blocks in any order and drag them
+    around -- the page keeps a hidden `block_order` field in sync with
+    on-screen order, listing each block's id. A block's id is only ever a
+    fragment of its field names (block_type_<id>, block_text_<id>, ...),
+    generated client-side and never stored once saved; this just walks that
+    order and pulls each block's type-specific fields back out.
+
+    Returns (blocks, images). images is {repo_path: bytes} for any newly
+    uploaded photo blocks, same shape save_record() expects for the cover
+    photo."""
+    order = [bid for bid in form.get("block_order", "").split(",") if bid.strip()]
+    blocks = []
+    images = {}
+
+    for bid in order:
+        btype = form.get(f"block_type_{bid}", "")
+
+        if btype == "paragraph":
+            text = form.get(f"block_text_{bid}", "").strip()
+            if text:
+                blocks.append({"type": "paragraph", "text": text})
+
+        elif btype == "subheading":
+            text = form.get(f"block_text_{bid}", "").strip()
+            if text:
+                blocks.append({"type": "subheading", "text": text})
+
+        elif btype == "quote":
+            text = form.get(f"block_text_{bid}", "").strip()
+            attribution = form.get(f"block_attribution_{bid}", "").strip()
+            if text:
+                blocks.append({"type": "quote", "text": text, "attribution": attribution})
+
+        elif btype == "embed":
+            html = form.get(f"block_text_{bid}", "").strip()
+            if html:
+                blocks.append({"type": "embed", "html": html})
+
+        elif btype == "photo":
+            caption = form.get(f"block_caption_{bid}", "").strip()
+            existing_image = form.get(f"block_existing_image_{bid}", "").strip() or None
+            field_name = f"block_photo_{bid}"
+            processed = story_store.process_image(files.get(field_name))
+            if processed is not None:
+                path = f"static/uploads/{slug}/block-{bid}.jpg"
+                images[path] = processed
+                image = "/" + path
+            else:
+                image = existing_image
+            if image:
+                blocks.append({"type": "photo", "image": image, "caption": caption})
+
+    return blocks, images
+
+
 def _build_doc_from_form(form, files, slug, existing):
     """Returns (doc, images, errors). images is {repo_path: bytes} for only
-    the photos newly uploaded this save -- paths for slots left blank reuse
-    whatever the existing article already had, so re-saving a story without
-    touching a given photo doesn't lose it."""
+    the photos newly uploaded this save (cover + any block photos) -- a
+    photo block left untouched re-saves whatever image path it already
+    had, so editing a story without touching a given photo doesn't lose
+    it."""
     errors = []
     title = form.get("title", "").strip()
     dek = form.get("dek", "").strip()
     category = form.get("category", "")
     published_at = form.get("published_at", "").strip()
-    template = form.get("template", "standard")
-    # Each story type has its own intro/body textarea in the form (they're
-    # only shown one at a time via JS, but all of them still submit, so
-    # each needs a distinct field name -- this picks the one that matches
-    # the selected type).
-    body_field = {"standard": "body", "gallery": "gallery_intro", "listicle": "listicle_intro"}.get(template, "body")
-    intro = paragraphs_from_textarea(form.get(body_field, ""))
 
     # The author field is a dropdown of registered authors (so their photo
     # comes along automatically) with an "Other" option that reveals a
@@ -174,8 +206,6 @@ def _build_doc_from_form(form, files, slug, existing):
         errors.append("Pick a valid category.")
     if not author_name:
         errors.append("Author is required.")
-    if template not in TEMPLATES:
-        errors.append("Pick a valid story type.")
     if not published_at:
         errors.append("Published date is required.")
 
@@ -192,6 +222,12 @@ def _build_doc_from_form(form, files, slug, existing):
     existing_cover = existing.get("cover_image") if existing else None
     cover_image = handle_image("cover_image", existing_cover)
 
+    blocks, block_images = _build_blocks_from_form(form, files, slug)
+    images.update(block_images)
+
+    if not blocks:
+        errors.append("Add at least one block to the story (a paragraph, a photo, a quote...).")
+
     doc = {
         "slug": slug,
         "title": title,
@@ -201,44 +237,10 @@ def _build_doc_from_form(form, files, slug, existing):
         "author_slug": author_slug or None,
         "author_photo": author_photo,
         "published_at": published_at,
-        "template": template,
         "cover_image": cover_image,
-        "body": intro,
+        "blocks": blocks,
+        "read_minutes": estimate_read_minutes(blocks),
     }
-
-    paragraph_lists = [intro]
-
-    if template == "gallery":
-        existing_photos = (existing.get("photos") or []) if existing else []
-        photos = []
-        for i in range(1, MAX_GALLERY_PHOTOS + 1):
-            field = f"photo_{i}"
-            prior = existing_photos[i - 1]["image"] if i <= len(existing_photos) else None
-            image_path = handle_image(field, prior)
-            caption = form.get(f"caption_{i}", "").strip()
-            if image_path:
-                photos.append({"image": image_path, "caption": caption})
-        if not photos:
-            errors.append("A photo gallery needs at least one photo.")
-        doc["photos"] = photos
-
-    elif template == "listicle":
-        existing_items = (existing.get("items") or []) if existing else []
-        items = []
-        for i in range(1, MAX_LISTICLE_ITEMS + 1):
-            heading = form.get(f"heading_{i}", "").strip()
-            field = f"item_image_{i}"
-            prior = existing_items[i - 1].get("image") if i <= len(existing_items) else None
-            image_path = handle_image(field, prior)
-            body = paragraphs_from_textarea(form.get(f"item_body_{i}", ""))
-            if heading:
-                items.append({"heading": heading, "image": image_path, "body": body})
-                paragraph_lists.append(body)
-        if not items:
-            errors.append("A listicle needs at least one item (give it a heading).")
-        doc["items"] = items
-
-    doc["read_minutes"] = estimate_read_minutes(paragraph_lists)
 
     return doc, images, errors
 
@@ -253,10 +255,8 @@ def story_new():
         mode="new",
         article=None,
         categories=CATEGORIES,
-        templates=TEMPLATES,
         authors=get_authors(),
-        max_photos=MAX_GALLERY_PHOTOS,
-        max_items=MAX_LISTICLE_ITEMS,
+        block_types=BLOCK_TYPES,
         errors=[],
     )
 
@@ -276,10 +276,8 @@ def story_create():
             mode="new",
             article=doc,
             categories=CATEGORIES,
-            templates=TEMPLATES,
             authors=get_authors(),
-            max_photos=MAX_GALLERY_PHOTOS,
-            max_items=MAX_LISTICLE_ITEMS,
+            block_types=BLOCK_TYPES,
             errors=errors,
         ), 400
 
@@ -299,10 +297,8 @@ def story_edit(slug):
         mode="edit",
         article=article,
         categories=CATEGORIES,
-        templates=TEMPLATES,
         authors=get_authors(),
-        max_photos=MAX_GALLERY_PHOTOS,
-        max_items=MAX_LISTICLE_ITEMS,
+        block_types=BLOCK_TYPES,
         errors=[],
     )
 
@@ -322,10 +318,8 @@ def story_update(slug):
             mode="edit",
             article=doc,
             categories=CATEGORIES,
-            templates=TEMPLATES,
             authors=get_authors(),
-            max_photos=MAX_GALLERY_PHOTOS,
-            max_items=MAX_LISTICLE_ITEMS,
+            block_types=BLOCK_TYPES,
             errors=errors,
         ), 400
 
