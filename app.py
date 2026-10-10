@@ -19,11 +19,13 @@ import os
 
 from content import get_articles, get_article, get_related, CATEGORIES
 from admin import admin_bp
+from author_auth import author_bp
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-only-insecure-key-change-me")
 app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024  # 25MB -- plenty for a handful of phone photos per save
 app.register_blueprint(admin_bp)
+app.register_blueprint(author_bp)
 
 
 @app.get("/")

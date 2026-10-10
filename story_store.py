@@ -38,24 +38,23 @@ def process_image(file_storage):
     return buf.getvalue()
 
 
-def save_story(doc, images, is_update=False):
-    """doc: the fully-built article dict (matches content.py's schema).
-    images: {repo_path: bytes} for any photos this save includes (cover +
-    template-specific). Writes content/articles/<slug>.json plus those
-    image files as one atomic publish.
+def save_record(record_path, doc, images, message):
+    """Generic version of what save_story does: writes one JSON file plus
+    any accompanying images as a single atomic publish (one GitHub commit,
+    or a local write in dev mode). Used for both articles and authors.
 
     Returns (published, message). published is True once this is committed
-    to GitHub (durable, triggers Render's auto-deploy); False means it only
-    landed on local disk (dev mode, no GITHUB_TOKEN set)."""
-    article_path = f"content/articles/{doc['slug']}.json"
-    article_bytes = (json.dumps(doc, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
+    to GitHub (durable, triggers Render's auto-deploy -- which also means
+    the CURRENTLY RUNNING process won't see this change until that deploy
+    finishes in a minute or two, since it's reading from its own local
+    checkout); False means it only landed on local disk (dev mode, no
+    GITHUB_TOKEN set -- there it's instant, no deploy involved)."""
+    record_bytes = (json.dumps(doc, indent=2, ensure_ascii=False) + "\n").encode("utf-8")
 
-    files = {article_path: article_bytes}
+    files = {record_path: record_bytes}
     files.update(images)
 
     if os.environ.get("GITHUB_TOKEN"):
-        verb = "Update" if is_update else "Add"
-        message = f"{verb} story: {doc['title']}"
         github_content.commit_files(files, message)
         return True, "Saved and pushed to GitHub — Render will redeploy (usually 1-2 min), then it's live."
 
@@ -67,3 +66,23 @@ def save_story(doc, images, is_update=False):
         "Saved locally. This is dev mode (no GITHUB_TOKEN configured) — "
         "set it in Render's environment variables so saves actually publish."
     )
+
+
+def save_story(doc, images, is_update=False):
+    """doc: the fully-built article dict (matches content.py's schema).
+    images: {repo_path: bytes} for any photos this save includes (cover +
+    template-specific). Writes content/articles/<slug>.json plus those
+    image files as one atomic publish."""
+    verb = "Update" if is_update else "Add"
+    message = f"{verb} story: {doc['title']}"
+    return save_record(f"content/articles/{doc['slug']}.json", doc, images, message)
+
+
+def save_author(doc, images, is_update=False):
+    """doc: the fully-built author dict (matches authors.py's schema,
+    password_hash included -- it's never shown back to a template, but it
+    does need to be saved). images: {repo_path: bytes} for a new/replaced
+    profile photo, if any."""
+    verb = "Update" if is_update else "Add"
+    message = f"{verb} author: {doc['name']}"
+    return save_record(f"content/authors/{doc['slug']}.json", doc, images, message)

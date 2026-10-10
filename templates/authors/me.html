@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Your profile — The Sod Father</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body class="admin-body">
+  <header class="admin-header">
+    <div class="admin-header__inner">
+      <a href="{{ url_for('author_auth.me') }}" class="admin-header__brand">⛳ The Sod Father <span>write for us</span></a>
+      <nav class="admin-header__nav">
+        <a href="/" target="_blank" rel="noopener">View site ↗</a>
+        <a href="{{ url_for('author_auth.logout') }}">Log out</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    <div class="admin-page-head"><h1>Your profile</h1></div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="admin-flashes">
+          {% for category, message in messages %}
+            <div class="admin-flash admin-flash--{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% if errors %}
+      <div class="admin-flash admin-flash--error">
+        <strong>Fix the following:</strong>
+        <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+      </div>
+    {% endif %}
+
+    <p class="admin-hint">This is the name and photo Danny picks from when crediting you on a story.</p>
+
+    <form method="post" enctype="multipart/form-data" class="admin-form">
+      <label class="admin-field">
+        <span>Name</span>
+        <input type="text" name="name" value="{{ author.name }}" required>
+      </label>
+
+      <label class="admin-field">
+        <span>Photo {% if author.photo %}(currently set — upload a new one to replace it){% endif %}</span>
+        {% if author.photo %}<img class="admin-thumb admin-thumb--small" src="{{ author.photo }}" alt="">{% endif %}
+        <input type="file" name="photo" accept="image/*">
+      </label>
+
+      <label class="admin-field">
+        <span>Short bio</span>
+        <textarea name="bio" rows="3">{{ author.bio or '' }}</textarea>
+      </label>
+
+      <div class="admin-template-section" style="border-top: 1px solid var(--line); padding-top: 18px;">
+        <p class="admin-hint" style="margin-top:0;">Change password (leave blank to keep your current one)</p>
+        <div class="admin-form__grid">
+          <label class="admin-field">
+            <span>Current password</span>
+            <input type="password" name="current_password">
+          </label>
+          <label class="admin-field">
+            <span>New password</span>
+            <input type="password" name="new_password">
+          </label>
+        </div>
+      </div>
+
+      <div class="admin-form__actions">
+        <button type="submit" class="admin-btn admin-btn--primary">Save changes</button>
+      </div>
+    </form>
+  </main>
+</body>
+</html>

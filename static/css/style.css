@@ -306,15 +306,28 @@ body.site-menu-open { overflow: hidden; }
   line-height: 1.5;
   margin: 0 0 14px;
 }
+.article__byline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+}
+.article__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
 .article__meta {
   font-size: 12.5px;
   font-weight: 700;
   color: var(--ink-faint);
   text-transform: uppercase;
   letter-spacing: 0.3px;
-  margin: 0 0 28px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid var(--line);
+  margin: 0;
 }
 .article__content p {
   font-size: 17px;

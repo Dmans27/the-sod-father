@@ -21,6 +21,7 @@ from flask import (
 )
 
 from content import CATEGORIES, TEMPLATES, get_article, get_articles
+from authors import get_author, get_authors
 import story_store
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -81,6 +82,15 @@ def dashboard():
     )
 
 
+@admin_bp.get("/authors")
+@login_required
+def authors_list():
+    # Read-only -- authors manage their own profiles at /authors/me. This
+    # is just so Danny can see at a glance who's signed up (and share the
+    # sign-up link/password with them) without digging through the repo.
+    return render_template("admin/authors.html", authors=get_authors())
+
+
 # ── Story form helpers ──────────────────────────────────────────────────
 
 def slugify(text):
@@ -129,7 +139,6 @@ def _build_doc_from_form(form, files, slug, existing):
     title = form.get("title", "").strip()
     dek = form.get("dek", "").strip()
     category = form.get("category", "")
-    author = form.get("author", "").strip()
     published_at = form.get("published_at", "").strip()
     template = form.get("template", "standard")
     # Each story type has its own intro/body textarea in the form (they're
@@ -139,11 +148,31 @@ def _build_doc_from_form(form, files, slug, existing):
     body_field = {"standard": "body", "gallery": "gallery_intro", "listicle": "listicle_intro"}.get(template, "body")
     intro = paragraphs_from_textarea(form.get(body_field, ""))
 
+    # The author field is a dropdown of registered authors (so their photo
+    # comes along automatically) with an "Other" option that reveals a
+    # plain text field -- for a one-off guest byline, or just because
+    # Danny hasn't set everyone up with an account yet. Resolved here,
+    # server-side, rather than trusted from hidden form fields, so there's
+    # no way to submit someone else's photo under a different name.
+    author_slug = form.get("author_slug", "").strip()
+    author_name = ""
+    author_photo = None
+    if author_slug and author_slug != "__other__":
+        author_record = get_author(author_slug)
+        if author_record:
+            author_name = author_record["name"]
+            author_photo = author_record.get("photo")
+        else:
+            author_slug = ""
+    else:
+        author_slug = ""
+        author_name = form.get("author_custom", "").strip()
+
     if not title:
         errors.append("Title is required.")
     if category not in CATEGORIES:
         errors.append("Pick a valid category.")
-    if not author:
+    if not author_name:
         errors.append("Author is required.")
     if template not in TEMPLATES:
         errors.append("Pick a valid story type.")
@@ -168,7 +197,9 @@ def _build_doc_from_form(form, files, slug, existing):
         "title": title,
         "dek": dek,
         "category": category,
-        "author": author,
+        "author": author_name,
+        "author_slug": author_slug or None,
+        "author_photo": author_photo,
         "published_at": published_at,
         "template": template,
         "cover_image": cover_image,
@@ -223,6 +254,7 @@ def story_new():
         article=None,
         categories=CATEGORIES,
         templates=TEMPLATES,
+        authors=get_authors(),
         max_photos=MAX_GALLERY_PHOTOS,
         max_items=MAX_LISTICLE_ITEMS,
         errors=[],
@@ -245,6 +277,7 @@ def story_create():
             article=doc,
             categories=CATEGORIES,
             templates=TEMPLATES,
+            authors=get_authors(),
             max_photos=MAX_GALLERY_PHOTOS,
             max_items=MAX_LISTICLE_ITEMS,
             errors=errors,
@@ -267,6 +300,7 @@ def story_edit(slug):
         article=article,
         categories=CATEGORIES,
         templates=TEMPLATES,
+        authors=get_authors(),
         max_photos=MAX_GALLERY_PHOTOS,
         max_items=MAX_LISTICLE_ITEMS,
         errors=[],
@@ -289,6 +323,7 @@ def story_update(slug):
             article=doc,
             categories=CATEGORIES,
             templates=TEMPLATES,
+            authors=get_authors(),
             max_photos=MAX_GALLERY_PHOTOS,
             max_items=MAX_LISTICLE_ITEMS,
             errors=errors,

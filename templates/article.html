@@ -16,7 +16,10 @@
     <a href="/category/{{ article.category }}" class="article__pill">{{ cat.label }}</a>
     <h1 class="article__title">{{ article.title }}</h1>
     <p class="article__dek">{{ article.dek }}</p>
-    <p class="article__meta">{{ article.author }} &middot; {{ article.published_at }} &middot; {{ article.read_minutes }} min read</p>
+    <div class="article__byline">
+      {% if article.author_photo %}<img class="article__avatar" src="{{ article.author_photo }}" alt="">{% endif %}
+      <p class="article__meta">{{ article.author }} &middot; {{ article.published_at }} &middot; {{ article.read_minutes }} min read</p>
+    </div>
 
     {% if article.body %}
       <div class="article__content">

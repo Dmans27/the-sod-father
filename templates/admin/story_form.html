@@ -40,7 +40,19 @@
 
     <label class="admin-field">
       <span>Author</span>
-      <input type="text" name="author" value="{{ a.get('author', '') }}" required>
+      <select name="author_slug" id="author-select">
+        <option value="">Choose an author…</option>
+        {% for author in authors %}
+          <option value="{{ author.slug }}" data-photo="{{ author.photo or '' }}" {% if a.get('author_slug') == author.slug %}selected{% endif %}>{{ author.name }}</option>
+        {% endfor %}
+        <option value="__other__" {% if a.get('author') and not a.get('author_slug') %}selected{% endif %}>Other (type a name)</option>
+      </select>
+      <div id="author-preview" class="admin-author-preview" style="display:none;">
+        <img id="author-preview-photo" class="admin-thumb admin-thumb--avatar" alt="">
+      </div>
+      <input type="text" name="author_custom" id="author-custom" placeholder="Author name"
+             value="{% if a.get('author') and not a.get('author_slug') %}{{ a.get('author') }}{% endif %}"
+             style="display:none; margin-top:8px;">
     </label>
 
     <label class="admin-field">
@@ -145,6 +157,27 @@
       });
     }
     select.addEventListener('change', sync);
+    sync();
+  })();
+
+  (function () {
+    var authorSelect = document.getElementById('author-select');
+    var customInput = document.getElementById('author-custom');
+    var preview = document.getElementById('author-preview');
+    var previewPhoto = document.getElementById('author-preview-photo');
+    function sync() {
+      var opt = authorSelect.options[authorSelect.selectedIndex];
+      var isOther = authorSelect.value === '__other__';
+      customInput.style.display = isOther ? '' : 'none';
+      var photo = opt ? opt.dataset.photo : '';
+      if (photo) {
+        previewPhoto.src = photo;
+        preview.style.display = '';
+      } else {
+        preview.style.display = 'none';
+      }
+    }
+    authorSelect.addEventListener('change', sync);
     sync();
   })();
 </script>

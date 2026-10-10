@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Author sign up — The Sod Father</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body class="admin-login-body">
+  <main class="admin-login">
+    <div class="admin-login__card admin-login__card--wide">
+      <div class="admin-login__brand">⛳ The Sod Father <span>write for us</span></div>
+
+      {% if not_configured %}
+        <p class="admin-login__error">
+          Author sign-up isn't set up yet. Add an <code>AUTHOR_SIGNUP_PASSWORD</code>
+          environment variable in Render, then redeploy.
+        </p>
+      {% else %}
+        {% if errors %}
+          <div class="admin-login__error">
+            <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+          </div>
+        {% endif %}
+        <form method="post" enctype="multipart/form-data">
+          <label class="admin-field">
+            <span>Sign-up password</span>
+            <input type="password" name="signup_password" required>
+          </label>
+          <label class="admin-field">
+            <span>Your name</span>
+            <input type="text" name="name" value="{{ form.name if form else '' }}" required>
+          </label>
+          <label class="admin-field">
+            <span>Email (this is how you'll sign in)</span>
+            <input type="email" name="email" value="{{ form.email if form else '' }}" required>
+          </label>
+          <label class="admin-field">
+            <span>Password</span>
+            <input type="password" name="password" required>
+          </label>
+          <label class="admin-field">
+            <span>Confirm password</span>
+            <input type="password" name="confirm_password" required>
+          </label>
+          <label class="admin-field">
+            <span>Photo (optional, you can add this later)</span>
+            <input type="file" name="photo" accept="image/*">
+          </label>
+          <label class="admin-field">
+            <span>Short bio (optional)</span>
+            <textarea name="bio" rows="3">{{ form.bio if form else '' }}</textarea>
+          </label>
+          <button type="submit" class="admin-btn admin-btn--primary admin-btn--block">Create account</button>
+        </form>
+        <p class="admin-login__footnote">Already have an account? <a href="{{ url_for('author_auth.login') }}">Sign in</a></p>
+      {% endif %}
+    </div>
+  </main>
+</body>
+</html>

@@ -175,6 +175,8 @@
 
 .admin-thumb { display: block; max-width: 220px; border-radius: 8px; margin-bottom: 4px; }
 .admin-thumb--small { max-width: 120px; }
+.admin-thumb--avatar { width: 44px; height: 44px; max-width: none; border-radius: 50%; object-fit: cover; margin: 0; }
+.admin-author-preview { margin-top: 8px; }
 
 .admin-form__actions { display: flex; gap: 10px; padding-top: 6px; }
 
@@ -199,6 +201,19 @@
   border-radius: 8px;
   margin-bottom: 14px;
 }
+.admin-login__error ul { margin: 0; padding-left: 18px; }
+.admin-login__notice {
+  background: rgba(45,106,79,0.12);
+  color: var(--fairway-deep);
+  font-size: 13.5px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
+.admin-login__footnote { text-align: center; font-size: 13px; color: var(--ink-faint); margin: 16px 0 0; }
+.admin-login__footnote a { color: var(--fairway); font-weight: 700; text-decoration: none; }
+.admin-login__footnote a:hover { text-decoration: underline; }
+.admin-login__card--wide { max-width: 420px; }
 .admin-login form { display: flex; flex-direction: column; gap: 14px; }
 
 @media (max-width: 520px) {

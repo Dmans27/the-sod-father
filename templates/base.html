@@ -117,6 +117,7 @@
           ? "background-image: url('" + article.cover_image + "'); background-size: cover; background-position: center;"
           : 'background: linear-gradient(135deg, ' + cat.color + ' 0%, ' + cat.color + 'cc 100%);';
         var heroEmoji = article.cover_image ? '' : '<span class="article-sheet__hero-emoji">' + cat.emoji + '</span>';
+        var avatar = article.author_photo ? '<img class="article__avatar" src="' + article.author_photo + '" alt="">' : '';
 
         inner.innerHTML =
           '<div class="article-sheet__hero" style="' + heroStyle + '">' +
@@ -126,7 +127,7 @@
             '<span class="article__pill">' + cat.label + '</span>' +
             '<h1 class="article__title">' + article.title + '</h1>' +
             '<p class="article__dek">' + article.dek + '</p>' +
-            '<p class="article__meta">' + article.author + ' &middot; ' + article.published_at + ' &middot; ' + article.read_minutes + ' min read</p>' +
+            '<div class="article__byline">' + avatar + '<p class="article__meta">' + article.author + ' &middot; ' + article.published_at + ' &middot; ' + article.read_minutes + ' min read</p></div>' +
             '<div class="article__content" id="article-sheet-content">' + paragraphsHtml(short.paragraphs) + '</div>' +
             (short.truncated ? '<button type="button" class="article-sheet__readmore" id="article-sheet-readmore">Read more</button>' : '') +
           '</div>';
