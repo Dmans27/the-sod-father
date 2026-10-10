@@ -113,10 +113,14 @@
       function renderSheet(article) {
         var cat = window.CATEGORIES_DATA[article.category] || {};
         var short = truncateParagraphs(article.body, WORD_LIMIT);
+        var heroStyle = article.cover_image
+          ? "background-image: url('" + article.cover_image + "'); background-size: cover; background-position: center;"
+          : 'background: linear-gradient(135deg, ' + cat.color + ' 0%, ' + cat.color + 'cc 100%);';
+        var heroEmoji = article.cover_image ? '' : '<span class="article-sheet__hero-emoji">' + cat.emoji + '</span>';
 
         inner.innerHTML =
-          '<div class="article-sheet__hero" style="background: linear-gradient(135deg, ' + cat.color + ' 0%, ' + cat.color + 'cc 100%);">' +
-            '<span class="article-sheet__hero-emoji">' + cat.emoji + '</span>' +
+          '<div class="article-sheet__hero" style="' + heroStyle + '">' +
+            heroEmoji +
           '</div>' +
           '<div class="article-sheet__body">' +
             '<span class="article__pill">' + cat.label + '</span>' +
@@ -161,6 +165,11 @@
       grid.addEventListener('click', function (e) {
         var link = e.target.closest('a.card[data-slug]');
         if (!link) return;
+        // Only "standard" articles open in the inline sheet -- a photo
+        // gallery or a listicle is built to be its own page (more room for
+        // photos / numbered items than a 150-word teaser can show), so
+        // those just navigate normally via the real href.
+        if (link.dataset.template && link.dataset.template !== 'standard') return;
         e.preventDefault();
         openSheet(link.getAttribute('data-slug'));
       });

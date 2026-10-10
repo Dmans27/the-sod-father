@@ -1,0 +1,15 @@
+{
+  "name": "the-sod-father-app",
+  "version": "1.0.0",
+  "private": true,
+  "description": "iOS wrapper for The Sod Father (thin native shell loading the live site)",
+  "scripts": {
+    "sync": "cap sync ios"
+  },
+  "dependencies": {
+    "@capacitor/cli": "^8.5.3",
+    "@capacitor/core": "^8.5.3",
+    "@capacitor/ios": "^8.5.3",
+    "@capacitor/splash-screen": "^8.0.2"
+  }
+}

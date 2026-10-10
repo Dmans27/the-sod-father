@@ -1,0 +1,151 @@
+{% extends "admin/_layout.html" %}
+{% block title %}{% if mode == 'new' %}New story{% else %}Edit story{% endif %}{% endblock %}
+
+{% block admin_content %}
+{% set a = article or {} %}
+{% set existing_photos = a.get('photos', []) %}
+{% set existing_items = a.get('items', []) %}
+
+<div class="admin-page-head">
+  <h1>{% if mode == 'new' %}New story{% else %}Edit story{% endif %}</h1>
+</div>
+
+{% if errors %}
+  <div class="admin-flash admin-flash--error">
+    <strong>Fix the following:</strong>
+    <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+  </div>
+{% endif %}
+
+<form method="post" enctype="multipart/form-data" class="admin-form" id="story-form">
+  <div class="admin-form__grid">
+    <label class="admin-field">
+      <span>Title</span>
+      <input type="text" name="title" value="{{ a.get('title', '') }}" required>
+    </label>
+
+    <label class="admin-field">
+      <span>Dek (one-line summary)</span>
+      <input type="text" name="dek" value="{{ a.get('dek', '') }}">
+    </label>
+
+    <label class="admin-field">
+      <span>Category</span>
+      <select name="category" required>
+        {% for key, cat in categories.items() %}
+          <option value="{{ key }}" {% if a.get('category') == key %}selected{% endif %}>{{ cat.label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
+    <label class="admin-field">
+      <span>Author</span>
+      <input type="text" name="author" value="{{ a.get('author', '') }}" required>
+    </label>
+
+    <label class="admin-field">
+      <span>Published date</span>
+      <input type="date" name="published_at" value="{{ a.get('published_at', '') }}" required>
+    </label>
+
+    <label class="admin-field">
+      <span>Story type</span>
+      <select name="template" id="template-select">
+        {% for key, label in templates.items() %}
+          <option value="{{ key }}" {% if a.get('template', 'standard') == key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+  </div>
+
+  <label class="admin-field">
+    <span>Cover photo {% if a.get('cover_image') %}(currently set — upload a new one to replace it){% endif %}</span>
+    {% if a.get('cover_image') %}
+      <img class="admin-thumb" src="{{ a.cover_image }}" alt="Current cover photo">
+    {% endif %}
+    <input type="file" name="cover_image" accept="image/*">
+  </label>
+
+  <section class="admin-template-section" data-template="standard">
+    <label class="admin-field">
+      <span>Story</span>
+      <textarea name="body" rows="14" placeholder="Write your story here. Leave a blank line between paragraphs.">{{ a.get('body', [])|join('\n\n') }}</textarea>
+    </label>
+  </section>
+
+  <section class="admin-template-section" data-template="gallery">
+    <label class="admin-field">
+      <span>Intro text (optional)</span>
+      <textarea name="gallery_intro" rows="4" placeholder="A short intro before the photos start, if you want one.">{{ a.get('body', [])|join('\n\n') if a.get('template') == 'gallery' else '' }}</textarea>
+    </label>
+
+    <p class="admin-hint">Add up to {{ max_photos }} photos, in order. Leave a slot's photo blank to keep what's already there.</p>
+    {% for i in range(1, max_photos + 1) %}
+      {% set p = existing_photos[i - 1] if i <= existing_photos|length else None %}
+      <div class="admin-repeat-row">
+        <div class="admin-repeat-row__num">{{ i }}</div>
+        <div class="admin-repeat-row__fields">
+          <label class="admin-field">
+            <span>Photo {{ i }}{% if p %} (currently set){% endif %}</span>
+            {% if p %}<img class="admin-thumb admin-thumb--small" src="{{ p.image }}" alt="">{% endif %}
+            <input type="file" name="photo_{{ i }}" accept="image/*">
+          </label>
+          <label class="admin-field">
+            <span>Caption (optional)</span>
+            <input type="text" name="caption_{{ i }}" value="{{ p.caption if p else '' }}">
+          </label>
+        </div>
+      </div>
+    {% endfor %}
+  </section>
+
+  <section class="admin-template-section" data-template="listicle">
+    <label class="admin-field">
+      <span>Intro text (optional)</span>
+      <textarea name="listicle_intro" rows="4" placeholder="A short intro before the list starts, if you want one.">{{ a.get('body', [])|join('\n\n') if a.get('template') == 'listicle' else '' }}</textarea>
+    </label>
+
+    <p class="admin-hint">Add up to {{ max_items }} items, in order. Only items with a heading are saved.</p>
+    {% for i in range(1, max_items + 1) %}
+      {% set it = existing_items[i - 1] if i <= existing_items|length else None %}
+      <div class="admin-repeat-row">
+        <div class="admin-repeat-row__num">{{ i }}</div>
+        <div class="admin-repeat-row__fields">
+          <label class="admin-field">
+            <span>Heading</span>
+            <input type="text" name="heading_{{ i }}" value="{{ it.heading if it else '' }}">
+          </label>
+          <label class="admin-field">
+            <span>Photo (optional){% if it and it.image %} (currently set){% endif %}</span>
+            {% if it and it.image %}<img class="admin-thumb admin-thumb--small" src="{{ it.image }}" alt="">{% endif %}
+            <input type="file" name="item_image_{{ i }}" accept="image/*">
+          </label>
+          <label class="admin-field">
+            <span>Text</span>
+            <textarea name="item_body_{{ i }}" rows="4">{{ it.body|join('\n\n') if it else '' }}</textarea>
+          </label>
+        </div>
+      </div>
+    {% endfor %}
+  </section>
+
+  <div class="admin-form__actions">
+    <button type="submit" class="admin-btn admin-btn--primary">{% if mode == 'new' %}Publish story{% else %}Save changes{% endif %}</button>
+    <a href="{{ url_for('admin.dashboard') }}" class="admin-btn">Cancel</a>
+  </div>
+</form>
+
+<script>
+  (function () {
+    var select = document.getElementById('template-select');
+    var sections = document.querySelectorAll('.admin-template-section');
+    function sync() {
+      sections.forEach(function (s) {
+        s.style.display = (s.dataset.template === select.value) ? '' : 'none';
+      });
+    }
+    select.addEventListener('change', sync);
+    sync();
+  })();
+</script>
+{% endblock %}

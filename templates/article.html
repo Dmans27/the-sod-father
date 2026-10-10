@@ -4,9 +4,13 @@
 {% block content %}
 {% set cat = categories[article.category] %}
 <article class="article">
-  <div class="article__hero" style="background: linear-gradient(135deg, {{ cat.color }} 0%, {{ cat.color }}cc 100%);">
-    <span class="article__hero-emoji">{{ cat.emoji }}</span>
-  </div>
+  {% if article.cover_image %}
+    <div class="article__hero" style="background-image: url('{{ article.cover_image }}'); background-size: cover; background-position: center;"></div>
+  {% else %}
+    <div class="article__hero" style="background: linear-gradient(135deg, {{ cat.color }} 0%, {{ cat.color }}cc 100%);">
+      <span class="article__hero-emoji">{{ cat.emoji }}</span>
+    </div>
+  {% endif %}
 
   <div class="article__body">
     <a href="/category/{{ article.category }}" class="article__pill">{{ cat.label }}</a>
@@ -14,11 +18,41 @@
     <p class="article__dek">{{ article.dek }}</p>
     <p class="article__meta">{{ article.author }} &middot; {{ article.published_at }} &middot; {{ article.read_minutes }} min read</p>
 
-    <div class="article__content">
-      {% for paragraph in article.body %}
-        <p>{{ paragraph }}</p>
-      {% endfor %}
-    </div>
+    {% if article.body %}
+      <div class="article__content">
+        {% for paragraph in article.body %}
+          <p>{{ paragraph }}</p>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if article.template == 'gallery' %}
+      <div class="gallery">
+        {% for photo in article.photos %}
+          <figure class="gallery__item">
+            <img class="gallery__image" src="{{ photo.image }}" alt="{{ photo.caption or article.title }}" loading="lazy">
+            {% if photo.caption %}<figcaption class="gallery__caption">{{ photo.caption }}</figcaption>{% endif %}
+          </figure>
+        {% endfor %}
+      </div>
+    {% elif article.template == 'listicle' %}
+      <ol class="listicle">
+        {% for item in article['items'] %}
+          <li class="listicle__item">
+            <div class="listicle__number">{{ loop.index }}</div>
+            <div class="listicle__item-body">
+              <h2 class="listicle__heading">{{ item.heading }}</h2>
+              {% if item.image %}
+                <img class="listicle__image" src="{{ item.image }}" alt="{{ item.heading }}" loading="lazy">
+              {% endif %}
+              {% for paragraph in item.body %}
+                <p>{{ paragraph }}</p>
+              {% endfor %}
+            </div>
+          </li>
+        {% endfor %}
+      </ol>
+    {% endif %}
 
     <a href="/" class="article__back">&larr; Back to all articles</a>
   </div>
@@ -31,8 +65,8 @@
     {% for a in related %}
       {% set rcat = categories[a.category] %}
       <a href="/article/{{ a.slug }}" class="card">
-        <div class="card__media" style="background: linear-gradient(135deg, {{ rcat.color }} 0%, {{ rcat.color }}cc 100%);">
-          <span class="card__media-emoji">{{ rcat.emoji }}</span>
+        <div class="card__media" style="{% if a.cover_image %}background-image: url('{{ a.cover_image }}'); background-size: cover; background-position: center;{% else %}background: linear-gradient(135deg, {{ rcat.color }} 0%, {{ rcat.color }}cc 100%);{% endif %}">
+          {% if not a.cover_image %}<span class="card__media-emoji">{{ rcat.emoji }}</span>{% endif %}
           <div class="card__scrim"></div>
           <div class="card__overlay">
             <span class="card__pill">{{ rcat.label }}</span>

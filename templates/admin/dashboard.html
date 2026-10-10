@@ -1,0 +1,30 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Stories{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <h1>Stories</h1>
+  <a href="{{ url_for('admin.story_new') }}" class="admin-btn admin-btn--primary">+ New story</a>
+</div>
+
+{% if not articles %}
+  <p class="admin-empty">No stories yet — write your first one.</p>
+{% else %}
+  <div class="admin-table">
+    {% for article in articles %}
+      <a href="{{ url_for('admin.story_edit', slug=article.slug) }}" class="admin-row">
+        <div class="admin-row__thumb" style="{% if article.cover_image %}background-image: url('{{ article.cover_image }}'); background-size: cover; background-position: center;{% else %}background: {{ categories[article.category].color }};{% endif %}">
+          {% if not article.cover_image %}{{ categories[article.category].emoji }}{% endif %}
+        </div>
+        <div class="admin-row__main">
+          <div class="admin-row__title">{{ article.title }}</div>
+          <div class="admin-row__meta">
+            {{ categories[article.category].label }} &middot; {{ templates.get(article.template, article.template) }} &middot; {{ article.published_at }} &middot; by {{ article.author }}
+          </div>
+        </div>
+        <span class="admin-row__edit">Edit →</span>
+      </a>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}

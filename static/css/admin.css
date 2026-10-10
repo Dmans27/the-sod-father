@@ -1,0 +1,206 @@
+/* The Sod Father -- admin portal. Reuses style.css's color variables and
+   font stack for consistency with the public site, but otherwise is its
+   own simple back-office look: no hamburger menu, no article sheet, just
+   forms and a list. */
+
+.admin-body { background: var(--cream-deep); min-height: 100vh; }
+
+.admin-header {
+  background: var(--fairway-deep);
+  padding-top: max(env(safe-area-inset-top), 20px);
+}
+.admin-header__inner {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.admin-header__brand { color: #fff; font-weight: 800; text-decoration: none; font-size: 16px; }
+.admin-header__brand span { font-weight: 600; opacity: 0.7; font-size: 13px; margin-left: 4px; }
+.admin-header__nav { display: flex; gap: 16px; flex-wrap: wrap; }
+.admin-header__nav a {
+  color: rgba(255,255,255,0.88);
+  text-decoration: none;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+.admin-header__nav a:hover { color: #fff; text-decoration: underline; }
+
+.admin-main { max-width: 960px; margin: 0 auto; padding: 28px 20px 70px; }
+
+.admin-page-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 22px;
+  flex-wrap: wrap;
+}
+.admin-page-head h1 { font-size: 24px; color: var(--fairway-deep); margin: 0; }
+
+.admin-empty { color: var(--ink-faint); padding: 20px 0; }
+
+/* ── Buttons ── */
+.admin-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--ink);
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 16px;
+  border-radius: 10px;
+  text-decoration: none;
+  cursor: pointer;
+}
+.admin-btn:hover { background: var(--cream); }
+.admin-btn--primary { background: var(--fairway-deep); border-color: var(--fairway-deep); color: #fff; }
+.admin-btn--primary:hover { background: var(--fairway); }
+.admin-btn--block { width: 100%; }
+
+/* ── Flash messages ── */
+.admin-flashes { margin-bottom: 20px; display: flex; flex-direction: column; gap: 8px; }
+.admin-flash {
+  padding: 12px 14px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+}
+.admin-flash--success { background: rgba(45,106,79,0.12); color: var(--fairway-deep); }
+.admin-flash--warning { background: rgba(184,134,11,0.14); color: #7a5c08; }
+.admin-flash--error { background: rgba(164,48,63,0.1); color: #7d2432; }
+.admin-flash--error ul { margin: 6px 0 0; padding-left: 18px; }
+
+/* ── Dashboard list ── */
+.admin-table { display: flex; flex-direction: column; gap: 10px; }
+.admin-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 14px;
+  text-decoration: none;
+  color: inherit;
+}
+.admin-row:hover { border-color: var(--fairway); }
+.admin-row__thumb {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 9px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  color: #fff;
+}
+.admin-row__main { min-width: 0; flex: 1; }
+.admin-row__title { font-weight: 800; color: var(--fairway-deep); }
+.admin-row__meta { font-size: 12.5px; color: var(--ink-faint); margin-top: 2px; }
+.admin-row__edit { font-size: 13px; font-weight: 700; color: var(--fairway); flex-shrink: 0; }
+
+/* ── Forms ── */
+.admin-form { display: flex; flex-direction: column; gap: 18px; }
+.admin-form__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+.admin-field { display: flex; flex-direction: column; gap: 6px; font-size: 13.5px; font-weight: 700; color: var(--ink-soft); }
+.admin-field input[type="text"],
+.admin-field input[type="password"],
+.admin-field input[type="date"],
+.admin-field input[type="file"],
+.admin-field select,
+.admin-field textarea {
+  font: inherit;
+  font-weight: 400;
+  font-size: 15px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.admin-field textarea { resize: vertical; line-height: 1.6; font-family: inherit; }
+.admin-field input:focus, .admin-field select:focus, .admin-field textarea:focus {
+  outline: 2px solid var(--fairway);
+  outline-offset: 1px;
+}
+
+.admin-hint { font-size: 13px; color: var(--ink-faint); margin: -6px 0 4px; }
+
+.admin-template-section {
+  border-top: 1px solid var(--line);
+  padding-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.admin-repeat-row { display: flex; gap: 12px; align-items: flex-start; }
+.admin-repeat-row__num {
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: var(--cream-deep);
+  color: var(--ink-faint);
+  font-weight: 800;
+  font-size: 12.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 6px;
+}
+.admin-repeat-row__fields {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.admin-repeat-row__fields .admin-field:last-child { grid-column: 1 / -1; }
+
+.admin-thumb { display: block; max-width: 220px; border-radius: 8px; margin-bottom: 4px; }
+.admin-thumb--small { max-width: 120px; }
+
+.admin-form__actions { display: flex; gap: 10px; padding-top: 6px; }
+
+/* ── Login ── */
+.admin-login-body { background: var(--fairway-deep); min-height: 100vh; }
+.admin-login { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.admin-login__card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 28px 26px;
+  width: 100%;
+  max-width: 340px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.25);
+}
+.admin-login__brand { font-weight: 800; color: var(--fairway-deep); margin-bottom: 18px; font-size: 16px; }
+.admin-login__brand span { font-weight: 600; opacity: 0.6; font-size: 13px; margin-left: 4px; }
+.admin-login__error {
+  background: rgba(164,48,63,0.1);
+  color: #7d2432;
+  font-size: 13.5px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
+.admin-login form { display: flex; flex-direction: column; gap: 14px; }
+
+@media (max-width: 520px) {
+  .admin-repeat-row__fields { grid-template-columns: 1fr; }
+}

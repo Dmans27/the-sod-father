@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>{% block title %}Admin{% endblock %} — The Sod Father</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body class="admin-body">
+  <header class="admin-header">
+    <div class="admin-header__inner">
+      <a href="{{ url_for('admin.dashboard') }}" class="admin-header__brand">⛳ The Sod Father <span>admin</span></a>
+      <nav class="admin-header__nav">
+        <a href="{{ url_for('admin.dashboard') }}">Stories</a>
+        <a href="{{ url_for('admin.story_new') }}">+ New story</a>
+        <a href="/" target="_blank" rel="noopener">View site ↗</a>
+        <a href="{{ url_for('admin.logout') }}">Log out</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="admin-main">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="admin-flashes">
+          {% for category, message in messages %}
+            <div class="admin-flash admin-flash--{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+
+    {% block admin_content %}{% endblock %}
+  </main>
+</body>
+</html>

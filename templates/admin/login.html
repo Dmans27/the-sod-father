@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Admin — The Sod Father</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/admin.css">
+</head>
+<body class="admin-login-body">
+  <main class="admin-login">
+    <div class="admin-login__card">
+      <div class="admin-login__brand">⛳ The Sod Father <span>admin</span></div>
+
+      {% if not_configured %}
+        <p class="admin-login__error">
+          No admin password is set up yet. Add an <code>ADMIN_PASSWORD</code>
+          environment variable in Render, then redeploy.
+        </p>
+      {% else %}
+        {% if error %}<p class="admin-login__error">{{ error }}</p>{% endif %}
+        <form method="post" action="{{ url_for('admin.login_submit') }}{% if request.args.get('next') %}?next={{ request.args.get('next') }}{% endif %}">
+          <label class="admin-field">
+            <span>Password</span>
+            <input type="password" name="password" autofocus required>
+          </label>
+          <button type="submit" class="admin-btn admin-btn--primary admin-btn--block">Log in</button>
+        </form>
+      {% endif %}
+    </div>
+  </main>
+</body>
+</html>
