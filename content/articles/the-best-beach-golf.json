@@ -8,6 +8,7 @@
   "author_photo": "/static/uploads/authors/daniel-mansfield/photo.jpg",
   "published_at": "2026-10-10",
   "cover_image": "/static/uploads/the-best-beach-golf/cover_image.jpg",
+  "featured": true,
   "blocks": [
     {
       "type": "paragraph",
