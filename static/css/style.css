@@ -459,34 +459,34 @@ body.site-menu-open { overflow: hidden; }
    up top (name/date/read time) is for context before you start reading;
    this is a sign-off once you're done, so the name reads on its own,
    bolder, with no date/read-time clutering it up. The photo is a bigger,
-   uncropped rectangle (not the small circular avatar used up top)
-   positioned to overhang the bottom-right corner of this block -- it
-   bleeds past the card's own bottom edge and gets a drop shadow, so it
-   reads as "popping out" of the corner rather than sitting neatly inside
-   a row. padding-right/padding-bottom on the card itself reserve the
-   room the photo needs so it never runs over the name or the "Back to
-   all articles" link beneath it. No author_photo set -> the --no-photo
-   modifier drops that reserved space, since otherwise it'd just be a
-   dead gap under the name. */
+   uncropped rectangle (not the small circular avatar used up top) that
+   fills the bottom-right corner of this block: top edge flush with the
+   section line (never above it), right/bottom edges flush with the
+   card's own corner. min-height on the card is what gives the photo
+   somewhere to be tall -- without it the card would only be as tall as
+   the name text and the photo would have no room below the line.
+   No author_photo set -> the --no-photo modifier drops the reserved
+   width/height, since otherwise it'd just be a dead gap under the name. */
 .article__author-card {
   position: relative;
   margin: 28px 0 28px;
-  padding: 20px 136px 36px 0;
+  min-height: 150px;
+  padding: 20px 150px 0 0;
   border-top: 1px solid var(--line);
 }
 .article__author-card--no-photo {
+  min-height: 0;
   padding-right: 0;
   padding-bottom: 20px;
 }
 .article__author-card-avatar {
   position: absolute;
+  top: 0;
   right: 0;
-  bottom: -24px;
-  width: 116px;
-  height: 148px;
+  bottom: 0;
+  width: 150px;
   object-fit: cover;
-  border-radius: 14px 0 0 0;
-  box-shadow: 0 14px 28px rgba(43, 54, 47, 0.28);
+  box-shadow: -8px 0 20px rgba(43, 54, 47, 0.18);
 }
 .article__author-card-info {
   display: flex;
