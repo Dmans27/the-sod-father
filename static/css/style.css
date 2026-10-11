@@ -468,9 +468,13 @@ body.site-menu-open { overflow: hidden; }
    No author_photo set -> the --no-photo modifier drops the reserved
    width/height, since otherwise it'd just be a dead gap under the name.
    border-bottom frames the block to match border-top -- since the photo
-   is bottom:0 inside this box, that line lands right at the photo's own
+   fills this box edge-to-edge, that line lands right at the photo's own
    bottom edge instead of floating further down past "Back to all
-   articles". */
+   articles". (height:100% rather than just "top:0;bottom:0" -- an <img>
+   is a replaced element, and browsers size those from the photo's own
+   aspect ratio first, which left a gap under any photo that wasn't
+   exactly this box's proportions. height:100% forces it to actually
+   fill the box, same as object-fit:cover already does horizontally.) */
 .article__author-card {
   position: relative;
   margin: 28px 0 20px;
@@ -490,6 +494,7 @@ body.site-menu-open { overflow: hidden; }
   right: 0;
   bottom: 0;
   width: 150px;
+  height: 100%;
   object-fit: cover;
   box-shadow: -8px 0 20px rgba(43, 54, 47, 0.18);
 }
