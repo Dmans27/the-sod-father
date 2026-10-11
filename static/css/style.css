@@ -181,7 +181,7 @@ a { color: inherit; }
 body.site-menu-open { overflow: hidden; }
 
 /* ── Hero ── */
-.site-main { max-width: 1080px; margin: 0 auto; padding: 0 20px 60px; background-color: #fff; }
+.site-main { max-width: 1080px; margin: 0 auto; padding: 0 20px 60px; }
 .hero { padding: 28px 0 20px; }
 .hero__title {
   font-family: var(--font-serif);
@@ -458,10 +458,13 @@ body.site-menu-open { overflow: hidden; }
    A second, bigger author credit after the story text -- the small byline
    up top (name/date/read time) is for context before you start reading;
    this is a sign-off once you're done, so the name reads on its own,
-   bolder, with no date/read-time clutering it up. */
+   bolder, with no date/read-time clutering it up. The photo sits in the
+   bottom-right corner of this block (name/label on the left, photo
+   bottom-aligned on the right) rather than beside the name. */
 .article__author-card {
   display: flex;
-  align-items: center;
+  align-items: flex-end;
+  justify-content: space-between;
   gap: 14px;
   margin: 28px 0 4px;
   padding-top: 20px;
@@ -609,7 +612,7 @@ body.site-menu-open { overflow: hidden; }
   width: 100%;
   max-width: 720px;
   max-height: 90vh;
-  background: #fff;
+  background: var(--cream);
   border-radius: 20px 20px 0 0;
   box-shadow: 0 -8px 32px rgba(27, 42, 31, 0.3);
   display: flex;

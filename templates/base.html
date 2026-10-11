@@ -157,11 +157,12 @@
         var avatar = article.author_photo ? '<img class="article__avatar" src="' + article.author_photo + '" alt="">' : '';
         var authorCardAvatar = article.author_photo ? '<img class="article__author-card-avatar" src="' + article.author_photo + '" alt="">' : '';
         var authorCardHtml =
-          '<div class="article__author-card">' + authorCardAvatar +
+          '<div class="article__author-card">' +
             '<div class="article__author-card-info">' +
               '<span class="article__author-card-label">Written by</span>' +
               '<span class="article__author-card-name">' + article.author + '</span>' +
             '</div>' +
+            authorCardAvatar +
           '</div>';
 
         inner.innerHTML =
