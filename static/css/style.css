@@ -474,12 +474,20 @@ body.site-menu-open { overflow: hidden; }
    is a replaced element, and browsers size those from the photo's own
    aspect ratio first, which left a gap under any photo that wasn't
    exactly this box's proportions. height:100% forces it to actually
-   fill the box, same as object-fit:cover already does horizontally.) */
+   fill the box, same as object-fit:cover already does horizontally.)
+   min-height is kept close to the actual text height now -- tall enough
+   for the photo to read as a photo, not so tall it leaves dead cream
+   space down the left side where there's no text to fill it. A negative
+   margin-right on the whole card (not just the photo) bleeds it a bit
+   past the page's own text column, out into the side gutter the rest of
+   the article respects -- the border-top/border-bottom move with it, so
+   the frame still ends exactly at the photo's edge instead of stopping
+   short of it. */
 .article__author-card {
   position: relative;
-  margin: 28px 0 20px;
-  min-height: 150px;
-  padding: 20px 150px 0 0;
+  margin: 28px -12px 20px 0;
+  min-height: 104px;
+  padding: 20px 140px 0 0;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
@@ -487,6 +495,7 @@ body.site-menu-open { overflow: hidden; }
   min-height: 0;
   padding-right: 0;
   padding-bottom: 20px;
+  margin-right: 0;
 }
 .article__author-card-avatar {
   position: absolute;
