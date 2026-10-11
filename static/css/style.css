@@ -458,24 +458,35 @@ body.site-menu-open { overflow: hidden; }
    A second, bigger author credit after the story text -- the small byline
    up top (name/date/read time) is for context before you start reading;
    this is a sign-off once you're done, so the name reads on its own,
-   bolder, with no date/read-time clutering it up. The photo sits in the
-   bottom-right corner of this block (name/label on the left, photo
-   bottom-aligned on the right) rather than beside the name. */
+   bolder, with no date/read-time clutering it up. The photo is a bigger,
+   uncropped rectangle (not the small circular avatar used up top)
+   positioned to overhang the bottom-right corner of this block -- it
+   bleeds past the card's own bottom edge and gets a drop shadow, so it
+   reads as "popping out" of the corner rather than sitting neatly inside
+   a row. padding-right/padding-bottom on the card itself reserve the
+   room the photo needs so it never runs over the name or the "Back to
+   all articles" link beneath it. No author_photo set -> the --no-photo
+   modifier drops that reserved space, since otherwise it'd just be a
+   dead gap under the name. */
 .article__author-card {
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 14px;
-  margin: 28px 0 4px;
-  padding-top: 20px;
+  position: relative;
+  margin: 28px 0 28px;
+  padding: 20px 136px 36px 0;
   border-top: 1px solid var(--line);
 }
+.article__author-card--no-photo {
+  padding-right: 0;
+  padding-bottom: 20px;
+}
 .article__author-card-avatar {
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
+  position: absolute;
+  right: 0;
+  bottom: -24px;
+  width: 116px;
+  height: 148px;
   object-fit: cover;
-  flex-shrink: 0;
+  border-radius: 14px 0 0 0;
+  box-shadow: 0 14px 28px rgba(43, 54, 47, 0.28);
 }
 .article__author-card-info {
   display: flex;

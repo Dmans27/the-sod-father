@@ -41,7 +41,7 @@
       </div>
     {% endif %}
 
-    <div class="article__author-card">
+    <div class="article__author-card{% if not article.author_photo %} article__author-card--no-photo{% endif %}">
       <div class="article__author-card-info">
         <span class="article__author-card-label">Written by</span>
         <span class="article__author-card-name">{{ article.author }}</span>
