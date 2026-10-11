@@ -454,6 +454,45 @@ body.site-menu-open { overflow: hidden; }
 }
 .article__back:hover { text-decoration: underline; }
 
+/* ── Author sign-off ──
+   A second, bigger author credit after the story text -- the small byline
+   up top (name/date/read time) is for context before you start reading;
+   this is a sign-off once you're done, so the name reads on its own,
+   bolder, with no date/read-time clutering it up. */
+.article__author-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 28px 0 4px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+}
+.article__author-card-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+.article__author-card-info {
+  display: flex;
+  flex-direction: column;
+}
+.article__author-card-label {
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.article__author-card-name {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--ink);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
 /* ── Story blocks ──
    Stories are built in the admin portal as a sequence of typed blocks
    (paragraph/photo/quote/subheading/embed) in whatever order the writer

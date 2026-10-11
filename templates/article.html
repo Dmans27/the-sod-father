@@ -41,6 +41,14 @@
       </div>
     {% endif %}
 
+    <div class="article__author-card">
+      {% if article.author_photo %}<img class="article__author-card-avatar" src="{{ article.author_photo }}" alt="">{% endif %}
+      <div class="article__author-card-info">
+        <span class="article__author-card-label">Written by</span>
+        <span class="article__author-card-name">{{ article.author }}</span>
+      </div>
+    </div>
+
     <a href="/" class="article__back">&larr; Back to all articles</a>
   </div>
 </article>

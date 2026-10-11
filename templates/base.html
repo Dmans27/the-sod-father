@@ -155,6 +155,14 @@
           ? '<div class="article-sheet__hero" style="background-image: url(\'' + article.cover_image + '\'); background-size: cover; background-position: center;"></div>'
           : '';
         var avatar = article.author_photo ? '<img class="article__avatar" src="' + article.author_photo + '" alt="">' : '';
+        var authorCardAvatar = article.author_photo ? '<img class="article__author-card-avatar" src="' + article.author_photo + '" alt="">' : '';
+        var authorCardHtml =
+          '<div class="article__author-card">' + authorCardAvatar +
+            '<div class="article__author-card-info">' +
+              '<span class="article__author-card-label">Written by</span>' +
+              '<span class="article__author-card-name">' + article.author + '</span>' +
+            '</div>' +
+          '</div>';
 
         inner.innerHTML =
           heroHtml +
@@ -165,6 +173,7 @@
             '<div class="article__byline">' + avatar + '<p class="article__meta">' + article.author + ' &middot; ' + article.published_at + ' &middot; ' + article.read_minutes + ' min read</p></div>' +
             '<div class="article__content" id="article-sheet-content">' + blocksHtml(short.blocks) + '</div>' +
             (short.truncated ? '<button type="button" class="article-sheet__readmore" id="article-sheet-readmore">Read more</button>' : '') +
+            authorCardHtml +
           '</div>';
 
         if (short.truncated) {
