@@ -70,8 +70,8 @@
     <span><input type="checkbox" name="featured" value="1" {% if a.get('featured') %}checked{% endif %}> Feature this story on the homepage</span>
   </label>
   <p class="admin-hint" style="margin-top:-12px;">
-    Shows big, up top, above the regular story grid. Only one story is featured at a time —
-    if more than one is checked, the most recently published one wins.
+    Shows big, up top, above the regular story list. Up to 3 stories can be featured at once,
+    newest first — if more than 3 are checked, the oldest checked ones just stop showing up top.
   </p>
 
   <label class="admin-field">
@@ -454,7 +454,7 @@
               '<p class="hero-story__meta">' + escapeHtml(authorName) + ' &middot; ' + readMinutes + ' min read</p>' +
             '</div>' +
           '</div>';
-        label.textContent = 'This is how it will look as the homepage hero:';
+        label.textContent = 'This is how it will look as a featured story up top (stacked with any others you\'ve featured, newest first):';
       } else {
         var thumb = coverUrl
           ? '<div class="story-row__thumb" style="background-image: url(\'' + coverUrl + '\'); background-size: cover; background-position: center;"></div>'

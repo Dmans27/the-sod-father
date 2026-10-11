@@ -77,7 +77,7 @@ def dashboard():
         "admin/dashboard.html",
         articles=articles,
         categories=CATEGORIES,
-        featured_slug=featured["slug"] if featured else None,
+        featured_slugs={a["slug"] for a in featured},
     )
 
 

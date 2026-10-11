@@ -126,11 +126,14 @@ def get_related(article, limit=3):
     return (same_category + different_category)[:limit]
 
 
+MAX_FEATURED = 3
+
+
 def get_featured(articles):
-    """The homepage's hero story -- picked by hand in the admin portal (the
-    "Feature this story" checkbox) rather than any ranking. `articles` is
-    expected already sorted newest-first (get_articles() does that), so if
-    more than one story is checked -- easy to forget to uncheck the old
-    one -- the most recently published one wins, not an arbitrary one."""
+    """The homepage's hero stories -- picked by hand in the admin portal
+    (the "Feature this story" checkbox) rather than any ranking. `articles`
+    is expected already sorted newest-first (get_articles() does that), so
+    if more than MAX_FEATURED are checked, the newest ones win and older
+    checked boxes simply stop having an effect rather than erroring."""
     featured = [a for a in articles if a.get("featured")]
-    return featured[0] if featured else None
+    return featured[:MAX_FEATURED]

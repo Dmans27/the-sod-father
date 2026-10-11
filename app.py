@@ -30,17 +30,19 @@ app.register_blueprint(author_bp)
 
 @app.get("/")
 def home():
-    # The hero story (if one's been picked via the admin portal's "Feature
-    # this story" checkbox) gets pulled out of the grid and rendered up top
-    # instead -- `articles` is what the grid loops over, `all_articles` is
-    # the full list including the hero, used for the inline-sheet JS data
-    # so clicking the hero opens the same popup the grid cards do.
+    # Up to content.MAX_FEATURED hero stories (picked via the admin
+    # portal's "Feature this story" checkbox) get pulled out of the list
+    # and rendered up top instead, newest first -- `articles` is what the
+    # list loops over, `all_articles` is the full set including the
+    # featured ones, used for the inline-sheet JS data so clicking a hero
+    # opens the same popup a list row does.
     all_articles = get_articles()
     featured = get_featured(all_articles)
-    grid_articles = [a for a in all_articles if not featured or a["slug"] != featured["slug"]]
+    featured_slugs = {a["slug"] for a in featured}
+    list_articles = [a for a in all_articles if a["slug"] not in featured_slugs]
     return render_template(
         "index.html",
-        articles=grid_articles,
+        articles=list_articles,
         all_articles=all_articles,
         featured=featured,
         categories=CATEGORIES,
@@ -52,14 +54,14 @@ def home():
 def category_page(slug):
     if slug not in CATEGORIES:
         abort(404)
-    # Category pages stay a plain grid -- no hero story there, same as a
+    # Category pages stay a plain list -- no hero stories there, same as a
     # section front usually looks different from a homepage.
     filtered = [a for a in get_articles() if a["category"] == slug]
     return render_template(
         "index.html",
         articles=filtered,
         all_articles=filtered,
-        featured=None,
+        featured=[],
         categories=CATEGORIES,
         active_category=slug,
     )

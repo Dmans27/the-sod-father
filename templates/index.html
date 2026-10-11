@@ -15,22 +15,22 @@
   </p>
 </section>
 
-{% if featured %}
-  {% set fcat = categories[featured.category] %}
-  <a href="/article/{{ featured.slug }}" class="hero-story{% if not featured.cover_image %} hero-story--plain{% endif %}" data-slug="{{ featured.slug }}">
-    {% if featured.cover_image %}
-      <div class="hero-story__media" style="background-image: url('{{ featured.cover_image }}'); background-size: cover; background-position: center;">
+{% for story in featured %}
+  {% set fcat = categories[story.category] %}
+  <a href="/article/{{ story.slug }}" class="hero-story{% if not story.cover_image %} hero-story--plain{% endif %}" data-slug="{{ story.slug }}">
+    {% if story.cover_image %}
+      <div class="hero-story__media" style="background-image: url('{{ story.cover_image }}'); background-size: cover; background-position: center;">
         <div class="hero-story__scrim"></div>
       </div>
     {% endif %}
     <div class="hero-story__content">
       <span class="hero-story__pill">{{ fcat.label }}</span>
-      <h2 class="hero-story__title">{{ featured.title }}</h2>
-      <p class="hero-story__dek">{{ featured.dek }}</p>
-      <p class="hero-story__meta">{{ featured.author }} &middot; {{ featured.read_minutes }} min read</p>
+      <h2 class="hero-story__title">{{ story.title }}</h2>
+      <p class="hero-story__dek">{{ story.dek }}</p>
+      <p class="hero-story__meta">{{ story.author }} &middot; {{ story.read_minutes }} min read</p>
     </div>
   </a>
-{% endif %}
+{% endfor %}
 
 <div class="story-list" id="card-grid">
   {% for article in articles %}
