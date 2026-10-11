@@ -466,13 +466,18 @@ body.site-menu-open { overflow: hidden; }
    somewhere to be tall -- without it the card would only be as tall as
    the name text and the photo would have no room below the line.
    No author_photo set -> the --no-photo modifier drops the reserved
-   width/height, since otherwise it'd just be a dead gap under the name. */
+   width/height, since otherwise it'd just be a dead gap under the name.
+   border-bottom frames the block to match border-top -- since the photo
+   is bottom:0 inside this box, that line lands right at the photo's own
+   bottom edge instead of floating further down past "Back to all
+   articles". */
 .article__author-card {
   position: relative;
-  margin: 28px 0 28px;
+  margin: 28px 0 20px;
   min-height: 150px;
   padding: 20px 150px 0 0;
   border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 .article__author-card--no-photo {
   min-height: 0;
