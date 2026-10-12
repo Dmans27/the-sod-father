@@ -58,6 +58,38 @@
   </footer>
 
   <script>
+    // The author sign-off photo should fill the card exactly -- top edge
+    // flush with the border line above it, bottom edge flush with the
+    // border line below it -- matching whatever height the "Written by /
+    // Name" text needs, no taller and no shorter. The CSS for that
+    // (height:100% on an absolutely-positioned photo inside a
+    // position:relative card whose own height is just "auto", driven by
+    // the text) renders correctly in Chromium but NOT consistently in
+    // Safari/WebKit (confirmed via screenshots on an iPhone: the photo
+    // falls back to its own natural aspect-ratio height instead of
+    // stretching, which is what brings the dead-space gap back). Rather
+    // than fight that cross-browser inconsistency in CSS, this measures
+    // the card's real rendered height in JS and sets the photo to match
+    // in pixels -- that behaves identically in every browser.
+    function syncAuthorCardPhoto(card) {
+      var photo = card.querySelector('.article__author-card-avatar');
+      if (!photo) return;
+      photo.style.height = card.clientHeight + 'px';
+    }
+    function syncAllAuthorCardPhotos() {
+      Array.prototype.forEach.call(document.querySelectorAll('.article__author-card'), syncAuthorCardPhoto);
+    }
+    window.addEventListener('load', syncAllAuthorCardPhotos);
+    window.addEventListener('resize', syncAllAuthorCardPhotos);
+    if (document.fonts && document.fonts.ready) {
+      // Web fonts can swap in after first paint and shift text metrics
+      // slightly, which would throw the pixel-matched height off by a
+      // few px -- re-sync once they're actually loaded.
+      document.fonts.ready.then(syncAllAuthorCardPhotos);
+    }
+  </script>
+
+  <script>
     // No-op on a regular browser visit -- window.Capacitor only exists when
     // this page is loaded inside the iOS app's native shell. There,
     // capacitor.config.ts turns off the splash screen's timer-based
@@ -176,6 +208,9 @@
             (short.truncated ? '<button type="button" class="article-sheet__readmore" id="article-sheet-readmore">Read more</button>' : '') +
             authorCardHtml +
           '</div>';
+
+        var newAuthorCard = inner.querySelector('.article__author-card');
+        if (newAuthorCard) syncAuthorCardPhoto(newAuthorCard);
 
         if (short.truncated) {
           document.getElementById('article-sheet-readmore').addEventListener('click', function () {
