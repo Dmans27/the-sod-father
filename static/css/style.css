@@ -200,29 +200,31 @@ body.site-menu-open { overflow: hidden; }
 .hero__sub a:hover { text-decoration: underline; }
 
 /* ── Hero story ──
-   The homepage's featured story (picked by hand in the admin portal, not
-   ranked automatically -- see content.py's get_featured). Deliberately
-   built differently from a regular .card: text sits below the image
-   instead of overlaid on it, and the headline switches to a serif, so the
-   one story getting the "big story" treatment actually reads as distinct
-   from the grid below it, not just a bigger version of the same card. */
+   The homepage's featured story/stories (picked by hand in the admin
+   portal, not ranked automatically -- see content.py's get_featured).
+   No card: no box, no shadow, no white background -- same shared page
+   background as everything else, matching the plain bordered-list look
+   used below. Still reads as "the big story" because the image and
+   headline are simply bigger, and a hairline border-bottom gives each
+   one (and the handoff into the regular list) a comfortable, clearly
+   separated gap, the same device .story-row uses between its own rows. */
 .hero-story {
   display: block;
   text-decoration: none;
   color: inherit;
-  border-radius: 20px;
-  overflow: hidden;
-  box-shadow: 0 4px 20px rgba(27,42,31,0.18);
-  margin-bottom: 20px;
-  transition: transform 0.15s, box-shadow 0.15s;
+  padding-bottom: 28px;
+  margin-bottom: 28px;
+  border-bottom: 1px solid var(--line);
 }
-.hero-story:hover { transform: translateY(-2px); box-shadow: 0 10px 30px rgba(27,42,31,0.24); }
 .hero-story__media {
   position: relative;
   aspect-ratio: 16 / 9;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 16px;
 }
 .hero-story__emoji { font-size: 64px; opacity: 0.9; }
 .hero-story__scrim {
@@ -230,10 +232,7 @@ body.site-menu-open { overflow: hidden; }
   inset: 0;
   background: linear-gradient(to bottom, rgba(0,0,0,0) 60%, rgba(0,0,0,0.15) 100%);
 }
-.hero-story__content {
-  background: #fff;
-  padding: 18px 18px 22px;
-}
+.hero-story__content { background: transparent; }
 .hero-story__pill {
   display: inline-block;
   font-size: 11px;
@@ -255,6 +254,7 @@ body.site-menu-open { overflow: hidden; }
   color: var(--fairway-deep);
   margin: 0 0 8px;
 }
+.hero-story:hover .hero-story__title { color: var(--fairway); }
 .hero-story__dek {
   font-size: 16px;
   color: var(--ink-soft);
@@ -275,12 +275,6 @@ body.site-menu-open { overflow: hidden; }
 @media (max-width: 420px) {
   .hero-story__title { font-size: 24px; }
 }
-
-/* A featured story with no cover photo skips .hero-story__media entirely --
-   .hero-story__content already reads as a clean text-only header on its
-   own (white background, dark serif title), so there's nothing else to
-   override here. */
-.hero-story--plain { box-shadow: 0 2px 14px rgba(27,42,31,0.14); }
 
 /* ── Story list ──
    A single continuous list, divided by hairline borders rather than
