@@ -479,7 +479,7 @@ body.site-menu-open { overflow: hidden; }
    short of it. */
 .article__author-card {
     position: relative;
-    margin: 27px -21px -9px 0px;
+    margin: 27px -21px -20px 0px;
     min-height: 96px;
     padding: 15px 134px 0px 0px;
     border-top: 1px solid var(--line);
