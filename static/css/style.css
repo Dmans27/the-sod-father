@@ -456,31 +456,33 @@ body.site-menu-open { overflow: hidden; }
    uncropped rectangle (not the small circular avatar used up top) that
    fills the bottom-right corner of this block: top edge flush with the
    section line (never above it), right/bottom edges flush with the
-   card's own corner. min-height on the card is what gives the photo
-   somewhere to be tall -- without it the card would only be as tall as
-   the name text and the photo would have no room below the line.
+   card's own corner. The card has no min-height -- it sizes to the text
+   (padding + the two lines), and the photo is pinned top:0/height:100%
+   (plus a JS pixel-height fallback, see base.html) so it always matches
+   that same height exactly, no taller.
    No author_photo set -> the --no-photo modifier drops the reserved
    width/height, since otherwise it'd just be a dead gap under the name.
    border-bottom frames the block to match border-top -- since the photo
    fills this box edge-to-edge, that line lands right at the photo's own
-   bottom edge instead of floating further down past "Back to all
-   articles". (height:100% rather than just "top:0;bottom:0" -- an <img>
-   is a replaced element, and browsers size those from the photo's own
-   aspect ratio first, which left a gap under any photo that wasn't
-   exactly this box's proportions. height:100% forces it to actually
-   fill the box, same as object-fit:cover already does horizontally.)
-   min-height is kept close to the actual text height now -- tall enough
-   for the photo to read as a photo, not so tall it leaves dead cream
-   space down the left side where there's no text to fill it. A negative
-   margin-right on the whole card (not just the photo) bleeds it a bit
-   past the page's own text column, out into the side gutter the rest of
-   the article respects -- the border-top/border-bottom move with it, so
-   the frame still ends exactly at the photo's edge instead of stopping
-   short of it. */
+   bottom edge.
+   padding-bottom is deliberately small (not matched to padding-top) --
+   with equal padding on both sides, the two-line text sat centered in
+   the box while the photo filled it edge-to-edge, so the photo read as
+   flush with the bottom border and the text didn't, which is what kept
+   coming back as "dead space" even once the box itself was sized
+   correctly (measured pixel-for-pixel against a user screenshot to
+   confirm: card and photo bottoms lined up exactly, only the text had
+   air under it). Shrinking just padding-bottom pulls the text's own
+   bottom close to the border too, so both halves of the row read as
+   flush with it. A negative margin-right on the whole card (not just
+   the photo) bleeds it a bit past the page's own text column, out into
+   the side gutter the rest of the article respects -- the
+   border-top/border-bottom move with it, so the frame still ends
+   exactly at the photo's edge instead of stopping short of it. */
 .article__author-card {
   position: relative;
   margin: 28px -12px 0 0;
-  padding: 20px 140px 16px 0;
+  padding: 20px 140px 4px 0;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
