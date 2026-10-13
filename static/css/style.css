@@ -676,7 +676,15 @@ body.site-menu-open { overflow: hidden; }
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   border-radius: inherit;
-  padding-bottom: env(safe-area-inset-bottom);
+  /* Full env(safe-area-inset-bottom) (~34px on a Face ID iPhone) was
+     reserved here so content never sits directly under the home-
+     indicator swipe bar in the native app -- but on a short article,
+     that's a big slab of visible blank cream below the author card with
+     nothing to explain it, which is exactly the "white space" that kept
+     getting flagged even after the card itself measured out correctly.
+     Capped it instead of dropping it entirely: still clears the gesture
+     bar a little, just nowhere near as much. */
+  padding-bottom: min(env(safe-area-inset-bottom), 10px);
 }
 
 .article-sheet__hero {
