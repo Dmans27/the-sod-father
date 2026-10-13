@@ -482,9 +482,8 @@ body.site-menu-open { overflow: hidden; }
 .article__author-card {
   position: relative;
   margin: 28px -12px 0 0;
-  padding: 17px 151px 4px 25px;
+  padding: 8px 151px 4px 30px;
   border-top: 1px solid var(--line);
-  border-bottom: 1px solid var(--line);
 }
 .article__author-card--no-photo {
   padding-right: 0;
