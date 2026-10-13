@@ -516,6 +516,13 @@ body.site-menu-open { overflow: hidden; }
 .article__author-card-info {
   display: flex;
   flex-direction: column;
+  /* This card sits at the very bottom of the page/popup, so on a phone
+     with rounded screen corners its last line (the name) can end up
+     right in the curve of the bottom-left corner and get visually
+     clipped there, even though it starts at the same x as everything
+     else above it. Nudging just this block in from the edge keeps it
+     clear of that corner without re-indenting the rest of the page. */
+  padding-left: 16px;
 }
 .article__author-card-label {
   font-size: 11.5px;
