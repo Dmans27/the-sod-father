@@ -49,10 +49,19 @@
       {% if article.author_photo %}<img class="article__author-card-avatar" src="{{ article.author_photo }}" alt="">{% endif %}
     </div>
 
-    <a href="/" class="article__back">&larr; Back to all articles</a>
+    {#
+      "Back to all articles" is switched off for now (Danny: "I do not
+      want any of this under my article card") -- commented out rather
+      than deleted so it's a one-line restore later.
+      <a href="/" class="article__back">&larr; Back to all articles</a>
+    #}
   </div>
 </article>
 
+{#
+  "Read next" / related-articles section is switched off for now, same
+  request -- commented out rather than deleted so it's a one-line
+  restore later (just un-comment this block).
 {% if related %}
 <section class="related">
   <h2 class="related__title">Read next</h2>
@@ -73,4 +82,5 @@
   </div>
 </section>
 {% endif %}
+#}
 {% endblock %}
