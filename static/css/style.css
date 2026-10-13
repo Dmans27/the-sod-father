@@ -486,7 +486,7 @@ body.site-menu-open { overflow: hidden; }
      .article__author-card-avatar) plus a little breathing room, so the
      reserved space is just big enough for the now-uncropped photo and
      doesn't leave a gap of its own next to it. */
-  padding: 20px 76px 4px 0;
+  padding: 0px 10px 7px 50px;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
