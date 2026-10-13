@@ -482,8 +482,13 @@ body.site-menu-open { overflow: hidden; }
 .article__author-card {
   position: relative;
   margin: 28px -12px 0 0;
-  padding: 8px 151px 4px 30px;
+  /* Right padding matches the photo's own width (see
+     .article__author-card-avatar) plus a little breathing room, so the
+     reserved space is just big enough for the now-uncropped photo and
+     doesn't leave a gap of its own next to it. */
+  padding: 20px 76px 4px 0;
   border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
 }
 .article__author-card--no-photo {
   padding-right: 0;
@@ -494,9 +499,18 @@ body.site-menu-open { overflow: hidden; }
   top: 0;
   right: 0;
   bottom: 0;
-  width: 150px;
+  /* Was 150px wide with object-fit:cover, which filled this box
+     edge-to-edge by cropping to a thin horizontal strip (the box is much
+     wider than it is tall) -- showing only a sliver of the face with the
+     top of the head and the shoulders cut off. object-fit:contain
+     shrinks the whole photo down to fit uncropped instead, and the width
+     is narrowed to roughly match the box's own height (close to square,
+     like the photo itself) so the smaller photo still fills its reserved
+     space rather than leaving a gap of its own next to it. */
+  width: 64px;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
+  object-position: right center;
   box-shadow: -8px 0 20px rgba(43, 54, 47, 0.18);
 }
 .article__author-card-info {
@@ -634,7 +648,7 @@ body.site-menu-open { overflow: hidden; }
   width: 100%;
   max-width: 720px;
   max-height: 90vh;
-  background: #ffff;
+  background: var(--cream);
   border-radius: 20px 20px 0 0;
   box-shadow: 0 -8px 32px rgba(27, 42, 31, 0.3);
   display: flex;
