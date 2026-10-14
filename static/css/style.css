@@ -519,7 +519,7 @@ body.site-menu-open { overflow: hidden; }
 .article__author-card-masthead {
   display: flex;
   flex-direction: column;
-  padding: 0px 55px 14px 0px;
+  padding: 0px 55px 0px 0px;
   align-items: flex-end;
   text-align: right;
   margin-left: auto;
