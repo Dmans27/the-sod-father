@@ -466,14 +466,16 @@ body.site-menu-open { overflow: hidden; }
    the old layout pinned the photo to the card's far right edge via
    absolute positioning, which left a big stretch of empty space between
    a short name and the photo on a wide card.
-   A negative margin-right on the whole card bleeds it a bit past the
-   page's own text column, out into the side gutter the rest of the
-   article respects. */
+   The card's own left/right edges line up exactly with the article text
+   column above it (no bleed past .article__body's padding on either
+   side) -- it used to carry negative left/right margins that let it
+   extend wider than the paragraph text, which read as off-center
+   against the text above it. */
 .article__author-card {
   display: flex;
   align-items: center;
   gap: 14px;
-  margin: 28px -12px 0 -15px;
+  margin: 28px 0 0 0;
   /* padding-right pulls the masthead text (the last thing in this flex
      row, flush with the card's own right edge) in enough to clear the
      phone's rounded bottom-right corner -- same reasoning as the
