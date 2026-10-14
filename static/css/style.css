@@ -499,17 +499,19 @@ body.site-menu-open { overflow: hidden; }
   top: 0;
   right: 0;
   bottom: 0;
-  /* Was 150px wide with object-fit:cover, which filled this box
-     edge-to-edge by cropping to a thin horizontal strip (the box is much
-     wider than it is tall) -- showing only a sliver of the face with the
-     top of the head and the shoulders cut off. object-fit:contain
-     shrinks the whole photo down to fit uncropped instead, and the width
-     is narrowed to roughly match the box's own height (close to square,
-     like the photo itself) so the smaller photo still fills its reserved
-     space rather than leaving a gap of its own next to it. */
+  /* This used object-fit:contain so the whole (then much wider,
+     background-heavy) photo would show uncropped -- but contain only
+     fills the box on one axis, so with the current photo's proportions
+     it left a visible strip of plain background color down one side of
+     the box, read as a stray gap next to the photo. Now that the photo
+     itself is cropped in close on him, object-fit:cover (which always
+     fills the box completely, cropping slightly instead of
+     letterboxing) no longer cuts off his head/shoulders the way it did
+     with the old, much-wider source photo -- it just trims a small,
+     even sliver off the top and bottom. */
   width: 64px;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   object-position: right center;
   box-shadow: -8px 0 20px rgba(43, 54, 47, 0.18);
 }
@@ -518,15 +520,11 @@ body.site-menu-open { overflow: hidden; }
   flex-direction: column;
   /* This card sits at the very bottom of the page/popup, so on a phone
      with rounded screen corners its last line (the name) can end up
-     right in the curve of the bottom-left corner and get visually
-     clipped there, even though it starts at the same x as everything
-     else above it. Nudging just this block in from the edge keeps it
-     clear of that corner without re-indenting the rest of the page.
-     16px cleared the corner but then sat noticeably further right than
-     the rest of the page's content (title, byline, etc. all start
-     further left) -- pulled back in to a smaller nudge that's closer
-     to that same line while still giving the corner some clearance. */
-  padding-left: 6px;
+     right in the curve of the bottom-left corner. Went 16px -> 6px as
+     that still read as further right than the rest of the page: pulled
+     all the way back to flush with everything else (0) now. If it
+     starts clipping into the corner again, a few px can go back on. */
+  padding-left: 0;
 }
 .article__author-card-label {
   font-size: 11.5px;
