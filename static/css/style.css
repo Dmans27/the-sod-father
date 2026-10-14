@@ -520,11 +520,11 @@ body.site-menu-open { overflow: hidden; }
   flex-direction: column;
   /* This card sits at the very bottom of the page/popup, so on a phone
      with rounded screen corners its last line (the name) can end up
-     right in the curve of the bottom-left corner. Went 16px -> 6px as
-     that still read as further right than the rest of the page: pulled
-     all the way back to flush with everything else (0) now. If it
-     starts clipping into the corner again, a few px can go back on. */
-  padding-left: 0;
+     right in the curve of the bottom-left corner -- that's the reason
+     for any padding here at all. Went 16px -> 6px -> 0, then Danny
+     clarified he wanted it moved further right (in from the edge) the
+     whole time, not left -- back up to a clearer rightward nudge. */
+  padding-left: 20px;
 }
 .article__author-card-label {
   font-size: 11.5px;
