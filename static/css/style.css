@@ -505,7 +505,7 @@ body.site-menu-open { overflow: hidden; }
   white-space: nowrap;
 }
 .article__author-card-name {
-  font-size: 15px;
+  font-size: 10px;
   font-weight: 800;
   color: var(--ink);
   text-transform: uppercase;
