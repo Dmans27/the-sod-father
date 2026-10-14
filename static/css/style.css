@@ -452,79 +452,42 @@ body.site-menu-open { overflow: hidden; }
    A second, bigger author credit after the story text -- the small byline
    up top (name/date/read time) is for context before you start reading;
    this is a sign-off once you're done, so the name reads on its own,
-   bolder, with no date/read-time clutering it up. The photo is a bigger,
-   uncropped rectangle (not the small circular avatar used up top) that
-   fills the bottom-right corner of this block: top edge flush with the
-   section line (never above it), right/bottom edges flush with the
-   card's own corner. The card has no min-height -- it sizes to the text
-   (padding + the two lines), and the photo is pinned top:0/height:100%
-   (plus a JS pixel-height fallback, see base.html) so it always matches
-   that same height exactly, no taller.
-   No author_photo set -> the --no-photo modifier drops the reserved
-   width/height, since otherwise it'd just be a dead gap under the name.
-   border-bottom frames the block to match border-top -- since the photo
-   fills this box edge-to-edge, that line lands right at the photo's own
-   bottom edge.
-   padding-bottom is deliberately small (not matched to padding-top) --
-   with equal padding on both sides, the two-line text sat centered in
-   the box while the photo filled it edge-to-edge, so the photo read as
-   flush with the bottom border and the text didn't, which is what kept
-   coming back as "dead space" even once the box itself was sized
-   correctly (measured pixel-for-pixel against a user screenshot to
-   confirm: card and photo bottoms lined up exactly, only the text had
-   air under it). Shrinking just padding-bottom pulls the text's own
-   bottom close to the border too, so both halves of the row read as
-   flush with it. A negative margin-right on the whole card (not just
-   the photo) bleeds it a bit past the page's own text column, out into
-   the side gutter the rest of the article respects -- the
-   border-top/border-bottom move with it, so the frame still ends
-   exactly at the photo's edge instead of stopping short of it. */
+   bolder, with no date/read-time clutering it up. The photo is now a
+   circular avatar sitting right next to the name (like the small byline
+   avatar up top, just bigger), not the full-bleed rectangle this used to
+   be -- Danny asked to bring the photo in closer to the text and make it
+   circular. Being a fixed-size circle, it no longer needs to track the
+   card's own height (see base.html -- the old syncAuthorCardPhoto JS
+   pixel-height fallback was only for the old edge-to-edge rectangle and
+   has been removed, since forcing a fixed-width circle to match the
+   card's height would just squash it into an oval).
+   display:flex + gap is what brings the photo in close to the text --
+   the old layout pinned the photo to the card's far right edge via
+   absolute positioning, which left a big stretch of empty space between
+   a short name and the photo on a wide card.
+   A negative margin-right on the whole card bleeds it a bit past the
+   page's own text column, out into the side gutter the rest of the
+   article respects. */
 .article__author-card {
-  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
   margin: 28px -12px 0 0;
-  /* Right padding matches the photo's own width (see
-     .article__author-card-avatar) plus a little breathing room, so the
-     reserved space is just big enough for the now-uncropped photo and
-     doesn't leave a gap of its own next to it. */
-  padding: 10px 74px 5px 20px;
+  padding: 16px 0 16px 20px;
   border-top: 1px solid var(--line);
   border-bottom: 1px solid var(--line);
 }
-.article__author-card--no-photo {
-  padding-right: 0;
-  margin-right: 0;
-}
 .article__author-card-avatar {
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  /* This used object-fit:contain so the whole (then much wider,
-     background-heavy) photo would show uncropped -- but contain only
-     fills the box on one axis, so with the current photo's proportions
-     it left a visible strip of plain background color down one side of
-     the box, read as a stray gap next to the photo. Now that the photo
-     itself is cropped in close on him, object-fit:cover (which always
-     fills the box completely, cropping slightly instead of
-     letterboxing) no longer cuts off his head/shoulders the way it did
-     with the old, much-wider source photo -- it just trims a small,
-     even sliver off the top and bottom. */
-  width: 64px;
-  height: 100%;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
   object-fit: cover;
-  object-position: right center;
-  box-shadow: -8px 0 20px rgba(43, 54, 47, 0.18);
+  flex-shrink: 0;
+  box-shadow: 0 2px 10px rgba(43, 54, 47, 0.18);
 }
 .article__author-card-info {
   display: flex;
   flex-direction: column;
-  /* This card sits at the very bottom of the page/popup, so on a phone
-     with rounded screen corners its last line (the name) can end up
-     right in the curve of the bottom-left corner -- that's the reason
-     for any padding here at all. Went 16px -> 6px -> 0, then Danny
-     clarified he wanted it moved further right (in from the edge) the
-     whole time, not left -- back up to a clearer rightward nudge. */
-  padding-left: 20px;
 }
 .article__author-card-label {
   font-size: 11.5px;
