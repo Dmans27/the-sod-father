@@ -472,7 +472,7 @@ body.site-menu-open { overflow: hidden; }
   display: flex;
   align-items: center;
   gap: 14px;
-  margin: 28px -12px 0 0;
+  margin: 28px -12px 0 -15px;
   /* padding-right pulls the masthead text (the last thing in this flex
      row, flush with the card's own right edge) in enough to clear the
      phone's rounded bottom-right corner -- same reasoning as the
