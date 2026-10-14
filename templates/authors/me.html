@@ -47,6 +47,11 @@
       </label>
 
       <label class="admin-field">
+        <span>Position / title</span>
+        <input type="text" name="position" value="{{ author.position or '' }}" placeholder="e.g. Staff Writer, Chief Editor">
+      </label>
+
+      <label class="admin-field">
         <span>Photo {% if author.photo %}(currently set — upload a new one to replace it){% endif %}</span>
         {% if author.photo %}<img class="admin-thumb admin-thumb--small" src="{{ author.photo }}" alt="">{% endif %}
         <input type="file" name="photo" accept="image/*">

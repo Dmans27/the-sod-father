@@ -77,6 +77,7 @@ def signup_submit():
     password = form.get("password", "")
     confirm = form.get("confirm_password", "")
     bio = form.get("bio", "").strip()
+    position = form.get("position", "").strip()
 
     if not name:
         errors.append("Name is required.")
@@ -109,6 +110,7 @@ def signup_submit():
         "password_hash": generate_password_hash(password),
         "photo": ("/" + photo_path) if photo_path else None,
         "bio": bio,
+        "position": position,
     }
 
     published, message = story_store.save_author(doc, images, is_update=False)
@@ -172,6 +174,7 @@ def me_update():
 
     name = form.get("name", "").strip()
     bio = form.get("bio", "").strip()
+    position = form.get("position", "").strip()
     new_password = form.get("new_password", "")
     current_password = form.get("current_password", "")
 
@@ -185,7 +188,7 @@ def me_update():
             errors.append(f"New password needs to be at least {MIN_PASSWORD_LENGTH} characters.")
 
     if errors:
-        preview = {**existing, "name": name, "bio": bio}
+        preview = {**existing, "name": name, "bio": bio, "position": position}
         return render_template("authors/me.html", author=public_fields(preview), errors=errors), 400
 
     images = {}
@@ -200,6 +203,7 @@ def me_update():
         **existing,
         "name": name,
         "bio": bio,
+        "position": position,
         "photo": photo_path,
     }
     if new_password and not errors:

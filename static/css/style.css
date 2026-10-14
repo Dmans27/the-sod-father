@@ -503,6 +503,33 @@ body.site-menu-open { overflow: hidden; }
   text-transform: uppercase;
   letter-spacing: 0.3px;
 }
+/* Fills the stretch of empty space the card gained once the photo became
+   a small circle instead of a full-height rectangle -- a little
+   masthead credit, right-aligned so it sits flush with the card's own
+   right edge the same way the photo used to. margin-left:auto is what
+   pushes it over there: info + avatar stay grouped on the left, this
+   soaks up whatever space is left over. No author_position set on the
+   story -> just the brand name shows, no empty second line. */
+.article__author-card-masthead {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  margin-left: auto;
+}
+.article__author-card-masthead-brand {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--fairway-deep);
+  font-family: var(--font-serif);
+}
+.article__author-card-masthead-position {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
 
 /* ── Story blocks ──
    Stories are built in the admin portal as a sequence of typed blocks

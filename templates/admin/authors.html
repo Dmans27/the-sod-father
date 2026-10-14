@@ -24,7 +24,7 @@
           <div class="admin-row__thumb" style="background: var(--fairway-deep);">{{ author.name[:1] }}</div>
         {% endif %}
         <div class="admin-row__main">
-          <div class="admin-row__title">{{ author.name }}</div>
+          <div class="admin-row__title">{{ author.name }}{% if author.position %} <span style="font-weight:400;color:var(--ink-faint);">— {{ author.position }}</span>{% endif %}</div>
           <div class="admin-row__meta">{{ author.email }}{% if author.bio %} &middot; {{ author.bio }}{% endif %}</div>
         </div>
       </div>

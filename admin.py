@@ -192,11 +192,13 @@ def _build_doc_from_form(form, files, slug, existing):
     author_slug = form.get("author_slug", "").strip()
     author_name = ""
     author_photo = None
+    author_position = None
     if author_slug and author_slug != "__other__":
         author_record = get_author(author_slug)
         if author_record:
             author_name = author_record["name"]
             author_photo = author_record.get("photo")
+            author_position = author_record.get("position")
         else:
             author_slug = ""
     else:
@@ -248,6 +250,7 @@ def _build_doc_from_form(form, files, slug, existing):
         "author": author_name,
         "author_slug": author_slug or None,
         "author_photo": author_photo,
+        "author_position": author_position,
         "published_at": published_at,
         "cover_image": cover_image,
         "featured": form.get("featured") == "1",

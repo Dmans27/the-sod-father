@@ -13,8 +13,8 @@ AUTHORS_DIR = Path(__file__).parent / "content" / "authors"
 
 def get_authors():
     """Every author, alphabetical by name. Not sensitive data is included
-    here (name, photo, bio) -- password_hash is also present in the file,
-    callers that render this to a page must leave it out."""
+    here (name, photo, bio, position) -- password_hash is also present in
+    the file, callers that render this to a page must leave it out."""
     authors = []
     if not AUTHORS_DIR.exists():
         return authors

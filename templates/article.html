@@ -47,6 +47,10 @@
         <span class="article__author-card-name">{{ article.author }}</span>
       </div>
       {% if article.author_photo %}<img class="article__author-card-avatar" src="{{ article.author_photo }}" alt="">{% endif %}
+      <div class="article__author-card-masthead">
+        <span class="article__author-card-masthead-brand">The Sod Father</span>
+        {% if article.author_position %}<span class="article__author-card-masthead-position">{{ article.author_position }}</span>{% endif %}
+      </div>
     </div>
 
     {#

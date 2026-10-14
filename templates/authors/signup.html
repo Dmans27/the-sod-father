@@ -33,6 +33,10 @@
             <input type="text" name="name" value="{{ form.name if form else '' }}" required>
           </label>
           <label class="admin-field">
+            <span>Position / title (optional)</span>
+            <input type="text" name="position" value="{{ form.position if form else '' }}" placeholder="e.g. Staff Writer, Chief Editor">
+          </label>
+          <label class="admin-field">
             <span>Email (this is how you'll sign in)</span>
             <input type="email" name="email" value="{{ form.email if form else '' }}" required>
           </label>
