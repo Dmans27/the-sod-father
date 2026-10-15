@@ -258,7 +258,7 @@
       if (scrollEl && stickyBar) {
         scrollEl.addEventListener('scroll', function () {
           var y = scrollEl.scrollTop;
-          stickyBar.classList.toggle('is-visible', y >= 100 && y <= 400);
+          stickyBar.classList.toggle('is-visible', y >= 200 && y <= 700);
         }, { passive: true });
       }
 
@@ -279,7 +279,7 @@
       if (!bar) return;
       function onScroll() {
         var y = window.scrollY || window.pageYOffset;
-        var visible = y >= 100 && y <= 400;
+        var visible = y >= 200 && y <= 700;
         bar.classList.toggle('is-visible', visible);
         // Also hides the site header underneath -- see the CSS rule on
         // body.has-sticky-author-bar .site-header for why.
