@@ -4,6 +4,11 @@
 {% block content %}
 {% set cat = categories[article.category] %}
 <article class="article">
+  <div class="article__sticky-bar" id="article-sticky-bar" aria-hidden="true">
+    {% if article.author_photo %}<img class="article-sticky-bar__avatar" src="{{ article.author_photo }}" alt="">{% endif %}
+    <p class="article__meta">{{ article.author }}{% if article.author_position %} &middot; {{ article.author_position }}{% endif %} &middot; {{ article.published_at }}</p>
+  </div>
+
   <div class="article__header">
     <a href="/category/{{ article.category }}" class="article__pill">{{ cat.label }}</a>
     <h1 class="article__title">{{ article.title }}</h1>
