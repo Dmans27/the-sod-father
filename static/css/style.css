@@ -35,8 +35,8 @@ body {
 a { color: inherit; }
 
 /* ── Header ──
-   Slim single-row bar: brand on the left, a hamburger toggle on the right
-   that opens .site-menu (a right-side drawer) instead of the old inline
+   Slim single-row bar: a hamburger toggle on the left and the brand next
+   to it; the toggle opens .site-menu (a left-side drawer) instead of the old inline
    nav row -- that row used to wrap onto a second line on narrow screens
    and, in the iOS app, sat right under the status bar. padding-top here
    uses the same env(safe-area-inset-top) pattern the article sheet uses
@@ -100,20 +100,36 @@ a { color: inherit; }
   background: #fff;
 }
 
-/* ── Menu drawer ── */
+/* ── Menu drawer ──
+   Slides in from the left (the same side as the hamburger button) while
+   fading in. The overlay used to toggle display:none <-> block, which
+   can't animate -- the browser has no "before" frame to transition from,
+   so the drawer just snapped open no matter what transition its children
+   declared (same problem the article sheet's overlay works around).
+   visibility + opacity keeps it in the render tree so the starting
+   transform actually gets painted; the delay on visibility defers the
+   removal from hit-testing/tab order until the fade-out has finished. */
 .site-menu-overlay {
   position: fixed;
   inset: 0;
   z-index: 200;
-  display: none;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.3s ease, visibility 0s linear 0.3s;
 }
-.site-menu-overlay.is-open { display: block; }
+.site-menu-overlay.is-open {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition: opacity 0.3s ease, visibility 0s linear 0s;
+}
 
 .site-menu-overlay__scrim {
   position: absolute;
   inset: 0;
   background: rgba(27, 42, 31, 0);
-  transition: background 0.25s ease;
+  transition: background 0.3s ease;
 }
 .site-menu-overlay.is-open .site-menu-overlay__scrim {
   background: rgba(27, 42, 31, 0.55);
@@ -122,20 +138,30 @@ a { color: inherit; }
 .site-menu {
   position: absolute;
   top: 0;
-  right: 0;
+  left: 0;
   bottom: 0;
   width: 78%;
   max-width: 300px;
   background: var(--fairway-deep);
-  box-shadow: -8px 0 32px rgba(27, 42, 31, 0.3);
+  box-shadow: 8px 0 32px rgba(27, 42, 31, 0.3);
   display: flex;
   flex-direction: column;
   padding: env(safe-area-inset-top) 0 env(safe-area-inset-bottom);
-  transform: translateX(100%);
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  transform: translateX(-100%);
+  opacity: 0;
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease;
   overflow-y: auto;
 }
-.site-menu-overlay.is-open .site-menu { transform: translateX(0); }
+.site-menu-overlay.is-open .site-menu {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-menu-overlay,
+  .site-menu-overlay__scrim,
+  .site-menu { transition-duration: 0.01s; }
+}
 
 .site-menu__header {
   display: flex;
