@@ -746,7 +746,7 @@ body.site-menu-open { overflow: hidden; }
   /* No longer flush against the sheet's own top edge (title/dek sit above
      it now), so it gets its own uniform rounding instead of inheriting
      and squaring off to match the sheet's shape. */
-  border-radius: 16px;
+  border-radius: 0px;
   margin: 16px 14px 20px;
 }
 .article-sheet__hero-emoji { font-size: 56px; opacity: 0.92; }
