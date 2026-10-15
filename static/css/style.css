@@ -222,7 +222,7 @@ body.site-menu-open { overflow: hidden; }
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 12px;
+  border-radius: 0px;
   overflow: hidden;
   /* Image now sits between the title/dek above it and the byline below
      it (Danny: title, subheader, image, [caption], then author line) --
