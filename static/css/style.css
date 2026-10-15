@@ -100,6 +100,43 @@ a { color: inherit; }
   background: #fff;
 }
 
+/* ── Category chip bar ──
+   The same categories as the hamburger drawer, as a horizontally scrolling
+   row of pills under the brand bar (inside .site-header, so it's sticky
+   with it). Scrollbar hidden -- it's a swipe row on touch -- and the right
+   edge fades out as a hint that there's more off-screen. position:relative
+   on the scroller makes each chip's offsetLeft relative to it, which the
+   "scroll the active chip into view" script in base.html relies on. */
+.category-bar {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+.category-bar__scroll {
+  position: relative;
+  display: flex;
+  gap: 8px;
+  padding: 0 32px 12px 16px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+}
+.category-bar__scroll::-webkit-scrollbar { display: none; }
+.category-bar__chip {
+  flex: 0 0 auto;
+  text-decoration: none;
+  white-space: nowrap;
+  color: rgba(255,255,255,0.82);
+  background: rgba(255,255,255,0.1);
+  font-size: 13.5px;
+  font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 999px;
+}
+.category-bar__chip:hover { background: rgba(255,255,255,0.18); }
+.category-bar__chip.is-active { color: var(--fairway-deep); background: var(--gold); }
+
 /* ── Menu drawer ──
    Slides in from the left (the same side as the hamburger button) while
    fading in. The overlay used to toggle display:none <-> block, which
