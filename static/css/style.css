@@ -452,14 +452,14 @@ body.site-menu-open { overflow: hidden; }
      math (18px text, 28px line box) and the em-based margin and
      word-wrap come across as-is; direction: ltr isn't meaningful for an
      English-only site so it's left out. */
-  color: var(--ink);
-  font-family: Lyon,Helvetica,Arial,sans-serif;
-  font-size: 18px;
-  font-weight: 400;
-  line-height: 1.66;
-  line-height: calc(28 / 18);
-  margin: 0 0 1em 0;
-  word-wrap: break-word;
+  color: var(--color-inkBase);
+    direction: var(--article-direction);
+    font-family: var(--article-font-family);
+    font-size: calc((18 / var(--article-base-font-size)) * var(--article-text-size-scale) * 1rem);
+    font-weight: var(--article-font-weight);
+    line-height: calc(28 / 18);
+    margin: 0 0 1em 0;
+    word-wrap: break-word;
 }
 .article__back {
   display: inline-block;
