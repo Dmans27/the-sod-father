@@ -173,12 +173,14 @@
           '</div>';
 
         inner.innerHTML =
-          heroHtml +
-          '<div class="article-sheet__body">' +
+          '<div class="article-sheet__header">' +
             '<span class="article__pill">' + cat.label + '</span>' +
             '<h1 class="article__title">' + article.title + '</h1>' +
             '<p class="article__dek">' + article.dek + '</p>' +
-            '<div class="article__byline">' + avatar + '<p class="article__meta">' + article.author + ' &middot; ' + article.published_at + ' &middot; ' + article.read_minutes + ' min read</p></div>' +
+          '</div>' +
+          heroHtml +
+          '<div class="article-sheet__body">' +
+            '<div class="article__byline">' + avatar + '<p class="article__meta">' + article.author + (article.author_position ? ' &middot; ' + article.author_position : '') + ' &middot; ' + article.published_at + '</p></div>' +
             '<div class="article__content" id="article-sheet-content">' + blocksHtml(short.blocks) + '</div>' +
             (short.truncated ? '<button type="button" class="article-sheet__readmore" id="article-sheet-readmore">Read more</button>' : '') +
             authorCardHtml +

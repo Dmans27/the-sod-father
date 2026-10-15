@@ -4,17 +4,20 @@
 {% block content %}
 {% set cat = categories[article.category] %}
 <article class="article">
+  <div class="article__header">
+    <a href="/category/{{ article.category }}" class="article__pill">{{ cat.label }}</a>
+    <h1 class="article__title">{{ article.title }}</h1>
+    <p class="article__dek">{{ article.dek }}</p>
+  </div>
+
   {% if article.cover_image %}
     <div class="article__hero" style="background-image: url('{{ article.cover_image }}'); background-size: cover; background-position: center;"></div>
   {% endif %}
 
   <div class="article__body">
-    <a href="/category/{{ article.category }}" class="article__pill">{{ cat.label }}</a>
-    <h1 class="article__title">{{ article.title }}</h1>
-    <p class="article__dek">{{ article.dek }}</p>
     <div class="article__byline">
       {% if article.author_photo %}<img class="article__avatar" src="{{ article.author_photo }}" alt="">{% endif %}
-      <p class="article__meta">{{ article.author }} &middot; {{ article.published_at }} &middot; {{ article.read_minutes }} min read</p>
+      <p class="article__meta">{{ article.author }}{% if article.author_position %} &middot; {{ article.author_position }}{% endif %} &middot; {{ article.published_at }}</p>
     </div>
 
     {% if article.blocks %}

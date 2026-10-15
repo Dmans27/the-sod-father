@@ -373,22 +373,26 @@ body.site-menu-open { overflow: hidden; }
 }
 
 /* ── Article page ──
-   A story with no cover photo skips .article__hero entirely (no markup at
-   all, not even a colored placeholder) -- .article__body's own top
-   padding below already provides the same breathing room from the header,
-   so the pill/title just starts the page cleanly. */
+   Order is title/dek, then the hero photo, then the byline -- .article__header
+   carries the top padding (breathing room from the site header) since it's
+   always first now, whether or not the story has a cover photo. A story
+   with no cover photo just skips .article__hero entirely (no markup at
+   all, not even a colored placeholder); .article__body no longer needs
+   its own top padding to compensate since .article__header already
+   provides it either way. */
 .article { max-width: 720px; margin: 0 auto; }
+.article__header { padding: 22px 4px 0; }
 .article__hero {
   aspect-ratio: 21 / 9;
   border-radius: 20px;
-  margin-top: 28px;
+  margin: 16px 0 20px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 .article__hero-emoji { font-size: 64px; opacity: 0.92; }
 
-.article__body { padding: 22px 4px 10px; }
+.article__body { padding: 0 4px 10px; }
 .article__pill {
   display: inline-block;
   text-decoration: none;
@@ -728,22 +732,29 @@ body.site-menu-open { overflow: hidden; }
   padding-bottom: 0;
 }
 
+/* .article-sheet__header is now the first thing in the sheet (title/dek
+   before the photo), so it's the one that needs the top padding/rounded-
+   corner clearance the hero used to own when it sat flush against the
+   sheet's top edge. */
+.article-sheet__header { padding: 20px 14px 0; }
+
 .article-sheet__hero {
   aspect-ratio: 21 / 9;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: inherit;
-  border-bottom-left-radius: 0;
-  border-bottom-right-radius: 0;
+  /* No longer flush against the sheet's own top edge (title/dek sit above
+     it now), so it gets its own uniform rounding instead of inheriting
+     and squaring off to match the sheet's shape. */
+  border-radius: 16px;
+  margin: 16px 14px 20px;
 }
 .article-sheet__hero-emoji { font-size: 56px; opacity: 0.92; }
 
 /* Horizontal padding kept deliberately tight (vs. the old 22px) so the
    paragraph column stretches closer to the sheet's edges, the same way
-   the full article page's own 4px gutter does -- still wide enough to
-   clear the close button and give the rounded top corners room. */
-.article-sheet__body { padding: 20px 14px 0; }
+   the full article page's own 4px gutter does. */
+.article-sheet__body { padding: 0 14px; }
 
 .article-sheet__readmore {
   display: inline-block;
@@ -766,5 +777,5 @@ body.article-sheet-open { overflow: hidden; }
   .article__dek { font-size: 15.5px; }
   /* .article__content p no longer shrinks here -- 18px is a fixed spec now,
      not a responsive one. */
-  .article-sheet__body .article__title { font-size: 23px; }
+  .article-sheet__header .article__title { font-size: 23px; }
 }
