@@ -18,16 +18,19 @@
 {% for story in featured %}
   {% set fcat = categories[story.category] %}
   <a href="/article/{{ story.slug }}" class="hero-story{% if not story.cover_image %} hero-story--plain{% endif %}" data-slug="{{ story.slug }}">
+    <div class="hero-story__content">
+      <span class="hero-story__pill">{{ fcat.label }}</span>
+      <h2 class="hero-story__title">{{ story.title }}</h2>
+      <p class="hero-story__dek">{{ story.dek }}</p>
+    </div>
     {% if story.cover_image %}
       <div class="hero-story__media" style="background-image: url('{{ story.cover_image }}'); background-size: cover; background-position: center;">
         <div class="hero-story__scrim"></div>
       </div>
     {% endif %}
-    <div class="hero-story__content">
-      <span class="hero-story__pill">{{ fcat.label }}</span>
-      <h2 class="hero-story__title">{{ story.title }}</h2>
-      <p class="hero-story__dek">{{ story.dek }}</p>
-      <p class="hero-story__meta">{{ story.author }} &middot; {{ story.read_minutes }} min read</p>
+    <div class="hero-story__byline">
+      {% if story.author_photo %}<img class="hero-story__byline-avatar" src="{{ story.author_photo }}" alt="">{% endif %}
+      <p class="hero-story__meta">{{ story.author }}{% if story.author_position %} &middot; {{ story.author_position }}{% endif %} &middot; {{ story.published_at }}</p>
     </div>
   </a>
 {% endfor %}

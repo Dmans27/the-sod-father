@@ -224,7 +224,11 @@ body.site-menu-open { overflow: hidden; }
   justify-content: center;
   border-radius: 12px;
   overflow: hidden;
-  margin-bottom: 16px;
+  /* Image now sits between the title/dek above it and the byline below
+     it (Danny: title, subheader, image, [caption], then author line) --
+     margin on both sides instead of just below, since it's no longer
+     the first thing in the card. */
+  margin: 16px 0;
 }
 .hero-story__emoji { font-size: 64px; opacity: 0.9; }
 .hero-story__scrim {
@@ -259,7 +263,21 @@ body.site-menu-open { overflow: hidden; }
   font-size: 16px;
   color: var(--ink-soft);
   line-height: 1.45;
-  margin: 0 0 10px;
+  margin: 0;
+}
+/* Byline row: author photo + name/position/date, now its own block below
+   the image rather than a plain text line inside .hero-story__content. */
+.hero-story__byline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hero-story__byline-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
 }
 .hero-story__meta {
   font-size: 12.5px;
