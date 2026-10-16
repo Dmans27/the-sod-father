@@ -37,7 +37,7 @@
       <div class="category-bar__scroll" id="category-bar-scroll">
         <a href="/" class="category-bar__chip {% if not active_category %}is-active{% endif %}">All</a>
         {% for key, cat in categories.items() %}
-          <a href="/category/{{ key }}" class="category-bar__chip {% if active_category == key %}is-active{% endif %}">{{ cat.emoji }} {{ cat.label }}</a>
+          <a href="/category/{{ key }}" class="category-bar__chip {% if active_category == key %}is-active{% endif %}">{{ cat.label }}</a>
         {% endfor %}
       </div>
     </nav>
