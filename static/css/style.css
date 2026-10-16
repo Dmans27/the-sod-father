@@ -48,7 +48,7 @@ a { color: inherit; }
    enough before. max(...) also guarantees at least 20px of clearance even
    on a device that reports a tiny or zero inset. */
 .site-header {
-  background: var(--fairway-deep);
+  background: #fff;
   border-bottom: 1px solid #e9ece9; /* light rule under the white category bar */
   position: sticky;
   top: 0;
@@ -69,7 +69,7 @@ a { color: inherit; }
   align-items: center;
   gap: 8px;
   text-decoration: none;
-  color: #fff;
+  color: #1b2a1f;
   font-weight: 800;
   font-size: 18px;
   letter-spacing: -0.01em;
@@ -92,12 +92,12 @@ a { color: inherit; }
   cursor: pointer;
   border-radius: 10px;
 }
-.site-menu-toggle:hover { background: rgba(255,255,255,0.08); }
+.site-menu-toggle:hover { background: rgba(0,0,0,0.06); }
 .site-menu-toggle__bar {
   width: 20px;
   height: 2px;
   border-radius: 2px;
-  background: #fff;
+  background: #000;
 }
 
 /* ── Category chip bar ──
