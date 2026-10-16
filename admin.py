@@ -15,6 +15,7 @@ import os
 import re
 import secrets
 from functools import wraps
+from urllib.parse import parse_qs, urlparse
 
 from flask import (
     Blueprint, abort, flash, redirect, render_template, request, session, url_for,
@@ -114,21 +115,117 @@ def _image_repo_path(slug, field_name, original_filename):
     return f"static/uploads/{slug}/{safe_field}{ext}"
 
 
-def _build_blocks_from_form(form, files, slug):
-    """The story builder (story_form.html) lets Danny add paragraph, photo,
-    quote, subheading, and custom-embed blocks in any order and drag them
-    around -- the page keeps a hidden `block_order` field in sync with
-    on-screen order, listing each block's id. A block's id is only ever a
-    fragment of its field names (block_type_<id>, block_text_<id>, ...),
-    generated client-side and never stored once saved; this just walks that
-    order and pulls each block's type-specific fields back out.
+# ── Parsing helpers for the newer block types ───────────────────────────
 
-    Returns (blocks, images). images is {repo_path: bytes} for any newly
-    uploaded photo blocks, same shape save_record() expects for the cover
-    photo."""
+_YOUTUBE_ID = re.compile(r"^[A-Za-z0-9_-]{11}$")
+
+
+def parse_video_url(raw):
+    """Turns a pasted YouTube or Vimeo link into (provider, video_id,
+    embed_url), or None if it isn't one we recognise. The embed URL is
+    always built here from the extracted ID -- never copied from what was
+    pasted -- so only these two players can ever end up in an iframe."""
+    raw = (raw or "").strip()
+    if not raw:
+        return None
+    if "://" not in raw:
+        raw = "https://" + raw
+    try:
+        parsed = urlparse(raw)
+    except ValueError:
+        return None
+    host = (parsed.hostname or "").lower()
+    for prefix in ("www.", "m."):
+        if host.startswith(prefix):
+            host = host[len(prefix):]
+
+    video_id = None
+    if host == "youtube.com":
+        if parsed.path == "/watch":
+            video_id = (parse_qs(parsed.query).get("v") or [None])[0]
+        else:
+            m = re.match(r"^/(?:embed|shorts|live|v)/([^/?#]+)", parsed.path)
+            video_id = m.group(1) if m else None
+    elif host == "youtu.be":
+        video_id = parsed.path.lstrip("/").split("/")[0]
+    if video_id and _YOUTUBE_ID.match(video_id):
+        return ("youtube", video_id, f"https://www.youtube-nocookie.com/embed/{video_id}")
+
+    if host in ("vimeo.com", "player.vimeo.com"):
+        ids = re.findall(r"/(\d{6,12})(?=/|$)", parsed.path)
+        if ids:
+            return ("vimeo", ids[-1], f"https://player.vimeo.com/video/{ids[-1]}")
+    return None
+
+
+def parse_list_items(text):
+    """One item per line; a leading bullet or "1." the writer typed is stripped."""
+    items = []
+    for line in (text or "").splitlines():
+        line = re.sub(r"^\s*(?:[-*\u2022]|\d+[.)])\s+", "", line).strip()
+        if line:
+            items.append(line)
+    return items
+
+
+def parse_table(text):
+    """One row per line, columns separated by | -- or tabs, so a range
+    pasted straight from Excel / Google Sheets works too. Rows are padded
+    to the same width."""
+    rows = []
+    for line in (text or "").splitlines():
+        if not line.strip():
+            continue
+        if "\t" in line:
+            cells = line.split("\t")
+        else:
+            line = line.strip()
+            if line.startswith("|"):
+                line = line[1:]
+            if line.endswith("|"):
+                line = line[:-1]
+            cells = line.split("|")
+        cells = [c.strip() for c in cells]
+        if all(re.fullmatch(r":?-{2,}:?", c) for c in cells if c) and any(cells):
+            continue  # a markdown "---|---" divider row
+        rows.append(cells)
+    if not rows:
+        return []
+    width = max(len(r) for r in rows)
+    return [r + [""] * (width - len(r)) for r in rows]
+
+
+def _story_choices():
+    """[{slug, title}] for the link card's "one of my stories" picker."""
+    return [{"slug": a["slug"], "title": a["title"]} for a in get_articles()]
+
+
+def _build_blocks_from_form(form, files, slug):
+    """The story builder (story_form.html) lets Danny add blocks of many
+    kinds in any order and drag them around -- the page keeps a hidden
+    `block_order` field in sync with on-screen order, listing each block's
+    id. A block's id is only ever a fragment of its field names
+    (block_type_<id>, block_text_<id>, ...), generated client-side and
+    never stored once saved; this just walks that order and pulls each
+    block's type-specific fields back out.
+
+    Returns (blocks, images, errors). images is {repo_path: bytes} for any
+    newly uploaded photos, same shape save_record() expects for the cover
+    photo. errors is a list of human-readable problems (e.g. a video link
+    that isn't YouTube/Vimeo) shown at the top of the form."""
     order = [bid for bid in form.get("block_order", "").split(",") if bid.strip()]
     blocks = []
     images = {}
+    errors = []
+
+    def image_for(field_name, existing_field, repo_path):
+        """A newly uploaded file wins; otherwise keep the image path the
+        block already had (so editing a story doesn't lose its photos)."""
+        processed = story_store.process_image(files.get(field_name))
+        if processed is not None:
+            images[repo_path] = processed
+            return "/" + repo_path
+        return form.get(existing_field, "").strip() or None
 
     for bid in order:
         btype = form.get(f"block_type_{bid}", "")
@@ -156,19 +253,122 @@ def _build_blocks_from_form(form, files, slug):
 
         elif btype == "photo":
             caption = form.get(f"block_caption_{bid}", "").strip()
-            existing_image = form.get(f"block_existing_image_{bid}", "").strip() or None
-            field_name = f"block_photo_{bid}"
-            processed = story_store.process_image(files.get(field_name))
-            if processed is not None:
-                path = f"static/uploads/{slug}/block-{bid}.jpg"
-                images[path] = processed
-                image = "/" + path
-            else:
-                image = existing_image
+            image = image_for(f"block_photo_{bid}", f"block_existing_image_{bid}",
+                              f"static/uploads/{slug}/block-{bid}.jpg")
             if image:
                 blocks.append({"type": "photo", "image": image, "caption": caption})
 
-    return blocks, images
+        elif btype == "list":
+            items = parse_list_items(form.get(f"block_text_{bid}", ""))
+            style = "numbered" if form.get(f"block_style_{bid}") == "numbered" else "bulleted"
+            if items:
+                blocks.append({"type": "list", "style": style, "items": items})
+
+        elif btype == "tip":
+            text = form.get(f"block_text_{bid}", "").strip()
+            variant = "warning" if form.get(f"block_variant_{bid}") == "warning" else "tip"
+            if text:
+                blocks.append({"type": "tip", "variant": variant, "text": text})
+
+        elif btype == "takeaways":
+            items = parse_list_items(form.get(f"block_text_{bid}", ""))
+            title = form.get(f"block_title_{bid}", "").strip() or "Key takeaways"
+            if items:
+                blocks.append({"type": "takeaways", "title": title, "items": items})
+
+        elif btype == "table":
+            rows = parse_table(form.get(f"block_text_{bid}", ""))
+            if rows:
+                has_header = form.get(f"block_header_{bid}") == "1" and len(rows) > 1
+                blocks.append({
+                    "type": "table",
+                    "header": rows[0] if has_header else None,
+                    "rows": rows[1:] if has_header else rows,
+                })
+
+        elif btype == "divider":
+            blocks.append({"type": "divider"})
+
+        elif btype == "gallery":
+            photos = []
+            row_ids = [r for r in form.get(f"block_gallery_order_{bid}", "").split(",") if r.strip()]
+            for rid in row_ids:
+                image = image_for(
+                    f"block_gallery_photo_{bid}_{rid}", f"block_gallery_existing_{bid}_{rid}",
+                    f"static/uploads/{slug}/gallery-{bid}-{rid}.jpg")
+                if image:
+                    photos.append({
+                        "image": image,
+                        "caption": form.get(f"block_gallery_caption_{bid}_{rid}", "").strip(),
+                    })
+            if photos:
+                blocks.append({"type": "gallery", "photos": photos})
+
+        elif btype == "video":
+            raw_url = form.get(f"block_url_{bid}", "").strip()
+            if raw_url:
+                parsed = parse_video_url(raw_url)
+                if parsed is None:
+                    errors.append(f"The video link \u201c{raw_url}\u201d isn't a YouTube or Vimeo link I can embed.")
+                else:
+                    provider, video_id, embed_url = parsed
+                    blocks.append({
+                        "type": "video", "provider": provider, "video_id": video_id,
+                        "url": raw_url, "embed_url": embed_url,
+                        "caption": form.get(f"block_caption_{bid}", "").strip(),
+                    })
+
+        elif btype == "link":
+            kind = form.get(f"block_link_kind_{bid}", "story")
+            label = form.get(f"block_link_label_{bid}", "").strip()
+            if kind == "story":
+                target = get_article(form.get(f"block_link_story_{bid}", "").strip())
+                if target:
+                    blocks.append({
+                        "type": "link", "kind": "story",
+                        "href": f"/article/{target['slug']}",
+                        "title": target["title"],
+                        "description": target.get("dek", ""),
+                        "image": target.get("cover_image"),
+                        "label": label or "Read the story",
+                        "host": None,
+                    })
+            else:
+                url = form.get(f"block_link_url_{bid}", "").strip()
+                title = form.get(f"block_link_title_{bid}", "").strip()
+                if url:
+                    if "://" not in url:
+                        url = "https://" + url
+                    parsed_url = urlparse(url)
+                    if parsed_url.scheme not in ("http", "https") or not parsed_url.hostname:
+                        errors.append(f"The link \u201c{url}\u201d must be a normal web address (https://...).")
+                    else:
+                        host = parsed_url.hostname
+                        blocks.append({
+                            "type": "link", "kind": "web", "href": url,
+                            "title": title or host,
+                            "description": form.get(f"block_link_desc_{bid}", "").strip(),
+                            "image": None,
+                            "label": label or "Visit site",
+                            "host": host[4:] if host.startswith("www.") else host,
+                        })
+
+        elif btype == "compare":
+            before = image_for(f"block_before_{bid}", f"block_existing_before_{bid}",
+                               f"static/uploads/{slug}/compare-{bid}-before.jpg")
+            after = image_for(f"block_after_{bid}", f"block_existing_after_{bid}",
+                              f"static/uploads/{slug}/compare-{bid}-after.jpg")
+            if before and after:
+                blocks.append({
+                    "type": "compare", "before": before, "after": after,
+                    "before_label": form.get(f"block_before_label_{bid}", "").strip() or "Before",
+                    "after_label": form.get(f"block_after_label_{bid}", "").strip() or "After",
+                    "caption": form.get(f"block_caption_{bid}", "").strip(),
+                })
+            elif before or after:
+                errors.append("A before / after slider needs two photos \u2014 one is missing.")
+
+    return blocks, images, errors
 
 
 def _build_doc_from_form(form, files, slug, existing):
@@ -236,8 +436,9 @@ def _build_doc_from_form(form, files, slug, existing):
         existing_cover = None
     cover_image = handle_image("cover_image", existing_cover)
 
-    blocks, block_images = _build_blocks_from_form(form, files, slug)
+    blocks, block_images, block_errors = _build_blocks_from_form(form, files, slug)
     images.update(block_images)
+    errors.extend(block_errors)
 
     if not blocks:
         errors.append("Add at least one block to the story (a paragraph, a photo, a quote...).")
@@ -273,6 +474,7 @@ def story_new():
         categories=CATEGORIES,
         authors=get_authors(),
         block_types=BLOCK_TYPES,
+        story_choices=_story_choices(),
         errors=[],
     )
 
@@ -294,6 +496,7 @@ def story_create():
             categories=CATEGORIES,
             authors=get_authors(),
             block_types=BLOCK_TYPES,
+        story_choices=_story_choices(),
             errors=errors,
         ), 400
 
@@ -315,6 +518,7 @@ def story_edit(slug):
         categories=CATEGORIES,
         authors=get_authors(),
         block_types=BLOCK_TYPES,
+        story_choices=_story_choices(),
         errors=[],
     )
 
@@ -336,6 +540,7 @@ def story_update(slug):
             categories=CATEGORIES,
             authors=get_authors(),
             block_types=BLOCK_TYPES,
+        story_choices=_story_choices(),
             errors=errors,
         ), 400
 

@@ -144,10 +144,80 @@
       // budget, so a story that opens with a photo doesn't get cut off
       // before any text has even shown.
       function blockWords(block) {
-        if (block.type === 'paragraph' || block.type === 'quote' || block.type === 'subheading') {
+        if (block.type === 'paragraph' || block.type === 'quote' || block.type === 'subheading' || block.type === 'tip') {
           return (block.text || '').split(/\s+/).filter(Boolean).length;
         }
+        // Lists count too, so a long ranked list can't push the preview
+        // past its word budget. Key takeaways deliberately count as zero:
+        // they're the summary, so they always show in the preview.
+        if (block.type === 'list') {
+          return (block.items || []).join(' ').split(/\s+/).filter(Boolean).length;
+        }
         return 0;
+      }
+
+      // The newer block types (list, tip, takeaways, table, divider,
+      // gallery, video, link card, before/after). Everything here goes
+      // through esc() -- same markup and class names as templates/article.html.
+      var esc = window.SodFather.esc;
+      var VIDEO_PREFIXES = ['https://www.youtube-nocookie.com/embed/', 'https://player.vimeo.com/video/'];
+      function newBlockHtml(block) {
+        var items, html;
+        if (block.type === 'list') {
+          var numbered = block.style === 'numbered', tag = numbered ? 'ol' : 'ul';
+          items = (block.items || []).map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('');
+          return '<' + tag + ' class="article__list' + (numbered ? ' article__list--numbered' : '') + '">' + items + '</' + tag + '>';
+        }
+        if (block.type === 'tip') {
+          var warn = block.variant === 'warning';
+          return '<aside class="article__tip article__tip--' + (warn ? 'warning' : 'tip') + '"><span class="article__tip-label">' +
+            (warn ? 'Heads up' : 'Pro tip') + '</span><p>' + esc(block.text) + '</p></aside>';
+        }
+        if (block.type === 'takeaways') {
+          items = (block.items || []).map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('');
+          return '<section class="article__takeaways"><h2 class="article__takeaways-title">' + esc(block.title || 'Key takeaways') + '</h2><ul>' + items + '</ul></section>';
+        }
+        if (block.type === 'table') {
+          var head = block.header ? '<thead><tr>' + block.header.map(function (c) { return '<th>' + esc(c) + '</th>'; }).join('') + '</tr></thead>' : '';
+          var body = (block.rows || []).map(function (r) { return '<tr>' + r.map(function (c) { return '<td>' + esc(c) + '</td>'; }).join('') + '</tr>'; }).join('');
+          var ncols = (block.header || (block.rows || [[]])[0] || []).length;
+          return '<div class="article__table-wrap"><table class="article__table"' + (ncols > 3 ? ' style="min-width: ' + (ncols * 120) + 'px"' : '') + '>' + head + '<tbody>' + body + '</tbody></table></div>';
+        }
+        if (block.type === 'divider') return '<hr class="article__divider">';
+        if (block.type === 'gallery') {
+          var slides = (block.photos || []).map(function (p) {
+            return '<figure class="article__gallery-slide"><img src="' + esc(p.image) + '" alt="' + esc(p.caption || '') + '" loading="lazy">' +
+              (p.caption ? '<figcaption>' + esc(p.caption) + '</figcaption>' : '') + '</figure>';
+          }).join('');
+          return '<div class="article__gallery" aria-label="Photo gallery, swipe to see more"><div class="article__gallery-track">' + slides + '</div></div>';
+        }
+        if (block.type === 'video') {
+          var ok = VIDEO_PREFIXES.some(function (p) { return (block.embed_url || '').indexOf(p) === 0; });
+          if (!ok) return '';
+          return '<figure class="article__video"><div class="article__video-frame"><iframe src="' + esc(block.embed_url) + '" title="' + esc(block.caption || 'Video') +
+            '" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe></div>' +
+            (block.caption ? '<figcaption>' + esc(block.caption) + '</figcaption>' : '') + '</figure>';
+        }
+        if (block.type === 'link') {
+          var external = block.kind === 'web';
+          return '<a class="link-card" href="' + esc(block.href) + '"' + (external ? ' target="_blank" rel="noopener noreferrer"' : '') + '>' +
+            '<div class="link-card__body"><span class="link-card__kicker">' + esc(block.host || 'More from The Sod Father') + '</span>' +
+            '<h3 class="link-card__title">' + esc(block.title) + '</h3>' +
+            (block.description ? '<p class="link-card__desc">' + esc(block.description) + '</p>' : '') +
+            '<span class="link-card__cta">' + esc(block.label || 'Read the story') + ' &rarr;</span></div>' +
+            (block.image ? '<div class="link-card__thumb" style="background-image: url(\'' + esc(block.image) + '\');"></div>' : '') + '</a>';
+        }
+        if (block.type === 'compare') {
+          var bl = esc(block.before_label || 'Before'), al = esc(block.after_label || 'After');
+          return '<figure class="compare" style="--pos: 50%;"><div class="compare__stage">' +
+            '<img class="compare__img" src="' + esc(block.after) + '" alt="' + al + '" loading="lazy">' +
+            '<img class="compare__img compare__img--before" src="' + esc(block.before) + '" alt="' + bl + '" loading="lazy">' +
+            '<span class="compare__label compare__label--before">' + bl + '</span><span class="compare__label compare__label--after">' + al + '</span>' +
+            '<span class="compare__handle" aria-hidden="true"></span>' +
+            '<input type="range" class="compare__range" min="0" max="100" value="50" aria-label="Drag to compare ' + bl + ' and ' + al + '">' +
+            '</div>' + (block.caption ? '<figcaption>' + esc(block.caption) + '</figcaption>' : '') + '</figure>';
+        }
+        return '';
       }
 
       function blockHtml(block) {
@@ -162,7 +232,7 @@
             (block.caption ? '<figcaption>' + block.caption + '</figcaption>' : '') + '</figure>';
         }
         if (block.type === 'embed') return '<div class="article__embed">' + block.html + '</div>';
-        return '';
+        return newBlockHtml(block);
       }
 
       function blocksHtml(blocks) {

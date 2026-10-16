@@ -32,6 +32,15 @@ BLOCK_TYPES = {
     "photo": "Photo",
     "quote": "Quote",
     "subheading": "Subheading",
+    "list": "List",
+    "tip": "Pro tip box",
+    "takeaways": "Key takeaways",
+    "table": "Table",
+    "divider": "Divider",
+    "gallery": "Gallery",
+    "video": "Video (YouTube / Vimeo link)",
+    "link": "Link card",
+    "compare": "Before / after slider",
     "embed": "Custom embed / code",
 }
 
@@ -84,10 +93,17 @@ def _with_blocks(article):
 
 
 def words_in_blocks(blocks):
+    """Words a reader actually reads, for the read-time estimate. Counts
+    prose plus list items, tip text and takeaways; tables, captions and
+    media don't add reading time."""
     words = 0
     for block in blocks:
-        if block.get("type") in ("paragraph", "quote", "subheading"):
+        kind = block.get("type")
+        if kind in ("paragraph", "quote", "subheading", "tip"):
             words += len((block.get("text") or "").split())
+        elif kind in ("list", "takeaways"):
+            for item in block.get("items") or []:
+                words += len(str(item).split())
     return words
 
 

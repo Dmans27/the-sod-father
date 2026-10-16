@@ -299,3 +299,56 @@
 .admin-login__footnote a:hover { text-decoration: underline; }
 .admin-login__card--wide { max-width: 420px; }
 .admin-login form { display: flex; flex-direction: column; gap: 14px; }
+
+
+/* ── Newer story-builder blocks (list, tip, takeaways, table, gallery,
+   video, link card, before/after) ── */
+.admin-block__body select {
+  font: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 11px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.admin-block__body input.admin-block__url,
+.admin-block__body input.admin-link__url,
+.admin-block__body input.admin-link__title,
+.admin-block__body input.admin-link__label,
+.admin-block__body input.admin-block__title,
+.admin-block__body input[class*="admin-compare__label"],
+.admin-block__body textarea.admin-link__desc,
+.admin-gallery__fields input[type="text"],
+.admin-gallery__fields input[type="file"] {
+  font: inherit;
+  font-size: 15px;
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 11px;
+  width: 100%;
+  box-sizing: border-box;
+}
+.admin-block__check { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; color: var(--ink-soft); }
+.admin-link__story, .admin-link__web { display: flex; flex-direction: column; gap: 8px; }
+.admin-gallery__rows { display: flex; flex-direction: column; gap: 10px; }
+.admin-gallery__row {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fafaf7;
+}
+.admin-gallery__thumb { flex-shrink: 0; width: 64px; height: 64px; max-width: none; object-fit: cover; margin: 0; }
+.admin-gallery__fields { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.admin-gallery__actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.admin-gallery__multi { cursor: pointer; }
+.admin-compare__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.admin-compare__side { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+@media (max-width: 600px) { .admin-compare__grid { grid-template-columns: 1fr; } }

@@ -192,11 +192,148 @@
   </div>
 </template>
 
+
+{# Shared header row for the newer block types' <template>s below. #}
+{% macro block_head(label) %}
+    <div class="admin-block__head">
+      <span class="admin-block__handle" draggable="true" title="Drag to reorder">⠿</span>
+      <span class="admin-block__label">{{ label }}</span>
+      <button type="button" class="admin-block__remove" title="Remove block">&times;</button>
+    </div>
+{% endmacro %}
+
+<template id="block-template-list">
+  <div class="admin-block" data-block-type="list">
+    {{ block_head('List') }}
+    <div class="admin-block__body">
+      <select class="admin-block__style">
+        <option value="bulleted">Bulleted list</option>
+        <option value="numbered">Numbered list (good for rankings)</option>
+      </select>
+      <textarea class="admin-block__text" rows="5" placeholder="One item per line"></textarea>
+    </div>
+  </div>
+</template>
+
+<template id="block-template-tip">
+  <div class="admin-block" data-block-type="tip">
+    {{ block_head('Pro tip box') }}
+    <div class="admin-block__body">
+      <select class="admin-block__variant">
+        <option value="tip">Pro tip (green)</option>
+        <option value="warning">Heads up / warning (amber)</option>
+      </select>
+      <textarea class="admin-block__text" rows="3" placeholder="The tip or warning"></textarea>
+    </div>
+  </div>
+</template>
+
+<template id="block-template-takeaways">
+  <div class="admin-block" data-block-type="takeaways">
+    {{ block_head('Key takeaways') }}
+    <div class="admin-block__body">
+      <input type="text" class="admin-block__title" placeholder="Heading (defaults to “Key takeaways”)">
+      <textarea class="admin-block__text" rows="4" placeholder="One takeaway per line"></textarea>
+      <p class="admin-hint">New takeaways boxes jump to the top of the story so skimmers see them first — drag it elsewhere if you'd rather.</p>
+    </div>
+  </div>
+</template>
+
+<template id="block-template-table">
+  <div class="admin-block" data-block-type="table">
+    {{ block_head('Table') }}
+    <div class="admin-block__body">
+      <textarea class="admin-block__text admin-block__text--code" rows="6" placeholder="Driver | Loft | Price&#10;TaylorMade Qi10 | 10.5° | $599&#10;Callaway Paradym | 10.5° | $549"></textarea>
+      <label class="admin-block__check"><input type="checkbox" class="admin-block__header-row" value="1"> First row is the header</label>
+      <p class="admin-hint">One row per line, columns separated by <strong>|</strong>. You can also paste a range straight from Excel or Google Sheets.</p>
+    </div>
+  </div>
+</template>
+
+<template id="block-template-divider">
+  <div class="admin-block" data-block-type="divider">
+    {{ block_head('Divider') }}
+    <div class="admin-block__body">
+      <p class="admin-hint" style="margin:0;">A thin line between sections — nothing to fill in.</p>
+    </div>
+  </div>
+</template>
+
+<template id="block-template-gallery">
+  <div class="admin-block" data-block-type="gallery">
+    {{ block_head('Gallery (swipeable photos)') }}
+    <div class="admin-block__body">
+      <div class="admin-gallery__rows"></div>
+      <div class="admin-gallery__actions">
+        <button type="button" class="admin-btn admin-gallery__add">+ Add a photo</button>
+        <label class="admin-btn admin-gallery__multi">Add several at once<input type="file" accept="image/*" multiple hidden></label>
+      </div>
+      <input type="hidden" class="admin-gallery__order">
+    </div>
+  </div>
+</template>
+
+<template id="block-template-video">
+  <div class="admin-block" data-block-type="video">
+    {{ block_head('Video (YouTube / Vimeo link)') }}
+    <div class="admin-block__body">
+      <input type="text" class="admin-block__url" placeholder="Paste a YouTube or Vimeo link" inputmode="url" autocapitalize="off">
+      <input type="text" class="admin-block__caption" placeholder="Caption (optional)">
+      <p class="admin-hint">Just the link — no embed code needed. It shows as a video player in the story.</p>
+    </div>
+  </div>
+</template>
+
+<template id="block-template-link">
+  <div class="admin-block" data-block-type="link">
+    {{ block_head('Link card') }}
+    <div class="admin-block__body">
+      <select class="admin-link__kind">
+        <option value="story">One of my stories</option>
+        <option value="web">A web link (booking page, product…)</option>
+      </select>
+      <div class="admin-link__story">
+        <select class="admin-link__story-select"></select>
+        <p class="admin-hint">Shows that story's title, summary and cover photo.</p>
+      </div>
+      <div class="admin-link__web" style="display:none;">
+        <input type="text" class="admin-link__url" placeholder="https://…" inputmode="url" autocapitalize="off">
+        <input type="text" class="admin-link__title" placeholder="Title">
+        <textarea class="admin-link__desc" rows="2" placeholder="Short description (optional)"></textarea>
+      </div>
+      <input type="text" class="admin-link__label" placeholder="Button text (optional — e.g. “Book a tee time”)">
+    </div>
+  </div>
+</template>
+
+<template id="block-template-compare">
+  <div class="admin-block" data-block-type="compare">
+    {{ block_head('Before / after slider') }}
+    <div class="admin-block__body">
+      <div class="admin-compare__grid">
+        <div class="admin-compare__side">
+          <input type="text" class="admin-compare__label-before" placeholder="Label (defaults to “Before”)">
+          <img class="admin-block__preview admin-thumb admin-thumb--small admin-compare__preview-before" style="display:none;" alt="">
+          <input type="file" class="admin-compare__file-before" accept="image/*">
+        </div>
+        <div class="admin-compare__side">
+          <input type="text" class="admin-compare__label-after" placeholder="Label (defaults to “After”)">
+          <img class="admin-block__preview admin-thumb admin-thumb--small admin-compare__preview-after" style="display:none;" alt="">
+          <input type="file" class="admin-compare__file-after" accept="image/*">
+        </div>
+      </div>
+      <input type="text" class="admin-block__caption" placeholder="Caption (optional)">
+      <p class="admin-hint">Use two photos with the same framing — readers drag a handle to reveal one over the other.</p>
+    </div>
+  </div>
+</template>
+
 <script>
   (function () {
     var container = document.getElementById('blocks-container');
     var orderInput = document.getElementById('block-order');
     var existingBlocks = {{ existing_blocks|tojson }};
+    var storyChoices = {{ story_choices|tojson }};
     var seq = 0;
 
     function newId() {
@@ -206,8 +343,9 @@
 
     function fieldName(prefix, id) { return prefix + '_' + id; }
 
-    function addBlock(type, data) {
+    function addBlock(type, data, opts) {
       data = data || {};
+      opts = opts || {};
       var tpl = document.getElementById('block-template-' + type);
       if (!tpl) return;
       var id = newId();
@@ -261,18 +399,204 @@
         });
       }
 
+
+      // ── Newer block types ───────────────────────────────────────────
+      if (type === 'list' || type === 'takeaways') {
+        var lt = node.querySelector('.admin-block__text');
+        lt.name = fieldName('block_text', id);
+        if (data.items) lt.value = data.items.join('\n');
+        if (type === 'list') {
+          var ls = node.querySelector('.admin-block__style');
+          ls.name = fieldName('block_style', id);
+          if (data.style) ls.value = data.style;
+        } else {
+          var tt = node.querySelector('.admin-block__title');
+          tt.name = fieldName('block_title', id);
+          if (data.title && data.title !== 'Key takeaways') tt.value = data.title;
+        }
+      }
+
+      if (type === 'tip') {
+        var tipText = node.querySelector('.admin-block__text');
+        tipText.name = fieldName('block_text', id);
+        if (data.text) tipText.value = data.text;
+        var tipVariant = node.querySelector('.admin-block__variant');
+        tipVariant.name = fieldName('block_variant', id);
+        if (data.variant) tipVariant.value = data.variant;
+      }
+
+      if (type === 'table') {
+        var tableText = node.querySelector('.admin-block__text');
+        tableText.name = fieldName('block_text', id);
+        var headerBox = node.querySelector('.admin-block__header-row');
+        headerBox.name = fieldName('block_header', id);
+        if (data.rows) {
+          var allRows = (data.header ? [data.header] : []).concat(data.rows);
+          tableText.value = allRows.map(function (r) { return r.join(' | '); }).join('\n');
+          headerBox.checked = !!data.header;
+        } else {
+          headerBox.checked = true; // a new table starts with a header row
+        }
+      }
+
+      if (type === 'video') {
+        var vUrl = node.querySelector('.admin-block__url');
+        vUrl.name = fieldName('block_url', id);
+        if (data.url) vUrl.value = data.url;
+        var vCap = node.querySelector('.admin-block__caption');
+        vCap.name = fieldName('block_caption', id);
+        if (data.caption) vCap.value = data.caption;
+      }
+
+      if (type === 'link') {
+        var kindSel = node.querySelector('.admin-link__kind');
+        kindSel.name = fieldName('block_link_kind', id);
+        var storySel = node.querySelector('.admin-link__story-select');
+        storySel.name = fieldName('block_link_story', id);
+        storyChoices.forEach(function (s) {
+          var o = document.createElement('option');
+          o.value = s.slug; o.textContent = s.title;
+          storySel.appendChild(o);
+        });
+        var urlEl = node.querySelector('.admin-link__url');
+        urlEl.name = fieldName('block_link_url', id);
+        var titleEl = node.querySelector('.admin-link__title');
+        titleEl.name = fieldName('block_link_title', id);
+        var descEl = node.querySelector('.admin-link__desc');
+        descEl.name = fieldName('block_link_desc', id);
+        var labelEl = node.querySelector('.admin-link__label');
+        labelEl.name = fieldName('block_link_label', id);
+        var storyBox = node.querySelector('.admin-link__story');
+        var webBox = node.querySelector('.admin-link__web');
+        function syncKind() {
+          var isStory = kindSel.value === 'story';
+          storyBox.style.display = isStory ? '' : 'none';
+          webBox.style.display = isStory ? 'none' : '';
+        }
+        kindSel.addEventListener('change', syncKind);
+        if (data.kind) {
+          kindSel.value = data.kind;
+          if (data.kind === 'story') storySel.value = (data.href || '').replace('/article/', '');
+          else {
+            urlEl.value = data.href || '';
+            titleEl.value = data.title || '';
+            descEl.value = data.description || '';
+          }
+          labelEl.value = data.label || '';
+        }
+        syncKind();
+      }
+
+      if (type === 'compare') {
+        ['before', 'after'].forEach(function (side) {
+          var file = node.querySelector('.admin-compare__file-' + side);
+          file.name = fieldName('block_' + side, id);
+          var lab = node.querySelector('.admin-compare__label-' + side);
+          lab.name = fieldName('block_' + side + '_label', id);
+          var prev = node.querySelector('.admin-compare__preview-' + side);
+          var keep = document.createElement('input');
+          keep.type = 'hidden';
+          keep.name = fieldName('block_existing_' + side, id);
+          keep.value = data[side] || '';
+          node.appendChild(keep);
+          if (data[side + '_label']) lab.value = data[side + '_label'];
+          if (data[side]) { prev.src = data[side]; prev.style.display = ''; }
+          file.addEventListener('change', function () {
+            if (file.files && file.files[0]) {
+              prev.src = URL.createObjectURL(file.files[0]);
+              prev.style.display = '';
+            }
+          });
+        });
+        var cCap = node.querySelector('.admin-block__caption');
+        cCap.name = fieldName('block_caption', id);
+        if (data.caption) cCap.value = data.caption;
+      }
+
+      if (type === 'gallery') {
+        var rowsEl = node.querySelector('.admin-gallery__rows');
+        var orderEl = node.querySelector('.admin-gallery__order');
+        orderEl.name = fieldName('block_gallery_order', id);
+        var rowSeq = 0;
+
+        function syncRows() {
+          orderEl.value = Array.prototype.map.call(rowsEl.children, function (r) { return r.dataset.rowId; }).join(',');
+        }
+        node._syncGallery = syncRows;
+
+        function addRow(photo, file) {
+          rowSeq += 1;
+          var rid = 'r' + rowSeq;
+          var row = document.createElement('div');
+          row.className = 'admin-gallery__row';
+          row.dataset.rowId = rid;
+          row.innerHTML =
+            '<img class="admin-thumb admin-gallery__thumb" style="display:none;" alt="">' +
+            '<div class="admin-gallery__fields">' +
+              '<input type="file" accept="image/*">' +
+              '<input type="text" placeholder="Caption (optional)">' +
+            '</div>' +
+            '<button type="button" class="admin-block__remove" title="Remove photo">&times;</button>';
+          var thumb = row.querySelector('img');
+          var fileEl = row.querySelector('input[type=file]');
+          var capEl = row.querySelector('input[type=text]');
+          fileEl.name = 'block_gallery_photo_' + id + '_' + rid;
+          capEl.name = 'block_gallery_caption_' + id + '_' + rid;
+          var keep = document.createElement('input');
+          keep.type = 'hidden';
+          keep.name = 'block_gallery_existing_' + id + '_' + rid;
+          keep.value = (photo && photo.image) || '';
+          row.appendChild(keep);
+          if (photo && photo.caption) capEl.value = photo.caption;
+          if (photo && photo.image) { thumb.src = photo.image; thumb.style.display = ''; }
+          function showFile() {
+            if (fileEl.files && fileEl.files[0]) {
+              thumb.src = URL.createObjectURL(fileEl.files[0]);
+              thumb.style.display = '';
+            }
+          }
+          fileEl.addEventListener('change', showFile);
+          if (file) {
+            try {
+              var dt = new DataTransfer();
+              dt.items.add(file);
+              fileEl.files = dt.files;
+              showFile();
+            } catch (e) { /* older browser: row stays empty, pick the file by hand */ }
+          }
+          row.querySelector('.admin-block__remove').addEventListener('click', function () {
+            row.remove();
+            syncRows();
+          });
+          rowsEl.appendChild(row);
+          syncRows();
+        }
+
+        node.querySelector('.admin-gallery__add').addEventListener('click', function () { addRow(null); });
+        node.querySelector('.admin-gallery__multi input').addEventListener('change', function (e) {
+          Array.prototype.forEach.call(e.target.files, function (f) { addRow(null, f); });
+          e.target.value = '';
+        });
+        if (data.photos && data.photos.length) data.photos.forEach(function (ph) { addRow(ph); });
+        else addRow(null);
+      }
+
       node.querySelector('.admin-block__remove').addEventListener('click', function () {
         node.remove();
         syncOrder();
       });
 
       wireDrag(node);
-      container.appendChild(node);
+      if (opts.atTop && container.firstChild) container.insertBefore(node, container.firstChild);
+      else container.appendChild(node);
       syncOrder();
       return node;
     }
 
     function syncOrder() {
+      Array.prototype.forEach.call(container.querySelectorAll('.admin-block'), function (el) {
+        if (el._syncGallery) el._syncGallery();
+      });
       var ids = Array.prototype.map.call(container.querySelectorAll('.admin-block'), function (el) {
         return el.dataset.blockId;
       });
@@ -328,7 +652,7 @@
 
     Array.prototype.forEach.call(document.querySelectorAll('.admin-block-add'), function (btn) {
       btn.addEventListener('click', function () {
-        addBlock(btn.dataset.blockType);
+        addBlock(btn.dataset.blockType, undefined, { atTop: btn.dataset.blockType === 'takeaways' });
       });
     });
 
@@ -416,7 +740,7 @@
       var words = 0;
       Array.prototype.forEach.call(blocksContainer.querySelectorAll('.admin-block'), function (block) {
         var type = block.dataset.blockType;
-        if (type === 'paragraph' || type === 'quote' || type === 'subheading') {
+        if (type === 'paragraph' || type === 'quote' || type === 'subheading' || type === 'tip' || type === 'list' || type === 'takeaways') {
           var textEl = block.querySelector('.admin-block__text');
           var text = textEl ? textEl.value.trim() : '';
           if (text) words += text.split(/\s+/).length;

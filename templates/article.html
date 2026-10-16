@@ -58,6 +58,77 @@
               <img src="{{ block.image }}" alt="{{ block.caption or article.title }}" loading="lazy">
               {% if block.caption %}<figcaption>{{ block.caption }}</figcaption>{% endif %}
             </figure>
+          {% elif block.type == 'list' %}
+            {% set numbered = block.style == 'numbered' %}
+            <{{ 'ol' if numbered else 'ul' }} class="article__list{% if numbered %} article__list--numbered{% endif %}">
+              {% for item in block['items'] %}<li>{{ item }}</li>{% endfor %}
+            </{{ 'ol' if numbered else 'ul' }}>
+          {% elif block.type == 'tip' %}
+            <aside class="article__tip article__tip--{{ 'warning' if block.variant == 'warning' else 'tip' }}">
+              <span class="article__tip-label">{{ 'Heads up' if block.variant == 'warning' else 'Pro tip' }}</span>
+              <p>{{ block.text }}</p>
+            </aside>
+          {% elif block.type == 'takeaways' %}
+            <section class="article__takeaways">
+              <h2 class="article__takeaways-title">{{ block.title or 'Key takeaways' }}</h2>
+              <ul>{% for item in block['items'] %}<li>{{ item }}</li>{% endfor %}</ul>
+            </section>
+          {% elif block.type == 'table' %}
+            <div class="article__table-wrap">
+              {% set ncols = (block.header or block.rows[0])|length %}
+              <table class="article__table"{% if ncols > 3 %} style="min-width: {{ ncols * 120 }}px"{% endif %}>
+                {% if block.header %}<thead><tr>{% for cell in block.header %}<th>{{ cell }}</th>{% endfor %}</tr></thead>{% endif %}
+                <tbody>
+                  {% for row in block.rows %}<tr>{% for cell in row %}<td>{{ cell }}</td>{% endfor %}</tr>{% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% elif block.type == 'divider' %}
+            <hr class="article__divider">
+          {% elif block.type == 'gallery' %}
+            <div class="article__gallery" aria-label="Photo gallery, swipe to see more">
+              <div class="article__gallery-track">
+                {% for photo in block.photos %}
+                  <figure class="article__gallery-slide">
+                    <img src="{{ photo.image }}" alt="{{ photo.caption or article.title }}" loading="lazy">
+                    {% if photo.caption %}<figcaption>{{ photo.caption }}</figcaption>{% endif %}
+                  </figure>
+                {% endfor %}
+              </div>
+            </div>
+          {% elif block.type == 'video' %}
+            {% if block.embed_url and (block.embed_url.startswith('https://www.youtube-nocookie.com/embed/') or block.embed_url.startswith('https://player.vimeo.com/video/')) %}
+              <figure class="article__video">
+                <div class="article__video-frame">
+                  <iframe src="{{ block.embed_url }}" title="{{ block.caption or 'Video' }}" loading="lazy" allowfullscreen
+                          referrerpolicy="strict-origin-when-cross-origin"
+                          allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe>
+                </div>
+                {% if block.caption %}<figcaption>{{ block.caption }}</figcaption>{% endif %}
+              </figure>
+            {% endif %}
+          {% elif block.type == 'link' %}
+            <a class="link-card" href="{{ block.href }}"{% if block.kind == 'web' %} target="_blank" rel="noopener noreferrer"{% endif %}>
+              <div class="link-card__body">
+                <span class="link-card__kicker">{{ block.host or 'More from The Sod Father' }}</span>
+                <h3 class="link-card__title">{{ block.title }}</h3>
+                {% if block.description %}<p class="link-card__desc">{{ block.description }}</p>{% endif %}
+                <span class="link-card__cta">{{ block.label or 'Read the story' }} &rarr;</span>
+              </div>
+              {% if block.image %}<div class="link-card__thumb" style="background-image: url('{{ block.image }}');"></div>{% endif %}
+            </a>
+          {% elif block.type == 'compare' %}
+            <figure class="compare" style="--pos: 50%;">
+              <div class="compare__stage">
+                <img class="compare__img" src="{{ block.after }}" alt="{{ block.after_label or 'After' }}" loading="lazy">
+                <img class="compare__img compare__img--before" src="{{ block.before }}" alt="{{ block.before_label or 'Before' }}" loading="lazy">
+                <span class="compare__label compare__label--before">{{ block.before_label or 'Before' }}</span>
+                <span class="compare__label compare__label--after">{{ block.after_label or 'After' }}</span>
+                <span class="compare__handle" aria-hidden="true"></span>
+                <input type="range" class="compare__range" min="0" max="100" value="50" aria-label="Drag to compare {{ block.before_label or 'before' }} and {{ block.after_label or 'after' }}">
+              </div>
+              {% if block.caption %}<figcaption>{{ block.caption }}</figcaption>{% endif %}
+            </figure>
           {% elif block.type == 'embed' %}
             <div class="article__embed">{{ block.html | safe }}</div>
           {% endif %}

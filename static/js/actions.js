@@ -340,7 +340,19 @@
     }
   }
 
+  // Before / after slider: the range input is invisible but covers the
+  // image, so dragging anywhere (mouse or finger) moves the divider. This
+  // is delegated on document so it also works for sliders the pop-up
+  // sheet adds after page load (scripts can't live inside that markup).
+  document.addEventListener('input', function (e) {
+    var range = e.target;
+    if (!range.classList || !range.classList.contains('compare__range')) return;
+    var fig = range.closest('.compare');
+    if (fig) fig.style.setProperty('--pos', range.value + '%');
+  });
+
   window.SodFather = {
+    esc: esc,
     actionsHtml: actionsHtml,
     mountComments: mountComments,
     scrollToComments: scrollToComments
