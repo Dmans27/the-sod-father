@@ -10,8 +10,8 @@
      green-black character at a gentler value, closer to how ink actually
      looks on paper than how it looks on a screen. */
   --ink: #2b362f;
-  --ink-soft: rgba(43, 54, 47, 0.68);
-  --ink-faint: rgba(43, 54, 47, 0.48);
+  --ink-soft: rgba(43, 54, 47, 0.78);
+  --ink-faint: rgba(43, 54, 47, 0.64);
   --cream: #faf6ec;
   --cream-deep: #f1ead8;
   --line: rgba(27, 42, 31, 0.1);
@@ -58,7 +58,7 @@ a { color: inherit; }
 .site-header__inner {
   max-width: 1080px;
   margin: 0 auto;
-  padding: 12px 16px;
+  padding: 6px 16px 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -70,8 +70,9 @@ a { color: inherit; }
   gap: 8px;
   text-decoration: none;
   color: #1b2a1f;
-  font-weight: 800;
-  font-size: 18px;
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 20px;
   letter-spacing: -0.01em;
   min-width: 0;
 }
