@@ -49,7 +49,7 @@ a { color: inherit; }
    on a device that reports a tiny or zero inset. */
 .site-header {
   background: var(--fairway-deep);
-  border-bottom: 1px solid rgba(0,0,0,0.15);
+  border-bottom: 1px solid var(--line); /* light rule under the white category bar */
   position: sticky;
   top: 0;
   z-index: 10;
@@ -102,20 +102,25 @@ a { color: inherit; }
 
 /* ── Category chip bar ──
    The same categories as the hamburger drawer, as a horizontally scrolling
-   row of pills under the brand bar (inside .site-header, so it's sticky
-   with it). Scrollbar hidden -- it's a swipe row on touch -- and the right
-   edge fades out as a hint that there's more off-screen. position:relative
-   on the scroller makes each chip's offsetLeft relative to it, which the
-   "scroll the active chip into view" script in base.html relies on. */
+   row under the brand bar (inside .site-header, so it's sticky with it).
+   White strip, no pills: each category is plain text in the serif face
+   with a thin vertical rule on its left to separate it from the previous
+   one (the first item has no rule). The active category is dark green with
+   a gold underline. Scrollbar hidden -- it's a swipe row on touch -- and the
+   right edge fades to white as a hint that there's more off-screen.
+   position:relative on the scroller makes each item's offsetLeft relative
+   to it, which the "scroll the active chip into view" script in base.html
+   relies on. (Class names still say "chip" so the script/markup didn't change.) */
 .category-bar {
-  max-width: 1080px;
-  margin: 0 auto;
+  background: #fff;
 }
 .category-bar__scroll {
   position: relative;
   display: flex;
-  gap: 8px;
-  padding: 0 32px 12px 16px;
+  align-items: center;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 10px 32px 10px 16px;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -127,15 +132,25 @@ a { color: inherit; }
   flex: 0 0 auto;
   text-decoration: none;
   white-space: nowrap;
-  color: rgba(255,255,255,0.82);
-  background: rgba(255,255,255,0.1);
-  font-size: 13.5px;
-  font-weight: 700;
-  padding: 8px 14px;
-  border-radius: 999px;
+  color: var(--ink-soft);
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  padding: 4px 16px;
+  border-left: 1px solid rgba(27, 42, 31, 0.22);
 }
-.category-bar__chip:hover { background: rgba(255,255,255,0.18); }
-.category-bar__chip.is-active { color: var(--fairway-deep); background: var(--gold); }
+.category-bar__chip:first-child { padding-left: 0; border-left: none; }
+.category-bar__chip:hover { color: var(--fairway-deep); }
+.category-bar__chip.is-active {
+  color: var(--fairway-deep);
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--gold);
+  text-decoration-thickness: 2px;
+  text-underline-offset: 6px;
+}
 
 /* ── Menu drawer ──
    Slides in from the left (the same side as the hamburger button) while
