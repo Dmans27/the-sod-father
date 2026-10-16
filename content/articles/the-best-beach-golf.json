@@ -29,8 +29,28 @@
       "caption": "Cantigny golf"
     },
     {
+      "type": "gallery",
+      "photos": [
+        {
+          "image": "/static/uploads/the-best-beach-golf/gallery-bmvasjrxi8-r2.jpg",
+          "caption": ""
+        },
+        {
+          "image": "/static/uploads/the-best-beach-golf/gallery-bmvasjrxi8-r3.jpg",
+          "caption": ""
+        },
+        {
+          "image": "/static/uploads/the-best-beach-golf/gallery-bmvasjrxi8-r4.jpg",
+          "caption": ""
+        }
+      ]
+    },
+    {
       "type": "paragraph",
       "text": "Budget the conversation early and directly, even though it's the least fun part. A trip that quietly assumes everyone's comfortable with the same green fees and lodging tier is the most common way a group trip turns awkward later. Thirty seconds of directness up front saves a lot of passive-aggressive group chat messages afterward."
+    },
+    {
+      "type": "divider"
     },
     {
       "type": "paragraph",
