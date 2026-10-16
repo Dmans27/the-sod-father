@@ -1,0 +1,20 @@
+{#
+  Save / Comment / Share row. Server-rendered for the cards and the article
+  page (so the right Saved state shows with no flash); the pop-up sheet
+  builds the same markup in static/js/actions.js. Clicks are handled by that
+  script -- these are plain <button>s with data-action attributes.
+  `compact` = icons only, used on the smaller list rows.
+#}
+{% macro story_actions(slug, title, saved, count, compact=False) %}
+<div class="story-actions{% if compact %} story-actions--compact{% endif %}" data-slug="{{ slug }}" data-title="{{ title }}">
+  <button type="button" class="story-action story-action--save{% if saved %} is-saved{% endif %}" data-action="save" aria-pressed="{{ 'true' if saved else 'false' }}" aria-label="{{ 'Unsave story' if saved else 'Save story' }}">
+    <svg class="story-action__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-save"></use></svg><span class="story-action__label">{{ 'Saved' if saved else 'Save' }}</span>
+  </button>
+  <button type="button" class="story-action" data-action="comment" aria-label="Comments">
+    <svg class="story-action__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-comment"></use></svg><span class="story-action__label">Comment</span><span class="story-action__count">{{ count if count else '' }}</span>
+  </button>
+  <button type="button" class="story-action" data-action="share" aria-label="Share story">
+    <svg class="story-action__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-share"></use></svg><span class="story-action__label">Share</span>
+  </button>
+</div>
+{% endmacro %}

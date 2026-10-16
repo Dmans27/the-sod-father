@@ -938,3 +938,254 @@ body.article-sheet-open { overflow: hidden; }
      not a responsive one. */
   .article-sheet__header .article__title { font-size: 23px; }
 }
+
+/* ── Story actions: Save / Comment / Share ──
+   A plain row of icon + label buttons (no pills, no boxes) under a story's
+   byline -- on the home-page cards, inside the pop-up sheet, and on the
+   article page. Icons are stroked outlines from the sprite at the top of
+   base.html; a saved story fills its bookmark gold. The negative left
+   margin lines the first icon up with the text edge above it (the button's
+   own padding would otherwise indent it). Behaviour: static/js/actions.js. */
+.story-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin: 10px 0 0 -10px;
+}
+.story-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 40px;
+  padding: 6px 10px;
+  border: none;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: var(--font-sans);
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.story-action:hover { color: var(--fairway-deep); }
+.story-action__icon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  flex-shrink: 0;
+}
+.story-action--save.is-saved { color: var(--gold); }
+.story-action--save.is-saved .story-action__icon { fill: currentColor; }
+.story-action__count { font-variant-numeric: tabular-nums; }
+.story-action__count:empty { display: none; }
+
+/* List rows are smaller: icons only (the counts stay). */
+.story-actions--compact { margin-top: 6px; }
+.story-actions--compact .story-action { min-height: 36px; padding: 6px 10px 6px 10px; }
+.story-actions--compact .story-action__label { display: none; }
+
+/* In the article / sheet the row sits between the byline rule and the text. */
+.article__byline + .story-actions { margin: -10px 0 14px -10px; }
+
+/* ── Share menu (bottom sheet) ── */
+.share-menu {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.25s ease, visibility 0s linear 0.25s;
+}
+.share-menu.is-open { visibility: visible; opacity: 1; transition: opacity 0.25s ease; }
+.share-menu__scrim { position: absolute; inset: 0; background: rgba(0,0,0,0.4); }
+.share-menu__panel {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  max-width: 520px;
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 18px 18px 0 0;
+  padding: 18px 18px calc(14px + env(safe-area-inset-bottom));
+  transform: translateY(24px);
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.share-menu.is-open .share-menu__panel { transform: translateY(0); }
+.share-menu__title {
+  margin: 0 0 6px;
+  font-family: var(--font-serif);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--fairway-deep);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.share-menu__item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 4px;
+  border: none;
+  border-bottom: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 16px;
+  font-weight: 600;
+  text-decoration: none;
+  text-align: left;
+  cursor: pointer;
+}
+.share-menu__item[hidden] { display: none; }
+.share-menu__item .story-action__icon { width: 22px; height: 22px; color: var(--fairway-deep); }
+.share-menu__cancel {
+  display: block;
+  width: 100%;
+  margin-top: 10px;
+  padding: 13px;
+  border: none;
+  border-radius: 12px;
+  background: #f2f4f2;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+@media (prefers-reduced-motion: reduce) {
+  .share-menu, .share-menu__panel { transition-duration: 0.01s; }
+}
+
+/* ── Comments ── */
+.comments { margin: 36px 0 24px; padding-top: 22px; border-top: 1px solid var(--line); }
+.comments__title {
+  font-family: var(--font-serif);
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--fairway-deep);
+  margin: 0 0 14px;
+}
+.comments__count { font-family: var(--font-sans); font-size: 14px; font-weight: 600; color: var(--ink-faint); }
+.comments__count:empty { display: none; }
+.comments__list { list-style: none; margin: 0; padding: 0; }
+.comments__list[data-empty="true"]::before {
+  content: "No comments yet. Be the first.";
+  display: block;
+  padding: 4px 0 16px;
+  color: var(--ink-soft);
+  font-size: 15px;
+}
+.comments__loading { color: var(--ink-faint); font-size: 14px; margin: 0 0 12px; }
+.comment { padding: 12px 0; border-bottom: 1px solid var(--line); }
+.comment__head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.comment__name { font-weight: 800; font-size: 14.5px; color: var(--ink); }
+.comment__time { font-size: 12.5px; color: var(--ink-faint); }
+.comment__delete {
+  margin-left: auto;
+  border: none;
+  background: transparent;
+  padding: 2px 0;
+  color: var(--ink-faint);
+  font-family: var(--font-sans);
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.comment__delete:hover { color: #a33; }
+.comment__body {
+  margin: 4px 0 0;
+  font-size: 15.5px;
+  line-height: 1.5;
+  color: var(--ink);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.comments__compose { margin-top: 18px; }
+.comments__as { display: block; font-size: 13px; color: var(--ink-soft); margin-bottom: 8px; }
+.comments__form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid rgba(27, 42, 31, 0.22);
+  border-radius: 10px;
+  font-family: var(--font-sans);
+  font-size: 16px; /* 16px stops iOS zooming into the field */
+  line-height: 1.45;
+  color: var(--ink);
+  resize: vertical;
+  background: #fff;
+}
+.comments__form textarea:focus { outline: 2px solid var(--fairway-deep); outline-offset: 1px; }
+.comments__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 10px; }
+.comments__error { color: #a33; font-size: 13px; }
+.comments__signin { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.comments__signin p { margin: 0; flex-basis: 100%; color: var(--ink-soft); font-size: 15px; }
+.comments__alt { color: var(--fairway-deep); font-weight: 700; font-size: 14px; }
+
+/* ── Account pages (sign in / create account / saved) ── */
+.account-card { max-width: 420px; margin: 0 auto; padding: 36px 0 20px; }
+.account-card__title {
+  font-family: var(--font-serif);
+  font-size: 30px;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--fairway-deep);
+  margin: 0 0 6px;
+}
+.account-card__sub { margin: 0 0 22px; color: var(--ink-soft); font-size: 16px; }
+.account-card__foot { margin: 22px 0 0; color: var(--ink-soft); font-size: 15px; }
+.account-card__foot a { color: var(--fairway-deep); font-weight: 700; }
+.account-error {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fbeeee;
+  color: #8a2a2a;
+  font-size: 14.5px;
+}
+.account-field { display: block; margin-bottom: 16px; }
+.account-field > span { display: block; margin-bottom: 6px; font-size: 13.5px; font-weight: 800; color: var(--ink); }
+.account-field em { font-style: normal; font-weight: 500; color: var(--ink-faint); margin-left: 4px; }
+.account-field input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px 14px;
+  border: 1px solid rgba(27, 42, 31, 0.22);
+  border-radius: 10px;
+  font-family: var(--font-sans);
+  font-size: 16px;
+  color: var(--ink);
+  background: #fff;
+}
+.account-field input:focus { outline: 2px solid var(--fairway-deep); outline-offset: 1px; }
+.account-btn {
+  display: inline-block;
+  padding: 13px 22px;
+  border: none;
+  border-radius: 10px;
+  background: var(--fairway-deep);
+  color: #fff;
+  font-family: var(--font-sans);
+  font-size: 15.5px;
+  font-weight: 800;
+  text-decoration: none;
+  text-align: center;
+  cursor: pointer;
+}
+.account-form .account-btn { width: 100%; }
+.account-btn:hover { background: #163a2b; }
+.account-btn:disabled { opacity: 0.6; cursor: default; }
+.account-btn--small { padding: 9px 16px; font-size: 14px; }
+.account-btn--ghost { background: transparent; color: var(--fairway-deep); border: 1px solid rgba(27, 42, 31, 0.28); }
+.account-btn--ghost:hover { background: #f2f4f2; }
+.account-signout { margin: 36px 0 0; }
+
+/* Drawer: account links under the categories. */
+.site-menu__account { margin-top: 10px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.12); }
+.site-menu__who { margin: 0; padding: 8px 18px 4px; color: rgba(255,255,255,0.55); font-size: 12.5px; font-weight: 700; }

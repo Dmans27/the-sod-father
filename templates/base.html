@@ -15,8 +15,21 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,600;0,700;1,600&family=Source+Sans+3:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css">
+  {% block head %}{% endblock %}
 </head>
 <body>
+  <!-- Icon sprite for the Save / Comment / Share buttons (see
+       templates/_actions.html and static/js/actions.js). -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+    <defs>
+      <symbol id="i-save" viewBox="0 0 24 24"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.2L5 21V4a1 1 0 0 1 1-1z"/></symbol>
+      <symbol id="i-comment" viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-12.2 7.6L3.5 20.5l1.4-4.9A8.5 8.5 0 1 1 21 11.5z"/></symbol>
+      <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></symbol>
+      <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/></symbol>
+      <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></symbol>
+    </defs>
+  </svg>
+
   <header class="site-header">
     <div class="site-header__inner">
       <button type="button" class="site-menu-toggle" id="site-menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="site-menu-overlay">
@@ -58,6 +71,15 @@
       {% for key, cat in categories.items() %}
         <a href="/category/{{ key }}" class="site-menu__link {% if active_category == key %}is-active{% endif %}">{{ cat.emoji }} {{ cat.label }}</a>
       {% endfor %}
+      <div class="site-menu__account">
+        {% if reader %}
+          <p class="site-menu__who">Signed in as {{ reader.display_name }}</p>
+          <a href="/account" class="site-menu__link">Saved stories</a>
+        {% else %}
+          <a href="/account/login" class="site-menu__link">Sign in</a>
+          <a href="/account/signup" class="site-menu__link">Create account</a>
+        {% endif %}
+      </div>
     </nav>
   </div>
 
@@ -68,6 +90,12 @@
   <footer class="site-footer">
     <p>The Sod Father &mdash; a fun side project, not a real publication (yet).</p>
   </footer>
+
+  <script>
+    // Who's signed in (from the server session) -- read by static/js/actions.js.
+    window.READER = {{ reader_state|tojson }};
+  </script>
+  <script src="/static/js/actions.js?v=1"></script>
 
   <script>
     // No-op on a regular browser visit -- window.Capacitor only exists when
@@ -196,10 +224,13 @@
           heroHtml +
           '<div class="article-sheet__body">' +
             '<div class="article__byline">' + avatar + '<p class="article__meta">' + article.author + (article.author_position ? ' &middot; ' + article.author_position : '') + ' &middot; ' + article.published_at + '</p></div>' +
+            window.SodFather.actionsHtml(article.slug, article.title, false) +
             '<div class="article__content" id="article-sheet-content">' + blocksHtml(short.blocks) + '</div>' +
             (short.truncated ? '<button type="button" class="article-sheet__readmore" id="article-sheet-readmore">Read more</button>' : '') +
             authorCardHtml +
+            '<div id="sheet-comments"></div>' +
           '</div>';
+        window.SodFather.mountComments(document.getElementById('sheet-comments'), article.slug);
 
         if (short.truncated) {
           document.getElementById('article-sheet-readmore').addEventListener('click', function () {
@@ -232,7 +263,13 @@
         if (!opts || opts.pushState !== false) {
           history.pushState({ articleSheet: slug }, '', '/article/' + slug);
         }
+        // Tapping "Comment" on a card opens the sheet and jumps to the
+        // comments (once the sheet's pop-in animation has started).
+        if (opts && opts.scrollTo === 'comments') {
+          setTimeout(window.SodFather.scrollToComments, 250);
+        }
       }
+      window.__openArticleSheet = openSheet;
 
       function closeSheet(opts) {
         overlay.classList.remove('is-open');

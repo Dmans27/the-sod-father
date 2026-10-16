@@ -1,9 +1,19 @@
 {% extends "base.html" %}
+{% from "_actions.html" import story_actions %}
 {% block title %}The Sod Father{% if active_category %} — {{ categories[active_category].label }}{% endif %}{% endblock %}
 
 {% block content %}
 <section class="hero">
-  
+  <h1 class="hero__title">
+    {% if active_category %}{{ categories[active_category].label }}{% else %}Golf, written by people who actually play it{% endif %}
+  </h1>
+  <p class="hero__sub">
+    {% if active_category %}
+      Every {{ categories[active_category].label|lower }} story, newest first.
+    {% else %}
+      Equipment, instruction, course guides, tour news, and everything in between.
+    {% endif %}
+  </p>
 </section>
 
 {% for story in featured %}
@@ -23,6 +33,7 @@
       {% if story.author_photo %}<img class="hero-story__byline-avatar" src="{{ story.author_photo }}" alt="">{% endif %}
       <p class="hero-story__meta">{{ story.author }}{% if story.author_position %} &middot; {{ story.author_position }}{% endif %} &middot; {{ story.published_at }}</p>
     </div>
+    {{ story_actions(story.slug, story.title, story.slug in saved_slugs, comment_counts.get(story.slug, 0)) }}
   </a>
 {% endfor %}
 
@@ -34,6 +45,7 @@
         <span class="story-row__pill">{{ cat.label }}</span>
         <h2 class="story-row__title">{{ article.title }}</h2>
         <p class="story-row__meta">{{ article.author }} &middot; {{ article.read_minutes }} min read</p>
+        {{ story_actions(article.slug, article.title, article.slug in saved_slugs, comment_counts.get(article.slug, 0), compact=True) }}
       </div>
       {% if article.cover_image %}
         <div class="story-row__thumb" style="background-image: url('{{ article.cover_image }}'); background-size: cover; background-position: center;"></div>
@@ -74,5 +86,6 @@
   // screen works around on the app side).
   window.ARTICLES_DATA = {{ all_articles|tojson }};
   window.CATEGORIES_DATA = {{ categories|tojson }};
+  window.COMMENT_COUNTS = {{ comment_counts|tojson }};
 </script>
 {% endblock %}

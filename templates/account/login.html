@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+{% block title %}Sign in — The Sod Father{% endblock %}
+
+{% block content %}
+<section class="account-card">
+  <h1 class="account-card__title">Sign in</h1>
+  <p class="account-card__sub">
+    {% if then.startswith('save:') %}Sign in to save this story.{% elif next.endswith('#comments') %}Sign in to join the conversation.{% else %}Welcome back.{% endif %}
+  </p>
+
+  {% if error %}<p class="account-error" role="alert">{{ error }}</p>{% endif %}
+
+  <form method="post" action="/account/login" class="account-form">
+    <input type="hidden" name="csrf" value="{{ csrf_token }}">
+    <input type="hidden" name="next" value="{{ next }}">
+    <input type="hidden" name="then" value="{{ then }}">
+    <label class="account-field">
+      <span>Email</span>
+      <input type="email" name="email" value="{{ (form or {}).get('email', '') }}" autocomplete="email" autocapitalize="off" required autofocus>
+    </label>
+    <label class="account-field">
+      <span>Password</span>
+      <input type="password" name="password" autocomplete="current-password" required>
+    </label>
+    <button type="submit" class="account-btn">Sign in</button>
+  </form>
+
+  <p class="account-card__foot">New here? <a href="/account/signup?next={{ next|urlencode }}{% if then %}&then={{ then|urlencode }}{% endif %}">Create an account</a></p>
+</section>
+{% endblock %}

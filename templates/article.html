@@ -1,5 +1,19 @@
 {% extends "base.html" %}
+{% from "_actions.html" import story_actions %}
 {% block title %}{{ article.title }} — The Sod Father{% endblock %}
+
+{# Link previews: when someone shares this page by email or text, these
+   tags are what the preview card (title, blurb, picture) is built from. #}
+{% block head %}
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="The Sod Father">
+  <meta property="og:title" content="{{ article.title }}">
+  <meta property="og:description" content="{{ article.dek }}">
+  <meta property="og:url" content="{{ request.url_root.rstrip('/') }}/article/{{ article.slug }}">
+  {% if article.cover_image %}<meta property="og:image" content="{{ (request.url_root.rstrip('/') ~ article.cover_image) if article.cover_image.startswith('/') else article.cover_image }}">{% endif %}
+  <meta name="twitter:card" content="{{ 'summary_large_image' if article.cover_image else 'summary' }}">
+  <meta name="description" content="{{ article.dek }}">
+{% endblock %}
 
 {% block content %}
 {% set cat = categories[article.category] %}
@@ -24,6 +38,8 @@
       {% if article.author_photo %}<img class="article__avatar" src="{{ article.author_photo }}" alt="">{% endif %}
       <p class="article__meta">{{ article.author }}{% if article.author_position %} &middot; {{ article.author_position }}{% endif %} &middot; {{ article.published_at }}</p>
     </div>
+
+    {{ story_actions(article.slug, article.title, article.slug in saved_slugs, comment_counts.get(article.slug, 0)) }}
 
     {% if article.blocks %}
       <div class="article__content">
@@ -60,6 +76,8 @@
         {% if article.author_position %}<span class="article__author-card-masthead-position">{{ article.author_position }}</span>{% endif %}
       </div>
     </div>
+
+    <div id="article-comments" data-slug="{{ article.slug }}"></div>
 
     {#
       "Back to all articles" is switched off for now (Danny: "I do not
