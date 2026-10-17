@@ -260,7 +260,7 @@ a { color: inherit; }
 body.site-menu-open { overflow: hidden; }
 
 /* ── Hero ── */
-.site-main { max-width: 1080px; margin: 0 auto; padding: 0 20px 60px; }
+.site-main { max-width: 1080px; margin: 0 auto; padding: 25px 20px 60px; }
 .hero { padding: 28px 0 20px; }
 .hero__title {
   font-family: var(--font-serif);
