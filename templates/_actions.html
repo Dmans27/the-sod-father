@@ -4,7 +4,7 @@
   builds the same markup in static/js/actions.js. Clicks are handled by that
   script -- these are plain <button>s with data-action attributes.
   `compact` = icons only, used on the smaller list rows.
-  `dark` = adds the dark reading mode button (article page and pop-up only).
+  `dark` = adds the reading tools (text size + dark mode buttons), article page and pop-up only.
 #}
 {% macro story_actions(slug, title, saved, count, compact=False, dark=False) %}
 <div class="story-actions{% if compact %} story-actions--compact{% endif %}" data-slug="{{ slug }}" data-title="{{ title }}">
@@ -18,9 +18,14 @@
     <svg class="story-action__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-share"></use></svg><span class="story-action__label">Share</span>
   </button>
   {% if dark %}
+  <span class="story-actions__tools">
+  <button type="button" class="story-action story-action--text" data-action="textsize" aria-label="Change text size (currently normal)">
+    <span class="story-action__aa" aria-hidden="true"><i>A</i><b>A</b></span><span class="story-action__label">Text size</span>
+  </button>
   <button type="button" class="story-action story-action--theme" data-action="theme" aria-pressed="false" aria-label="Switch to dark reading mode">
     <svg class="story-action__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"></use></svg><span class="story-action__label">Dark</span>
   </button>
+  </span>
   {% endif %}
 </div>
 {% endmacro %}

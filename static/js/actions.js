@@ -31,6 +31,18 @@
   // the reader's choice, but a fresh page load or app launch starts light.
   var readingDark = false;
 
+  // Text size: the "Aa" button steps through these multipliers of the base
+  // 18px paragraph size (18 -> 20 -> 22.5 -> 25px) and wraps back to normal.
+  // Same rule as dark mode: held in memory only, so a reload starts at normal.
+  var TEXT_SCALES = [1, 1.12, 1.25, 1.4];
+  var TEXT_NAMES = ['normal', 'large', 'larger', 'largest'];
+  var textStep = 0;
+
+  function textButtonHtml() {
+    return '<button type="button" class="story-action story-action--text" data-action="textsize" aria-label="Change text size (currently ' + TEXT_NAMES[textStep] + ')">' +
+      '<span class="story-action__aa" aria-hidden="true"><i>A</i><b>A</b></span><span class="story-action__label">Text size</span></button>';
+  }
+
   function themeButtonHtml() {
     return '<button type="button" class="story-action story-action--theme" data-action="theme" aria-pressed="' + readingDark + '" aria-label="' +
       (readingDark ? 'Switch to light reading mode' : 'Switch to dark reading mode') + '">' +
@@ -40,6 +52,14 @@
   function applyReadingTheme() {
     var scopes = document.querySelectorAll('.article-sheet, body.article-page');
     Array.prototype.forEach.call(scopes, function (el) { el.classList.toggle('is-dark', readingDark); });
+    Array.prototype.forEach.call(scopes, function (el) {
+      if (textStep) el.style.setProperty('--read-scale', TEXT_SCALES[textStep]);
+      else el.style.removeProperty('--read-scale');
+    });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-action="textsize"]'), function (b) {
+      b.setAttribute('aria-label', 'Change text size (currently ' + TEXT_NAMES[textStep] + ')');
+      b.classList.toggle('is-active', textStep > 0);
+    });
     if (menu) menu.classList.toggle('is-dark', readingDark);
     Array.prototype.forEach.call(document.querySelectorAll('[data-action="theme"]'), function (b) {
       b.setAttribute('aria-pressed', readingDark ? 'true' : 'false');
@@ -60,7 +80,7 @@
         icon('comment') + '<span class="story-action__label">Comment</span><span class="story-action__count">' + (n || '') + '</span></button>' +
       '<button type="button" class="story-action" data-action="share" aria-label="Share story">' +
         icon('share') + '<span class="story-action__label">Share</span></button>' +
-      (withTheme && !compact ? themeButtonHtml() : '') +
+      (withTheme && !compact ? '<span class="story-actions__tools">' + textButtonHtml() + themeButtonHtml() + '</span>' : '') +
     '</div>';
   }
 
@@ -344,6 +364,7 @@
     var title = row.getAttribute('data-title');
     var action = btn.getAttribute('data-action');
 
+    if (action === 'textsize') { textStep = (textStep + 1) % TEXT_SCALES.length; applyReadingTheme(); return; }
     if (action === 'theme') { readingDark = !readingDark; applyReadingTheme(); return; }
     if (action === 'save') toggleSave(slug);
     else if (action === 'share') openShare(slug, title);

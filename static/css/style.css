@@ -533,7 +533,7 @@ body.site-menu-open { overflow: hidden; }
      English-only site so it's left out. */
   color: var(--ink);
   font-family: Lyon,Helvetica,Arial,sans-serif;
-  font-size: 18px;
+  font-size: calc(18px * var(--read-scale, 1));
   font-weight: 400;
   line-height: 1.66;
   line-height: calc(28 / 18);
@@ -733,7 +733,7 @@ body.has-sticky-author-bar .site-header { visibility: hidden; }
    file so a quote's own <p> styling wins over the generic one. */
 .article__subheading {
   font-family: var(--font-serif);
-  font-size: 21px;
+  font-size: calc(21px * var(--read-scale, 1));
   font-weight: 700;
   letter-spacing: -0.005em;
   color: var(--fairway-deep);
@@ -746,7 +746,7 @@ body.has-sticky-author-bar .site-header { visibility: hidden; }
 }
 .article__quote p {
   font-family: var(--font-serif);
-  font-size: 19px;
+  font-size: calc(19px * var(--read-scale, 1));
   font-style: italic;
   line-height: 1.45;
   color: var(--fairway-deep);
@@ -978,6 +978,7 @@ body.article-sheet-open { overflow: hidden; }
   stroke-linejoin: round;
   flex-shrink: 0;
 }
+.story-action--text.is-active { color: var(--fairway-deep); }
 .story-action--save.is-saved { color: var(--gold); }
 .story-action--save.is-saved .story-action__icon { fill: currentColor; }
 .story-action__count { font-variant-numeric: tabular-nums; }
@@ -1200,7 +1201,7 @@ body.article-sheet-open { overflow: hidden; }
   padding-left: 1.3em;
   color: var(--ink);
   font-family: Lyon, Helvetica, Arial, sans-serif;
-  font-size: 18px;
+  font-size: calc(18px * var(--read-scale, 1));
   line-height: calc(28 / 18);
 }
 .article__list li { margin: 0 0 0.45em; padding-left: 0.2em; }
@@ -1225,7 +1226,7 @@ body.article-sheet-open { overflow: hidden; }
   color: var(--fairway-deep);
 }
 .article__tip--warning .article__tip-label { color: #7a5a06; }
-.article__tip p { margin: 0; font-size: 16.5px; line-height: 1.55; white-space: pre-line; }
+.article__tip p { margin: 0; font-size: calc(16.5px * var(--read-scale, 1)); line-height: 1.55; white-space: pre-line; }
 
 .article__takeaways {
   margin: 0 0 26px;
@@ -1248,7 +1249,7 @@ body.article-sheet-open { overflow: hidden; }
   margin: 0 0 12px;
   padding-left: 22px;
   font-family: var(--font-serif);
-  font-size: 17px;
+  font-size: calc(17px * var(--read-scale, 1));
   font-weight: 600;
   line-height: 1.4;
   color: var(--fairway-deep);
@@ -1271,7 +1272,7 @@ body.article-sheet-open { overflow: hidden; }
   border: 1px solid var(--line);
   border-radius: 12px;
 }
-.article__table { width: 100%; border-collapse: collapse; font-size: 15.5px; color: var(--ink); }
+.article__table { width: 100%; border-collapse: collapse; font-size: calc(15.5px * var(--read-scale, 1)); color: var(--ink); }
 .article__table th, .article__table td { padding: 11px 12px; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
 .article__table th {
   background: var(--fairway-deep);
@@ -1423,15 +1424,28 @@ body.article-sheet-open { overflow: hidden; }
 /* The dark/light switch is icon-only and sits at the right end of the row,
    so Saved + a 3-digit comment count still fit on a small phone. */
 .story-action--theme .story-action__icon { fill: none; }
-.story-action--theme .story-action__label {
+.story-action--theme .story-action__label,
+.story-action--text .story-action__label {
   position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
 }
-.story-actions .story-action--theme { margin-left: auto; padding-left: 12px; padding-right: 4px; }
-@media (max-width: 380px) {
-  .article__byline + .story-actions .story-action { padding-left: 7px; padding-right: 7px; gap: 5px; }
-  .article__byline + .story-actions { margin-left: -7px; }
-  .article__byline + .story-actions .story-action--theme { padding-right: 2px; }
-}
+.story-actions__tools { display: inline-flex; align-items: center; margin-left: auto; }
+.story-actions .story-action--text { padding-left: 12px; padding-right: 8px; }
+.story-actions .story-action--theme { margin-left: 0; padding-left: 8px; padding-right: 4px; }
+/* "Aa": a small A beside a big A, drawn in text so it needs no icon. */
+.story-action__aa { display: inline-flex; align-items: baseline; gap: 1px; font-family: var(--font-serif); font-weight: 700; line-height: 1; }
+.story-action__aa i { font-style: normal; font-size: 13px; }
+.story-action__aa b { font-size: 20px; }
+/* In the article / sheet the row is a little tighter and wraps instead of
+   overflowing (e.g. "Saved" + a 3-digit comment count on a small phone):
+   the two reading tools then drop to a second line, right-aligned. */
+.article__byline + .story-actions,
+.article-sheet__body .story-actions { flex-wrap: wrap; gap: 0; margin-left: -7px; }
+.article__byline + .story-actions .story-action,
+.article-sheet__body .story-actions .story-action { padding-left: 7px; padding-right: 7px; gap: 4px; }
+.article__byline + .story-actions .story-action--text,
+.article-sheet__body .story-actions .story-action--text { padding-left: 8px; padding-right: 4px; }
+.article__byline + .story-actions .story-action--theme,
+.article-sheet__body .story-actions .story-action--theme { padding-left: 4px; padding-right: 3px; }
 
 .article-sheet.is-dark,
 body.article-page.is-dark,
