@@ -1411,3 +1411,87 @@ body.article-sheet-open { overflow: hidden; }
   appearance: none;
 }
 .compare__stage:focus-within .compare__handle::after { outline: 2px solid var(--gold); }
+
+/* ── Dark reading mode ──
+   The "Dark" button in the story action row adds .is-dark to the pop-up
+   sheet (.article-sheet) or, on the full article page, to <body> (which
+   carries .article-page). The home feed is never affected. Most of the
+   story already reads its colors from the variables below, so redefining
+   them in this scope darkens text, headings, borders, tips, takeaways,
+   tables and comments in one go; the rules after that cover the places
+   that use a fixed white or black. */
+/* The dark/light switch is icon-only and sits at the right end of the row,
+   so Saved + a 3-digit comment count still fit on a small phone. */
+.story-action--theme .story-action__icon { fill: none; }
+.story-action--theme .story-action__label {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+.story-actions .story-action--theme { margin-left: auto; padding-left: 12px; padding-right: 4px; }
+@media (max-width: 380px) {
+  .article__byline + .story-actions .story-action { padding-left: 7px; padding-right: 7px; gap: 5px; }
+  .article__byline + .story-actions { margin-left: -7px; }
+  .article__byline + .story-actions .story-action--theme { padding-right: 2px; }
+}
+
+.article-sheet.is-dark,
+body.article-page.is-dark,
+.share-menu.is-dark {
+  --ink: #e4e9e5;
+  --ink-soft: rgba(228, 233, 229, 0.8);
+  --ink-faint: rgba(228, 233, 229, 0.62);
+  --cream: #1b221e;
+  --cream-deep: #222b25;
+  --line: rgba(255, 255, 255, 0.14);
+  --fairway: #7ccaa0;
+  --fairway-deep: #a8dcbf;
+  --gold: #e3b94f;
+  color: var(--ink);
+}
+
+body.article-page { transition: background-color 0.25s ease; }
+.article-sheet { transition: background-color 0.25s ease; }
+body.article-page.is-dark,
+.article-sheet.is-dark { background: #121714; }
+
+body.article-page.is-dark .site-header,
+body.article-page.is-dark .category-bar { background: #121714; border-color: rgba(255, 255, 255, 0.12); }
+body.article-page.is-dark .site-brand { color: #e4e9e5; }
+body.article-page.is-dark .site-menu-toggle__bar { background: #e4e9e5; }
+body.article-page.is-dark .site-menu-toggle:hover { background: rgba(255, 255, 255, 0.08); }
+body.article-page.is-dark .category-bar__chip { color: rgba(228, 233, 229, 0.78); border-left-color: rgba(255, 255, 255, 0.2); }
+body.article-page.is-dark .category-bar__chip.is-active { color: #a8dcbf; }
+/* The slide-out menu keeps its own dark-green look in both modes. */
+body.article-page.is-dark .site-menu { background: #1b4332; }
+body.article-page.is-dark .site-menu__link.is-active { color: #1b4332; }
+
+.is-dark .article__pill { background: rgba(255, 255, 255, 0.09); }
+.is-dark .article__sticky-bar,
+.is-dark .article-sheet__sticky-bar { background: #121714; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); }
+.is-dark .article__photo img,
+.is-dark .article__gallery-slide img { box-shadow: none; filter: brightness(0.92); }
+.is-dark .article__hero,
+.is-dark .article-sheet__hero { filter: brightness(0.9); }
+.is-dark .article__author-card-avatar { box-shadow: none; }
+.is-dark .article__tip { background: rgba(124, 202, 160, 0.12); }
+.is-dark .article__tip--warning { background: rgba(227, 185, 79, 0.14); }
+.is-dark .article__tip--warning .article__tip-label { color: #e3b94f; }
+.is-dark .article__table th { background: #2d6a4f; color: #fff; }
+.is-dark .article__table tbody tr:nth-child(even) td { background: rgba(255, 255, 255, 0.04); }
+.is-dark .article__divider { border-top-color: rgba(255, 255, 255, 0.2); }
+.is-dark .link-card { background: #1b221e; border-color: rgba(255, 255, 255, 0.16); }
+.is-dark .comments__form textarea { background: #1b221e; border-color: rgba(255, 255, 255, 0.22); color: var(--ink); }
+.is-dark .comments__form textarea::placeholder { color: rgba(228, 233, 229, 0.45); }
+.is-dark .comment__delete:hover,
+.is-dark .comments__error { color: #ff8a80; }
+.is-dark .story-action:hover { color: #a8dcbf; }
+.is-dark .article-sheet__readmore { background: #2d6a4f; }
+.is-dark .article-sheet__close { background: rgba(255, 255, 255, 0.18); }
+.share-menu.is-dark .share-menu__panel { background: #1b221e; }
+.share-menu.is-dark .share-menu__cancel { background: #262f29; color: var(--ink); }
+/* Buttons that use the (now light) green as a fill keep a dark-green fill and white text. */
+.is-dark .account-btn,
+.is-dark .article-sheet__readmore:hover { background: #2d6a4f; color: #fff; }
+.is-dark .account-btn:hover { background: #38815f; }
+.is-dark .account-btn--ghost { background: transparent; color: var(--fairway-deep); border-color: rgba(255, 255, 255, 0.28); }
+.is-dark .account-btn--ghost:hover { background: rgba(255, 255, 255, 0.08); }
+.is-dark .article__author-card-name { color: var(--ink); }

@@ -24,8 +24,33 @@
 
   function isSaved(slug) { return READER.saved.indexOf(slug) !== -1; }
 
+  // ── Dark reading mode ────────────────────────────────────────────────
+  // Only the article (the pop-up sheet and the /article/ page) goes dark;
+  // the home feed stays light. It always starts light: the choice is held
+  // in memory only, so opening a different story in the same visit keeps
+  // the reader's choice, but a fresh page load or app launch starts light.
+  var readingDark = false;
+
+  function themeButtonHtml() {
+    return '<button type="button" class="story-action story-action--theme" data-action="theme" aria-pressed="' + readingDark + '" aria-label="' +
+      (readingDark ? 'Switch to light reading mode' : 'Switch to dark reading mode') + '">' +
+      icon(readingDark ? 'sun' : 'moon') + '<span class="story-action__label">' + (readingDark ? 'Light' : 'Dark') + '</span></button>';
+  }
+
+  function applyReadingTheme() {
+    var scopes = document.querySelectorAll('.article-sheet, body.article-page');
+    Array.prototype.forEach.call(scopes, function (el) { el.classList.toggle('is-dark', readingDark); });
+    if (menu) menu.classList.toggle('is-dark', readingDark);
+    Array.prototype.forEach.call(document.querySelectorAll('[data-action="theme"]'), function (b) {
+      b.setAttribute('aria-pressed', readingDark ? 'true' : 'false');
+      b.setAttribute('aria-label', readingDark ? 'Switch to light reading mode' : 'Switch to dark reading mode');
+      b.querySelector('.story-action__label').textContent = readingDark ? 'Light' : 'Dark';
+      b.querySelector('use').setAttribute('href', readingDark ? '#i-sun' : '#i-moon');
+    });
+  }
+
   // The three buttons. `compact` = icons only (used on the list rows).
-  function actionsHtml(slug, title, compact) {
+  function actionsHtml(slug, title, compact, withTheme) {
     var saved = isSaved(slug);
     var n = COUNTS[slug] || 0;
     return '<div class="story-actions' + (compact ? ' story-actions--compact' : '') + '" data-slug="' + esc(slug) + '" data-title="' + esc(title) + '">' +
@@ -35,6 +60,7 @@
         icon('comment') + '<span class="story-action__label">Comment</span><span class="story-action__count">' + (n || '') + '</span></button>' +
       '<button type="button" class="story-action" data-action="share" aria-label="Share story">' +
         icon('share') + '<span class="story-action__label">Share</span></button>' +
+      (withTheme && !compact ? themeButtonHtml() : '') +
     '</div>';
   }
 
@@ -171,6 +197,7 @@
       closeShare();
     };
 
+    menu.classList.toggle('is-dark', readingDark && !!document.querySelector('.article-sheet.is-dark, body.article-page.is-dark'));
     menu.classList.add('is-open');
     menu.setAttribute('aria-hidden', 'false');
   }
@@ -317,6 +344,7 @@
     var title = row.getAttribute('data-title');
     var action = btn.getAttribute('data-action');
 
+    if (action === 'theme') { readingDark = !readingDark; applyReadingTheme(); return; }
     if (action === 'save') toggleSave(slug);
     else if (action === 'share') openShare(slug, title);
     else if (action === 'comment') {
@@ -354,12 +382,14 @@
   window.SodFather = {
     esc: esc,
     actionsHtml: actionsHtml,
+    applyReadingTheme: applyReadingTheme,
     mountComments: mountComments,
     scrollToComments: scrollToComments
   };
 
   // Static article page: mount the comments section (and honor #comments).
   document.addEventListener('DOMContentLoaded', function () {
+    applyReadingTheme();
     var host = document.getElementById('article-comments');
     if (!host) return;
     mountComments(host, host.getAttribute('data-slug'));

@@ -4,8 +4,9 @@
   builds the same markup in static/js/actions.js. Clicks are handled by that
   script -- these are plain <button>s with data-action attributes.
   `compact` = icons only, used on the smaller list rows.
+  `dark` = adds the dark reading mode button (article page and pop-up only).
 #}
-{% macro story_actions(slug, title, saved, count, compact=False) %}
+{% macro story_actions(slug, title, saved, count, compact=False, dark=False) %}
 <div class="story-actions{% if compact %} story-actions--compact{% endif %}" data-slug="{{ slug }}" data-title="{{ title }}">
   <button type="button" class="story-action story-action--save{% if saved %} is-saved{% endif %}" data-action="save" aria-pressed="{{ 'true' if saved else 'false' }}" aria-label="{{ 'Unsave story' if saved else 'Save story' }}">
     <svg class="story-action__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-save"></use></svg><span class="story-action__label">{{ 'Saved' if saved else 'Save' }}</span>
@@ -16,5 +17,10 @@
   <button type="button" class="story-action" data-action="share" aria-label="Share story">
     <svg class="story-action__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-share"></use></svg><span class="story-action__label">Share</span>
   </button>
+  {% if dark %}
+  <button type="button" class="story-action story-action--theme" data-action="theme" aria-pressed="false" aria-label="Switch to dark reading mode">
+    <svg class="story-action__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"></use></svg><span class="story-action__label">Dark</span>
+  </button>
+  {% endif %}
 </div>
 {% endmacro %}

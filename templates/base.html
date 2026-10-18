@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="/static/css/style.css">
   {% block head %}{% endblock %}
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
   <!-- Icon sprite for the Save / Comment / Share buttons (see
        templates/_actions.html and static/js/actions.js). -->
   <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
@@ -25,6 +25,8 @@
       <symbol id="i-save" viewBox="0 0 24 24"><path d="M6 3h12a1 1 0 0 1 1 1v17l-7-4.2L5 21V4a1 1 0 0 1 1-1z"/></symbol>
       <symbol id="i-comment" viewBox="0 0 24 24"><path d="M21 11.5a8.5 8.5 0 0 1-12.2 7.6L3.5 20.5l1.4-4.9A8.5 8.5 0 1 1 21 11.5z"/></symbol>
       <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></symbol>
+      <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></symbol>
+      <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></symbol>
       <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/></symbol>
       <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></symbol>
     </defs>
@@ -294,13 +296,14 @@
           heroHtml +
           '<div class="article-sheet__body">' +
             '<div class="article__byline">' + avatar + '<p class="article__meta">' + article.author + (article.author_position ? ' &middot; ' + article.author_position : '') + ' &middot; ' + article.published_at + '</p></div>' +
-            window.SodFather.actionsHtml(article.slug, article.title, false) +
+            window.SodFather.actionsHtml(article.slug, article.title, false, true) +
             '<div class="article__content" id="article-sheet-content">' + blocksHtml(short.blocks) + '</div>' +
             (short.truncated ? '<button type="button" class="article-sheet__readmore" id="article-sheet-readmore">Read more</button>' : '') +
             authorCardHtml +
             '<div id="sheet-comments"></div>' +
           '</div>';
         window.SodFather.mountComments(document.getElementById('sheet-comments'), article.slug);
+        window.SodFather.applyReadingTheme();
 
         if (short.truncated) {
           document.getElementById('article-sheet-readmore').addEventListener('click', function () {
