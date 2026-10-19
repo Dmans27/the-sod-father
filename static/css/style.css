@@ -1528,6 +1528,14 @@ body.article-page.is-dark,
 .is-dark .account-btn--ghost { background: transparent; color: var(--fairway-deep); border-color: rgba(255, 255, 255, 0.28); }
 .is-dark .account-btn--ghost:hover { background: rgba(255, 255, 255, 0.08); }
 .is-dark .article__author-card-name { color: var(--ink); }
+/* Every heading (feed titles, article title and subheadings, takeaways,
+   Read next, Comments, account titles, share sheet) is plain white in dark mode. */
+.is-dark h1,
+.is-dark h2,
+.is-dark h3,
+.is-dark .share-menu__title,
+.is-dark .hero-story:hover .hero-story__title,
+.is-dark .story-row:hover .story-row__title { color: #fff; }
 /* Account pages (sign in / sign up / saved stories). */
 .is-dark .account-field input { background: #1b221e; border-color: rgba(255, 255, 255, 0.22); color: var(--ink); }
 .is-dark .account-field input:-webkit-autofill { -webkit-text-fill-color: var(--ink); box-shadow: 0 0 0 100px #1b221e inset; }
