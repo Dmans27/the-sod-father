@@ -851,7 +851,7 @@ body.has-sticky-author-bar .site-header { visibility: hidden; }
 .article-sheet-overlay.is-open .article-sheet { transform: translateY(0); }
 
 @media (min-width: 760px) {
-  .article-sheet-overlay { align-items: center; padding: 30px; }
+  .article-sheet-overlay { align-items: center; padding: 100px 11px 8px; }
   .article-sheet { border-radius: 20px; max-height: 85vh; }
 }
 
