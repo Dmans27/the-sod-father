@@ -25,11 +25,11 @@
   function isSaved(slug) { return READER.saved.indexOf(slug) !== -1; }
 
   // ── Dark reading mode ────────────────────────────────────────────────
-  // Only the article (the pop-up sheet and the /article/ page) goes dark;
-  // the home feed stays light. It always starts light: the choice is held
-  // in memory only, so opening a different story in the same visit keeps
-  // the reader's choice, but a fresh page load or app launch starts light.
+  // Dark mode is site-wide now: the switch in the hamburger menu and the
+  // moon button in an article drive the same setting, which is remembered on
+  // this device (localStorage key "sf-theme"). Text size still resets on reload.
   var readingDark = false;
+  try { readingDark = localStorage.getItem('sf-theme') === 'dark'; } catch (e) {}
 
   // Text size: the "Aa" button steps through these multipliers of the base
   // 18px paragraph size (18 -> 20 -> 22.5 -> 25px) and wraps back to normal.
@@ -49,7 +49,14 @@
       icon(readingDark ? 'sun' : 'moon') + '<span class="story-action__label">' + (readingDark ? 'Light' : 'Dark') + '</span></button>';
   }
 
+  function setDark(on) {
+    readingDark = !!on;
+    try { localStorage.setItem('sf-theme', readingDark ? 'dark' : 'light'); } catch (e) {}
+    applyReadingTheme();
+  }
+
   function applyReadingTheme() {
+    document.documentElement.classList.toggle('is-dark', readingDark);
     var scopes = document.querySelectorAll('.article-sheet, body.article-page');
     Array.prototype.forEach.call(scopes, function (el) { el.classList.toggle('is-dark', readingDark); });
     Array.prototype.forEach.call(scopes, function (el) {
@@ -61,6 +68,12 @@
       b.classList.toggle('is-active', textStep > 0);
     });
     if (menu) menu.classList.toggle('is-dark', readingDark);
+    var sw = document.getElementById('site-theme-toggle');
+    if (sw) {
+      sw.setAttribute('aria-checked', readingDark ? 'true' : 'false');
+    }
+    var tc = document.querySelector('meta[name="theme-color"]');
+    if (tc) tc.setAttribute('content', readingDark ? '#121714' : '#ffffff');
     Array.prototype.forEach.call(document.querySelectorAll('[data-action="theme"]'), function (b) {
       b.setAttribute('aria-pressed', readingDark ? 'true' : 'false');
       b.setAttribute('aria-label', readingDark ? 'Switch to light reading mode' : 'Switch to dark reading mode');
@@ -227,7 +240,7 @@
       closeShare();
     };
 
-    menu.classList.toggle('is-dark', readingDark && !!document.querySelector('.article-sheet.is-dark, body.article-page.is-dark'));
+    menu.classList.toggle('is-dark', readingDark);
     menu.classList.add('is-open');
     menu.setAttribute('aria-hidden', 'false');
   }
@@ -375,7 +388,7 @@
     var action = btn.getAttribute('data-action');
 
     if (action === 'textsize') { textStep = (textStep + 1) % TEXT_SCALES.length; applyReadingTheme(); return; }
-    if (action === 'theme') { readingDark = !readingDark; applyReadingTheme(); return; }
+    if (action === 'theme') { setDark(!readingDark); return; }
     if (action === 'save') toggleSave(slug);
     else if (action === 'share') openShare(slug, title);
     else if (action === 'comment') {
@@ -408,6 +421,14 @@
     if (!range.classList || !range.classList.contains('compare__range')) return;
     var fig = range.closest('.compare');
     if (fig) fig.style.setProperty('--pos', range.value + '%');
+  });
+
+  // Dark-mode switch in the hamburger menu.
+  document.addEventListener('click', function (e) {
+    var sw = e.target.closest('[data-site-theme]');
+    if (!sw) return;
+    e.preventDefault();
+    setDark(!readingDark);
   });
 
   window.SodFather = {

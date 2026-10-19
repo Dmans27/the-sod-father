@@ -1449,6 +1449,7 @@ body.article-sheet-open { overflow: hidden; }
 
 .article-sheet.is-dark,
 body.article-page.is-dark,
+html.is-dark,
 .share-menu.is-dark {
   --ink: #e4e9e5;
   --ink-soft: rgba(228, 233, 229, 0.8);
@@ -1462,21 +1463,39 @@ body.article-page.is-dark,
   color: var(--ink);
 }
 
-body.article-page { transition: background-color 0.25s ease; }
+body { transition: background-color 0.25s ease; }
 .article-sheet { transition: background-color 0.25s ease; }
+html.is-dark body,
 body.article-page.is-dark,
 .article-sheet.is-dark { background: #121714; }
 
-body.article-page.is-dark .site-header,
-body.article-page.is-dark .category-bar { background: #121714; border-color: rgba(255, 255, 255, 0.12); }
-body.article-page.is-dark .site-brand { color: #e4e9e5; }
-body.article-page.is-dark .site-menu-toggle__bar { background: #e4e9e5; }
-body.article-page.is-dark .site-menu-toggle:hover { background: rgba(255, 255, 255, 0.08); }
-body.article-page.is-dark .category-bar__chip { color: rgba(228, 233, 229, 0.78); border-left-color: rgba(255, 255, 255, 0.2); }
-body.article-page.is-dark .category-bar__chip.is-active { color: #a8dcbf; }
+.is-dark .site-header,
+.is-dark .category-bar { background: #121714; border-color: rgba(255, 255, 255, 0.12); }
+.is-dark .site-brand { color: #e4e9e5; }
+.is-dark .site-menu-toggle__bar { background: #e4e9e5; }
+.is-dark .site-menu-toggle:hover { background: rgba(255, 255, 255, 0.08); }
+.is-dark .category-bar__chip { color: rgba(228, 233, 229, 0.78); border-left-color: rgba(255, 255, 255, 0.2); }
+.is-dark .category-bar__chip.is-active { color: #a8dcbf; }
 /* The slide-out menu keeps its own dark-green look in both modes. */
-body.article-page.is-dark .site-menu { background: #1b4332; }
-body.article-page.is-dark .site-menu__link.is-active { color: #1b4332; }
+.is-dark .site-menu { background: #1b4332; }
+.is-dark .site-menu__link.is-active { color: #1b4332; }
+
+/* Dark-mode switch inside the hamburger menu. */
+.site-menu__theme {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  width: 100%; margin-top: 10px; padding: 13px 18px;
+  background: none; border: none; border-top: 1px solid rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.78); font: inherit; font-size: 15px; font-weight: 700;
+  text-align: left; cursor: pointer;
+}
+.site-menu__theme:hover { background: rgba(255, 255, 255, 0.06); }
+.site-menu__theme-label { display: inline-flex; align-items: center; gap: 10px; }
+.site-menu__theme-icon { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.site-switch { position: relative; width: 44px; height: 26px; border-radius: 13px; background: rgba(255, 255, 255, 0.22); transition: background-color 0.2s ease; flex: none; }
+.site-switch__knob { position: absolute; top: 3px; left: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform 0.2s ease; }
+.site-menu__theme[aria-checked="true"] .site-switch { background: var(--gold); }
+.site-menu__theme[aria-checked="true"] .site-switch__knob { transform: translateX(18px); }
+.site-menu__theme:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
 
 .is-dark .article__pill { background: rgba(255, 255, 255, 0.09); }
 .is-dark .article__sticky-bar,
@@ -1509,6 +1528,11 @@ body.article-page.is-dark .site-menu__link.is-active { color: #1b4332; }
 .is-dark .account-btn--ghost { background: transparent; color: var(--fairway-deep); border-color: rgba(255, 255, 255, 0.28); }
 .is-dark .account-btn--ghost:hover { background: rgba(255, 255, 255, 0.08); }
 .is-dark .article__author-card-name { color: var(--ink); }
+/* Account pages (sign in / sign up / saved stories). */
+.is-dark .account-field input { background: #1b221e; border-color: rgba(255, 255, 255, 0.22); color: var(--ink); }
+.is-dark .account-field input:-webkit-autofill { -webkit-text-fill-color: var(--ink); box-shadow: 0 0 0 100px #1b221e inset; }
+.is-dark .account-error { background: rgba(255, 138, 128, 0.14); color: #ffb4ab; }
+.is-dark .site-footer { color: rgba(228, 233, 229, 0.6); }
 
 /* ── Bottom author name tag ──
    While reading from roughly 500px to 800px of scroll, the same

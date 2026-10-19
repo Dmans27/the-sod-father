@@ -14,6 +14,11 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,600;0,700;1,600&family=Source+Sans+3:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    // Apply the saved dark-mode choice before the page paints, so a dark
+    // reader never sees a white flash on load (the menu toggle sets this).
+    try { if (localStorage.getItem('sf-theme') === 'dark') document.documentElement.classList.add('is-dark'); } catch (e) {}
+  </script>
   <link rel="stylesheet" href="/static/css/style.css">
   {% block head %}{% endblock %}
 </head>
@@ -73,6 +78,13 @@
       {% for key, cat in categories.items() %}
         <a href="/category/{{ key }}" class="site-menu__link {% if active_category == key %}is-active{% endif %}">{{ cat.emoji }} {{ cat.label }}</a>
       {% endfor %}
+      <button type="button" class="site-menu__theme" id="site-theme-toggle" data-site-theme role="switch" aria-checked="false">
+        <span class="site-menu__theme-label">
+          <svg class="site-menu__theme-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"/></svg>
+          Dark mode
+        </span>
+        <span class="site-switch" aria-hidden="true"><span class="site-switch__knob"></span></span>
+      </button>
       <div class="site-menu__account">
         {% if reader %}
           <p class="site-menu__who">Signed in as {{ reader.display_name }}</p>
@@ -97,7 +109,7 @@
     // Who's signed in (from the server session) -- read by static/js/actions.js.
     window.READER = {{ reader_state|tojson }};
   </script>
-  <script src="/static/js/actions.js?v=1"></script>
+  <script src="/static/js/actions.js?v=2"></script>
 
   <script>
     // No-op on a regular browser visit -- window.Capacitor only exists when
