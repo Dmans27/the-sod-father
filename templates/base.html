@@ -394,7 +394,7 @@
         scrollEl.addEventListener('scroll', function () {
           var y = scrollEl.scrollTop;
           if (stickyBar) stickyBar.classList.toggle('is-visible', y >= 200 && y <= 400);
-          if (authorPop) authorPop.classList.toggle('is-visible', y >= 500 && y <= 1200);
+          if (authorPop) authorPop.classList.toggle('is-visible', y >= 450 && y <= 1600);
         }, { passive: true });
       }
 
@@ -419,7 +419,7 @@
         var visible = y >= 200 && y <= 400;
         bar.classList.toggle('is-visible', visible);
         // Bottom "Written by" name tag: slides up from 500-800px.
-        if (pop) pop.classList.toggle('is-visible', y >= 500 && y <= 1200);
+        if (pop) pop.classList.toggle('is-visible', y >= 450 && y <= 1600);
         // Also hides the site header underneath -- see the CSS rule on
         // body.has-sticky-author-bar .site-header for why.
         document.body.classList.toggle('has-sticky-author-bar', visible);
