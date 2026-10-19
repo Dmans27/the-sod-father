@@ -73,7 +73,7 @@
       sw.setAttribute('aria-checked', readingDark ? 'true' : 'false');
     }
     var tc = document.querySelector('meta[name="theme-color"]');
-    if (tc) tc.setAttribute('content', readingDark ? '#121714' : '#ffffff');
+    if (tc) tc.setAttribute('content', readingDark ? '#1c231f' : '#ffffff');
     Array.prototype.forEach.call(document.querySelectorAll('[data-action="theme"]'), function (b) {
       b.setAttribute('aria-pressed', readingDark ? 'true' : 'false');
       b.setAttribute('aria-label', readingDark ? 'Switch to light reading mode' : 'Switch to dark reading mode');

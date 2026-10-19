@@ -1454,8 +1454,8 @@ html.is-dark,
   --ink: #e4e9e5;
   --ink-soft: rgba(228, 233, 229, 0.8);
   --ink-faint: rgba(228, 233, 229, 0.62);
-  --cream: #1b221e;
-  --cream-deep: #222b25;
+  --cream: #252d28;
+  --cream-deep: #2c352f;
   --line: rgba(255, 255, 255, 0.14);
   --fairway: #7ccaa0;
   --fairway-deep: #a8dcbf;
@@ -1467,10 +1467,10 @@ body { transition: background-color 0.25s ease; }
 .article-sheet { transition: background-color 0.25s ease; }
 html.is-dark body,
 body.article-page.is-dark,
-.article-sheet.is-dark { background: #121714; }
+.article-sheet.is-dark { background: #1c231f; }
 
 .is-dark .site-header,
-.is-dark .category-bar { background: #121714; border-color: rgba(255, 255, 255, 0.12); }
+.is-dark .category-bar { background: #1c231f; border-color: rgba(255, 255, 255, 0.12); }
 .is-dark .site-brand { color: #e4e9e5; }
 .is-dark .site-menu-toggle__bar { background: #e4e9e5; }
 .is-dark .site-menu-toggle:hover { background: rgba(255, 255, 255, 0.08); }
@@ -1499,7 +1499,7 @@ body.article-page.is-dark,
 
 .is-dark .article__pill { background: rgba(255, 255, 255, 0.09); }
 .is-dark .article__sticky-bar,
-.is-dark .article-sheet__sticky-bar { background: #121714; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); }
+.is-dark .article-sheet__sticky-bar { background: #1c231f; box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); }
 .is-dark .article__photo img,
 .is-dark .article__gallery-slide img { box-shadow: none; filter: brightness(0.92); }
 .is-dark .article__hero,
@@ -1511,16 +1511,16 @@ body.article-page.is-dark,
 .is-dark .article__table th { background: #2d6a4f; color: #fff; }
 .is-dark .article__table tbody tr:nth-child(even) td { background: rgba(255, 255, 255, 0.04); }
 .is-dark .article__divider { border-top-color: rgba(255, 255, 255, 0.2); }
-.is-dark .link-card { background: #1b221e; border-color: rgba(255, 255, 255, 0.16); }
-.is-dark .comments__form textarea { background: #1b221e; border-color: rgba(255, 255, 255, 0.22); color: var(--ink); }
+.is-dark .link-card { background: #252d28; border-color: rgba(255, 255, 255, 0.16); }
+.is-dark .comments__form textarea { background: #252d28; border-color: rgba(255, 255, 255, 0.22); color: var(--ink); }
 .is-dark .comments__form textarea::placeholder { color: rgba(228, 233, 229, 0.45); }
 .is-dark .comment__delete:hover,
 .is-dark .comments__error { color: #ff8a80; }
 .is-dark .story-action:hover { color: #a8dcbf; }
 .is-dark .article-sheet__readmore { background: #2d6a4f; }
 .is-dark .article-sheet__close { background: rgba(255, 255, 255, 0.18); }
-.share-menu.is-dark .share-menu__panel { background: #1b221e; }
-.share-menu.is-dark .share-menu__cancel { background: #262f29; color: var(--ink); }
+.share-menu.is-dark .share-menu__panel { background: #252d28; }
+.share-menu.is-dark .share-menu__cancel { background: #2f3832; color: var(--ink); }
 /* Buttons that use the (now light) green as a fill keep a dark-green fill and white text. */
 .is-dark .account-btn,
 .is-dark .article-sheet__readmore:hover { background: #2d6a4f; color: #fff; }
@@ -1537,8 +1537,8 @@ body.article-page.is-dark,
 .is-dark .hero-story:hover .hero-story__title,
 .is-dark .story-row:hover .story-row__title { color: #fff; }
 /* Account pages (sign in / sign up / saved stories). */
-.is-dark .account-field input { background: #1b221e; border-color: rgba(255, 255, 255, 0.22); color: var(--ink); }
-.is-dark .account-field input:-webkit-autofill { -webkit-text-fill-color: var(--ink); box-shadow: 0 0 0 100px #1b221e inset; }
+.is-dark .account-field input { background: #252d28; border-color: rgba(255, 255, 255, 0.22); color: var(--ink); }
+.is-dark .account-field input:-webkit-autofill { -webkit-text-fill-color: var(--ink); box-shadow: 0 0 0 100px #252d28 inset; }
 .is-dark .account-error { background: rgba(255, 138, 128, 0.14); color: #ffb4ab; }
 .is-dark .site-footer { color: rgba(228, 233, 229, 0.6); }
 
@@ -1590,4 +1590,4 @@ body.article-page.is-dark,
 .article__author-pop.is-visible,
 .article-sheet__author-pop.is-visible { pointer-events: auto; }
 .is-dark .article__author-pop,
-.is-dark .article-sheet__author-pop { background: #121714; border-top-color: rgba(255, 255, 255, 0.12); box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.5); }
+.is-dark .article-sheet__author-pop { background: #1c231f; border-top-color: rgba(255, 255, 255, 0.12); box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.5); }
