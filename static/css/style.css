@@ -885,6 +885,10 @@ body.has-sticky-author-bar .site-header { visibility: hidden; }
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   border-radius: inherit;
+  /* Scrolling still works with wheel, trackpad, touch and keyboard; only
+     the scrollbar itself is hidden. */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   /* Used to reserve env(safe-area-inset-bottom) (~34px on a Face ID
      iPhone) so content never sat directly under the home-indicator swipe
      bar in the native app, then a capped-down version of the same thing
@@ -894,6 +898,7 @@ body.has-sticky-author-bar .site-header { visibility: hidden; }
      native app. */
   padding-bottom: 0;
 }
+.article-sheet__scroll::-webkit-scrollbar { display: none; }
 
 /* .article-sheet__header is now the first thing in the sheet (title/dek
    before the photo), so it's the one that needs the top padding/rounded-
