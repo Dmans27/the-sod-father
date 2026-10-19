@@ -132,6 +132,7 @@
       var grid = document.getElementById('card-grid');
       var scrollEl = document.querySelector('.article-sheet__scroll');
       var stickyBar = document.getElementById('article-sheet-sticky-bar');
+      var authorPop = document.getElementById('article-sheet-author-pop');
       if (!overlay || !inner || !grid || !window.ARTICLES_DATA) return;
 
       var articlesBySlug = {};
@@ -323,6 +324,13 @@
             '<p class="article__meta">' + article.author + (article.author_position ? ' &middot; ' + article.author_position : '') + ' &middot; ' + article.published_at + '</p>';
           stickyBar.classList.remove('is-visible');
         }
+        // The "Written by" name tag that slides up from the bottom for a
+        // stretch of the scroll (see the scroll listener below) is the same
+        // card as the sign-off at the end of the story.
+        if (authorPop) {
+          authorPop.innerHTML = authorCardHtml;
+          authorPop.classList.remove('is-visible');
+        }
         if (scrollEl) scrollEl.scrollTop = 0;
       }
 
@@ -374,13 +382,16 @@
         if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeSheet();
       });
 
-      // Sticky author bar: visible only in the 100-400px window of the
+      // Author name bar at the top: visible only from 200-400px of the
       // sheet's own scroll (not the page's), since the sheet scrolls
-      // internally rather than the whole window.
-      if (scrollEl && stickyBar) {
+      // internally rather than the whole window. Then, from 500-800px, the
+      // "Written by" name tag slides up from the bottom instead. After that
+      // only the sign-off card at the very end of the story is left.
+      if (scrollEl && (stickyBar || authorPop)) {
         scrollEl.addEventListener('scroll', function () {
           var y = scrollEl.scrollTop;
-          stickyBar.classList.toggle('is-visible', y >= 200 && y <= 700);
+          if (stickyBar) stickyBar.classList.toggle('is-visible', y >= 200 && y <= 400);
+          if (authorPop) authorPop.classList.toggle('is-visible', y >= 500 && y <= 800);
         }, { passive: true });
       }
 
@@ -398,11 +409,14 @@
     // without #article-sticky-bar (homepage, 404, etc.).
     (function () {
       var bar = document.getElementById('article-sticky-bar');
+      var pop = document.getElementById('article-author-pop');
       if (!bar) return;
       function onScroll() {
         var y = window.scrollY || window.pageYOffset;
-        var visible = y >= 200 && y <= 700;
+        var visible = y >= 200 && y <= 400;
         bar.classList.toggle('is-visible', visible);
+        // Bottom "Written by" name tag: slides up from 500-800px.
+        if (pop) pop.classList.toggle('is-visible', y >= 500 && y <= 800);
         // Also hides the site header underneath -- see the CSS rule on
         // body.has-sticky-author-bar .site-header for why.
         document.body.classList.toggle('has-sticky-author-bar', visible);

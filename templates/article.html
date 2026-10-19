@@ -25,6 +25,22 @@
     <p class="article__meta">{{ article.author }}{% if article.author_position %} &middot; {{ article.author_position }}{% endif %} &middot; {{ article.published_at }}</p>
   </div>
 
+  {# Name tag that slides up from the bottom while reading from ~500 to ~800px;
+     after that only the sign-off card at the end of the story remains. #}
+  <div class="article__author-pop" id="article-author-pop" aria-hidden="true">
+    <div class="article__author-card{% if not article.author_photo %} article__author-card--no-photo{% endif %}">
+      <div class="article__author-card-info">
+        <span class="article__author-card-label">Written by</span>
+        <span class="article__author-card-name">{{ article.author }}</span>
+      </div>
+      {% if article.author_photo %}<img class="article__author-card-avatar" src="{{ article.author_photo }}" alt="">{% endif %}
+      <div class="article__author-card-masthead">
+        <span class="article__author-card-masthead-brand">The Sod Father</span>
+        {% if article.author_position %}<span class="article__author-card-masthead-position">{{ article.author_position }}</span>{% endif %}
+      </div>
+    </div>
+  </div>
+
   <div class="article__header">
     <a href="/category/{{ article.category }}" class="article__pill">{{ cat.label }}</a>
     <h1 class="article__title">{{ article.title }}</h1>

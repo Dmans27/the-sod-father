@@ -1509,3 +1509,35 @@ body.article-page.is-dark .site-menu__link.is-active { color: #1b4332; }
 .is-dark .account-btn--ghost { background: transparent; color: var(--fairway-deep); border-color: rgba(255, 255, 255, 0.28); }
 .is-dark .account-btn--ghost:hover { background: rgba(255, 255, 255, 0.08); }
 .is-dark .article__author-card-name { color: var(--ink); }
+
+/* ── Bottom author name tag ──
+   While reading from roughly 500px to 800px of scroll, the same
+   "Written by ... The Sod Father" card that closes the story slides up from
+   the bottom edge (the top author bar has gone by then: it shows from 200 to
+   400px). After 800px it slides away again and only the sign-off card at the
+   end of the story remains. Pointer events stay off so it never blocks taps. */
+.article__author-pop,
+.article-sheet__author-pop {
+  z-index: 50;
+  background: #fff;
+  border-top: 1px solid var(--line);
+  box-shadow: 0 -4px 14px rgba(27, 42, 31, 0.1);
+  padding-bottom: env(safe-area-inset-bottom);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(100%);
+  transition: opacity 0.25s ease, transform 0.25s ease, background-color 0.25s ease;
+}
+.article__author-pop.is-visible,
+.article-sheet__author-pop.is-visible { opacity: 1; transform: translateY(0); }
+.article__author-pop { position: fixed; left: 0; right: 0; bottom: 0; max-width: 720px; margin: 0 auto; }
+.article-sheet__author-pop {
+  position: absolute; left: 0; right: 0; bottom: 0; z-index: 3;
+  border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;
+}
+.article__author-pop .article__author-card,
+.article-sheet__author-pop .article__author-card { margin: 0; border: none; padding: 10px 26px; }
+.article__author-pop .article__author-card-avatar,
+.article-sheet__author-pop .article__author-card-avatar { width: 44px; height: 44px; }
+.is-dark .article__author-pop,
+.is-dark .article-sheet__author-pop { background: #121714; border-top-color: rgba(255, 255, 255, 0.12); box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.5); }
