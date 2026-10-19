@@ -1591,3 +1591,19 @@ body.article-page.is-dark,
 .article-sheet__author-pop.is-visible { pointer-events: auto; }
 .is-dark .article__author-pop,
 .is-dark .article-sheet__author-pop { background: #1c231f; border-top-color: rgba(255, 255, 255, 0.12); box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.5); }
+
+/* ── Wide desktop: bigger pop-up card, same narrow article ──
+   On a wide screen the story pop-up grows to the width of the feed column
+   (1040px) so it fills the page better, while everything you read stays in
+   the same 720px column (692px of text) centered inside it. The top author
+   bar and the bottom name tag line up with that column too. Phones and
+   narrow windows are untouched. */
+@media (min-width: 900px) {
+  .article-sheet { max-width: 1040px; }
+  .article-sheet__header,
+  .article-sheet__body { max-width: 720px; margin-left: auto; margin-right: auto; }
+  .article-sheet__hero { width: calc(100% - 28px); max-width: 692px; margin-left: auto; margin-right: auto; }
+  .article-sheet__sticky-bar { padding-left: calc((100% - 720px) / 2 + 14px); }
+  .article-sheet__author-pop .article__author-card,
+  .article-sheet__author-pop .author-pop__tools { max-width: 720px; margin-left: auto; margin-right: auto; }
+}
