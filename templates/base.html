@@ -328,8 +328,11 @@
         // stretch of the scroll (see the scroll listener below) is the same
         // card as the sign-off at the end of the story.
         if (authorPop) {
-          authorPop.innerHTML = authorCardHtml;
+          authorPop.setAttribute('data-slug', article.slug);
+          authorPop.setAttribute('data-title', article.title);
+          authorPop.innerHTML = authorCardHtml + window.SodFather.popToolsHtml();
           authorPop.classList.remove('is-visible');
+          window.SodFather.applyReadingTheme();
         }
         if (scrollEl) scrollEl.scrollTop = 0;
       }

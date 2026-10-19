@@ -27,7 +27,7 @@
 
   {# Name tag that slides up from the bottom while reading from ~500 to ~800px;
      after that only the sign-off card at the end of the story remains. #}
-  <div class="article__author-pop" id="article-author-pop" aria-hidden="true">
+  <div class="article__author-pop" id="article-author-pop" aria-hidden="true" data-slug="{{ article.slug }}" data-title="{{ article.title }}">
     <div class="article__author-card{% if not article.author_photo %} article__author-card--no-photo{% endif %}">
       <div class="article__author-card-info">
         <span class="article__author-card-label">Written by</span>
@@ -38,6 +38,17 @@
         <span class="article__author-card-masthead-brand">The Sod Father</span>
         {% if article.author_position %}<span class="article__author-card-masthead-position">{{ article.author_position }}</span>{% endif %}
       </div>
+    </div>
+    <div class="author-pop__tools">
+      <button type="button" class="story-action story-action--text" data-action="textsize" aria-label="Change text size (currently normal)">
+        <span class="story-action__aa" aria-hidden="true"><i>A</i><b>A</b></span><span class="story-action__label">Text size</span>
+      </button>
+      <button type="button" class="story-action story-action--theme" data-action="theme" aria-pressed="false" aria-label="Switch to dark reading mode">
+        <svg class="story-action__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"></use></svg><span class="story-action__label">Dark</span>
+      </button>
+      <button type="button" class="story-action story-action--share" data-action="share" aria-label="Share story">
+        <svg class="story-action__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-share"></use></svg><span class="story-action__label">Share</span>
+      </button>
     </div>
   </div>
 

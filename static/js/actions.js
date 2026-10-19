@@ -69,6 +69,16 @@
     });
   }
 
+  // Icon-only text size / dark mode / share buttons for the bottom name tag
+  // (the tag carries data-slug and data-title itself, since it isn't inside
+  // a .story-actions row).
+  function popToolsHtml() {
+    return '<div class="author-pop__tools">' + textButtonHtml() + themeButtonHtml() +
+      '<button type="button" class="story-action story-action--share" data-action="share" aria-label="Share story">' +
+        icon('share') + '<span class="story-action__label">Share</span></button>' +
+    '</div>';
+  }
+
   // The three buttons. `compact` = icons only (used on the list rows).
   function actionsHtml(slug, title, compact, withTheme) {
     var saved = isSaved(slug);
@@ -359,7 +369,7 @@
     if (!btn) return;
     e.preventDefault();
     e.stopPropagation();
-    var row = btn.closest('.story-actions');
+    var row = btn.closest('.story-actions') || btn.closest('[data-slug]');
     var slug = row.getAttribute('data-slug');
     var title = row.getAttribute('data-title');
     var action = btn.getAttribute('data-action');
@@ -403,6 +413,7 @@
   window.SodFather = {
     esc: esc,
     actionsHtml: actionsHtml,
+    popToolsHtml: popToolsHtml,
     applyReadingTheme: applyReadingTheme,
     mountComments: mountComments,
     scrollToComments: scrollToComments
