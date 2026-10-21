@@ -1672,4 +1672,30 @@ body.article-page.is-dark,
   .article-sheet__sticky-bar { padding-left: max(24px, calc((100% - 720px) / 2 + 24px)); }
   .article-sheet__author-pop .article__author-card,
   .article-sheet__author-pop .author-pop__tools { max-width: 720px; margin-left: auto; margin-right: auto; }
+
+  /* Safe areas. On a foldable the status indicator / camera area can sit on
+     the right edge in landscape and the insets can differ left and right, so
+     each page only pads for the edge of the screen it actually touches: the
+     left page for the left inset, the right page for the right inset. */
+  .site-header__inner { padding-left: max(16px, env(safe-area-inset-left, 0px)); }
+  .site-main { padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
+  html.book-open .site-main { padding-right: 20px; }
+  .hero-story.is-current,
+  .story-row.is-current {
+    margin-left: calc(-1 * max(20px, env(safe-area-inset-left, 0px)));
+    padding-left: calc(max(20px, env(safe-area-inset-left, 0px)) + 3px);
+  }
+  .article-sheet__header { padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+  .article-sheet__body { padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+  .article-sheet__hero {
+    width: min(672px, calc(100% - 24px - max(24px, env(safe-area-inset-right, 0px))));
+    max-width: none;
+    margin-left: max(24px, calc((100% - 720px) / 2 + 24px)); margin-right: 0;
+  }
+
+  /* Close button sits at the top-left of the right page (next to the feed),
+     clear of the status indicator and camera on the right edge. */
+  .article-sheet__close { right: auto; left: 20px; }
+  .article-sheet__header { padding-top: 60px; }
+  .article-sheet__sticky-bar { padding-left: max(68px, calc((100% - 720px) / 2 + 24px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
 }
