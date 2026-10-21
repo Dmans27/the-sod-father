@@ -854,10 +854,8 @@ body.has-sticky-author-bar .site-header { visibility: hidden; }
 }
 .article-sheet-overlay.is-open .article-sheet { transform: translateY(0); }
 
-@media (min-width: 760px) {
-  .article-sheet-overlay { align-items: center; padding: 100px 11px 8px; }
-  .article-sheet { border-radius: 20px; max-height: 85vh; }
-}
+/* On screens 700px and wider the story opens as the right-hand page of a
+   book instead (see "Two-page book layout" at the end of this file). */
 
 .article-sheet__close {
   position: absolute;
@@ -1601,18 +1599,77 @@ body.article-page.is-dark,
 .is-dark .article__author-pop,
 .is-dark .article-sheet__author-pop { background: #1c231f; border-top-color: rgba(255, 255, 255, 0.12); box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.5); }
 
-/* ── Wide desktop: bigger pop-up card, same narrow article ──
-   On a wide screen the story pop-up grows to the width of the feed column
-   (1040px) so it fills the page better, while everything you read stays in
-   the same 720px column (692px of text) centered inside it. The top author
-   bar and the bottom name tag line up with that column too. Phones and
-   narrow windows are untouched. */
-@media (min-width: 900px) {
-  .article-sheet { max-width: 1040px; }
+/* ── Two-page book layout (700px and wider) ──
+   The feed is the left page and a story opens as the right page, side by
+   side, like an open book. Until a story is tapped the feed uses the full
+   width as before. Phones and the Duo's outer display (under 700px) keep the
+   bottom pop-up sheet. The layout follows the live window width, so folding,
+   unfolding or splitting the screen switches between the two on its own.
+   JS only adds .book-open on <html> (and .is-current on the open story). */
+@media (min-width: 700px) {
+  :root { --book-left: clamp(320px, 42vw, 520px); }
+
+  /* Left page: header, feed and footer shrink to the left column. */
+  .site-header { width: 100%; transition: width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .site-main {
+    max-width: none;
+    width: min(100%, 1080px);
+    margin: 0 0 0 max(0px, calc((100% - 1080px) / 2));
+    transition: width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1), margin 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  html.book-open { scrollbar-width: none; }
+  html.book-open::-webkit-scrollbar { display: none; }
+  html.book-open body.article-sheet-open { overflow: visible; }
+  html.book-open .site-header { width: var(--book-left); }
+  html.book-open .site-main { width: var(--book-left); margin-left: 0; }
+  html.book-open .site-footer { width: var(--book-left); }
+  html.book-open .hero-story__title { font-size: 26px; }
+  html.book-open .story-list { max-width: none; }
+
+  /* The story you are reading is marked in the feed. */
+  .hero-story.is-current,
+  .story-row.is-current {
+    background: var(--cream);
+    box-shadow: inset 3px 0 0 var(--gold);
+    margin-left: -20px; margin-right: -20px;
+    padding-left: 23px; padding-right: 20px;
+  }
+  .story-list > .story-row.is-current:first-child { padding-top: 16px; }
+  .hero-story.is-current { padding-top: 16px; }
+
+  /* Right page: full height, no dimmed backdrop, slides in from the right. */
+  .article-sheet-overlay {
+    inset: 0 0 0 auto;
+    width: calc(100% - var(--book-left));
+    padding: env(safe-area-inset-top, 0px) 0 0;
+    align-items: stretch;
+    justify-content: stretch;
+  }
+  .article-sheet-overlay__scrim { display: none; }
+  .article-sheet {
+    max-width: none; max-height: none; height: 100%;
+    border-radius: 0;
+    box-shadow: -10px 0 30px rgba(27, 42, 31, 0.12);
+    transform: translateX(100%);
+  }
+  .article-sheet-overlay.is-open .article-sheet { transform: none; }
+  /* Soft shadow along the spine. */
+  .article-sheet::before {
+    content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 18px; z-index: 4;
+    background: linear-gradient(to right, rgba(27, 42, 31, 0.1), rgba(27, 42, 31, 0));
+    pointer-events: none;
+  }
+  .is-dark .article-sheet { box-shadow: -10px 0 30px rgba(0, 0, 0, 0.45); }
+  .is-dark .article-sheet::before { background: linear-gradient(to right, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0)); }
+  .article-sheet__scroll { overscroll-behavior: contain; }
+
+  /* Reading column: same narrow 720px column, centered on the page. */
+  .article-sheet__header { padding: 28px 24px 0; }
   .article-sheet__header,
   .article-sheet__body { max-width: 720px; margin-left: auto; margin-right: auto; }
-  .article-sheet__hero { width: calc(100% - 28px); max-width: 692px; margin-left: auto; margin-right: auto; }
-  .article-sheet__sticky-bar { padding-left: calc((100% - 720px) / 2 + 14px); }
+  .article-sheet__body { padding: 0 24px; }
+  .article-sheet__hero { width: calc(100% - 48px); max-width: 672px; margin: 16px auto 20px; }
+  .article-sheet__sticky-bar { padding-left: max(24px, calc((100% - 720px) / 2 + 24px)); }
   .article-sheet__author-pop .article__author-card,
   .article-sheet__author-pop .author-pop__tools { max-width: 720px; margin-left: auto; margin-right: auto; }
 }

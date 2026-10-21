@@ -349,15 +349,37 @@
         if (scrollEl) scrollEl.scrollTop = 0;
       }
 
+      // 700px and wider: the story opens as the right-hand page of a book
+      // with the feed staying on the left (all layout is in the CSS media
+      // query; JS only flags it and marks the story being read).
+      var bookMq = window.matchMedia ? window.matchMedia('(min-width: 700px)') : { matches: false };
+      var sheetEl = overlay.querySelector('.article-sheet');
+      function markCurrent(slug) {
+        Array.prototype.forEach.call(document.querySelectorAll('a[data-slug].is-current'), function (el) { el.classList.remove('is-current'); });
+        if (!slug) return;
+        var cur = document.querySelector('a[data-slug="' + slug + '"]');
+        if (cur) cur.classList.add('is-current');
+      }
+
       function openSheet(slug, opts) {
         var article = articlesBySlug[slug];
         if (!article) return;
+        var alreadyOpen = overlay.classList.contains('is-open');
         renderSheet(article);
         overlay.classList.add('is-open');
         overlay.setAttribute('aria-hidden', 'false');
         document.body.classList.add('article-sheet-open');
+        document.documentElement.classList.add('book-open');
+        if (sheetEl) sheetEl.setAttribute('aria-modal', bookMq.matches ? 'false' : 'true');
+        markCurrent(slug);
         if (!opts || opts.pushState !== false) {
-          history.pushState({ articleSheet: slug }, '', '/article/' + slug);
+          // Switching stories while the book is already open replaces the
+          // history entry, so Back still closes the book in one step.
+          if (alreadyOpen && history.state && history.state.articleSheet) {
+            history.replaceState({ articleSheet: slug }, '', '/article/' + slug);
+          } else {
+            history.pushState({ articleSheet: slug }, '', '/article/' + slug);
+          }
         }
         // Tapping "Comment" on a card opens the sheet and jumps to the
         // comments (once the sheet's pop-in animation has started).
@@ -371,6 +393,8 @@
         overlay.classList.remove('is-open');
         overlay.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('article-sheet-open');
+        document.documentElement.classList.remove('book-open');
+        markCurrent(null);
         if (!opts || opts.goBack !== false) {
           if (history.state && history.state.articleSheet) {
             history.back();
