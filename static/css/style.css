@@ -1599,6 +1599,9 @@ body.article-page.is-dark,
 .is-dark .article__author-pop,
 .is-dark .article-sheet__author-pop { background: #1c231f; border-top-color: rgba(255, 255, 255, 0.12); box-shadow: 0 -4px 14px rgba(0, 0, 0, 0.5); }
 
+/* Drag handle on the spine (only shown in the two-page layout). */
+.book-handle { display: none; }
+
 /* ── Two-page book layout (700px and wider) ──
    The feed is the left page and a story opens as the right page, side by
    side, like an open book. Until a story is tapped the feed uses the full
@@ -1698,4 +1701,57 @@ body.article-page.is-dark,
   .article-sheet__close { right: auto; left: 20px; }
   .article-sheet__header { padding-top: 60px; }
   .article-sheet__sticky-bar { padding-left: max(68px, calc((100% - 720px) / 2 + 24px)); padding-right: max(24px, env(safe-area-inset-right, 0px)); }
+  /* Drag handle: a small grip centered on the spine, halfway down. */
+  .book-handle {
+    display: flex; align-items: center; justify-content: center;
+    position: absolute; z-index: 6; top: 50%; left: -15px;
+    width: 30px; height: 72px; margin-top: -36px;
+    border-radius: 15px;
+    background: var(--cream-deep); border: 1px solid var(--line);
+    box-shadow: 0 2px 10px rgba(27, 42, 31, 0.2);
+    cursor: col-resize; touch-action: none;
+    -webkit-user-select: none; user-select: none; -webkit-tap-highlight-color: transparent;
+    outline: none;
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+  }
+  /* Larger invisible touch target around the visible grip. */
+  .book-handle::before { content: ""; position: absolute; inset: -12px -14px; }
+  .book-handle__grip {
+    width: 6px; height: 26px;
+    border-left: 2px solid var(--ink-faint); border-right: 2px solid var(--ink-faint);
+  }
+  .book-handle:focus-visible { box-shadow: 0 0 0 3px var(--gold); }
+  html.book-dragging .book-handle { background: var(--fairway); }
+  html.book-dragging .book-handle__grip { border-color: #fff; }
+  .is-dark .book-handle { box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5); }
+  html.book-full .book-handle { left: 8px; }
+  html.book-full .article-sheet::before { display: none; }
+  html.book-full .article-sheet { box-shadow: none; }
+  html.book-full .article-sheet__close { left: max(20px, calc(env(safe-area-inset-left, 0px) + 10px)); }
+  html.book-full .article-sheet__header { padding-left: max(24px, env(safe-area-inset-left, 0px)); }
+
+  /* Pages follow the handle: widths animate when it snaps, but track the
+     finger exactly while it is being dragged. */
+  .article-sheet-overlay,
+  .article-sheet-overlay.is-open {
+    transition: opacity 0.25s ease, visibility 0s linear 0.25s, width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .article-sheet-overlay.is-open {
+    transition: opacity 0.25s ease, visibility 0s linear 0s, width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  html.book-dragging .site-header,
+  html.book-dragging .site-main,
+  html.book-dragging .site-footer,
+  html.book-dragging .article-sheet-overlay { transition: none !important; }
+  html.book-dragging { cursor: col-resize; }
+  html.book-dragging body { -webkit-user-select: none; user-select: none; }
+
+  /* The feed page clips instead of spilling while it is squeezed, and
+     disappears entirely in the full-page article mode. */
+  html.book-open .site-header,
+  html.book-open .site-main,
+  html.book-open .site-footer { overflow: hidden; }
+  html.book-full .site-header { border-bottom-width: 0; }
+  html.book-full .site-main,
+  html.book-full .site-footer { height: 0; padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0; }
 }

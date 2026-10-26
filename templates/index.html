@@ -65,6 +65,12 @@
     </div>
     <div class="article-sheet__author-pop" id="article-sheet-author-pop" aria-hidden="true"></div>
   </div>
+  <!-- Drag handle on the spine between the two pages (700px and wider only):
+       drag left for a full-width article, back to the middle for split. -->
+  <div class="book-handle" id="book-handle" role="separator" aria-orientation="vertical"
+       aria-label="Resize the reading page. Drag, or press the arrow keys." aria-valuemin="0" aria-valuemax="100" aria-valuenow="42" tabindex="0">
+    <span class="book-handle__grip" aria-hidden="true"></span>
+  </div>
 </div>
 
 <script>

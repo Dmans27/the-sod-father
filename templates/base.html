@@ -361,6 +361,95 @@
         if (cur) cur.classList.add('is-current');
       }
 
+      // ── Drag handle between the two pages ──
+      // Drag it left for a full-width article, back toward the middle for
+      // the split view. Tap or press Enter to flip between the two. Modes:
+      // 'split' (default width), 'custom' (wherever it was dragged) and
+      // 'full' (article only). All sizing is the --book-left variable that
+      // the CSS already uses; this just sets it.
+      var handle = document.getElementById('book-handle');
+      var root = document.documentElement;
+      var bookState = { mode: 'split', frac: 0.42 };
+      var savedY = 0;
+      var drag = null;
+      var MIN_RIGHT = 340;   // narrowest the article page may get
+      var MIN_LEFT = 280;    // narrowest the feed page may get (below that it snaps shut)
+      var SNAP_FULL = 140;   // released left of this -> full-page article
+      function vw() { return window.innerWidth; }
+      function defaultLeft() { return Math.min(520, Math.max(320, vw() * 0.42)); }
+      function maxLeft() { return Math.max(MIN_LEFT, vw() - MIN_RIGHT); }
+      function clampLeft(px) { return Math.min(Math.max(px, MIN_LEFT), maxLeft()); }
+      function setLeftPx(px) { root.style.setProperty('--book-left', Math.round(px) + 'px'); }
+      function currentLeft() { return overlay.getBoundingClientRect().left; }
+      function applyBook() {
+        if (!handle || !overlay.classList.contains('is-open')) return;
+        var full = bookState.mode === 'full';
+        var wasFull = root.classList.contains('book-full');
+        if (full && !wasFull) savedY = window.pageYOffset || 0;
+        root.classList.toggle('book-full', full);
+        if (full) setLeftPx(0);
+        else if (bookState.mode === 'custom') setLeftPx(clampLeft(bookState.frac * vw()));
+        else root.style.removeProperty('--book-left');
+        if (wasFull && !full) {
+          // Put the feed back where the reader left it.
+          requestAnimationFrame(function () { window.scrollTo(0, savedY); });
+        }
+        var pct = full ? 0 : Math.round((bookState.mode === 'custom' ? clampLeft(bookState.frac * vw()) : defaultLeft()) / vw() * 100);
+        handle.setAttribute('aria-valuenow', String(pct));
+      }
+      function setLeftFromPx(raw) {
+        if (raw < SNAP_FULL) { bookState.mode = 'full'; }
+        else {
+          var px = clampLeft(raw);
+          if (Math.abs(px - defaultLeft()) < 40) { bookState.mode = 'split'; }
+          else { bookState.mode = 'custom'; bookState.frac = px / vw(); }
+        }
+      }
+      if (handle) {
+        handle.addEventListener('pointerdown', function (e) {
+          if (!bookMq.matches) return;
+          drag = { id: e.pointerId, startX: e.clientX, startLeft: currentLeft(), moved: false, raw: currentLeft() };
+          try { handle.setPointerCapture(e.pointerId); } catch (err) {}
+          root.classList.add('book-dragging');
+          e.preventDefault();
+        });
+        handle.addEventListener('pointermove', function (e) {
+          if (!drag || e.pointerId !== drag.id) return;
+          var dx = e.clientX - drag.startX;
+          if (!drag.moved && Math.abs(dx) < 4) return;
+          drag.moved = true;
+          drag.raw = drag.startLeft + dx;
+          // Follows the finger live; snapping happens on release.
+          setLeftPx(Math.max(0, Math.min(drag.raw, maxLeft())));
+        });
+        function endDrag(e, cancelled) {
+          if (!drag || e.pointerId !== drag.id) return;
+          var d = drag; drag = null;
+          root.classList.remove('book-dragging');
+          if (!d.moved) {
+            if (!cancelled) bookState.mode = bookState.mode === 'full' ? 'split' : 'full';
+          } else if (!cancelled) {
+            setLeftFromPx(d.raw);
+          }
+          applyBook();
+        }
+        handle.addEventListener('pointerup', function (e) { endDrag(e, false); });
+        handle.addEventListener('pointercancel', function (e) { endDrag(e, true); });
+        handle.addEventListener('keydown', function (e) {
+          if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            var cur = bookState.mode === 'full' ? 0 : currentLeft();
+            setLeftFromPx(cur + (e.key === 'ArrowRight' ? 40 : -40));
+            if (bookState.mode === 'full' && e.key === 'ArrowRight') { bookState.mode = 'custom'; bookState.frac = MIN_LEFT / vw(); }
+          } else if (e.key === 'Home') { bookState.mode = 'full'; }
+          else if (e.key === 'End' || e.key === 'Enter' || e.key === ' ') {
+            bookState.mode = (e.key === 'End') ? 'split' : (bookState.mode === 'full' ? 'split' : 'full');
+          } else { return; }
+          e.preventDefault();
+          applyBook();
+        });
+        window.addEventListener('resize', applyBook);
+      }
+
       function openSheet(slug, opts) {
         var article = articlesBySlug[slug];
         if (!article) return;
@@ -370,6 +459,9 @@
         overlay.setAttribute('aria-hidden', 'false');
         document.body.classList.add('article-sheet-open');
         document.documentElement.classList.add('book-open');
+        // A fresh open always starts with the feed visible.
+        if (!alreadyOpen && bookState.mode === 'full') bookState.mode = 'split';
+        applyBook();
         if (sheetEl) sheetEl.setAttribute('aria-modal', bookMq.matches ? 'false' : 'true');
         markCurrent(slug);
         if (!opts || opts.pushState !== false) {
@@ -393,7 +485,7 @@
         overlay.classList.remove('is-open');
         overlay.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('article-sheet-open');
-        document.documentElement.classList.remove('book-open');
+        document.documentElement.classList.remove('book-open', 'book-full', 'book-dragging');
         markCurrent(null);
         if (!opts || opts.goBack !== false) {
           if (history.state && history.state.articleSheet) {
