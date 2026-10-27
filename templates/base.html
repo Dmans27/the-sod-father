@@ -397,13 +397,24 @@
         var pct = full ? 0 : Math.round((bookState.mode === 'custom' ? clampLeft(bookState.frac * vw()) : defaultLeft()) / vw() * 100);
         handle.setAttribute('aria-valuenow', String(pct));
       }
+      // Magnetic points: the default split, and exactly half and half (where
+      // the fold sits on a foldable). Returns { px, mode } for a raw position.
+      var SNAP_DIST = 32;
+      function snapPoint(raw) {
+        var px = clampLeft(raw);
+        var cands = [{ px: defaultLeft(), mode: 'split' }, { px: vw() / 2, mode: 'half' }];
+        var best = null;
+        cands.forEach(function (c) {
+          var d = Math.abs(px - c.px);
+          if (d <= SNAP_DIST && c.px >= MIN_LEFT && c.px <= maxLeft() && (!best || d < best.d)) best = { px: c.px, mode: c.mode, d: d };
+        });
+        return best ? { px: best.px, mode: best.mode } : { px: px, mode: 'custom' };
+      }
       function setLeftFromPx(raw) {
-        if (raw < SNAP_FULL) { bookState.mode = 'full'; }
-        else {
-          var px = clampLeft(raw);
-          if (Math.abs(px - defaultLeft()) < 40) { bookState.mode = 'split'; }
-          else { bookState.mode = 'custom'; bookState.frac = px / vw(); }
-        }
+        if (raw < SNAP_FULL) { bookState.mode = 'full'; return; }
+        var sp = snapPoint(raw);
+        if (sp.mode === 'split') { bookState.mode = 'split'; }
+        else { bookState.mode = 'custom'; bookState.frac = sp.px / vw(); }
       }
       if (handle) {
         handle.addEventListener('pointerdown', function (e) {
@@ -420,7 +431,7 @@
           drag.moved = true;
           drag.raw = drag.startLeft + dx;
           // Follows the finger live; snapping happens on release.
-          setLeftPx(Math.max(0, Math.min(drag.raw, maxLeft())));
+          setLeftPx(drag.raw < MIN_LEFT ? Math.max(0, drag.raw) : snapPoint(drag.raw).px);
         });
         function endDrag(e, cancelled) {
           if (!drag || e.pointerId !== drag.id) return;

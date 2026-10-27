@@ -1679,7 +1679,9 @@ body.article-page.is-dark,
   /* Safe areas. On a foldable the status indicator / camera area can sit on
      the right edge in landscape and the insets can differ left and right, so
      each page only pads for the edge of the screen it actually touches: the
-     left page for the left inset, the right page for the right inset. */
+     left page for the left inset, the right page for the right inset, and only
+     around the title area at the top (the status indicator is up there), so the
+     article body keeps even left and right margins. */
   .site-header__inner { padding-left: max(16px, env(safe-area-inset-left, 0px)); }
   .site-main { padding-left: max(20px, env(safe-area-inset-left, 0px)); padding-right: max(20px, env(safe-area-inset-right, 0px)); }
   html.book-open .site-main { padding-right: 20px; }
@@ -1689,9 +1691,8 @@ body.article-page.is-dark,
     padding-left: calc(max(20px, env(safe-area-inset-left, 0px)) + 3px);
   }
   .article-sheet__header { padding-right: max(24px, env(safe-area-inset-right, 0px)); }
-  .article-sheet__body { padding-right: max(24px, env(safe-area-inset-right, 0px)); }
   .article-sheet__hero {
-    width: min(672px, calc(100% - 24px - max(24px, env(safe-area-inset-right, 0px))));
+    width: min(672px, calc(100% - 48px));
     max-width: none;
     margin-left: max(24px, calc((100% - 720px) / 2 + 24px)); margin-right: 0;
   }
@@ -1744,6 +1745,12 @@ body.article-page.is-dark,
   html.book-dragging .site-footer,
   html.book-dragging .article-sheet-overlay { transition: none !important; }
   html.book-dragging { cursor: col-resize; }
+  /* While dragging, a thin guide marks the exact middle of the screen, where
+     the fold sits on a foldable; the divider clicks onto it when close. */
+  html.book-dragging::after {
+    content: ""; position: fixed; top: 0; bottom: 0; left: 50%; width: 2px; margin-left: -1px;
+    background: var(--gold); opacity: 0.55; z-index: 150; pointer-events: none;
+  }
   html.book-dragging body { -webkit-user-select: none; user-select: none; }
 
   /* The feed page clips instead of spilling while it is squeezed, and
