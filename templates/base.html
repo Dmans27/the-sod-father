@@ -32,6 +32,8 @@
       <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></symbol>
       <symbol id="i-moon" viewBox="0 0 24 24"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></symbol>
       <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></symbol>
+      <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></symbol>
+      <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></symbol>
       <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/></symbol>
       <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></symbol>
     </defs>
@@ -105,11 +107,34 @@
     <p>The Sod Father &mdash; a fun side project, not a real publication (yet).</p>
   </footer>
 
+  <!-- Bottom navigation bar: phones and the Duo's outer display only
+       (the CSS hides it at 700px and wider, where the two-page layout takes
+       over, and on the full article page). Dark/light is the same switch as
+       the one in the hamburger menu. -->
+  <nav class="bottom-nav" aria-label="Main">
+    <a href="/" class="bottom-nav__item {% if request.path == '/' or request.path.startswith('/category/') %}is-active{% endif %}">
+      <svg class="bottom-nav__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-home"/></svg>
+      <span>Home</span>
+    </a>
+    <a href="{{ '/account' if reader else '/account/login?next=/account' }}" class="bottom-nav__item {% if request.path == '/account' %}is-active{% endif %}">
+      <svg class="bottom-nav__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-save"/></svg>
+      <span>Saved</span>
+    </a>
+    <a href="{{ '/account/profile' if reader else '/account/login?next=/account/profile' }}" class="bottom-nav__item {% if request.path.startswith('/account/') %}is-active{% endif %}">
+      <svg class="bottom-nav__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"/></svg>
+      <span>Account</span>
+    </a>
+    <button type="button" class="bottom-nav__item" id="bar-theme-toggle" data-site-theme aria-pressed="false" aria-label="Switch to dark mode">
+      <svg class="bottom-nav__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"/></svg>
+      <span class="bottom-nav__label">Dark</span>
+    </button>
+  </nav>
+
   <script>
     // Who's signed in (from the server session) -- read by static/js/actions.js.
     window.READER = {{ reader_state|tojson }};
   </script>
-  <script src="/static/js/actions.js?v=2"></script>
+  <script src="/static/js/actions.js?v=3"></script>
 
   <script>
     // No-op on a regular browser visit -- window.Capacitor only exists when

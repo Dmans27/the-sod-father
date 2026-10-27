@@ -249,6 +249,24 @@ def account():
         "account/saved.html", saved=saved, categories=CATEGORIES, active_category=None)
 
 
+@readers_bp.get("/account/profile")
+def profile():
+    """The Account tab: who you're signed in as, a link to saved stories and
+    sign out. Signed-out visitors are sent to sign in first."""
+    reader = current_reader()
+    if not reader:
+        return redirect(url_for("readers.login", next="/account/profile"))
+    saved_count = 0
+    try:
+        row = db.query_one(
+            "SELECT COUNT(*) AS n FROM saved_articles WHERE reader_id = :r", r=reader["id"])
+        saved_count = int((row or {}).get("n", 0))
+    except Exception as exc:
+        print("readers: could not count saved stories:", exc)
+    return render_template(
+        "account/profile.html", saved_count=saved_count, categories=CATEGORIES, active_category=None)
+
+
 # ── JSON API: save + comments ────────────────────────────────────────────
 
 @readers_bp.post("/api/save/<slug>")

@@ -72,6 +72,13 @@
     if (sw) {
       sw.setAttribute('aria-checked', readingDark ? 'true' : 'false');
     }
+    var bt = document.getElementById('bar-theme-toggle');
+    if (bt) {
+      bt.setAttribute('aria-pressed', readingDark ? 'true' : 'false');
+      bt.setAttribute('aria-label', readingDark ? 'Switch to light mode' : 'Switch to dark mode');
+      bt.querySelector('use').setAttribute('href', readingDark ? '#i-sun' : '#i-moon');
+      bt.querySelector('.bottom-nav__label').textContent = readingDark ? 'Light' : 'Dark';
+    }
     var tc = document.querySelector('meta[name="theme-color"]');
     if (tc) tc.setAttribute('content', readingDark ? '#1c231f' : '#ffffff');
     Array.prototype.forEach.call(document.querySelectorAll('[data-action="theme"]'), function (b) {

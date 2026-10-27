@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Account — The Sod Father{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <h1 class="hero__title">Account</h1>
+  <p class="hero__sub">Signed in as {{ reader.display_name }}.</p>
+</section>
+
+<dl class="account-details">
+  <div class="account-details__row">
+    <dt>Name</dt>
+    <dd>{{ reader.display_name }}</dd>
+  </div>
+  <div class="account-details__row">
+    <dt>Email</dt>
+    <dd>{{ reader.email }}</dd>
+  </div>
+  <div class="account-details__row">
+    <dt>Saved stories</dt>
+    <dd><a href="/account">{{ saved_count }} saved</a></dd>
+  </div>
+</dl>
+
+<form method="post" action="/account/logout" class="account-signout">
+  <input type="hidden" name="csrf" value="{{ csrf_token }}">
+  <button type="submit" class="account-btn account-btn--ghost">Sign out</button>
+</form>
+{% endblock %}
