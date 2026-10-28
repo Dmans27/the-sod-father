@@ -5,15 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>{% block title %}The Sod Father{% endblock %}</title>
   <!-- Source Serif 4 for headlines (an editorial serif with real warmth,
-       standing in for Georgia) and Source Sans 3 for everything else
-       (body copy, UI labels) -- same type family, designed to pair, so
-       headlines and body text read as one cohesive system rather than
-       two unrelated fonts jammed together. preconnect shaves the DNS/TLS
+       standing in for Georgia, also used for article body text), IBM Plex Sans
+       for UI and bylines, and IBM Plex Mono for the small uppercase labels --
+       a serif/sans/mono system so headlines and body read as one voice. preconnect shaves the DNS/TLS
        handshake off the font request, which otherwise shows as a flash
        of fallback-font text on a slow connection. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,600;0,700;1,600&family=Source+Sans+3:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script>
     // Apply the saved dark-mode choice before the page paints, so a dark
     // reader never sees a white flash on load (the menu toggle sets this).

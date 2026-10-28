@@ -19,7 +19,11 @@
   --fairway-deep: #1b4332;
   --gold: #b8860b;
   --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
-  --font-sans: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* Article body text. Serif to match the headlines; set this to
+     var(--font-sans) to go back to a sans-serif body. */
+  --font-body: "Source Serif 4", Georgia, "Times New Roman", serif;
 }
 
 * { box-sizing: border-box; }
@@ -532,7 +536,7 @@ body.site-menu-open { overflow: hidden; }
      word-wrap come across as-is; direction: ltr isn't meaningful for an
      English-only site so it's left out. */
   color: var(--ink);
-  font-family: Lyon,Helvetica,Arial,sans-serif;
+  font-family: var(--font-body);
   font-size: calc(18px * var(--read-scale, 1));
   font-weight: 400;
   line-height: 1.66;
@@ -1207,7 +1211,7 @@ body.article-sheet-open { overflow: hidden; }
   margin: 4px 0 1.1em;
   padding-left: 1.3em;
   color: var(--ink);
-  font-family: Lyon, Helvetica, Arial, sans-serif;
+  font-family: var(--font-body);
   font-size: calc(18px * var(--read-scale, 1));
   line-height: calc(28 / 18);
 }
@@ -1808,3 +1812,35 @@ body.article-page.is-dark,
 .account-details dt { font-size: 13.5px; font-weight: 800; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.3px; }
 .account-details dd { margin: 0; font-size: 16px; color: var(--ink); text-align: right; word-break: break-word; }
 .account-details dd a { color: var(--fairway-deep); font-weight: 700; }
+
+
+/* ---- Type system: Source Serif 4 (headlines + article body), IBM Plex Sans
+   (UI, bylines, descriptions), IBM Plex Mono (small uppercase labels). ----
+   Plex Mono only ships 400/500, so label weights are set to 500 here. Mono
+   letters are wide, so the labels are a touch smaller with a little more
+   letter-spacing than the sans versions they replace. */
+.site-menu__title,
+.hero-story__pill,
+.hero-story__meta,
+.story-row__pill,
+.article__pill,
+.article__meta,
+.article__author-card-label,
+.article__author-card-masthead-position,
+.related__title,
+.article__tip-label,
+.article__takeaways-title,
+.compare__label,
+.link-card__kicker,
+.account-details dt {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  letter-spacing: 0.06em;
+}
+.hero-story__pill, .article__pill { font-size: 10.5px; }
+.story-row__pill { font-size: 10px; }
+.hero-story__meta, .article__meta { font-size: 11.5px; }
+.article__author-card-label { font-size: 10.5px; }
+.article__author-card-masthead-position { font-size: 10px; }
+.related__title, .site-menu__title, .article__takeaways-title, .article__tip-label, .compare__label, .link-card__kicker { font-size: 11px; }
+.account-details dt { font-size: 12px; }
