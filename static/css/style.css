@@ -1487,9 +1487,8 @@ body.article-page.is-dark,
 .is-dark .site-menu-toggle:hover { background: rgba(255, 255, 255, 0.08); }
 .is-dark .category-bar__chip { color: rgba(228, 233, 229, 0.78); border-left-color: rgba(255, 255, 255, 0.2); }
 .is-dark .category-bar__chip.is-active { color: #a8dcbf; }
-/* The slide-out menu keeps its own dark-green look in both modes. */
-.is-dark .site-menu { background: #1b4332; }
-.is-dark .site-menu__link.is-active { color: #1b4332; }
+/* The slide-out menu follows the theme: white in light mode, dark in dark mode
+   (see the "Slide-out menu theme" block at the end of this file). */
 
 /* Dark-mode switch inside the hamburger menu. */
 .site-menu__theme {
@@ -1844,3 +1843,31 @@ body.article-page.is-dark,
 .article__author-card-masthead-position { font-size: 10px; }
 .related__title, .site-menu__title, .article__takeaways-title, .article__tip-label, .compare__label, .link-card__kicker { font-size: 11px; }
 .account-details dt { font-size: 12px; }
+
+
+/* ---- Slide-out menu theme ----
+   Light mode: white drawer with dark text. Dark mode: same dark as the page
+   and the bottom bar. The gold "current page" highlight stays in both. */
+.site-menu { background: #fff; box-shadow: 8px 0 32px rgba(27, 42, 31, 0.18); }
+.site-menu__title { color: var(--ink-faint); }
+.site-menu__close { background: rgba(27, 42, 31, 0.08); color: var(--ink); }
+.site-menu__close:hover { background: rgba(27, 42, 31, 0.14); }
+.site-menu__link { color: var(--ink-soft); }
+.site-menu__link:hover { background: rgba(27, 42, 31, 0.05); }
+.site-menu__account { border-top-color: var(--line); }
+.site-menu__who { color: var(--ink-faint); }
+.site-menu__theme { color: var(--ink-soft); border-top-color: var(--line); }
+.site-menu__theme:hover { background: rgba(27, 42, 31, 0.05); }
+.site-switch { background: rgba(27, 42, 31, 0.22); }
+
+.is-dark .site-menu { background: #1c231f; box-shadow: 8px 0 32px rgba(0, 0, 0, 0.5); }
+.is-dark .site-menu__title { color: rgba(255, 255, 255, 0.6); }
+.is-dark .site-menu__close { background: rgba(255, 255, 255, 0.12); color: #fff; }
+.is-dark .site-menu__close:hover { background: rgba(255, 255, 255, 0.22); }
+.is-dark .site-menu__link { color: rgba(255, 255, 255, 0.78); }
+.is-dark .site-menu__link:hover { background: rgba(255, 255, 255, 0.06); }
+.is-dark .site-menu__account { border-top-color: rgba(255, 255, 255, 0.12); }
+.is-dark .site-menu__who { color: rgba(255, 255, 255, 0.55); }
+.is-dark .site-menu__theme { color: rgba(255, 255, 255, 0.78); border-top-color: rgba(255, 255, 255, 0.12); }
+.is-dark .site-menu__theme:hover { background: rgba(255, 255, 255, 0.06); }
+.is-dark .site-switch { background: rgba(255, 255, 255, 0.22); }
