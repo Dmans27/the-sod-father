@@ -371,7 +371,7 @@ body.site-menu-open { overflow: hidden; }
   margin: 0;
 }
 @media (min-width: 640px) {
-  .hero-story__title { font-size: 38px; }
+  .hero-story__title { font-size: 45px; }
 }
 @media (max-width: 420px) {
   .hero-story__title { font-size: 24px; }
