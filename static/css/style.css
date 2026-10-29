@@ -144,9 +144,29 @@ a { color: inherit; }
   letter-spacing: 0.01em;
   line-height: 1.2;
   padding: 4px 16px;
+}
+/* Each tab is an "item": the tab link, plus a small arrow button when the
+   category has subcategories. The thin rule between tabs sits on the item. */
+.category-bar__item {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
   border-left: 1px solid rgba(27, 42, 31, 0.22);
 }
-.category-bar__chip:first-child { padding-left: 0; border-left: none; }
+.category-bar__item:first-child { border-left: none; }
+.category-bar__item:first-child .category-bar__chip { padding-left: 0; }
+.category-bar__item.has-sub .category-bar__chip { padding-right: 2px; }
+.category-bar__caret {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 26px; margin-right: 6px; padding: 0;
+  background: none; border: none; border-radius: 6px;
+  color: var(--ink-faint); cursor: pointer;
+}
+.category-bar__caret svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.18s ease; }
+.category-bar__caret:hover { color: var(--fairway-deep); background: rgba(27, 42, 31, 0.06); }
+.category-bar__caret[aria-expanded="true"] svg { transform: rotate(180deg); }
+.category-bar__caret[aria-expanded="true"] { color: var(--fairway-deep); }
+.category-bar__caret:focus-visible { outline: 2px solid var(--gold); outline-offset: -1px; }
 .category-bar__chip:hover { color: var(--fairway-deep); }
 .category-bar__chip.is-active {
   color: var(--fairway-deep);
@@ -1485,7 +1505,8 @@ body.article-page.is-dark,
 .is-dark .site-brand { color: #e4e9e5; }
 .is-dark .site-menu-toggle__bar { background: #e4e9e5; }
 .is-dark .site-menu-toggle:hover { background: rgba(255, 255, 255, 0.08); }
-.is-dark .category-bar__chip { color: rgba(228, 233, 229, 0.78); border-left-color: rgba(255, 255, 255, 0.2); }
+.is-dark .category-bar__chip { color: rgba(228, 233, 229, 0.78); }
+.is-dark .category-bar__item { border-left-color: rgba(255, 255, 255, 0.2); }
 .is-dark .category-bar__chip.is-active { color: #a8dcbf; }
 /* The slide-out menu follows the theme: white in light mode, dark in dark mode
    (see the "Slide-out menu theme" block at the end of this file). */
@@ -1888,33 +1909,51 @@ body.article-page.is-dark,
      tab (not justify-content) so a row that is too wide still scrolls from
      its left edge instead of getting cut off. */
   html:not(.book-open) .category-bar__scroll { padding-right: 16px; }
-  html:not(.book-open) .category-bar__chip:first-child { margin-left: auto; }
-  html:not(.book-open) .category-bar__chip:last-child { margin-right: auto; }
+  html:not(.book-open) .category-bar__item:first-child { margin-left: auto; }
+  html:not(.book-open) .category-bar__item:last-child { margin-right: auto; }
 }
 
-/* ---- Subcategory filter row (category pages) ----
-   A quiet row of small links under the category tabs: "All Golf",
-   "Equipment", "Instruction"... It wraps on narrow screens and follows the
-   theme. Centered on bigger screens like the category tabs. */
-.sub-bar { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; }
-.sub-bar__chip {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  text-decoration: none;
-  color: var(--ink-soft);
-  padding: 6px 11px;
+/* ---- Subcategory dropdowns (from the category tabs) ----
+   One panel per category that has subcategories. It is positioned with
+   script under the tab's arrow (position: fixed, so the sideways-scrolling
+   tab row can't clip it) and closes on outside click, Escape, scroll or
+   resize. */
+.subnav {
+  position: fixed;
+  z-index: 120;
+  min-width: 200px;
+  max-width: calc(100vw - 16px);
+  padding: 6px;
+  background: #fff;
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(27, 42, 31, 0.18);
+}
+.subnav[hidden] { display: none; }
+.subnav__link {
+  display: block;
+  padding: 10px 12px;
+  border-radius: 8px;
+  text-decoration: none;
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: 14px;
+  font-weight: 600;
   white-space: nowrap;
 }
-.sub-bar__chip:hover { color: var(--fairway-deep); border-color: rgba(27, 42, 31, 0.3); }
-.sub-bar__chip.is-active { color: var(--fairway-deep); background: rgba(45, 106, 79, 0.1); border-color: transparent; }
-.is-dark .sub-bar__chip { color: rgba(228, 233, 229, 0.78); border-color: rgba(255, 255, 255, 0.16); }
-.is-dark .sub-bar__chip:hover { color: #fff; border-color: rgba(255, 255, 255, 0.34); }
-.is-dark .sub-bar__chip.is-active { color: #a8dcbf; background: rgba(168, 220, 191, 0.12); border-color: transparent; }
+.subnav__link:hover, .subnav__link:focus-visible { background: rgba(27, 42, 31, 0.06); outline: none; }
+.subnav__link.is-active { color: var(--fairway-deep); background: rgba(45, 106, 79, 0.1); }
+.subnav__link--all { border-bottom: 1px solid var(--line); border-radius: 8px 8px 0 0; margin-bottom: 4px; }
+.is-dark .subnav { background: #232b27; border-color: rgba(255, 255, 255, 0.12); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5); }
+.is-dark .subnav__link { color: rgba(255, 255, 255, 0.86); }
+.is-dark .subnav__link:hover, .is-dark .subnav__link:focus-visible { background: rgba(255, 255, 255, 0.07); }
+.is-dark .subnav__link.is-active { color: #a8dcbf; background: rgba(168, 220, 191, 0.12); }
+.is-dark .subnav__link--all { border-bottom-color: rgba(255, 255, 255, 0.12); }
+.is-dark .category-bar__caret { color: rgba(228, 233, 229, 0.6); }
+.is-dark .category-bar__caret:hover, .is-dark .category-bar__caret[aria-expanded="true"] { color: #fff; background: rgba(255, 255, 255, 0.08); }
+
+/* Small label above a subcategory page's list: "Golf / Equipment". */
+.sub-crumb { margin: 0 0 18px; font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); }
 @media (min-width: 900px) {
-  html:not(.book-open) .sub-bar { justify-content: center; }
+  html:not(.book-open) .sub-crumb { text-align: center; }
 }

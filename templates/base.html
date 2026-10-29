@@ -56,12 +56,32 @@
          the page scrolls. -->
     <nav class="category-bar" aria-label="Browse categories">
       <div class="category-bar__scroll" id="category-bar-scroll">
-        <a href="/" class="category-bar__chip {% if not active_category %}is-active{% endif %}">All</a>
+        <div class="category-bar__item">
+          <a href="/" class="category-bar__chip {% if not active_category %}is-active{% endif %}">All</a>
+        </div>
         {% for key, cat in categories.items() %}
-          <a href="/category/{{ key }}" class="category-bar__chip {% if active_category == key %}is-active{% endif %}">{{ cat.label }}</a>
+          {% set subs = cat.get('subcategories') %}
+          <div class="category-bar__item{% if subs %} has-sub{% endif %}">
+            <a href="/category/{{ key }}" class="category-bar__chip {% if active_category == key %}is-active{% endif %}">{{ cat.label }}</a>
+            {% if subs %}
+              <button type="button" class="category-bar__caret" data-subnav="subnav-{{ key }}" aria-haspopup="true" aria-expanded="false" aria-controls="subnav-{{ key }}" aria-label="{{ cat.label }} subcategories">
+                <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg>
+              </button>
+            {% endif %}
+          </div>
         {% endfor %}
       </div>
     </nav>
+    {% for key, cat in categories.items() %}
+      {% if cat.get('subcategories') %}
+        <div class="subnav" id="subnav-{{ key }}" role="menu" aria-label="{{ cat.label }}" hidden>
+          <a href="/category/{{ key }}" role="menuitem" class="subnav__link subnav__link--all {% if active_category == key and not active_sub %}is-active{% endif %}">All {{ cat.label }}</a>
+          {% for skey, slabel in cat.subcategories.items() %}
+            <a href="/category/{{ key }}/{{ skey }}" role="menuitem" class="subnav__link {% if active_category == key and active_sub == skey %}is-active{% endif %}">{{ slabel }}</a>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endfor %}
   </header>
 
   <!-- Hamburger drawer: replaces the old inline nav row (it used to wrap
@@ -603,6 +623,70 @@
       var active = row.querySelector('.is-active');
       if (!active) return;
       row.scrollLeft = active.offsetLeft - (row.clientWidth - active.offsetWidth) / 2;
+    })();
+  </script>
+
+  <script>
+    // Subcategory dropdowns under the category tabs. Each tab with
+    // subcategories has an arrow button; tapping it opens that category's
+    // panel (.subnav) just under the tab. The panel is position: fixed so
+    // the sideways-scrolling tab row can't clip it, which means it has to be
+    // placed with script and closed when the page or the row moves.
+    (function () {
+      var carets = document.querySelectorAll('.category-bar__caret');
+      if (!carets.length) return;
+      var row = document.getElementById('category-bar-scroll');
+      var openCaret = null;
+
+      function panelFor(caret) { return document.getElementById(caret.getAttribute('data-subnav')); }
+
+      function closeAll() {
+        Array.prototype.forEach.call(carets, function (c) {
+          c.setAttribute('aria-expanded', 'false');
+          var p = panelFor(c);
+          if (p) p.hidden = true;
+        });
+        openCaret = null;
+      }
+
+      function place(caret, panel) {
+        var anchor = caret.closest('.category-bar__item').getBoundingClientRect();
+        panel.hidden = false;
+        var w = panel.offsetWidth;
+        var left = Math.min(Math.max(8, anchor.left), window.innerWidth - w - 8);
+        panel.style.left = left + 'px';
+        panel.style.top = (anchor.bottom + 6) + 'px';
+      }
+
+      function open(caret) {
+        closeAll();
+        var panel = panelFor(caret);
+        if (!panel) return;
+        caret.setAttribute('aria-expanded', 'true');
+        place(caret, panel);
+        openCaret = caret;
+      }
+
+      Array.prototype.forEach.call(carets, function (caret) {
+        caret.addEventListener('click', function (e) {
+          e.stopPropagation();
+          if (openCaret === caret) closeAll(); else open(caret);
+        });
+      });
+      document.addEventListener('click', function (e) {
+        if (!openCaret) return;
+        if (e.target.closest('.subnav') || e.target.closest('.category-bar__caret')) {
+          if (e.target.closest('.subnav__link')) closeAll();
+          return;
+        }
+        closeAll();
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && openCaret) { var c = openCaret; closeAll(); c.focus(); }
+      });
+      window.addEventListener('resize', closeAll);
+      window.addEventListener('scroll', closeAll, { passive: true });
+      if (row) row.addEventListener('scroll', closeAll, { passive: true });
     })();
   </script>
 

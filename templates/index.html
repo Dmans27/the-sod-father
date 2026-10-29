@@ -3,13 +3,8 @@
 {% block title %}The Sod Father{% if active_category %} — {{ categories[active_category].label }}{% if active_sub %} · {{ categories[active_category].subcategories[active_sub] }}{% endif %}{% endif %}{% endblock %}
 
 {% block content %}
-{% if active_category and categories[active_category].subcategories %}
-<nav class="sub-bar" aria-label="{{ categories[active_category].label }} subcategories">
-  <a href="/category/{{ active_category }}" class="sub-bar__chip {% if not active_sub %}is-active{% endif %}">All {{ categories[active_category].label }}</a>
-  {% for key, label in categories[active_category].subcategories.items() %}
-    <a href="/category/{{ active_category }}/{{ key }}" class="sub-bar__chip {% if active_sub == key %}is-active{% endif %}">{{ label }}</a>
-  {% endfor %}
-</nav>
+{% if active_category and active_sub %}
+<p class="sub-crumb">{{ categories[active_category].label }} / {{ categories[active_category].subcategories[active_sub] }}</p>
 {% endif %}
 {% for story in featured %}
   {% set fcat = categories[story.category] %}
