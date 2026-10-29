@@ -16,10 +16,10 @@ from pathlib import Path
 CONTENT_DIR = Path(__file__).parent / "content" / "articles"
 
 CATEGORIES = {
-    "IT":   {"label": "IT",     "emoji": "\U0001F3CC️",  "color": "#B8860B"},
-    "Cooking": {"label": "Cooking",   "emoji": "\U0001F3AF",        "color": "#1D6FA5"},
-    "Golf":     {"label": "Course Golf", "emoji": "\U0001F3DE️",  "color": "#2D6A4F"},
-    "Travel":        {"label": "Tour Travel",     "emoji": "\U0001F3C6",        "color": "#A4303F"},
+    "equipment":   {"label": "Equipment",     "emoji": "\U0001F3CC️",  "color": "#B8860B"},
+    "instruction": {"label": "Instruction",   "emoji": "\U0001F3AF",        "color": "#1D6FA5"},
+    "courses":     {"label": "Course Guides", "emoji": "\U0001F3DE️",  "color": "#2D6A4F"},
+    "tour":        {"label": "Tour News",     "emoji": "\U0001F3C6",        "color": "#A4303F"},
     "lifestyle":   {"label": "Lifestyle",     "emoji": "⛳",            "color": "#5C6B73"},
 }
 
