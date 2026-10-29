@@ -1871,3 +1871,16 @@ body.article-page.is-dark,
 .is-dark .site-menu__theme { color: rgba(255, 255, 255, 0.78); border-top-color: rgba(255, 255, 255, 0.12); }
 .is-dark .site-menu__theme:hover { background: rgba(255, 255, 255, 0.06); }
 .is-dark .site-switch { background: rgba(255, 255, 255, 0.22); }
+
+/* ---- Centered featured story on bigger screens ----
+   When the feed has the whole window (no story open beside it), the
+   featured story's text, byline and action row are centered under the
+   centered category tabs. In the two-page layout the feed is a narrow left
+   page, so it stays left-aligned there. */
+@media (min-width: 900px) {
+  html:not(.book-open) .hero-story__content { text-align: center; }
+  html:not(.book-open) .hero-story__title { max-width: 24em; margin-left: auto; margin-right: auto; text-wrap: balance; }
+  html:not(.book-open) .hero-story__dek { max-width: 40em; margin-left: auto; margin-right: auto; }
+  html:not(.book-open) .hero-story__byline { justify-content: center; }
+  html:not(.book-open) .hero-story .story-actions { justify-content: center; margin-left: 0; }
+}
