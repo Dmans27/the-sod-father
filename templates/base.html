@@ -326,7 +326,7 @@
 
         inner.innerHTML =
           '<div class="article-sheet__header">' +
-            '<span class="article__pill">' + cat.label + '</span>' +
+            '<span class="article__pill">' + esc(article.pill || cat.label || '') + '</span>' +
             '<h1 class="article__title">' + article.title + '</h1>' +
             '<p class="article__dek">' + article.dek + '</p>' +
           '</div>' +

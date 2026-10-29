@@ -381,6 +381,7 @@ def _build_doc_from_form(form, files, slug, existing):
     title = form.get("title", "").strip()
     dek = form.get("dek", "").strip()
     category = form.get("category", "")
+    subcategory = form.get("subcategory", "").strip()
     published_at = form.get("published_at", "").strip()
 
     # The author field is a dropdown of registered authors (so their photo
@@ -409,6 +410,8 @@ def _build_doc_from_form(form, files, slug, existing):
         errors.append("Title is required.")
     if category not in CATEGORIES:
         errors.append("Pick a valid category.")
+    elif subcategory and subcategory not in (CATEGORIES[category].get("subcategories") or {}):
+        errors.append("Pick a subcategory that belongs to the chosen category.")
     if not author_name:
         errors.append("Author is required.")
     if not published_at:
@@ -448,6 +451,7 @@ def _build_doc_from_form(form, files, slug, existing):
         "title": title,
         "dek": dek,
         "category": category,
+        "subcategory": subcategory,
         "author": author_name,
         "author_slug": author_slug or None,
         "author_photo": author_photo,

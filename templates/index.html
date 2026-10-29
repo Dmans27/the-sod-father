@@ -1,13 +1,21 @@
 {% extends "base.html" %}
 {% from "_actions.html" import story_actions %}
-{% block title %}The Sod Father{% if active_category %} — {{ categories[active_category].label }}{% endif %}{% endblock %}
+{% block title %}The Sod Father{% if active_category %} — {{ categories[active_category].label }}{% if active_sub %} · {{ categories[active_category].subcategories[active_sub] }}{% endif %}{% endif %}{% endblock %}
 
 {% block content %}
+{% if active_category and categories[active_category].subcategories %}
+<nav class="sub-bar" aria-label="{{ categories[active_category].label }} subcategories">
+  <a href="/category/{{ active_category }}" class="sub-bar__chip {% if not active_sub %}is-active{% endif %}">All {{ categories[active_category].label }}</a>
+  {% for key, label in categories[active_category].subcategories.items() %}
+    <a href="/category/{{ active_category }}/{{ key }}" class="sub-bar__chip {% if active_sub == key %}is-active{% endif %}">{{ label }}</a>
+  {% endfor %}
+</nav>
+{% endif %}
 {% for story in featured %}
   {% set fcat = categories[story.category] %}
   <a href="/article/{{ story.slug }}" class="hero-story{% if not story.cover_image %} hero-story--plain{% endif %}" data-slug="{{ story.slug }}">
     <div class="hero-story__content">
-      <span class="hero-story__pill">{{ fcat.label }}</span>
+      <span class="hero-story__pill">{{ story.pill }}</span>
       <h2 class="hero-story__title">{{ story.title }}</h2>
       <p class="hero-story__dek">{{ story.dek }}</p>
     </div>
@@ -29,7 +37,7 @@
     {% set cat = categories[article.category] %}
     <a href="/article/{{ article.slug }}" class="story-row" data-slug="{{ article.slug }}">
       <div class="story-row__body">
-        <span class="story-row__pill">{{ cat.label }}</span>
+        <span class="story-row__pill">{{ article.pill }}</span>
         <h2 class="story-row__title">{{ article.title }}</h2>
         <p class="story-row__meta">{{ article.author }} &middot; {{ article.read_minutes }} min read</p>
         {{ story_actions(article.slug, article.title, article.slug in saved_slugs, comment_counts.get(article.slug, 0), compact=True) }}

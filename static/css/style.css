@@ -1891,3 +1891,30 @@ body.article-page.is-dark,
   html:not(.book-open) .category-bar__chip:first-child { margin-left: auto; }
   html:not(.book-open) .category-bar__chip:last-child { margin-right: auto; }
 }
+
+/* ---- Subcategory filter row (category pages) ----
+   A quiet row of small links under the category tabs: "All Golf",
+   "Equipment", "Instruction"... It wraps on narrow screens and follows the
+   theme. Centered on bigger screens like the category tabs. */
+.sub-bar { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; }
+.sub-bar__chip {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--ink-soft);
+  padding: 6px 11px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  white-space: nowrap;
+}
+.sub-bar__chip:hover { color: var(--fairway-deep); border-color: rgba(27, 42, 31, 0.3); }
+.sub-bar__chip.is-active { color: var(--fairway-deep); background: rgba(45, 106, 79, 0.1); border-color: transparent; }
+.is-dark .sub-bar__chip { color: rgba(228, 233, 229, 0.78); border-color: rgba(255, 255, 255, 0.16); }
+.is-dark .sub-bar__chip:hover { color: #fff; border-color: rgba(255, 255, 255, 0.34); }
+.is-dark .sub-bar__chip.is-active { color: #a8dcbf; background: rgba(168, 220, 191, 0.12); border-color: transparent; }
+@media (min-width: 900px) {
+  html:not(.book-open) .sub-bar { justify-content: center; }
+}

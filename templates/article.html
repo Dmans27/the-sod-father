@@ -53,7 +53,7 @@
   </div>
 
   <div class="article__header">
-    <a href="/category/{{ article.category }}" class="article__pill">{{ cat.label }}</a>
+    <a href="/category/{{ article.category }}{% if article.subcategory %}/{{ article.subcategory }}{% endif %}" class="article__pill">{{ article.pill }}</a>
     <h1 class="article__title">{{ article.title }}</h1>
     <p class="article__dek">{{ article.dek }}</p>
   </div>
@@ -200,7 +200,7 @@
       {% set rcat = categories[a.category] %}
       <a href="/article/{{ a.slug }}" class="story-row">
         <div class="story-row__body">
-          <span class="story-row__pill">{{ rcat.label }}</span>
+          <span class="story-row__pill">{{ a.pill }}</span>
           <h2 class="story-row__title">{{ a.title }}</h2>
           <p class="story-row__meta">{{ a.read_minutes }} min read</p>
         </div>

@@ -15,23 +15,67 @@ from pathlib import Path
 
 CONTENT_DIR = Path(__file__).parent / "content" / "articles"
 
+# Each category can have subcategories: {key: "Label"}, shown in this order.
+# To add a subcategory later, add one line to that category's "subcategories"
+# (the key becomes part of the web address: /category/golf/equipment). To
+# add a whole new category, copy a category line and give it its own
+# "subcategories". The story editor and the category pages read this list,
+# so nothing else needs to change.
 CATEGORIES = {
-    "it":        {"label": "IT",        "emoji": "\U0001F4BB",       "color": "#1D6FA5"},
-    "cooking":   {"label": "Cooking",   "emoji": "\U0001F373",       "color": "#C2571A"},
-    "travel":    {"label": "Travel",    "emoji": "✈️",      "color": "#0F766E"},
-    "golf":      {"label": "Golf",      "emoji": "⛳",           "color": "#2D6A4F"},
-    "lifestyle": {"label": "Lifestyle", "emoji": "\U0001F33F",       "color": "#5C6B73"},
+    "it": {
+        "label": "IT", "emoji": "\U0001F4BB", "color": "#1D6FA5",
+        "subcategories": {
+            "networking": "Networking",
+            "security": "Security",
+            "home-lab": "Home Lab",
+            "troubleshooting": "Troubleshooting",
+            "data-ai": "Data & AI",
+            "careers": "Careers & Certs",
+        },
+    },
+    "cooking": {
+        "label": "Cooking", "emoji": "\U0001F373", "color": "#C2571A",
+        "subcategories": {
+            "recipes": "Recipes",
+            "techniques": "Techniques",
+            "gear": "Kitchen Gear",
+            "meal-prep": "Meal Prep",
+        },
+    },
+    "travel": {
+        "label": "Travel", "emoji": "✈️", "color": "#0F766E",
+        "subcategories": {
+            "destinations": "Destinations",
+            "planning": "Planning",
+            "travel-tech": "Travel Tech",
+            "food-travel": "Food & Travel",
+        },
+    },
+    "golf": {
+        "label": "Golf", "emoji": "⛳", "color": "#2D6A4F",
+        "subcategories": {
+            "equipment": "Equipment",
+            "instruction": "Instruction",
+            "courses": "Course Guides",
+            "tour": "Tour News",
+        },
+    },
+    "lifestyle": {
+        "label": "Lifestyle", "emoji": "\U0001F33F", "color": "#5C6B73",
+        "subcategories": {},
+    },
 }
 
-# Stories written under the old golf-only categories are treated as "golf"
-# when they are read, so nothing has to be edited by hand (and a story
-# published straight to GitHub with an old category can't break the site).
-# Saving a story from the admin portal writes the new category.
+# Stories written under the old golf-only categories are treated as Golf
+# stories (with the old category as their subcategory) when they are read,
+# so nothing has to be edited by hand, and a story published straight to
+# GitHub with an old category can't break the site. Saving a story from the
+# admin portal writes the new category and subcategory.
 LEGACY_CATEGORIES = {
-    "equipment": "golf",
-    "instruction": "golf",
-    "courses": "golf",
-    "tour": "golf",
+    "equipment": ("golf", "equipment"),
+    "instruction": ("golf", "instruction"),
+    "courses": ("golf", "courses"),
+    "tour": ("golf", "tour"),
 }
 
 # Block types the story builder (templates/admin/story_form.html) can add,
@@ -97,10 +141,22 @@ def _with_blocks(article):
     legacy fields the first time an older story is read."""
     if article is None:
         return None
+    article = dict(article)
     legacy = LEGACY_CATEGORIES.get(article.get("category"))
     if legacy:
-        article = dict(article)
-        article["category"] = legacy
+        article["category"] = legacy[0]
+        if not article.get("subcategory"):
+            article["subcategory"] = legacy[1]
+    # `pill` is the short label shown on cards ("Golf · Equipment"). It is
+    # worked out here when a story is read and is never saved to the story's file.
+    cat = CATEGORIES.get(article.get("category")) or {}
+    subs = cat.get("subcategories") or {}
+    sub = article.get("subcategory") or ""
+    if sub not in subs:
+        sub = ""
+    article["subcategory"] = sub
+    label = cat.get("label", "")
+    article["pill"] = f"{label} · {subs[sub]}" if sub else label
     if "blocks" not in article:
         article = dict(article)
         article["blocks"] = _blocks_from_legacy(article)

@@ -12,7 +12,7 @@
     {% set cat = categories[article.category] %}
     <a href="/article/{{ article.slug }}" class="story-row">
       <div class="story-row__body">
-        <span class="story-row__pill">{{ cat.label }}</span>
+        <span class="story-row__pill">{{ article.pill }}</span>
         <h2 class="story-row__title">{{ article.title }}</h2>
         <p class="story-row__meta">{{ article.author }} &middot; {{ article.read_minutes }} min read</p>
       </div>

@@ -54,12 +54,20 @@ def home():
 
 
 @app.get("/category/<slug>")
-def category_page(slug):
+@app.get("/category/<slug>/<sub>")
+def category_page(slug, sub=None):
     if slug not in CATEGORIES:
+        abort(404)
+    # A subcategory page (/category/golf/equipment) only exists for the
+    # subcategories listed under that category in content.py.
+    if sub is not None and sub not in (CATEGORIES[slug].get("subcategories") or {}):
         abort(404)
     # Category pages stay a plain list -- no hero stories there, same as a
     # section front usually looks different from a homepage.
-    filtered = [a for a in get_articles() if a["category"] == slug]
+    filtered = [
+        a for a in get_articles()
+        if a["category"] == slug and (sub is None or a.get("subcategory") == sub)
+    ]
     return render_template(
         "index.html",
         articles=filtered,
@@ -67,6 +75,7 @@ def category_page(slug):
         featured=[],
         categories=CATEGORIES,
         active_category=slug,
+        active_sub=sub,
         comment_counts=readers.comment_counts(),
     )
 

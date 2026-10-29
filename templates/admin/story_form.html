@@ -43,6 +43,17 @@
       </select>
     </label>
 
+    <label class="admin-field" id="subcategory-field">
+      <span>Subcategory</span>
+      <select name="subcategory" id="subcategory-select" data-selected="{{ a.get('subcategory', '') }}">
+        <option value="">None</option>
+        {% set current_cat = categories.get(a.get('category', '')) or (categories.values()|first) %}
+        {% for key, label in (current_cat.get('subcategories') or {}).items() %}
+          <option value="{{ key }}" {% if a.get('subcategory') == key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+
     <label class="admin-field">
       <span>Author</span>
       <select name="author_slug" id="author-select">
@@ -704,6 +715,34 @@
     var titleInput = document.querySelector('input[name="title"]');
     var dekInput = document.querySelector('input[name="dek"]');
     var categorySelect = document.querySelector('select[name="category"]');
+    // Ordered lists (the plain CATEGORIES_DATA object comes through sorted A-Z,
+    // so the order you set in content.py is kept here instead).
+    var SUBCATEGORY_CHOICES = {
+      {% for key, cat in categories.items() %}{{ key|tojson }}: [{% for sk, sl in (cat.get('subcategories') or {}).items() %}[{{ sk|tojson }}, {{ sl|tojson }}]{% if not loop.last %}, {% endif %}{% endfor %}]{% if not loop.last %},{% endif %}
+      {% endfor %}
+    };
+    var subcategorySelect = document.getElementById('subcategory-select');
+    var subcategoryField = document.getElementById('subcategory-field');
+
+    // Subcategory choices follow the chosen category (data comes from CATEGORIES in content.py).
+    function syncSubcategories() {
+      var choices = SUBCATEGORY_CHOICES[categorySelect.value] || [];
+      var keep = subcategorySelect.value || subcategorySelect.getAttribute('data-selected') || '';
+      subcategorySelect.innerHTML = '';
+      var none = document.createElement('option');
+      none.value = ''; none.textContent = 'None';
+      subcategorySelect.appendChild(none);
+      var found = false;
+      choices.forEach(function (pair) {
+        var opt = document.createElement('option');
+        opt.value = pair[0]; opt.textContent = pair[1];
+        if (pair[0] === keep) found = true;
+        subcategorySelect.appendChild(opt);
+      });
+      subcategorySelect.value = found ? keep : '';
+      subcategorySelect.setAttribute('data-selected', '');
+      subcategoryField.style.display = choices.length ? '' : 'none';
+    }
     var featuredCheckbox = document.querySelector('input[name="featured"]');
     var coverInput = document.querySelector('input[name="cover_image"]');
     var removeCoverCheckbox = document.getElementById('remove-cover-checkbox');
@@ -753,6 +792,8 @@
       var title = titleInput.value.trim() || 'Untitled story';
       var dek = dekInput.value.trim();
       var cat = CATEGORIES_DATA[categorySelect.value] || { label: 'Category', color: '#5C6B73', emoji: '⛳' };
+      var subLabel = ((cat.subcategories || {})[subcategorySelect.value]) || '';
+      var pillText = subLabel ? cat.label + ' · ' + subLabel : cat.label;
       var isFeatured = featuredCheckbox.checked;
       var readMinutes = estimateReadMinutes();
       var authorName = currentAuthorName();
@@ -772,7 +813,7 @@
           '<div class="hero-story' + (coverUrl ? '' : ' hero-story--plain') + '">' +
             heroMedia +
             '<div class="hero-story__content">' +
-              '<span class="hero-story__pill">' + cat.label + '</span>' +
+              '<span class="hero-story__pill">' + pillText + '</span>' +
               '<h2 class="hero-story__title">' + escapeHtml(title) + '</h2>' +
               '<p class="hero-story__dek">' + escapeHtml(dek) + '</p>' +
               '<p class="hero-story__meta">' + escapeHtml(authorName) + ' &middot; ' + readMinutes + ' min read</p>' +
@@ -786,7 +827,7 @@
         html =
           '<div class="story-list"><div class="story-row">' +
             '<div class="story-row__body">' +
-              '<span class="story-row__pill">' + cat.label + '</span>' +
+              '<span class="story-row__pill">' + pillText + '</span>' +
               '<h2 class="story-row__title">' + escapeHtml(title) + '</h2>' +
               '<p class="story-row__meta">' + escapeHtml(authorName) + ' &middot; ' + readMinutes + ' min read</p>' +
             '</div>' +
@@ -797,7 +838,10 @@
       mount.innerHTML = html;
     }
 
-    [titleInput, dekInput, categorySelect, featuredCheckbox, authorSelectEl, authorCustomEl].forEach(function (el) {
+    categorySelect.addEventListener('change', syncSubcategories);
+    syncSubcategories();
+
+    [titleInput, dekInput, categorySelect, subcategorySelect, featuredCheckbox, authorSelectEl, authorCustomEl].forEach(function (el) {
       el.addEventListener('input', renderPreview);
       el.addEventListener('change', renderPreview);
     });

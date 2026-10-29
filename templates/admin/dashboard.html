@@ -22,7 +22,7 @@
             {% if article.slug in featured_slugs %}<span class="admin-row__badge">★ Featured</span>{% endif %}
           </div>
           <div class="admin-row__meta">
-            {{ categories[article.category].label }} &middot; {{ article.published_at }} &middot; by {{ article.author }}
+            {{ article.pill }} &middot; {{ article.published_at }} &middot; by {{ article.author }}
           </div>
         </div>
         <span class="admin-row__edit">Edit →</span>
