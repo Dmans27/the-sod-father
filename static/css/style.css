@@ -1883,4 +1883,11 @@ body.article-page.is-dark,
   html:not(.book-open) .hero-story__dek { max-width: 40em; margin-left: auto; margin-right: auto; }
   html:not(.book-open) .hero-story__byline { justify-content: center; }
   html:not(.book-open) .hero-story .story-actions { justify-content: center; margin-left: 0; }
+
+  /* Category tabs: centered when they fit. Auto margins on the first and last
+     tab (not justify-content) so a row that is too wide still scrolls from
+     its left edge instead of getting cut off. */
+  html:not(.book-open) .category-bar__scroll { padding-right: 16px; }
+  html:not(.book-open) .category-bar__chip:first-child { margin-left: auto; }
+  html:not(.book-open) .category-bar__chip:last-child { margin-right: auto; }
 }
