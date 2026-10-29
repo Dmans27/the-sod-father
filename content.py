@@ -16,11 +16,22 @@ from pathlib import Path
 CONTENT_DIR = Path(__file__).parent / "content" / "articles"
 
 CATEGORIES = {
-    "equipment":   {"label": "Equipment",     "emoji": "\U0001F3CC️",  "color": "#B8860B"},
-    "instruction": {"label": "Instruction",   "emoji": "\U0001F3AF",        "color": "#1D6FA5"},
-    "courses":     {"label": "Course Guides", "emoji": "\U0001F3DE️",  "color": "#2D6A4F"},
-    "tour":        {"label": "Tour News",     "emoji": "\U0001F3C6",        "color": "#A4303F"},
-    "lifestyle":   {"label": "Lifestyle",     "emoji": "⛳",            "color": "#5C6B73"},
+    "it":        {"label": "IT",        "emoji": "\U0001F4BB",       "color": "#1D6FA5"},
+    "cooking":   {"label": "Cooking",   "emoji": "\U0001F373",       "color": "#C2571A"},
+    "travel":    {"label": "Travel",    "emoji": "✈️",      "color": "#0F766E"},
+    "golf":      {"label": "Golf",      "emoji": "⛳",           "color": "#2D6A4F"},
+    "lifestyle": {"label": "Lifestyle", "emoji": "\U0001F33F",       "color": "#5C6B73"},
+}
+
+# Stories written under the old golf-only categories are treated as "golf"
+# when they are read, so nothing has to be edited by hand (and a story
+# published straight to GitHub with an old category can't break the site).
+# Saving a story from the admin portal writes the new category.
+LEGACY_CATEGORIES = {
+    "equipment": "golf",
+    "instruction": "golf",
+    "courses": "golf",
+    "tour": "golf",
 }
 
 # Block types the story builder (templates/admin/story_form.html) can add,
@@ -86,6 +97,10 @@ def _with_blocks(article):
     legacy fields the first time an older story is read."""
     if article is None:
         return None
+    legacy = LEGACY_CATEGORIES.get(article.get("category"))
+    if legacy:
+        article = dict(article)
+        article["category"] = legacy
     if "blocks" not in article:
         article = dict(article)
         article["blocks"] = _blocks_from_legacy(article)
