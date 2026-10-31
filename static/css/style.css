@@ -155,18 +155,6 @@ a { color: inherit; }
 }
 .category-bar__item:first-child { border-left: none; }
 .category-bar__item:first-child .category-bar__chip { padding-left: 0; }
-.category-bar__item.has-sub .category-bar__chip { padding-right: 2px; }
-.category-bar__caret {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 28px; height: 26px; margin-right: 6px; padding: 0;
-  background: none; border: none; border-radius: 6px;
-  color: var(--ink-faint); cursor: pointer;
-}
-.category-bar__caret svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; transition: transform 0.18s ease; }
-.category-bar__caret:hover { color: var(--fairway-deep); background: rgba(27, 42, 31, 0.06); }
-.category-bar__caret[aria-expanded="true"] svg { transform: rotate(180deg); }
-.category-bar__caret[aria-expanded="true"] { color: var(--fairway-deep); }
-.category-bar__caret:focus-visible { outline: 2px solid var(--gold); outline-offset: -1px; }
 .category-bar__chip:hover { color: var(--fairway-deep); }
 .category-bar__chip.is-active {
   color: var(--fairway-deep);
@@ -1949,11 +1937,4 @@ body.article-page.is-dark,
 .is-dark .subnav__link:hover, .is-dark .subnav__link:focus-visible { background: rgba(255, 255, 255, 0.07); }
 .is-dark .subnav__link.is-active { color: #a8dcbf; background: rgba(168, 220, 191, 0.12); }
 .is-dark .subnav__link--all { border-bottom-color: rgba(255, 255, 255, 0.12); }
-.is-dark .category-bar__caret { color: rgba(228, 233, 229, 0.6); }
-.is-dark .category-bar__caret:hover, .is-dark .category-bar__caret[aria-expanded="true"] { color: #fff; background: rgba(255, 255, 255, 0.08); }
-
-/* Small label above a subcategory page's list: "Golf / Equipment". */
-.sub-crumb { margin: 0 0 18px; font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); }
-@media (min-width: 900px) {
-  html:not(.book-open) .sub-crumb { text-align: center; }
-}
+.is-dark 

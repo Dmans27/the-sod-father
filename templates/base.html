@@ -62,12 +62,7 @@
         {% for key, cat in categories.items() %}
           {% set subs = cat.get('subcategories') %}
           <div class="category-bar__item{% if subs %} has-sub{% endif %}">
-            <a href="/category/{{ key }}" class="category-bar__chip {% if active_category == key %}is-active{% endif %}">{{ cat.label }}</a>
-            {% if subs %}
-              <button type="button" class="category-bar__caret" data-subnav="subnav-{{ key }}" aria-haspopup="true" aria-expanded="false" aria-controls="subnav-{{ key }}" aria-label="{{ cat.label }} subcategories">
-                <svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5"/></svg>
-              </button>
-            {% endif %}
+            <a href="/category/{{ key }}" class="category-bar__chip {% if active_category == key %}is-active{% endif %}"{% if subs %} data-subnav="subnav-{{ key }}" aria-haspopup="true" aria-expanded="false" aria-controls="subnav-{{ key }}"{% endif %}>{{ cat.label }}</a>
           </div>
         {% endfor %}
       </div>
@@ -627,62 +622,97 @@
   </script>
 
   <script>
-    // Subcategory dropdowns under the category tabs. Each tab with
-    // subcategories has an arrow button; tapping it opens that category's
-    // panel (.subnav) just under the tab. The panel is position: fixed so
-    // the sideways-scrolling tab row can't clip it, which means it has to be
-    // placed with script and closed when the page or the row moves.
+    // Subcategory dropdowns under the category tabs.
+    //  - Mouse: hover a tab to reveal its dropdown, click a tab to go to
+    //    the category, click an option to go to that subcategory.
+    //  - Touch / pen (no hover): the first tap on a tab opens its dropdown
+    //    (its first option is "All <Category>"); tap again to close.
+    //  - Keyboard: Down arrow on a tab opens the dropdown, Escape closes it.
+    // The panel is position: fixed so the sideways-scrolling tab row can't
+    // clip it, so it is placed with script and closed when the page moves.
     (function () {
-      var carets = document.querySelectorAll('.category-bar__caret');
-      if (!carets.length) return;
+      var tabs = document.querySelectorAll('.category-bar__chip[data-subnav]');
+      if (!tabs.length) return;
       var row = document.getElementById('category-bar-scroll');
-      var openCaret = null;
+      var openTab = null, closeTimer = null, pointerType = 'mouse';
 
-      function panelFor(caret) { return document.getElementById(caret.getAttribute('data-subnav')); }
-
+      function panelFor(t) { return document.getElementById(t.getAttribute('data-subnav')); }
+      function cancelClose() { if (closeTimer) { clearTimeout(closeTimer); closeTimer = null; } }
       function closeAll() {
-        Array.prototype.forEach.call(carets, function (c) {
-          c.setAttribute('aria-expanded', 'false');
-          var p = panelFor(c);
+        cancelClose();
+        Array.prototype.forEach.call(tabs, function (t) {
+          t.setAttribute('aria-expanded', 'false');
+          var p = panelFor(t);
           if (p) p.hidden = true;
         });
-        openCaret = null;
+        openTab = null;
       }
-
-      function place(caret, panel) {
-        var anchor = caret.closest('.category-bar__item').getBoundingClientRect();
+      function scheduleClose() {
+        cancelClose();
+        closeTimer = setTimeout(closeAll, 220);
+      }
+      function open(tab) {
+        if (openTab === tab) { cancelClose(); return; }
+        closeAll();
+        var panel = panelFor(tab);
+        if (!panel) return;
+        var anchor = tab.closest('.category-bar__item').getBoundingClientRect();
         panel.hidden = false;
         var w = panel.offsetWidth;
-        var left = Math.min(Math.max(8, anchor.left), window.innerWidth - w - 8);
-        panel.style.left = left + 'px';
-        panel.style.top = (anchor.bottom + 6) + 'px';
+        panel.style.left = Math.min(Math.max(8, anchor.left), window.innerWidth - w - 8) + 'px';
+        panel.style.top = (anchor.bottom + 2) + 'px';
+        tab.setAttribute('aria-expanded', 'true');
+        openTab = tab;
       }
 
-      function open(caret) {
-        closeAll();
-        var panel = panelFor(caret);
-        if (!panel) return;
-        caret.setAttribute('aria-expanded', 'true');
-        place(caret, panel);
-        openCaret = caret;
-      }
+      document.addEventListener('pointerdown', function (e) { pointerType = e.pointerType || 'mouse'; }, true);
 
-      Array.prototype.forEach.call(carets, function (caret) {
-        caret.addEventListener('click', function (e) {
-          e.stopPropagation();
-          if (openCaret === caret) closeAll(); else open(caret);
+      Array.prototype.forEach.call(tabs, function (tab) {
+        var item = tab.closest('.category-bar__item');
+        var panel = panelFor(tab);
+        item.addEventListener('pointerenter', function (e) {
+          if (e.pointerType !== 'mouse') return;
+          open(tab);
+        });
+        item.addEventListener('pointerleave', function (e) {
+          if (e.pointerType !== 'mouse') return;
+          scheduleClose();
+        });
+        if (panel) {
+          panel.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') cancelClose(); });
+          panel.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') scheduleClose(); });
+        }
+        tab.addEventListener('click', function (e) {
+          if (pointerType === 'mouse') return;   // mouse: just follow the link
+          if (e.detail === 0) return;            // keyboard Enter: follow the link
+          e.preventDefault();
+          if (openTab === tab) closeAll(); else open(tab);
+        });
+        tab.addEventListener('keydown', function (e) {
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            open(tab);
+            var first = panel && panel.querySelector('.subnav__link');
+            if (first) first.focus();
+          }
         });
       });
+      Array.prototype.forEach.call(document.querySelectorAll('.subnav'), function (p) {
+        p.addEventListener('keydown', function (e) {
+          var links = Array.prototype.slice.call(p.querySelectorAll('.subnav__link'));
+          var i = links.indexOf(document.activeElement);
+          if (e.key === 'ArrowDown') { e.preventDefault(); links[(i + 1) % links.length].focus(); }
+          else if (e.key === 'ArrowUp') { e.preventDefault(); links[(i - 1 + links.length) % links.length].focus(); }
+        });
+      });
+
       document.addEventListener('click', function (e) {
-        if (!openCaret) return;
-        if (e.target.closest('.subnav') || e.target.closest('.category-bar__caret')) {
-          if (e.target.closest('.subnav__link')) closeAll();
-          return;
-        }
+        if (!openTab) return;
+        if (e.target.closest('.subnav') || e.target.closest('.category-bar__chip[data-subnav]')) return;
         closeAll();
       });
       document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && openCaret) { var c = openCaret; closeAll(); c.focus(); }
+        if (e.key === 'Escape' && openTab) { var t = openTab; closeAll(); t.focus(); }
       });
       window.addEventListener('resize', closeAll);
       window.addEventListener('scroll', closeAll, { passive: true });
