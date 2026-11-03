@@ -27,6 +27,7 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 import db
+from authors import get_author, get_author_by_email
 from content import CATEGORIES, get_article
 
 readers_bp = Blueprint("readers", __name__)
@@ -362,12 +363,37 @@ def register(app):
     app.config.setdefault("SESSION_COOKIE_SECURE", bool(os.environ.get("RENDER")))
     app.config.setdefault("PERMANENT_SESSION_LIFETIME", timedelta(days=90))
 
+    def header_user(reader):
+        """Who the avatar in the site header shows: a reader (their author
+        photo if their email matches an author account, otherwise their
+        initial), an author who is signed in to the writers' area, or nobody
+        (the default silhouette with sign in / create account)."""
+        try:
+            if reader:
+                author = get_author_by_email(reader.get("email"))
+                name = reader["display_name"]
+                return {"kind": "reader", "name": name, "email": reader.get("email"),
+                        "photo": (author or {}).get("photo"),
+                        "initial": (name.strip()[:1] or "?").upper(),
+                        "is_author": bool(session.get("author_slug"))}
+            slug = session.get("author_slug")
+            author = get_author(slug) if slug else None
+            if author:
+                name = author.get("name") or "Author"
+                return {"kind": "author", "name": name, "email": author.get("email"),
+                        "photo": author.get("photo"),
+                        "initial": (name.strip()[:1] or "?").upper(), "is_author": True}
+        except Exception as exc:  # never let the avatar break a page
+            print("readers: could not build header user:", exc)
+        return None
+
     @app.context_processor
     def inject_reader():
         reader = current_reader()
         saved = sorted(saved_slugs()) if reader else []
         return {
             "reader": reader,
+            "header_user": header_user(reader),
             "csrf_token": csrf_token(),
             "saved_slugs": set(saved),
             "reader_state": {

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>{% block title %}The Sod Father{% endblock %}</title>
+  <title>{% block title %}Mansfield Tech{% endblock %}</title>
   <!-- Source Serif 4 for headlines (an editorial serif with real warmth,
        standing in for Georgia, also used for article body text), IBM Plex Sans
        for UI and bylines, and IBM Plex Mono for the small uppercase labels --
@@ -46,9 +46,47 @@
         <span class="site-menu-toggle__bar"></span>
       </button>
       <a href="/" class="site-brand">
-        <span class="site-brand__mark">⛳</span>
-        <span class="site-brand__text">The Sod Father</span>
+        <span class="site-brand__text">Mansfield Tech</span>
       </a>
+      {# Avatar at the right of the bar. Signed in: your photo (or initial).
+         Signed out: a default silhouette that opens Sign in / Create account. #}
+      {% set nxt = '' if (request.path.startswith('/account') or request.path.startswith('/authors') or request.path.startswith('/admin')) else '?next=' ~ (request.path | urlencode) %}
+      <div class="user-menu" id="user-menu">
+        <button type="button" class="user-menu__btn{% if header_user %} is-signed-in{% endif %}" id="user-menu-btn" aria-haspopup="true" aria-expanded="false" aria-controls="user-menu-panel" aria-label="{% if header_user %}Account menu for {{ header_user.name }}{% else %}Sign in or create an account{% endif %}">
+          {% if header_user %}
+            <span class="user-menu__initial" aria-hidden="true">{{ header_user.initial }}</span>
+            {% if header_user.photo %}<img class="user-menu__img" src="{{ header_user.photo }}" alt="" onerror="this.remove()">{% endif %}
+          {% else %}
+            <svg class="user-menu__ghost" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"/></svg>
+          {% endif %}
+        </button>
+        <div class="user-menu__panel" id="user-menu-panel" role="menu" hidden>
+          {% if header_user %}
+            <div class="user-menu__who">
+              <strong>{{ header_user.name }}</strong>
+              {% if header_user.email %}<span>{{ header_user.email }}</span>{% endif %}
+            </div>
+            {% if reader %}
+              <a role="menuitem" class="user-menu__link" href="/account/profile">Account</a>
+              <a role="menuitem" class="user-menu__link" href="/account">Saved stories</a>
+            {% endif %}
+            {% if header_user.is_author %}
+              <a role="menuitem" class="user-menu__link" href="/authors/me">Author profile</a>
+            {% endif %}
+            {% if reader %}
+              <form method="post" action="/account/logout" class="user-menu__form">
+                <input type="hidden" name="csrf" value="{{ csrf_token }}">
+                <button type="submit" role="menuitem" class="user-menu__link user-menu__link--button">Sign out</button>
+              </form>
+            {% else %}
+              <a role="menuitem" class="user-menu__link" href="/authors/logout">Sign out</a>
+            {% endif %}
+          {% else %}
+            <a role="menuitem" class="user-menu__link user-menu__link--primary" href="/account/login{{ nxt }}">Sign in</a>
+            <a role="menuitem" class="user-menu__link" href="/account/signup{{ nxt }}">Create account</a>
+          {% endif %}
+        </div>
+      </div>
     </div>
     <!-- Same categories as the hamburger drawer below (which stays for
          now), as a horizontally scrolling row of chips right under the
@@ -118,7 +156,7 @@
   </main>
 
   <footer class="site-footer">
-    <p>The Sod Father &mdash; a fun side project, not a real publication (yet).</p>
+    <p>Mansfield Tech &mdash; a fun side project, not a real publication (yet).</p>
   </footer>
 
   <!-- Bottom navigation bar: phones and the Duo's outer display only
@@ -255,7 +293,7 @@
         if (block.type === 'link') {
           var external = block.kind === 'web';
           return '<a class="link-card" href="' + esc(block.href) + '"' + (external ? ' target="_blank" rel="noopener noreferrer"' : '') + '>' +
-            '<div class="link-card__body"><span class="link-card__kicker">' + esc(block.host || 'More from The Sod Father') + '</span>' +
+            '<div class="link-card__body"><span class="link-card__kicker">' + esc(block.host || 'More from Mansfield Tech') + '</span>' +
             '<h3 class="link-card__title">' + esc(block.title) + '</h3>' +
             (block.description ? '<p class="link-card__desc">' + esc(block.description) + '</p>' : '') +
             '<span class="link-card__cta">' + esc(block.label || 'Read the story') + ' &rarr;</span></div>' +
@@ -334,7 +372,7 @@
             '</div>' +
             authorCardAvatar +
             '<div class="article__author-card-masthead">' +
-              '<span class="article__author-card-masthead-brand">The Sod Father</span>' +
+              '<span class="article__author-card-masthead-brand">Mansfield Tech</span>' +
               authorCardPosition +
             '</div>' +
           '</div>';
@@ -717,6 +755,31 @@
       window.addEventListener('resize', closeAll);
       window.addEventListener('scroll', closeAll, { passive: true });
       if (row) row.addEventListener('scroll', closeAll, { passive: true });
+    })();
+  </script>
+
+  <script>
+    // Avatar menu at the right of the header: click to open, click outside,
+    // Escape or any link to close.
+    (function () {
+      var btn = document.getElementById('user-menu-btn');
+      var panel = document.getElementById('user-menu-panel');
+      if (!btn || !panel) return;
+      function setOpen(open) {
+        panel.hidden = !open;
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      }
+      btn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        setOpen(panel.hidden);
+      });
+      document.addEventListener('click', function (e) {
+        if (!panel.hidden && !e.target.closest('#user-menu')) setOpen(false);
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && !panel.hidden) { setOpen(false); btn.focus(); }
+      });
+      window.addEventListener('scroll', function () { if (!panel.hidden) setOpen(false); }, { passive: true });
     })();
   </script>
 
