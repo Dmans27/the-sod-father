@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>{% block title %}Admin{% endblock %} — Mansfield Tech</title>
+  <title>{% block title %}Admin{% endblock %} — /Column</title>
   <!-- Same fonts as the public site (base.html) -- without these the live
        homepage preview panel below would fall back to Georgia/system
        fonts and not actually match what a save would produce. -->
@@ -16,7 +16,7 @@
 <body class="admin-body">
   <header class="admin-header">
     <div class="admin-header__inner">
-      <a href="{{ url_for('admin.dashboard') }}" class="admin-header__brand">Mansfield Tech <span>admin</span></a>
+      <a href="{{ url_for('admin.dashboard') }}" class="admin-header__brand">/Column <span>admin</span></a>
       <nav class="admin-header__nav">
         <a href="{{ url_for('admin.dashboard') }}">Stories</a>
         <a href="{{ url_for('admin.story_new') }}">+ New story</a>

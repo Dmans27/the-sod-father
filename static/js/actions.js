@@ -218,7 +218,7 @@
     menu.querySelector('.share-menu__title').textContent = title;
     menu.querySelector('#share-email').href =
       'mailto:?subject=' + encodeURIComponent(title) +
-      '&body=' + encodeURIComponent('I thought you’d like this story from Mansfield Tech:\n\n' + title + '\n' + url);
+      '&body=' + encodeURIComponent('I thought you’d like this story from /Column:\n\n' + title + '\n' + url);
 
     var copy = menu.querySelector('#share-copy');
     copy.querySelector('span').textContent = 'Copy link';

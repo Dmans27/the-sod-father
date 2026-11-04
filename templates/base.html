@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <title>{% block title %}Mansfield Tech{% endblock %}</title>
+  <title>{% block title %}/Column{% endblock %}</title>
   <!-- Source Serif 4 for headlines (an editorial serif with real warmth,
        standing in for Georgia, also used for article body text), IBM Plex Sans
        for UI and bylines, and IBM Plex Mono for the small uppercase labels --
@@ -58,7 +58,7 @@
         <span class="site-menu-toggle__bar"></span>
       </button>
       <a href="/" class="site-brand">
-        <span class="site-brand__text">Mansfield Tech</span>
+        <span class="site-brand__text"><span class="site-brand__slashes">/</span>Column</span>
       </a>
       {# Avatar at the right of the bar. Signed in: your photo (or initial).
          Signed out: a default silhouette that opens Sign in / Create account. #}
@@ -173,7 +173,7 @@
   </main>
 
   <footer class="site-footer">
-    <p>Mansfield Tech &mdash; a fun side project, not a real publication (yet).</p>
+    <p>/Column &mdash; a fun side project, not a real publication (yet).</p>
   </footer>
 
   <!-- Bottom navigation bar: phones and the Duo's outer display only
@@ -310,7 +310,7 @@
         if (block.type === 'link') {
           var external = block.kind === 'web';
           return '<a class="link-card" href="' + esc(block.href) + '"' + (external ? ' target="_blank" rel="noopener noreferrer"' : '') + '>' +
-            '<div class="link-card__body"><span class="link-card__kicker">' + esc(block.host || 'More from Mansfield Tech') + '</span>' +
+            '<div class="link-card__body"><span class="link-card__kicker">' + esc(block.host || 'More from /Column') + '</span>' +
             '<h3 class="link-card__title">' + esc(block.title) + '</h3>' +
             (block.description ? '<p class="link-card__desc">' + esc(block.description) + '</p>' : '') +
             '<span class="link-card__cta">' + esc(block.label || 'Read the story') + ' &rarr;</span></div>' +
@@ -389,7 +389,7 @@
             '</div>' +
             authorCardAvatar +
             '<div class="article__author-card-masthead">' +
-              '<span class="article__author-card-masthead-brand">Mansfield Tech</span>' +
+              '<span class="article__author-card-masthead-brand">/Column</span>' +
               authorCardPosition +
             '</div>' +
           '</div>';

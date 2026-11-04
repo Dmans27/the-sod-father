@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "_actions.html" import story_actions %}
-{% block title %}Mansfield Tech{% if active_category %} — {{ categories[active_category].label }}{% if active_sub %} · {{ categories[active_category].subcategories[active_sub] }}{% endif %}{% endif %}{% endblock %}
+{% block title %}/Column{% if active_category %} — {{ categories[active_category].label }}{% if active_sub %} · {{ categories[active_category].subcategories[active_sub] }}{% endif %}{% endif %}{% endblock %}
 
 {% block content %}
 {% if active_category and active_sub %}

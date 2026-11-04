@@ -85,6 +85,7 @@ a { color: inherit; }
 }
 @media (min-width: 700px) { .site-brand { font-size: 26px; } }
 .site-brand__mark { font-size: 20px; flex-shrink: 0; }
+.site-brand__slashes { color: var(--gold, #b8860b); margin-right: 0.02em; }
 .site-brand__text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 .site-menu-toggle {
