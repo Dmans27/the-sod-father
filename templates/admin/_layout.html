@@ -12,6 +12,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="stylesheet" href="/static/css/admin.css">
+  <script>
+    // Same saved light/dark choice as the public site (localStorage "sf-theme"),
+    // applied before the page paints so there's no flash.
+    try { if (localStorage.getItem('sf-theme') === 'dark') document.documentElement.classList.add('is-dark'); } catch (e) {}
+  </script>
 </head>
 <body class="admin-body">
   <header class="admin-header">
@@ -23,6 +28,11 @@
         <a href="{{ url_for('admin.authors_list') }}">Authors</a>
         <a href="/" target="_blank" rel="noopener">View site ↗</a>
         <a href="{{ url_for('admin.logout') }}">Log out</a>
+        <button type="button" class="admin-theme-toggle" id="admin-theme-toggle" aria-pressed="false" title="Switch between light and dark">
+          <svg class="admin-theme-toggle__moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg>
+          <svg class="admin-theme-toggle__sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></svg>
+          <span class="admin-theme-toggle__label">Dark mode</span>
+        </button>
       </nav>
     </div>
   </header>
@@ -40,5 +50,25 @@
 
     {% block admin_content %}{% endblock %}
   </main>
+  <script>
+    // Light / dark switch for the admin portal. Shares the "sf-theme" choice
+    // with the public site, so flipping it here flips it there too.
+    (function () {
+      var btn = document.getElementById('admin-theme-toggle');
+      if (!btn) return;
+      var root = document.documentElement;
+      function sync() {
+        var dark = root.classList.contains('is-dark');
+        btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+        btn.querySelector('.admin-theme-toggle__label').textContent = dark ? 'Light mode' : 'Dark mode';
+      }
+      btn.addEventListener('click', function () {
+        var dark = root.classList.toggle('is-dark');
+        try { localStorage.setItem('sf-theme', dark ? 'dark' : 'light'); } catch (e) {}
+        sync();
+      });
+      sync();
+    })();
+  </script>
 </body>
 </html>

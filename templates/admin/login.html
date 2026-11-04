@@ -6,6 +6,11 @@
   <title>Admin — /Column</title>
   <link rel="stylesheet" href="/static/css/style.css">
   <link rel="stylesheet" href="/static/css/admin.css">
+  <script>
+    // Same saved light/dark choice as the public site (localStorage "sf-theme"),
+    // applied before the page paints so there's no flash.
+    try { if (localStorage.getItem('sf-theme') === 'dark') document.documentElement.classList.add('is-dark'); } catch (e) {}
+  </script>
 </head>
 <body class="admin-login-body">
   <main class="admin-login">

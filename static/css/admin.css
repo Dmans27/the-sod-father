@@ -1,4 +1,4 @@
-/* The Sod Father -- admin portal. Reuses style.css's color variables and
+/* /Column -- admin portal. Reuses style.css's color variables and
    font stack for consistency with the public site, but otherwise is its
    own simple back-office look: no hamburger menu, no article sheet, just
    forms and a list. */
@@ -352,3 +352,67 @@
 .admin-compare__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .admin-compare__side { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 @media (max-width: 600px) { .admin-compare__grid { grid-template-columns: 1fr; } }
+
+
+/* ── Dark mode ──
+   html.is-dark (the same class and saved choice as the public site) flips
+   the shared colour variables in style.css; this block handles what admin.css
+   hard-codes: white cards and inputs, the green header, buttons, notices. */
+html.is-dark { color-scheme: dark; }
+.is-dark .admin-header { background: #131916; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
+.admin-theme-toggle {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255, 255, 255, 0.12); color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 999px;
+  padding: 4px 12px 4px 9px; font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.admin-theme-toggle:hover { background: rgba(255, 255, 255, 0.2); }
+.admin-theme-toggle svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.admin-theme-toggle__sun { display: none; }
+.is-dark .admin-theme-toggle__sun { display: block; }
+.is-dark .admin-theme-toggle__moon { display: none; }
+
+.is-dark .admin-btn { background: #2c352f; color: var(--ink); border-color: rgba(255, 255, 255, 0.18); }
+.is-dark .admin-btn:hover { background: #36413a; }
+.is-dark .admin-btn--primary { background: #2d6a4f; border-color: #2d6a4f; color: #fff; }
+.is-dark .admin-btn--primary:hover { background: #3a8062; border-color: #3a8062; }
+
+.is-dark .admin-field input[type="text"],
+.is-dark .admin-field input[type="password"],
+.is-dark .admin-field input[type="date"],
+.is-dark .admin-field input[type="file"],
+.is-dark .admin-field select,
+.is-dark .admin-field textarea,
+.is-dark .admin-block__body textarea,
+.is-dark .admin-block__body input[type="text"],
+.is-dark .admin-block__body input[type="file"],
+.is-dark .admin-block__body select,
+.is-dark .admin-block__body input.admin-block__url,
+.is-dark .admin-block__body input.admin-link__url,
+.is-dark .admin-block__body input.admin-link__title,
+.is-dark .admin-block__body input.admin-link__label,
+.is-dark .admin-block__body input.admin-block__title,
+.is-dark .admin-block__body input[class*="admin-compare__label"],
+.is-dark .admin-block__body textarea.admin-link__desc,
+.is-dark .admin-gallery__fields input[type="text"],
+.is-dark .admin-gallery__fields input[type="file"] { background: #1a211d; color: var(--ink); border-color: rgba(255, 255, 255, 0.2); }
+.is-dark .admin-field input::placeholder,
+.is-dark .admin-field textarea::placeholder,
+.is-dark .admin-block__body input::placeholder,
+.is-dark .admin-block__body textarea::placeholder { color: rgba(228, 233, 229, 0.42); }
+
+.is-dark .admin-row,
+.is-dark .admin-block { background: #232b27; }
+.is-dark .admin-block__head { background: #2a332d; }
+.is-dark .admin-gallery__row { background: #1f2722; }
+.is-dark .admin-preview { background: #232b27; }
+.is-dark .admin-block__remove:hover { background: rgba(255, 120, 135, 0.18); color: #ff9aa6; }
+
+.is-dark .admin-flash--success { background: rgba(124, 202, 160, 0.14); color: #a8dcbf; }
+.is-dark .admin-flash--warning { background: rgba(227, 185, 79, 0.16); color: #ecc968; }
+.is-dark .admin-flash--error { background: rgba(255, 120, 135, 0.14); color: #ffb0b9; }
+.is-dark .admin-row__badge { color: #ecc968; background: rgba(227, 185, 79, 0.18); }
+
+.is-dark .admin-login__card { background: #232b27; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); }
+.is-dark .admin-login__error { background: rgba(255, 120, 135, 0.14); color: #ffb0b9; }
+.is-dark .admin-login__notice { background: rgba(124, 202, 160, 0.14); color: #a8dcbf; }
