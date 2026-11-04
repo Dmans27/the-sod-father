@@ -54,8 +54,7 @@ a { color: inherit; }
 .site-header {
   background: #fff;
   border-bottom: 1px solid #e9ece9; /* light rule under the white category bar */
-  position: sticky;
-  top: 0;
+  position: relative; /* scrolls away; the .popbar takes over after 150px */
   z-index: 10;
   padding-top: max(env(safe-area-inset-top), 20px);
 }
@@ -1983,3 +1982,27 @@ body.article-page.is-dark,
 .is-dark .user-menu__who { border-color: rgba(255, 255, 255, 0.12); }
 .is-dark .user-menu__who span { color: rgba(228, 233, 229, 0.6); }
 .is-dark .user-menu__link:hover, .is-dark .user-menu__link:focus-visible { background: rgba(255, 255, 255, 0.08); }
+
+
+/* ── Pop-up category bar ──
+   Hidden above the page until you scroll ~150px, then slides down from the
+   top with the category tabs. Matches the header's width, so in the
+   two-page layout it sits over the left page only. */
+.popbar {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 15;
+  padding-top: env(safe-area-inset-top, 0px);
+  background: #fff; border-bottom: 1px solid #e9ece9;
+  box-shadow: 0 6px 18px rgba(27, 42, 31, 0.1);
+  transform: translateY(-110%); visibility: hidden;
+  transition: transform 0.25s ease, visibility 0s linear 0.25s, width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.popbar.is-visible { transform: none; visibility: visible; transition: transform 0.25s ease, width 0.35s cubic-bezier(0.2, 0.8, 0.2, 1); }
+.popbar .category-bar { background: transparent; }
+.popbar .category-bar__scroll { padding-top: 8px; padding-bottom: 8px; }
+.is-dark .popbar { background: #1c231f; border-color: rgba(255, 255, 255, 0.12); box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45); }
+@media (min-width: 700px) {
+  html.book-open .popbar { right: auto; width: var(--book-left); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .popbar, .popbar.is-visible { transition: none; }
+}

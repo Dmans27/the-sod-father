@@ -38,6 +38,18 @@
     </defs>
   </svg>
 
+{% macro category_items() %}
+        <div class="category-bar__item">
+  <a href="/" class="category-bar__chip {% if not active_category %}is-active{% endif %}">All</a>
+</div>
+{% for key, cat in categories.items() %}
+  {% set subs = cat.get('subcategories') %}
+  <div class="category-bar__item{% if subs %} has-sub{% endif %}">
+    <a href="/category/{{ key }}" class="category-bar__chip {% if active_category == key %}is-active{% endif %}"{% if subs %} data-subnav="subnav-{{ key }}" aria-haspopup="true" aria-expanded="false" aria-controls="subnav-{{ key }}"{% endif %}>{{ cat.label }}</a>
+  </div>
+{% endfor %}
+{% endmacro %}
+
   <header class="site-header">
     <div class="site-header__inner">
       <button type="button" class="site-menu-toggle" id="site-menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="site-menu-overlay">
@@ -94,15 +106,7 @@
          the page scrolls. -->
     <nav class="category-bar" aria-label="Browse categories">
       <div class="category-bar__scroll" id="category-bar-scroll">
-        <div class="category-bar__item">
-          <a href="/" class="category-bar__chip {% if not active_category %}is-active{% endif %}">All</a>
-        </div>
-        {% for key, cat in categories.items() %}
-          {% set subs = cat.get('subcategories') %}
-          <div class="category-bar__item{% if subs %} has-sub{% endif %}">
-            <a href="/category/{{ key }}" class="category-bar__chip {% if active_category == key %}is-active{% endif %}"{% if subs %} data-subnav="subnav-{{ key }}" aria-haspopup="true" aria-expanded="false" aria-controls="subnav-{{ key }}"{% endif %}>{{ cat.label }}</a>
-          </div>
-        {% endfor %}
+        {{ category_items() }}
       </div>
     </nav>
     {% for key, cat in categories.items() %}
@@ -116,6 +120,19 @@
       {% endif %}
     {% endfor %}
   </header>
+
+  <!-- Pop-up category bar: the main header above stays at the top of the page
+       and scrolls away like normal; once you are past ~150px this slim bar
+       slides down from the top with the same tabs (hover one for its
+       subcategories, same as the header's). Not used on story pages, which
+       have their own bar. Inert while hidden so it can't be tabbed to. -->
+  <div class="popbar" id="popbar" inert>
+    <nav class="category-bar" aria-label="Quick category navigation">
+      <div class="category-bar__scroll" id="popbar-scroll">
+        {{ category_items() }}
+      </div>
+    </nav>
+  </div>
 
   <!-- Hamburger drawer: replaces the old inline nav row (it used to wrap
        onto a second line on narrow screens, and sat right under the
@@ -651,11 +668,11 @@
     // sitting off-screen to the right. Sets scrollLeft directly rather than
     // calling scrollIntoView, which can also scroll the whole page.
     (function () {
-      var row = document.getElementById('category-bar-scroll');
-      if (!row) return;
-      var active = row.querySelector('.is-active');
-      if (!active) return;
-      row.scrollLeft = active.offsetLeft - (row.clientWidth - active.offsetWidth) / 2;
+      Array.prototype.forEach.call(document.querySelectorAll('.category-bar__scroll'), function (row) {
+        var active = row.querySelector('.is-active');
+        if (!active) return;
+        row.scrollLeft = active.offsetLeft - (row.clientWidth - active.offsetWidth) / 2;
+      });
     })();
   </script>
 
@@ -671,7 +688,7 @@
     (function () {
       var tabs = document.querySelectorAll('.category-bar__chip[data-subnav]');
       if (!tabs.length) return;
-      var row = document.getElementById('category-bar-scroll');
+      var rows = document.querySelectorAll('.category-bar__scroll');
       var openTab = null, closeTimer = null, pointerType = 'mouse';
 
       function panelFor(t) { return document.getElementById(t.getAttribute('data-subnav')); }
@@ -698,7 +715,8 @@
         panel.hidden = false;
         var w = panel.offsetWidth;
         panel.style.left = Math.min(Math.max(8, anchor.left), window.innerWidth - w - 8) + 'px';
-        panel.style.top = (anchor.bottom + 2) + 'px';
+        var bar = tab.closest('.popbar');  // from the pop-up bar, hang off the bar's edge
+        panel.style.top = ((bar ? bar.getBoundingClientRect().bottom : anchor.bottom) + 2) + 'px';
         tab.setAttribute('aria-expanded', 'true');
         openTab = tab;
       }
@@ -754,7 +772,31 @@
       });
       window.addEventListener('resize', closeAll);
       window.addEventListener('scroll', closeAll, { passive: true });
-      if (row) row.addEventListener('scroll', closeAll, { passive: true });
+      Array.prototype.forEach.call(rows, function (r) { r.addEventListener('scroll', closeAll, { passive: true }); });
+    })();
+  </script>
+
+  <script>
+    // Show the pop-up category bar once the page is scrolled past 150px.
+    (function () {
+      var bar = document.getElementById('popbar');
+      if (!bar) return;
+      var SHOW_AFTER = 150, on = false;
+      function allowed() {
+        var c = document.body.classList;
+        return !c.contains('article-page') && !c.contains('has-sticky-author-bar');
+      }
+      function update() {
+        var y = window.pageYOffset || document.documentElement.scrollTop || 0;
+        var want = y > SHOW_AFTER && allowed();
+        if (want === on) return;
+        on = want;
+        bar.classList.toggle('is-visible', on);
+        if (on) bar.removeAttribute('inert'); else bar.setAttribute('inert', '');
+      }
+      window.addEventListener('scroll', update, { passive: true });
+      window.addEventListener('resize', update);
+      update();
     })();
   </script>
 
