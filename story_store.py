@@ -73,8 +73,11 @@ def save_story(doc, images, is_update=False):
     images: {repo_path: bytes} for any photos this save includes (cover +
     any photo blocks). Writes content/articles/<slug>.json plus those
     image files as one atomic publish."""
-    verb = "Update" if is_update else "Add"
-    message = f"{verb} story: {doc['title']}"
+    if doc.get("status") == "draft":
+        message = f"Save draft: {doc['title']}"
+    else:
+        verb = "Update" if is_update else "Add"
+        message = f"{verb} story: {doc['title']}"
     return save_record(f"content/articles/{doc['slug']}.json", doc, images, message)
 
 

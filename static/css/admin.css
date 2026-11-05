@@ -416,3 +416,25 @@ html.is-dark { color-scheme: dark; }
 .is-dark .admin-login__card { background: #232b27; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5); }
 .is-dark .admin-login__error { background: rgba(255, 120, 135, 0.14); color: #ffb0b9; }
 .is-dark .admin-login__notice { background: rgba(124, 202, 160, 0.14); color: #a8dcbf; }
+
+
+/* ── Drafts and autosave ── */
+.admin-section-title { font-size: 13px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ink-faint); margin: 26px 0 10px; }
+.admin-section-title:first-of-type { margin-top: 0; }
+.admin-section-title span { font-weight: 700; opacity: 0.7; margin-left: 4px; }
+.admin-row__badge--draft { color: #3d4f8a; background: rgba(61, 79, 138, 0.14); }
+.is-dark .admin-row__badge--draft { color: #aebdf0; background: rgba(140, 160, 235, 0.2); }
+.admin-form__actions { flex-wrap: wrap; align-items: center; }
+.admin-draft-status { font-size: 13px; font-weight: 600; color: var(--ink-faint); margin-left: 6px; }
+.admin-draft-status.is-saving { color: var(--ink-soft); }
+.admin-draft-status.is-error { color: #a4303f; }
+.is-dark .admin-draft-status.is-error { color: #ff9aa6; }
+.admin-draft-note { margin: 4px 0 0; }
+.admin-restore {
+  display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap;
+  padding: 12px 14px; margin-bottom: 18px; border-radius: 10px;
+  background: rgba(184, 134, 11, 0.14); color: var(--ink); font-size: 14px; font-weight: 600;
+}
+.admin-restore__text { flex: 1 1 260px; }
+.admin-restore__actions { display: flex; gap: 8px; }
+.admin-restore .admin-btn { padding: 6px 12px; font-size: 13px; }

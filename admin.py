@@ -14,14 +14,15 @@ other people start writing stories too.
 import os
 import re
 import secrets
+from datetime import date, datetime
 from functools import wraps
 from urllib.parse import parse_qs, urlparse
 
 from flask import (
-    Blueprint, abort, flash, redirect, render_template, request, session, url_for,
+    Blueprint, abort, flash, jsonify, redirect, render_template, request, session, url_for,
 )
 
-from content import BLOCK_TYPES, CATEGORIES, estimate_read_minutes, get_article, get_articles, get_featured
+from content import BLOCK_TYPES, CATEGORIES, estimate_read_minutes, get_article, get_articles, get_featured, is_draft
 from authors import get_author, get_authors
 import story_store
 
@@ -72,13 +73,16 @@ def logout():
 @admin_bp.get("/")
 @login_required
 def dashboard():
-    articles = get_articles()
-    featured = get_featured(articles)
+    everything = get_articles(include_drafts=True)
+    drafts = [x for x in everything if is_draft(x)]
+    published = [x for x in everything if not is_draft(x)]
+    featured = get_featured(published)
     return render_template(
         "admin/dashboard.html",
-        articles=articles,
+        drafts=drafts,
+        articles=published,
         categories=CATEGORIES,
-        featured_slugs={a["slug"] for a in featured},
+        featured_slugs={x["slug"] for x in featured},
     )
 
 
@@ -371,13 +375,19 @@ def _build_blocks_from_form(form, files, slug):
     return blocks, images, errors
 
 
-def _build_doc_from_form(form, files, slug, existing):
-    """Returns (doc, images, errors). images is {repo_path: bytes} for only
+def _build_doc_from_form(form, files, slug, existing, draft=False):
+    """Returns (doc, images, errors, warnings). images is {repo_path: bytes} for only
     the photos newly uploaded this save (cover + any block photos) -- a
     photo block left untouched re-saves whatever image path it already
     had, so editing a story without touching a given photo doesn't lose
-    it."""
+    it.
+
+    draft=True is the "Save draft" path: nothing is required (a half-written
+    story is the whole point), so what would be an error when publishing --
+    a missing title, author or date, a block with a problem -- is either
+    filled in with a placeholder or skipped and reported back as a warning."""
     errors = []
+    warnings = []
     title = form.get("title", "").strip()
     dek = form.get("dek", "").strip()
     category = form.get("category", "")
@@ -406,16 +416,24 @@ def _build_doc_from_form(form, files, slug, existing):
         author_slug = ""
         author_name = form.get("author_custom", "").strip()
 
-    if not title:
-        errors.append("Title is required.")
-    if category not in CATEGORIES:
-        errors.append("Pick a valid category.")
-    elif subcategory and subcategory not in (CATEGORIES[category].get("subcategories") or {}):
-        errors.append("Pick a subcategory that belongs to the chosen category.")
-    if not author_name:
-        errors.append("Author is required.")
-    if not published_at:
-        errors.append("Published date is required.")
+    if draft:
+        title = title or "Untitled draft"
+        published_at = published_at or date.today().isoformat()
+        if category not in CATEGORIES:
+            category = ""
+        if not category or subcategory not in (CATEGORIES[category].get("subcategories") or {}):
+            subcategory = ""
+    else:
+        if not title:
+            errors.append("Title is required.")
+        if category not in CATEGORIES:
+            errors.append("Pick a valid category.")
+        elif subcategory and subcategory not in (CATEGORIES[category].get("subcategories") or {}):
+            errors.append("Pick a subcategory that belongs to the chosen category.")
+        if not author_name:
+            errors.append("Author is required.")
+        if not published_at:
+            errors.append("Published date is required.")
 
     images = {}
 
@@ -441,10 +459,12 @@ def _build_doc_from_form(form, files, slug, existing):
 
     blocks, block_images, block_errors = _build_blocks_from_form(form, files, slug)
     images.update(block_images)
-    errors.extend(block_errors)
-
-    if not blocks:
-        errors.append("Add at least one block to the story (a paragraph, a photo, a quote...).")
+    if draft:
+        warnings.extend(block_errors)
+    else:
+        errors.extend(block_errors)
+        if not blocks:
+            errors.append("Add at least one block to the story (a paragraph, a photo, a quote...).")
 
     doc = {
         "slug": slug,
@@ -459,95 +479,143 @@ def _build_doc_from_form(form, files, slug, existing):
         "published_at": published_at,
         "cover_image": cover_image,
         "featured": form.get("featured") == "1",
+        "status": "draft" if draft else "published",
         "blocks": blocks,
         "read_minutes": estimate_read_minutes(blocks),
     }
 
-    return doc, images, errors
+    return doc, images, errors, warnings
 
 
 # ── Story routes ─────────────────────────────────────────────────────────
 
-@admin_bp.get("/story/new")
-@login_required
-def story_new():
+def _wants_draft():
+    return request.form.get("action") == "draft"
+
+
+def _slug_from_hint():
+    """The editor remembers a story's slug (hidden draft_slug field) once it
+    has been saved as a draft, so saving again updates that same draft instead
+    of creating a second one. Returns (slug, existing_story) -- slug is ""
+    when there is no usable hint. A hint that points at a *published* story is
+    ignored, so this can never overwrite one by accident."""
+    raw = request.form.get("draft_slug", "").strip()
+    if not raw:
+        return "", None
+    slug = slugify(raw)
+    prior = get_article(slug, include_drafts=True)
+    if prior is not None and not is_draft(prior):
+        return "", None
+    return slug, prior
+
+
+def _render_form(mode, article, errors):
     return render_template(
         "admin/story_form.html",
-        mode="new",
-        article=None,
-        categories=CATEGORIES,
-        authors=get_authors(),
-        block_types=BLOCK_TYPES,
-        story_choices=_story_choices(),
-        errors=[],
-    )
-
-
-@admin_bp.post("/story/new")
-@login_required
-def story_create():
-    title = request.form.get("title", "").strip()
-    existing_slugs = {a["slug"] for a in get_articles()}
-    slug = unique_slug(slugify(title or "story"), existing_slugs)
-
-    doc, images, errors = _build_doc_from_form(request.form, request.files, slug, existing=None)
-
-    if errors:
-        return render_template(
-            "admin/story_form.html",
-            mode="new",
-            article=doc,
-            categories=CATEGORIES,
-            authors=get_authors(),
-            block_types=BLOCK_TYPES,
-        story_choices=_story_choices(),
-            errors=errors,
-        ), 400
-
-    published, message = story_store.save_story(doc, images, is_update=False)
-    flash(message, "success" if published else "warning")
-    return redirect(url_for("admin.dashboard"))
-
-
-@admin_bp.get("/story/<slug>/edit")
-@login_required
-def story_edit(slug):
-    article = get_article(slug)
-    if not article:
-        abort(404)
-    return render_template(
-        "admin/story_form.html",
-        mode="edit",
+        mode=mode,
         article=article,
         categories=CATEGORIES,
         authors=get_authors(),
         block_types=BLOCK_TYPES,
         story_choices=_story_choices(),
-        errors=[],
+        errors=errors,
     )
+
+
+def _draft_message(committed):
+    if committed:
+        return ("Draft saved to GitHub \u2014 Render redeploys (usually 1-2 min). "
+                "It stays off the site until you publish it.")
+    return ("Draft saved locally (dev mode, no GITHUB_TOKEN). "
+            "It stays off the site until you publish it.")
+
+
+def _flash_save(published, message, warnings, draft):
+    flash(_draft_message(published) if draft else message,
+          "success" if published else "warning")
+    for w in warnings:
+        flash("Skipped in the draft: " + w, "warning")
+
+
+@admin_bp.get("/story/new")
+@login_required
+def story_new():
+    return _render_form("new", None, [])
+
+
+@admin_bp.post("/story/new")
+@login_required
+def story_create():
+    draft = _wants_draft()
+    slug, existing = _slug_from_hint()
+    if not slug:
+        title = request.form.get("title", "").strip()
+        taken = {x["slug"] for x in get_articles(include_drafts=True)}
+        slug = unique_slug(slugify(title or ("untitled-draft" if draft else "story")), taken)
+
+    doc, images, errors, warnings = _build_doc_from_form(
+        request.form, request.files, slug, existing=existing, draft=draft)
+
+    if errors:
+        return _render_form("new", doc, errors), 400
+
+    published, message = story_store.save_story(doc, images, is_update=existing is not None)
+    _flash_save(published, message, warnings, draft)
+    return redirect(url_for("admin.dashboard"))
+
+
+@admin_bp.post("/story/draft")
+@login_required
+def story_save_draft():
+    """The editor's "Save draft" button (and nothing else) posts here from
+    JavaScript, so the page stays open and keeps working. Saves with the same
+    rules as a draft from the normal form, and answers with JSON."""
+    slug, existing = _slug_from_hint()
+    if not slug:
+        title = request.form.get("title", "").strip()
+        taken = {x["slug"] for x in get_articles(include_drafts=True)}
+        slug = unique_slug(slugify(title or "untitled-draft"), taken)
+
+    doc, images, _errors, warnings = _build_doc_from_form(
+        request.form, request.files, slug, existing=existing, draft=True)
+    try:
+        published, message = story_store.save_story(doc, images, is_update=existing is not None)
+    except Exception as exc:  # GitHub down / token problem: tell the editor, don't 500
+        return jsonify(ok=False, error=str(exc)), 502
+    return jsonify(
+        ok=True,
+        slug=slug,
+        title=doc["title"],
+        message=_draft_message(published),
+        warnings=warnings,
+        saved_at=datetime.now().strftime("%H:%M:%S"),
+        edit_url=url_for("admin.story_edit", slug=slug),
+    )
+
+
+@admin_bp.get("/story/<slug>/edit")
+@login_required
+def story_edit(slug):
+    article = get_article(slug, include_drafts=True)
+    if not article:
+        abort(404)
+    return _render_form("edit", article, [])
 
 
 @admin_bp.post("/story/<slug>/edit")
 @login_required
 def story_update(slug):
-    existing = get_article(slug)
+    existing = get_article(slug, include_drafts=True)
     if not existing:
         abort(404)
 
-    doc, images, errors = _build_doc_from_form(request.form, request.files, slug, existing=existing)
+    draft = _wants_draft()
+    doc, images, errors, warnings = _build_doc_from_form(
+        request.form, request.files, slug, existing=existing, draft=draft)
 
     if errors:
-        return render_template(
-            "admin/story_form.html",
-            mode="edit",
-            article=doc,
-            categories=CATEGORIES,
-            authors=get_authors(),
-            block_types=BLOCK_TYPES,
-        story_choices=_story_choices(),
-            errors=errors,
-        ), 400
+        return _render_form("edit", doc, errors), 400
 
     published, message = story_store.save_story(doc, images, is_update=True)
-    flash(message, "success" if published else "warning")
+    _flash_save(published, message, warnings, draft)
     return redirect(url_for("admin.dashboard"))

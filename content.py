@@ -155,6 +155,7 @@ def _with_blocks(article):
     if sub not in subs:
         sub = ""
     article["subcategory"] = sub
+    article["status"] = "draft" if article.get("status") == "draft" else "published"
     label = cat.get("label", "")
     article["pill"] = f"{label} · {subs[sub]}" if sub else label
     if "blocks" not in article:
@@ -182,8 +183,15 @@ def estimate_read_minutes(blocks):
     return max(1, round(words_in_blocks(blocks) / 200))
 
 
-def get_articles():
-    """Every article, newest first. Reads from disk on every call (not
+def is_draft(article):
+    """Drafts are stories saved from the admin editor with "Save draft". They
+    live in the same content/articles folder but are kept off the public site."""
+    return (article or {}).get("status") == "draft"
+
+
+def get_articles(include_drafts=False):
+    """Every published article, newest first (drafts too when asked -- only the
+    admin portal does that). Reads from disk on every call (not
     cached) -- there are only a few dozen of these at most, and reading
     fresh means a story saved through /admin shows up immediately without
     needing the dev server restarted, and in production each save is its
@@ -193,17 +201,23 @@ def get_articles():
         return articles
     for path in CONTENT_DIR.glob("*.json"):
         with open(path, encoding="utf-8") as f:
-            articles.append(_with_blocks(json.load(f)))
+            article = _with_blocks(json.load(f))
+        if is_draft(article) and not include_drafts:
+            continue
+        articles.append(article)
     articles.sort(key=lambda a: a.get("published_at", ""), reverse=True)
     return articles
 
 
-def get_article(slug):
+def get_article(slug, include_drafts=False):
     path = CONTENT_DIR / f"{slug}.json"
     if not path.exists():
         return None
     with open(path, encoding="utf-8") as f:
-        return _with_blocks(json.load(f))
+        article = _with_blocks(json.load(f))
+    if is_draft(article) and not include_drafts:
+        return None
+    return article
 
 
 def get_related(article, limit=3):

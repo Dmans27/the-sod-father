@@ -1,12 +1,13 @@
 {% extends "admin/_layout.html" %}
-{% block title %}{% if mode == 'new' %}New story{% else %}Edit story{% endif %}{% endblock %}
+{% block title %}{% if mode == 'new' %}New story{% elif article and article.get('status') == 'draft' %}Edit draft{% else %}Edit story{% endif %}{% endblock %}
 
 {% block admin_content %}
 {% set a = article or {} %}
+{% set is_published = mode == 'edit' and a.get('status', 'published') != 'draft' %}
 {% set existing_blocks = a.get('blocks', []) %}
 
 <div class="admin-page-head">
-  <h1>{% if mode == 'new' %}New story{% else %}Edit story{% endif %}</h1>
+  <h1>{% if mode == 'new' %}New story{% elif is_published %}Edit story{% else %}Edit draft <span class="admin-row__badge admin-row__badge--draft">Draft</span>{% endif %}</h1>
   <button type="button" class="admin-btn" id="preview-toggle">👁 Preview on homepage</button>
 </div>
 
@@ -22,7 +23,8 @@
   </div>
 {% endif %}
 
-<form method="post" enctype="multipart/form-data" class="admin-form" id="story-form">
+<form method="post" enctype="multipart/form-data" class="admin-form" id="story-form" data-draft-key="{{ a.get('slug') or 'new' }}">
+  <input type="hidden" name="draft_slug" id="draft-slug" value="{{ a.get('slug', '') }}">
   <div class="admin-form__grid">
     <label class="admin-field">
       <span>Title</span>
@@ -37,6 +39,7 @@
     <label class="admin-field">
       <span>Category</span>
       <select name="category" required>
+        <option value="" {% if not a.get('category') %}selected{% endif %}>Choose a category…</option>
         {% for key, cat in categories.items() %}
           <option value="{{ key }}" {% if a.get('category') == key %}selected{% endif %}>{{ cat.label }}</option>
         {% endfor %}
@@ -124,9 +127,21 @@
   </section>
 
   <div class="admin-form__actions">
-    <button type="submit" class="admin-btn admin-btn--primary">{% if mode == 'new' %}Publish story{% else %}Save changes{% endif %}</button>
+    <button type="submit" name="action" value="publish" class="admin-btn admin-btn--primary" id="publish-btn">{% if is_published %}Save changes{% else %}Publish story{% endif %}</button>
+    {% if is_published %}
+      <button type="submit" name="action" value="draft" formnovalidate class="admin-btn" id="move-to-drafts-btn">Move to drafts</button>
+    {% else %}
+      <button type="submit" name="action" value="draft" formnovalidate class="admin-btn" id="save-draft-btn">Save draft</button>
+    {% endif %}
     <a href="{{ url_for('admin.dashboard') }}" class="admin-btn">Cancel</a>
+    <span class="admin-draft-status" id="draft-status" role="status" aria-live="polite"></span>
   </div>
+  {% if not is_published %}
+    <p class="admin-hint admin-draft-note">
+      Not ready? <strong>Save draft</strong> keeps it off the site so you can come back to it from
+      the Stories list. While you type, a copy is also saved automatically in this browser.
+    </p>
+  {% endif %}
 </form>
 
 <!-- Block templates: one <template> per block type, cloned by JS below
@@ -672,6 +687,13 @@
     });
 
     document.getElementById('story-form').addEventListener('submit', syncOrder);
+
+    // Hooks for story-draft.js (autosave and restore).
+    window.__storyEditor = {
+      addBlock: addBlock,
+      syncOrder: syncOrder,
+      clear: function () { container.innerHTML = ''; syncOrder(); }
+    };
   })();
 
   (function () {
