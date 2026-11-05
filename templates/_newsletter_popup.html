@@ -1,0 +1,32 @@
+{# Timed newsletter pop-up. Included from base.html on the homepage and
+   article pages only; static/js/newsletter.js decides when (and whether) to
+   show it. Hidden by default. #}
+{% from "_newsletter_fields.html" import fields %}
+<div class="nl-popup" id="nl-popup" role="dialog" aria-modal="true" aria-labelledby="nl-popup-msg" hidden>
+  <div class="nl-popup__backdrop" data-nl-close></div>
+  <div class="nl-popup__card">
+    <button type="button" class="nl-popup__close" data-nl-close aria-label="Close">&times;</button>
+
+    <div class="nl-popup__step" data-nl-step="intro">
+      <p class="nl-popup__msg" id="nl-popup-msg">If you enjoy what you are reading, then please sign up for our news letter below!</p>
+      <button type="button" class="account-btn nl-popup__cta" data-nl-open>/Newsletter</button>
+    </div>
+
+    <div class="nl-popup__step" data-nl-step="form" hidden>
+      <h2 class="nl-popup__title">Join the newsletter</h2>
+      <p class="nl-popup__sub">Three quick questions and you're in.</p>
+      <form method="post" action="/newsletter/subscribe" class="account-form" data-newsletter-form>
+        <input type="hidden" name="csrf" value="{{ csrf_token }}">
+        <input type="hidden" name="source" value="popup">
+        {{ fields('popup', {}) }}
+        <p class="nl-status" role="status" aria-live="polite" hidden></p>
+        <button type="submit" class="account-btn">Sign me up</button>
+      </form>
+    </div>
+
+    <div class="nl-popup__step" data-nl-step="done" hidden>
+      <p class="nl-popup__msg">You're on the list. Thanks for signing up!</p>
+      <button type="button" class="account-btn account-btn--ghost" data-nl-close>Keep reading</button>
+    </div>
+  </div>
+</div>

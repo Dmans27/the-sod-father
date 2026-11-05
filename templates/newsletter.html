@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% from "_newsletter_fields.html" import fields %}
+{% block title %}Newsletter — /Column{% endblock %}
+
+{% block content %}
+<section class="account-card">
+  <h1 class="account-card__title">The /Column newsletter</h1>
+  <p class="account-card__sub">New stories on IT, cooking, travel, golf and life, straight to your inbox. No spam, unsubscribe any time.</p>
+
+  {% if joined %}
+    <p class="nl-success" role="status">{{ message }}</p>
+    <p class="account-card__foot"><a href="/">Back to the stories</a></p>
+  {% else %}
+    {% if error %}<p class="account-error" role="alert">{{ error }}</p>{% endif %}
+    <form method="post" action="/newsletter/subscribe" class="account-form" data-newsletter-form>
+      <input type="hidden" name="csrf" value="{{ csrf_token }}">
+      <input type="hidden" name="source" value="page">
+      {{ fields('page', form) }}
+      <p class="nl-status" role="status" aria-live="polite" hidden></p>
+      <button type="submit" class="account-btn">Sign me up</button>
+    </form>
+  {% endif %}
+</section>
+{% endblock %}

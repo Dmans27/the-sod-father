@@ -86,6 +86,51 @@ def dashboard():
     )
 
 
+def _subscribers():
+    import db
+    return db.query(
+        "SELECT email, name, profession, source, created_at "
+        "FROM newsletter_subscribers ORDER BY created_at DESC")
+
+
+@admin_bp.get("/subscribers")
+@login_required
+def subscribers_list():
+    """Everyone who signed up for the newsletter (footer, /newsletter page or
+    the pop-up). Read-only; use the CSV download to move them to an email tool."""
+    error = None
+    try:
+        subscribers = _subscribers()
+    except Exception as exc:  # database unreachable: say so instead of a 500
+        subscribers, error = [], str(exc)
+    return render_template("admin/subscribers.html", subscribers=subscribers, error=error)
+
+
+def _csv_cell(value):
+    """Stops a spreadsheet from running a name like '=HYPERLINK(...)' as a
+    formula when the CSV is opened in Excel/Numbers/Sheets."""
+    value = "" if value is None else str(value)
+    if value[:1] in ("=", "+", "-", "@", "\t", "\r"):
+        value = "'" + value
+    return value
+
+
+@admin_bp.get("/subscribers.csv")
+@login_required
+def subscribers_csv():
+    import csv
+    import io
+    from flask import Response
+    buf = io.StringIO()
+    writer = csv.writer(buf)
+    writer.writerow(["email", "name", "profession", "source", "signed_up_at"])
+    for row in _subscribers():
+        writer.writerow([_csv_cell(row[k]) for k in ("email", "name", "profession", "source", "created_at")])
+    return Response(
+        buf.getvalue(), mimetype="text/csv",
+        headers={"Content-Disposition": "attachment; filename=column-newsletter-subscribers.csv"})
+
+
 @admin_bp.get("/authors")
 @login_required
 def authors_list():

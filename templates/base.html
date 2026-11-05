@@ -173,8 +173,27 @@
   </main>
 
   <footer class="site-footer">
+    {% if request.path != '/newsletter' %}
+    <form method="post" action="/newsletter/subscribe" class="footer-newsletter" data-newsletter-form>
+      <input type="hidden" name="csrf" value="{{ csrf_token }}">
+      <input type="hidden" name="source" value="footer">
+      <p class="footer-newsletter__title">Get new stories by email</p>
+      <div class="footer-newsletter__row">
+        <label class="visually-hidden" for="footer-nl-email">Email address</label>
+        <input type="email" name="email" id="footer-nl-email" placeholder="you@example.com" maxlength="254" autocomplete="email" autocapitalize="off" required>
+        <button type="submit" class="account-btn account-btn--small">Subscribe</button>
+      </div>
+      <div class="nl-hp" aria-hidden="true"><label>Leave this empty <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+      <p class="nl-status" role="status" aria-live="polite" hidden></p>
+      <p class="footer-newsletter__more"><a href="/newsletter">Tell us a bit about you &rarr;</a></p>
+    </form>
+    {% endif %}
     <p>/Column &mdash; a fun side project, not a real publication (yet).</p>
   </footer>
+
+  {% if request.path == '/' or request.path.startswith('/article/') %}
+    {% include "_newsletter_popup.html" %}
+  {% endif %}
 
   <!-- Bottom navigation bar: phones and the Duo's outer display only
        (the CSS hides it at 700px and wider, where the two-page layout takes
@@ -204,6 +223,7 @@
     window.READER = {{ reader_state|tojson }};
   </script>
   <script src="/static/js/actions.js?v=3"></script>
+  <script src="/static/js/newsletter.js?v=1" defer></script>
 
   <script>
     // No-op on a regular browser visit -- window.Capacitor only exists when

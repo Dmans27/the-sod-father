@@ -1,0 +1,29 @@
+{# The questionnaire fields, shared by the pop-up and the /newsletter page.
+   `prefix` keeps element ids unique when both are on one page. #}
+{% macro fields(prefix, form) %}
+  <label class="account-field">
+    <span>Name</span>
+    <input type="text" name="name" id="{{ prefix }}-name" value="{{ (form or {}).get('name', '') }}" maxlength="80" autocomplete="name" required>
+  </label>
+  <label class="account-field">
+    <span>Profession <em>what do you do?</em></span>
+    <input type="text" name="profession" id="{{ prefix }}-profession" value="{{ (form or {}).get('profession', '') }}" maxlength="80" list="{{ prefix }}-professions" autocomplete="organization-title" placeholder="e.g. Systems administrator" required>
+    <datalist id="{{ prefix }}-professions">
+      <option value="IT helpdesk / support">
+      <option value="Systems administrator">
+      <option value="Network engineer">
+      <option value="Cloud / DevOps engineer">
+      <option value="Software developer">
+      <option value="Security analyst">
+      <option value="IT manager">
+      <option value="Student">
+      <option value="Other">
+    </datalist>
+  </label>
+  <label class="account-field">
+    <span>Email <em>never shared</em></span>
+    <input type="email" name="email" id="{{ prefix }}-email" value="{{ (form or {}).get('email', '') }}" maxlength="254" autocomplete="email" autocapitalize="off" required>
+  </label>
+  {# Honeypot: hidden from people, tempting to bots. #}
+  <div class="nl-hp" aria-hidden="true"><label>Leave this empty <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+{% endmacro %}

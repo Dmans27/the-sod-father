@@ -2007,3 +2007,56 @@ body.article-page.is-dark,
 @media (prefers-reduced-motion: reduce) {
   .popbar, .popbar.is-visible { transition: none; }
 }
+
+
+/* ── Newsletter (footer form, /newsletter page, timed pop-up) ── */
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0;
+}
+.nl-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+.nl-status { margin: 0 0 14px; font-size: 14px; font-weight: 700; color: var(--fairway-deep); }
+.nl-status.is-error { color: #a4262c; }
+.nl-success {
+  margin: 0 0 8px; padding: 12px 14px; border-radius: 10px;
+  background: rgba(45, 106, 79, 0.12); color: var(--fairway-deep); font-weight: 700;
+}
+.footer-newsletter { max-width: 420px; margin: 0 auto 26px; text-align: center; }
+.footer-newsletter__title {
+  margin: 0 0 10px; font-family: var(--font-serif); font-size: 17px; font-weight: 700; color: var(--ink);
+}
+.footer-newsletter__row { display: flex; gap: 8px; }
+.footer-newsletter__row input[type="email"] {
+  flex: 1; min-width: 0; padding: 9px 12px; border: 1px solid rgba(27, 42, 31, 0.22);
+  border-radius: 10px; font-family: var(--font-sans); font-size: 16px; color: var(--ink); background: #fff;
+}
+.footer-newsletter__row input[type="email"]:focus { outline: 2px solid var(--fairway-deep); outline-offset: 1px; }
+.footer-newsletter .nl-status { margin: 10px 0 0; }
+.footer-newsletter__more { margin: 8px 0 0; font-size: 12.5px; }
+.footer-newsletter__more a { color: var(--fairway-deep); font-weight: 700; }
+.is-dark .footer-newsletter__row input[type="email"] { background: #252d28; border-color: rgba(255, 255, 255, 0.22); }
+.is-dark .nl-status.is-error { color: #ffb4ab; }
+.is-dark .nl-success { background: rgba(124, 202, 160, 0.16); }
+
+.nl-popup { position: fixed; inset: 0; z-index: 400; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.nl-popup[hidden] { display: none; }
+.nl-popup__backdrop { position: absolute; inset: 0; background: rgba(20, 28, 23, 0.55); }
+.nl-popup__card {
+  position: relative; width: 100%; max-width: 420px; max-height: calc(100vh - 40px); overflow-y: auto;
+  padding: 30px 26px 26px; border-radius: 16px; background: var(--cream);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.35); animation: nl-in 0.28s ease both;
+}
+@keyframes nl-in { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .nl-popup__card { animation: none; } }
+.nl-popup__close {
+  position: absolute; top: 8px; right: 10px; width: 36px; height: 36px; border: none; border-radius: 50%;
+  background: transparent; color: var(--ink-soft); font-size: 26px; line-height: 1; cursor: pointer;
+}
+.nl-popup__close:hover { background: rgba(27, 42, 31, 0.08); }
+.nl-popup__msg { margin: 6px 0 20px; font-family: var(--font-serif); font-size: 21px; line-height: 1.35; font-weight: 600; color: var(--ink); text-align: center; }
+.nl-popup__cta { display: block; width: 100%; font-family: var(--font-mono); font-size: 17px; }
+.nl-popup__title { margin: 0 0 4px; font-family: var(--font-serif); font-size: 24px; color: var(--fairway-deep); }
+.nl-popup__sub { margin: 0 0 18px; color: var(--ink-soft); font-size: 15px; }
+.nl-popup__step[data-nl-step="done"] .account-btn { display: block; margin: 0 auto; }
+html.nl-open { overflow: hidden; }
+.is-dark .nl-popup__close:hover { background: rgba(255, 255, 255, 0.1); }

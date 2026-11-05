@@ -1,0 +1,33 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Subscribers{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <h1>Newsletter subscribers{% if subscribers %} <span style="font-weight:400;color:var(--ink-faint);">({{ subscribers|length }})</span>{% endif %}</h1>
+  {% if subscribers %}<a class="admin-btn" href="{{ url_for('admin.subscribers_csv') }}">Download CSV</a>{% endif %}
+</div>
+
+<p class="admin-hint">
+  Everyone who signed up through the footer, the <code>/newsletter</code> page or the pop-up.
+  Nothing is emailed from the site yet &mdash; download the CSV and import it into whichever
+  email tool you pick for sending.
+</p>
+
+{% if error %}
+  <p class="admin-empty">Couldn't load subscribers: {{ error }}</p>
+{% elif not subscribers %}
+  <p class="admin-empty">No subscribers yet.</p>
+{% else %}
+  <div class="admin-table">
+    {% for s in subscribers %}
+      <div class="admin-row" style="cursor: default;">
+        <div class="admin-row__thumb" style="background: var(--fairway-deep);">{{ (s.name or s.email)[:1]|upper }}</div>
+        <div class="admin-row__main">
+          <div class="admin-row__title">{{ s.name or '(no name)' }}{% if s.profession %} <span style="font-weight:400;color:var(--ink-faint);">— {{ s.profession }}</span>{% endif %}</div>
+          <div class="admin-row__meta">{{ s.email }} &middot; {{ s.source }} &middot; {{ s.created_at }}</div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}

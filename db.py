@@ -1,5 +1,6 @@
 """
-Tiny database layer for reader accounts, saved stories and comments.
+Tiny database layer for reader accounts, saved stories, comments and
+newsletter subscribers.
 
 Articles themselves still live in JSON files (content.py) -- this is only
 for the data that *readers* create, which has to survive Render deploys
@@ -76,6 +77,16 @@ SCHEMA = [
         slug       TEXT NOT NULL,
         reader_id  TEXT NOT NULL,
         body       TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS newsletter_subscribers (
+        id         TEXT PRIMARY KEY,
+        email      TEXT NOT NULL UNIQUE,
+        name       TEXT NOT NULL,
+        profession TEXT NOT NULL,
+        source     TEXT NOT NULL,
         created_at TEXT NOT NULL
     )
     """,
