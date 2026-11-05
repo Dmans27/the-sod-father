@@ -3,6 +3,7 @@
   "title": "The best beach golf you can find in the US",
   "dek": "Play where the water meets you",
   "category": "lifestyle",
+  "subcategory": "",
   "author": "Daniel Mansfield",
   "author_slug": "daniel-mansfield",
   "author_photo": "/static/uploads/authors/daniel-mansfield/photo.jpg",
@@ -10,6 +11,7 @@
   "published_at": "2026-10-10",
   "cover_image": null,
   "featured": true,
+  "status": "draft",
   "blocks": [
     {
       "type": "paragraph",
@@ -17,7 +19,7 @@
     },
     {
       "type": "paragraph",
-      "text": "The single biggest unlock is picking the date before picking anything else — including the course. A trip with a date but no finalized course still happens. A trip with a dream course but no committed date almost never does, because there's always a reason to wait one more week before locking it in."
+      "text": "The single biggest unlock is picking the date before picking anything else — including the course. A trip with a date but no finalized course still happens. A trip with a dream course but no committed date almost never does, because there's always a reason to wait one more week before locking it in.\r\n\r\n\r\ntesting this to see"
     },
     {
       "type": "paragraph",
