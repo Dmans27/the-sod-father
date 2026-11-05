@@ -11,7 +11,7 @@
   "published_at": "2026-10-10",
   "cover_image": null,
   "featured": true,
-  "status": "draft",
+  "status": "published",
   "blocks": [
     {
       "type": "paragraph",
