@@ -19,7 +19,7 @@ from functools import wraps
 from urllib.parse import parse_qs, urlparse
 
 from flask import (
-    Blueprint, abort, flash, jsonify, redirect, render_template, request, session, url_for,
+    Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, session, url_for,
 )
 
 from content import BLOCK_TYPES, CATEGORIES, estimate_read_minutes, get_article, get_articles, get_featured, is_draft
@@ -530,6 +530,15 @@ def _draft_message(committed):
             "It stays off the site until you publish it.")
 
 
+def _save_error_text(exc):
+    """A readable message for a failed save, shown above the editor so the
+    story text the writer typed is not lost behind a bare 500 page."""
+    return ("Your story was NOT saved: %s. Nothing you typed has been lost -- "
+            "it is still in this form (and autosaved in this browser). "
+            "If this mentions GitHub or a token, the GITHUB_TOKEN on Render "
+            "has probably expired and needs replacing." % exc)
+
+
 def _flash_save(published, message, warnings, draft):
     flash(_draft_message(published) if draft else message,
           "success" if published else "warning")
@@ -559,7 +568,11 @@ def story_create():
     if errors:
         return _render_form("new", doc, errors), 400
 
-    published, message = story_store.save_story(doc, images, is_update=existing is not None)
+    try:
+        published, message = story_store.save_story(doc, images, is_update=existing is not None)
+    except Exception as exc:  # GitHub rejected the commit, token expired, etc.
+        current_app.logger.exception("Saving story %s failed", slug)
+        return _render_form("new", doc, [_save_error_text(exc)]), 502
     _flash_save(published, message, warnings, draft)
     return redirect(url_for("admin.dashboard"))
 
@@ -616,6 +629,10 @@ def story_update(slug):
     if errors:
         return _render_form("edit", doc, errors), 400
 
-    published, message = story_store.save_story(doc, images, is_update=True)
+    try:
+        published, message = story_store.save_story(doc, images, is_update=True)
+    except Exception as exc:  # GitHub rejected the commit, token expired, etc.
+        current_app.logger.exception("Saving story %s failed", slug)
+        return _render_form("edit", doc, [_save_error_text(exc)]), 502
     _flash_save(published, message, warnings, draft)
     return redirect(url_for("admin.dashboard"))
