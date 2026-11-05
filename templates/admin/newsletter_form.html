@@ -1,0 +1,147 @@
+{% extends "admin/_layout.html" %}
+{% block title %}{{ 'Newsletter issue' }}{% endblock %}
+
+{% block admin_content %}
+{% set sent = issue.status == 'sent' %}
+<div class="admin-page-head">
+  <h1>{{ 'Sent issue' if sent else ('New issue' if not issue.id else 'Edit issue') }}</h1>
+  <a href="{{ url_for('admin.newsletter_list') }}" class="admin-btn">&larr; All issues</a>
+</div>
+
+{% include "admin/_newsletter_status.html" %}
+
+{% if errors %}
+  <div class="admin-flash admin-flash--error" role="alert">
+    <strong>Fix the following:</strong>
+    <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+  </div>
+{% endif %}
+
+<div class="nl-editor">
+  <form method="post" action="{{ url_for('admin.newsletter_update', issue_id=issue.id) if issue.id else url_for('admin.newsletter_create') }}" class="nl-editor__form">
+    <fieldset {{ 'disabled' if sent }} style="border:0;padding:0;margin:0;min-width:0;">
+      <label class="admin-field">
+        <span>Subject line <em>what people see in their inbox</em></span>
+        <input type="text" name="subject" value="{{ issue.subject }}" maxlength="150" required>
+      </label>
+      <label class="admin-field">
+        <span>Preview text <em>the grey snippet after the subject</em></span>
+        <input type="text" name="preview" value="{{ issue.preview }}" maxlength="200">
+      </label>
+      <label class="admin-field">
+        <span>Intro <em>a few lines from you; a blank line starts a new paragraph</em></span>
+        <textarea name="intro" rows="6" maxlength="6000">{{ issue.intro }}</textarea>
+      </label>
+
+      <div class="admin-field">
+        <span>Stories to include <em>shown newest first, with cover photo and summary</em></span>
+        {% if not stories %}
+          <p class="admin-hint">No published stories yet.</p>
+        {% else %}
+          <div class="nl-stories">
+            {% for a in stories %}
+              <label class="nl-story">
+                <input type="checkbox" name="slugs" value="{{ a.slug }}" {{ 'checked' if a.slug in issue.slugs }}>
+                {% if a.cover_image %}<span class="nl-story__thumb" style="background-image:url('{{ a.cover_image }}')"></span>{% else %}<span class="nl-story__thumb"></span>{% endif %}
+                <span class="nl-story__text"><strong>{{ a.title }}</strong><small>{{ a.pill or '' }} &middot; {{ a.published_at }}</small></span>
+              </label>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+
+      <label class="admin-field">
+        <span>Sign-off <em>optional closing note</em></span>
+        <textarea name="outro" rows="3" maxlength="6000">{{ issue.outro }}</textarea>
+      </label>
+    </fieldset>
+    {% if not sent %}
+      <div class="nl-editor__actions">
+        <button type="submit" class="admin-btn admin-btn--primary">Save draft</button>
+        {% if issue.id %}<a href="{{ url_for('admin.newsletter_preview', issue_id=issue.id) }}" target="_blank" rel="noopener" class="admin-btn">Open preview ↗</a>{% endif %}
+      </div>
+    {% endif %}
+  </form>
+
+  <div class="nl-editor__side">
+    {% if issue.id %}
+      <h2 class="admin-section-title">Preview <span>of the saved draft</span></h2>
+      <iframe class="nl-preview" src="{{ url_for('admin.newsletter_preview', issue_id=issue.id) }}" title="Email preview"></iframe>
+    {% else %}
+      <p class="admin-hint">Save the draft to see a preview of the email here.</p>
+    {% endif %}
+  </div>
+</div>
+
+{% if issue.id %}
+<div class="nl-send">
+  <h2 class="admin-section-title">Send</h2>
+
+  <form method="post" action="{{ url_for('admin.newsletter_test', issue_id=issue.id) }}" class="nl-test">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label class="admin-field" style="margin:0;flex:1;">
+      <span>Send a test to <em>saved draft only; save first if you just edited</em></span>
+      <input type="email" name="test_email" placeholder="you@example.com" required>
+    </label>
+    <button type="submit" class="admin-btn">Send test</button>
+  </form>
+
+  {% if sent %}
+    <p class="admin-hint">Sent {{ issue.sent_at }} to {{ delivered }} subscriber{{ '' if delivered == 1 else 's' }}{% if failed %}; {{ failed }} failed{% endif %}.</p>
+    {% if failed %}<button type="button" class="admin-btn" id="nl-retry">Retry the {{ failed }} that failed</button>{% endif %}
+  {% else %}
+    <p class="admin-hint">
+      {{ status.active }} active subscriber{{ '' if status.active == 1 else 's' }}.
+      {% if delivered %}{{ delivered }} already received this issue; {{ waiting }} still waiting.{% endif %}
+      Once sending starts the issue is locked. Send a test and read it on your phone first.
+    </p>
+    <label class="nl-confirm"><input type="checkbox" id="nl-confirm"> I've previewed it and I'm ready to email {{ status.active }} subscriber{{ '' if status.active == 1 else 's' }}.</label>
+    <button type="button" class="admin-btn admin-btn--primary" id="nl-send" disabled>{{ 'Continue sending' if delivered else 'Send to all subscribers' }}</button>
+  {% endif %}
+  <p class="nl-progress" id="nl-progress" role="status" aria-live="polite" hidden></p>
+</div>
+
+<script>
+(function () {
+  var csrf = {{ csrf|tojson }};
+  var url = {{ url_for('admin.newsletter_send_chunk', issue_id=issue.id)|tojson }};
+  var send = document.getElementById('nl-send');
+  var retry = document.getElementById('nl-retry');
+  var confirmBox = document.getElementById('nl-confirm');
+  var out = document.getElementById('nl-progress');
+  if (confirmBox && send) confirmBox.addEventListener('change', function () { send.disabled = !confirmBox.checked; });
+
+  function say(text) { out.hidden = !text; out.textContent = text || ''; }
+
+  function run(isRetry, button) {
+    button.disabled = true;
+    say('Sending…');
+    var body = new FormData();
+    if (isRetry) body.append('retry', '1');
+    fetch(url, { method: 'POST', body: body, headers: { 'X-CSRF-Token': csrf, 'Accept': 'application/json' }, credentials: 'same-origin' })
+      .then(function (r) { return r.json().catch(function () { return { ok: false, error: 'The server returned an unexpected response (HTTP ' + r.status + ').' }; }); })
+      .then(function (d) {
+        if (!d.ok) { say(d.error || 'Something went wrong.'); button.disabled = false; return; }
+        var line = d.delivered + ' delivered' + (d.failed ? ', ' + d.failed + ' failed' : '') + (d.remaining ? ', ' + d.remaining + ' to go' : '');
+        if (d.quota) {
+          say(line + '. Resend\'s sending limit was reached (' + (d.error || 'quota') + '). Nothing is lost: come back later and press Continue sending to finish.');
+          button.disabled = false;
+        } else if (d.finished) {
+          say('Finished. ' + line + '.' + (d.failed && d.error ? ' Last error: ' + d.error : ''));
+          setTimeout(function () { location.reload(); }, 2500);
+        } else if (d.sent_now === 0 && d.failed_now === 0) {
+          say(line + '. Nothing more could be sent right now.' + (d.error ? ' ' + d.error : ''));
+          button.disabled = false;
+        } else {
+          say(line + '…');
+          run(isRetry, button);
+        }
+      })
+      .catch(function () { say('Lost the connection. Press the button again to carry on where it stopped.'); button.disabled = false; });
+  }
+  if (send) send.addEventListener('click', function () { run(false, send); });
+  if (retry) retry.addEventListener('click', function () { run(true, retry); });
+})();
+</script>
+{% endif %}
+{% endblock %}

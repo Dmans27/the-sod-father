@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Unsubscribe — /Column{% endblock %}
+
+{% block content %}
+<section class="account-card">
+  <h1 class="account-card__title">Unsubscribe</h1>
+  {% if state == 'confirm' %}
+    <p class="account-card__sub">Stop sending the /Column newsletter to <strong>{{ email }}</strong>?</p>
+    <form method="post" action="/newsletter/unsubscribe?e={{ email|urlencode }}&amp;t={{ token|urlencode }}" class="account-form">
+      <button type="submit" class="account-btn">Yes, unsubscribe me</button>
+    </form>
+    <p class="account-card__foot"><a href="/">No, take me back to the stories</a></p>
+  {% elif state == 'done' %}
+    <p class="nl-success" role="status">Done. <strong>{{ email }}</strong> won't get any more newsletters.</p>
+    <p class="account-card__foot">Changed your mind? <a href="/newsletter">Sign up again</a> or <a href="/">keep reading</a>.</p>
+  {% elif state == 'error' %}
+    <p class="account-error" role="alert">Something went wrong. Please try again in a moment.</p>
+  {% else %}
+    <p class="account-error" role="alert">That unsubscribe link isn't valid. Open the link from the newsletter email, or reply to the email and ask to be removed.</p>
+    <p class="account-card__foot"><a href="/">Back to the stories</a></p>
+  {% endif %}
+</section>
+{% endblock %}

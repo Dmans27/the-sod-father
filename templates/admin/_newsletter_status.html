@@ -1,0 +1,9 @@
+{# Setup warnings shown above the newsletter screens. #}
+{% if not status.has_key %}
+  <div class="admin-flash admin-flash--warning">Sending isn't set up yet: add <code>RESEND_API_KEY</code> in Render &rarr; Environment. You can still write and preview issues.</div>
+{% elif status.test_sender %}
+  <div class="admin-flash admin-flash--warning">Test mode: emails are still sent from <code>{{ status.from }}</code>, which only delivers to your own Resend account email. To email readers, verify a domain in Resend and set <code>NEWSLETTER_FROM</code> (for example <code>/Column &lt;news@yourdomain.com&gt;</code>) in Render.</div>
+{% endif %}
+{% if not status.has_address %}
+  <div class="admin-flash admin-flash--warning">No postal address set. Anti-spam laws (CAN-SPAM in the US, and similar elsewhere) expect marketing email to include one. Add <code>NEWSLETTER_ADDRESS</code> in Render and it appears in every email's footer.</div>
+{% endif %}

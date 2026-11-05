@@ -90,6 +90,36 @@ SCHEMA = [
         created_at TEXT NOT NULL
     )
     """,
+    """
+    CREATE TABLE IF NOT EXISTS newsletter_issues (
+        id         TEXT PRIMARY KEY,
+        subject    TEXT NOT NULL,
+        preview    TEXT NOT NULL,
+        intro      TEXT NOT NULL,
+        outro      TEXT NOT NULL,
+        slugs      TEXT NOT NULL,
+        status     TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        sent_at    TEXT
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS newsletter_unsubscribes (
+        email      TEXT PRIMARY KEY,
+        created_at TEXT NOT NULL
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS newsletter_deliveries (
+        issue_id   TEXT NOT NULL,
+        email      TEXT NOT NULL,
+        status     TEXT NOT NULL,
+        error      TEXT,
+        created_at TEXT NOT NULL,
+        PRIMARY KEY (issue_id, email)
+    )
+    """,
     "CREATE INDEX IF NOT EXISTS idx_comments_slug ON comments (slug, created_at)",
     "CREATE INDEX IF NOT EXISTS idx_saved_reader ON saved_articles (reader_id, created_at)",
 ]

@@ -9,8 +9,8 @@
 
 <p class="admin-hint">
   Everyone who signed up through the footer, the <code>/newsletter</code> page or the pop-up.
-  Nothing is emailed from the site yet &mdash; download the CSV and import it into whichever
-  email tool you pick for sending.
+  Write and send an issue from <a href="{{ url_for('admin.newsletter_list') }}">Newsletter</a>, or download
+  the CSV to use in another email tool. People who unsubscribe stay listed here but are skipped when sending.
 </p>
 
 {% if error %}
@@ -24,7 +24,7 @@
         <div class="admin-row__thumb" style="background: var(--fairway-deep);">{{ (s.name or s.email)[:1]|upper }}</div>
         <div class="admin-row__main">
           <div class="admin-row__title">{{ s.name or '(no name)' }}{% if s.profession %} <span style="font-weight:400;color:var(--ink-faint);">— {{ s.profession }}</span>{% endif %}</div>
-          <div class="admin-row__meta">{{ s.email }} &middot; {{ s.source }} &middot; {{ s.created_at }}</div>
+          <div class="admin-row__meta">{{ s.email }} &middot; {{ s.source }} &middot; {{ s.created_at }}{% if s.unsubscribed %} &middot; <strong>unsubscribed</strong>{% endif %}</div>
         </div>
       </div>
     {% endfor %}

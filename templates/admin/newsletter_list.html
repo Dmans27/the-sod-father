@@ -1,0 +1,38 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Newsletter{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <h1>Newsletter</h1>
+  <a href="{{ url_for('admin.newsletter_new') }}" class="admin-btn admin-btn--primary">+ New issue</a>
+</div>
+
+{% include "admin/_newsletter_status.html" %}
+
+{% if error %}
+  <p class="admin-empty">Couldn't load issues: {{ error }}</p>
+{% elif not issues %}
+  <p class="admin-empty">No issues yet. Start one with <strong>+ New issue</strong>: pick a few stories, add a short intro, send a test to yourself, then send it to your readers.</p>
+{% else %}
+  <div class="admin-table">
+    {% for i in issues %}
+      <a href="{{ url_for('admin.newsletter_edit', issue_id=i.id) }}" class="admin-row">
+        <div class="admin-row__main">
+          <div class="admin-row__title">{{ i.subject }}
+            {% if i.status == 'sent' %}<span class="admin-row__badge">Sent</span>{% else %}<span class="admin-row__badge admin-row__badge--draft">Draft</span>{% endif %}
+          </div>
+          <div class="admin-row__meta">
+            {{ i.slugs|length }} stor{{ 'y' if i.slugs|length == 1 else 'ies' }}
+            {% if i.status == 'sent' %}&middot; sent {{ i.sent_at }} to {{ i.delivered }}{% else %}&middot; updated {{ i.updated_at }}{% endif %}
+          </div>
+        </div>
+        <span class="admin-row__edit">{{ 'View →' if i.status == 'sent' else 'Continue →' }}</span>
+      </a>
+    {% endfor %}
+  </div>
+{% endif %}
+
+<p class="admin-hint" style="margin-top:22px;">
+  <a href="{{ url_for('admin.subscribers_list') }}">View subscribers ({{ status.active }} active)</a>
+</p>
+{% endblock %}

@@ -16,6 +16,7 @@ from flask import Blueprint, jsonify, render_template, request
 from sqlalchemy.exc import IntegrityError
 
 import db
+import newsletter_send
 from content import CATEGORIES
 from readers import EMAIL_RE, _csrf_ok
 
@@ -86,4 +87,49 @@ def subscribe():
         print("newsletter: could not save subscriber:", exc)
         return respond(False, "Something went wrong saving that. Please try again in a moment.", 500, form)
 
+    # Signing up again after unsubscribing is an explicit "yes, send me mail".
+    try:
+        db.execute("DELETE FROM newsletter_unsubscribes WHERE email = :e", e=email)
+    except Exception as exc:
+        print("newsletter: could not clear unsubscribe:", exc)
+
     return respond(True, "You're on the list. Thanks for signing up!")
+
+
+# ── Unsubscribe ──────────────────────────────────────────────────────────
+# The link in every email carries the address and a signature made with the
+# server's secret key (newsletter_send.unsub_token), so it can't be forged.
+# GET only shows a confirm button -- link scanners in mail apps open links
+# without anyone clicking, and must not unsubscribe people. The POST does the
+# work; mail apps' one-click "Unsubscribe" button also POSTs to this URL
+# (List-Unsubscribe-Post header), which is why it has no CSRF check: the
+# signature is the protection.
+
+def _unsub_page(email, state):
+    return render_template("newsletter_unsubscribe.html", email=email, state=state,
+                           token=request.args.get("t", ""), categories=CATEGORIES, active_category=None)
+
+
+@newsletter_bp.get("/newsletter/unsubscribe")
+def unsubscribe_page():
+    email = (request.args.get("e") or "").strip().lower()
+    if not newsletter_send.token_ok(email, request.args.get("t")):
+        return _unsub_page("", "invalid"), 400
+    return _unsub_page(email, "confirm")
+
+
+@newsletter_bp.post("/newsletter/unsubscribe")
+def unsubscribe_submit():
+    email = (request.args.get("e") or request.form.get("e") or "").strip().lower()
+    token = request.args.get("t") or request.form.get("t")
+    if not newsletter_send.token_ok(email, token):
+        return _unsub_page("", "invalid"), 400
+    try:
+        db.execute("INSERT INTO newsletter_unsubscribes (email, created_at) VALUES (:e, :t)",
+                   e=email, t=db.now_iso())
+    except IntegrityError:
+        pass  # already unsubscribed
+    except Exception as exc:
+        print("newsletter: could not unsubscribe:", exc)
+        return _unsub_page(email, "error"), 500
+    return _unsub_page(email, "done")

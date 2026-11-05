@@ -89,8 +89,11 @@ def dashboard():
 def _subscribers():
     import db
     return db.query(
-        "SELECT email, name, profession, source, created_at "
-        "FROM newsletter_subscribers ORDER BY created_at DESC")
+        "SELECT s.email, s.name, s.profession, s.source, s.created_at, "
+        "CASE WHEN u.email IS NULL THEN 0 ELSE 1 END AS unsubscribed "
+        "FROM newsletter_subscribers s "
+        "LEFT JOIN newsletter_unsubscribes u ON u.email = s.email "
+        "ORDER BY s.created_at DESC")
 
 
 @admin_bp.get("/subscribers")
@@ -123,12 +126,187 @@ def subscribers_csv():
     from flask import Response
     buf = io.StringIO()
     writer = csv.writer(buf)
-    writer.writerow(["email", "name", "profession", "source", "signed_up_at"])
+    writer.writerow(["email", "name", "profession", "source", "signed_up_at", "unsubscribed"])
     for row in _subscribers():
-        writer.writerow([_csv_cell(row[k]) for k in ("email", "name", "profession", "source", "created_at")])
+        writer.writerow([_csv_cell(row[k]) for k in ("email", "name", "profession", "source", "created_at")]
+                        + ["yes" if row["unsubscribed"] else ""])
     return Response(
         buf.getvalue(), mimetype="text/csv",
         headers={"Content-Disposition": "attachment; filename=column-newsletter-subscribers.csv"})
+
+
+# ── Newsletter issues: write, preview, test, send ───────────────────────
+# Sending logic lives in newsletter_send.py; this is just the admin screens.
+
+def _newsletter_status():
+    """What the editor page should warn about before anyone presses send."""
+    import newsletter_send as ns
+    active = 0
+    try:
+        active = len(ns.subscribers())
+    except Exception:
+        pass
+    return {
+        "has_key": bool(ns.api_key()),
+        "from": ns.from_address(),
+        "test_sender": ns.is_test_sender(),
+        "has_address": bool(ns.postal_address()),
+        "active": active,
+    }
+
+
+def _issue_or_404(issue_id):
+    import newsletter_send as ns
+    issue = ns.get_issue(issue_id)
+    if not issue:
+        abort(404)
+    return issue
+
+
+def _issue_form_page(issue, errors=None, status=200):
+    import newsletter_send as ns
+    from readers import csrf_token
+    stories = get_articles()
+    delivered, failed, todo = (0, 0, [])
+    if issue and issue.get("id"):
+        try:
+            delivered, failed, todo = ns.progress(issue["id"])
+        except Exception:
+            pass
+    return render_template(
+        "admin/newsletter_form.html", issue=issue, stories=stories, errors=errors or [],
+        status=_newsletter_status(), delivered=delivered, failed=failed, waiting=len(todo),
+        csrf=csrf_token()), status
+
+
+@admin_bp.get("/newsletter")
+@login_required
+def newsletter_list():
+    import newsletter_send as ns
+    error = None
+    try:
+        issues = ns.list_issues()
+    except Exception as exc:
+        issues, error = [], str(exc)
+    return render_template("admin/newsletter_list.html", issues=issues, error=error,
+                           status=_newsletter_status())
+
+
+@admin_bp.get("/newsletter/new")
+@login_required
+def newsletter_new():
+    return _issue_form_page({"id": None, "subject": "", "preview": "", "intro": "", "outro": "",
+                             "slugs": [], "status": "draft"})
+
+
+@admin_bp.post("/newsletter/new")
+@login_required
+def newsletter_create():
+    import newsletter_send as ns
+    issue, errors = ns.clean_issue_form(request.form)
+    if errors:
+        return _issue_form_page(dict(issue, id=None, status="draft"), errors, 400)
+    issue_id = ns.save_issue(issue)
+    flash("Draft saved.", "success")
+    return redirect(url_for("admin.newsletter_edit", issue_id=issue_id))
+
+
+@admin_bp.get("/newsletter/<issue_id>")
+@login_required
+def newsletter_edit(issue_id):
+    return _issue_form_page(_issue_or_404(issue_id))
+
+
+@admin_bp.post("/newsletter/<issue_id>")
+@login_required
+def newsletter_update(issue_id):
+    import newsletter_send as ns
+    current = _issue_or_404(issue_id)
+    if current["status"] == "sent":
+        flash("This issue has already been sent, so it can't be edited. Start a new issue instead.", "warning")
+        return redirect(url_for("admin.newsletter_edit", issue_id=issue_id))
+    issue, errors = ns.clean_issue_form(request.form)
+    if errors:
+        return _issue_form_page(dict(issue, id=issue_id, status=current["status"]), errors, 400)
+    ns.save_issue(issue, issue_id)
+    flash("Draft saved.", "success")
+    return redirect(url_for("admin.newsletter_edit", issue_id=issue_id))
+
+
+@admin_bp.post("/newsletter/<issue_id>/delete")
+@login_required
+def newsletter_delete(issue_id):
+    import newsletter_send as ns
+    from readers import _csrf_ok
+    issue = _issue_or_404(issue_id)
+    if issue["status"] == "sent":
+        flash("Sent issues are kept as a record and can't be deleted.", "warning")
+    elif _csrf_ok():
+        ns.delete_issue(issue_id)
+        flash("Draft deleted.", "success")
+    return redirect(url_for("admin.newsletter_list"))
+
+
+@admin_bp.get("/newsletter/<issue_id>/preview")
+@login_required
+def newsletter_preview(issue_id):
+    import newsletter_send as ns
+    html, _text = ns.render_issue(_issue_or_404(issue_id), name="Alex Reader")
+    return html
+
+
+@admin_bp.post("/newsletter/<issue_id>/test")
+@login_required
+def newsletter_test(issue_id):
+    import newsletter_send as ns
+    from readers import EMAIL_RE, _csrf_ok
+    issue = _issue_or_404(issue_id)
+    to = (request.form.get("test_email") or "").strip().lower()
+    if not _csrf_ok():
+        flash("Your session expired -- please try again.", "error")
+    elif not ns.api_key():
+        flash("RESEND_API_KEY isn't set on the server, so nothing can be sent yet.", "warning")
+    elif not EMAIL_RE.match(to):
+        flash("Enter a valid email address to send the test to.", "error")
+    else:
+        html, text = ns.render_issue(issue, email=to, name="")
+        try:
+            ok, err = ns.send_email(to, "[TEST] " + issue["subject"], html, text)
+        except ns.QuotaReached as exc:
+            ok, err = False, str(exc)
+        if ok:
+            flash(f"Test email sent to {to}. It can take a minute to arrive -- check spam too.", "success")
+        else:
+            flash(f"The test email failed: {err}", "error")
+    return redirect(url_for("admin.newsletter_edit", issue_id=issue_id))
+
+
+@admin_bp.post("/newsletter/<issue_id>/send")
+@login_required
+def newsletter_send_chunk(issue_id):
+    """Called repeatedly by the editor page's JavaScript; each call emails a
+    batch (about 18 seconds' worth) and reports progress as JSON."""
+    import newsletter_send as ns
+    from readers import _csrf_ok
+    issue = _issue_or_404(issue_id)
+    if not _csrf_ok():
+        return jsonify(ok=False, error="Your session expired -- reload the page and try again."), 400
+    if not ns.api_key():
+        return jsonify(ok=False, error="RESEND_API_KEY isn't set on the server."), 400
+    if ns.is_test_sender():
+        return jsonify(ok=False, error=(
+            "Sending is still on Resend's test sender, which only delivers to your own address. "
+            "Verify a domain in Resend and set NEWSLETTER_FROM first.")), 400
+    if issue["status"] == "sent" and request.form.get("retry") != "1":
+        return jsonify(ok=False, error="This issue has already been sent."), 400
+    if not ns.subscribers():
+        return jsonify(ok=False, error="There are no active subscribers yet."), 400
+    try:
+        result = ns.send_chunk(issue, retry_failed=request.form.get("retry") == "1")
+    except Exception as exc:
+        current_app.logger.exception("Newsletter send failed")
+        return jsonify(ok=False, error=str(exc)), 500
+    return jsonify(ok=True, **result)
 
 
 @admin_bp.get("/authors")
