@@ -1,0 +1,31 @@
+{# The "Ask" chat screen. Included from base.html on every page; opened by any
+   [data-ask-open] button (the bottom bar's search icon on phones, the
+   magnifier in the header on larger screens). static/js/ask.js drives it. #}
+<div class="ask" id="ask" aria-hidden="true" inert>
+  <div class="ask__backdrop" data-ask-close></div>
+  <section class="ask__sheet" role="dialog" aria-modal="true" aria-labelledby="ask-title">
+    <header class="ask__head">
+      <div>
+        <h2 class="ask__title" id="ask-title"><span class="ask__slashes">\\</span>Mansfield <span class="ask__title-light">Ask</span></h2>
+        <p class="ask__sub" id="ask-sub">Answers come from the articles on this site.</p>
+      </div>
+      <button type="button" class="ask__close" data-ask-close aria-label="Close">&times;</button>
+    </header>
+
+    <div class="ask__log" id="ask-log" role="log" aria-live="polite">
+      <div class="ask__msg ask__msg--bot">
+        <div class="ask__bubble">Hi! Ask me anything and I'll answer from the stories on this site. If I haven't written about it yet, I'll tell you and point you to the closest stories.</div>
+      </div>
+      <div class="ask__chips" id="ask-chips" hidden></div>
+    </div>
+
+    <form class="ask__form" id="ask-form" autocomplete="off">
+      <label class="visually-hidden" for="ask-input">Your question</label>
+      <textarea id="ask-input" class="ask__input" rows="1" maxlength="500" placeholder="Ask a question…" enterkeyhint="send"></textarea>
+      <button type="submit" class="ask__send" id="ask-send" aria-label="Send">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg>
+      </button>
+    </form>
+    <p class="ask__note" id="ask-note" aria-live="polite"></p>
+  </section>
+</div>

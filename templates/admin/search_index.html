@@ -1,0 +1,34 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Search index{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <h1>Search (Ask)</h1>
+</div>
+
+<p class="admin-hint">
+  The chat on the site answers questions from your published stories. Stories are indexed
+  automatically the first time someone asks after a change, so you normally never need this page.
+</p>
+
+{% if error %}
+  <p class="admin-empty">Couldn't load the index: {{ error }}</p>
+{% else %}
+  <div class="admin-table">
+    <div class="admin-row" style="cursor: default;"><div class="admin-row__main">
+      <div class="admin-row__title">Status: {% if enabled %}switched on{% else %}switched off{% endif %}</div>
+      <div class="admin-row__meta">{% if enabled %}OpenAI key found.{% else %}Add <code>OPENAI_API_KEY</code> in Render &rarr; Environment to switch it on.{% endif %}</div>
+    </div></div>
+    <div class="admin-row" style="cursor: default;"><div class="admin-row__main">
+      <div class="admin-row__title">{{ status.articles_indexed }} of {{ status.articles_published }} published stories indexed</div>
+      <div class="admin-row__meta">{{ status.chunks }} searchable pieces &middot; embeddings: {{ embed_model }} &middot; answers: {{ chat_model }}</div>
+    </div></div>
+  </div>
+
+  <form method="post" action="{{ url_for('admin.search_index_rebuild') }}" style="margin-top:18px;">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <button type="submit" class="admin-btn" {% if not enabled %}disabled{% endif %}>Rebuild index</button>
+    <span class="admin-hint" style="margin-left:10px;">Re-reads every story. Costs a few cents at most.</span>
+  </form>
+{% endif %}
+{% endblock %}

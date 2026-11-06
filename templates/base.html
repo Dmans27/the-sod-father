@@ -33,6 +33,7 @@
       <symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.3 5.3l1.6 1.6M17.1 17.1l1.6 1.6M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6"/></symbol>
       <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9a1 1 0 0 1-1 1h-4v-6H9v6H5a1 1 0 0 1-1-1z"/></symbol>
       <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></symbol>
+      <symbol id="i-search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></symbol>
       <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 7l8.5 6 8.5-6"/></symbol>
       <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4.5 4.5 0 0 0 6.4 0l3-3a4.5 4.5 0 0 0-6.4-6.4l-1 1"/><path d="M14 10a4.5 4.5 0 0 0-6.4 0l-3 3a4.5 4.5 0 0 0 6.4 6.4l1-1"/></symbol>
     </defs>
@@ -58,47 +59,52 @@
       {# Avatar at the right of the bar. Signed in: your photo (or initial).
          Signed out: a default silhouette that opens Sign in / Create account. #}
       {% set nxt = '' if (request.path.startswith('/account') or request.path.startswith('/authors') or request.path.startswith('/admin')) else '?next=' ~ (request.path | urlencode) %}
-      <div class="user-menu" id="user-menu">
-        <button type="button" class="user-menu__btn{% if header_user %} is-signed-in{% endif %}" id="user-menu-btn" aria-haspopup="true" aria-expanded="false" aria-controls="user-menu-panel" aria-label="{% if header_user %}Account menu for {{ header_user.name }}{% else %}Sign in or create an account{% endif %}">
-          {% if header_user %}
-            <span class="user-menu__initial" aria-hidden="true">{{ header_user.initial }}</span>
-            {% if header_user.photo %}<img class="user-menu__img" src="{{ header_user.photo }}" alt="" onerror="this.remove()">{% endif %}
-          {% else %}
-            <svg class="user-menu__ghost" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"/></svg>
-          {% endif %}
+      <div class="header-tools">
+        <button type="button" class="header-ask" data-ask-open aria-label="Ask a question about the articles">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-search"/></svg>
         </button>
-        <div class="user-menu__panel" id="user-menu-panel" role="menu" hidden>
-          {% if header_user %}
-            <div class="user-menu__who">
-              <strong>{{ header_user.name }}</strong>
-              {% if header_user.email %}<span>{{ header_user.email }}</span>{% endif %}
-            </div>
-            {% if reader %}
-              <a role="menuitem" class="user-menu__link" href="/account/profile">Account</a>
-              <a role="menuitem" class="user-menu__link" href="/account">Saved stories</a>
-            {% endif %}
-            {% if header_user.is_author %}
-              <a role="menuitem" class="user-menu__link" href="/authors/me">Author profile</a>
-            {% endif %}
-            {% if reader %}
-              <form method="post" action="/account/logout" class="user-menu__form">
-                <input type="hidden" name="csrf" value="{{ csrf_token }}">
-                <button type="submit" role="menuitem" class="user-menu__link user-menu__link--button">Sign out</button>
-              </form>
+        <div class="user-menu" id="user-menu">
+          <button type="button" class="user-menu__btn{% if header_user %} is-signed-in{% endif %}" id="user-menu-btn" aria-haspopup="true" aria-expanded="false" aria-controls="user-menu-panel" aria-label="{% if header_user %}Account menu for {{ header_user.name }}{% else %}Sign in or create an account{% endif %}">
+            {% if header_user %}
+              <span class="user-menu__initial" aria-hidden="true">{{ header_user.initial }}</span>
+              {% if header_user.photo %}<img class="user-menu__img" src="{{ header_user.photo }}" alt="" onerror="this.remove()">{% endif %}
             {% else %}
-              <a role="menuitem" class="user-menu__link" href="/authors/logout">Sign out</a>
+              <svg class="user-menu__ghost" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"/></svg>
             {% endif %}
-          {% else %}
-            <a role="menuitem" class="user-menu__link user-menu__link--primary" href="/account/login{{ nxt }}">Sign in</a>
-            <a role="menuitem" class="user-menu__link" href="/account/signup{{ nxt }}">Create account</a>
-          {% endif %}
-          <button type="button" role="menuitemcheckbox" class="user-menu__theme" id="site-theme-toggle" data-site-theme aria-checked="false">
-            <span class="user-menu__theme-label">
-              <svg class="user-menu__theme-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"/></svg>
-              Dark mode
-            </span>
-            <span class="site-switch" aria-hidden="true"><span class="site-switch__knob"></span></span>
           </button>
+          <div class="user-menu__panel" id="user-menu-panel" role="menu" hidden>
+            {% if header_user %}
+              <div class="user-menu__who">
+                <strong>{{ header_user.name }}</strong>
+                {% if header_user.email %}<span>{{ header_user.email }}</span>{% endif %}
+              </div>
+              {% if reader %}
+                <a role="menuitem" class="user-menu__link" href="/account/profile">Account</a>
+                <a role="menuitem" class="user-menu__link" href="/account">Saved stories</a>
+              {% endif %}
+              {% if header_user.is_author %}
+                <a role="menuitem" class="user-menu__link" href="/authors/me">Author profile</a>
+              {% endif %}
+              {% if reader %}
+                <form method="post" action="/account/logout" class="user-menu__form">
+                  <input type="hidden" name="csrf" value="{{ csrf_token }}">
+                  <button type="submit" role="menuitem" class="user-menu__link user-menu__link--button">Sign out</button>
+                </form>
+              {% else %}
+                <a role="menuitem" class="user-menu__link" href="/authors/logout">Sign out</a>
+              {% endif %}
+            {% else %}
+              <a role="menuitem" class="user-menu__link user-menu__link--primary" href="/account/login{{ nxt }}">Sign in</a>
+              <a role="menuitem" class="user-menu__link" href="/account/signup{{ nxt }}">Create account</a>
+            {% endif %}
+            <button type="button" role="menuitemcheckbox" class="user-menu__theme" id="site-theme-toggle" data-site-theme aria-checked="false">
+              <span class="user-menu__theme-label">
+                <svg class="user-menu__theme-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"/></svg>
+                Dark mode
+              </span>
+              <span class="site-switch" aria-hidden="true"><span class="site-switch__knob"></span></span>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -161,6 +167,8 @@
     {% include "_newsletter_popup.html" %}
   {% endif %}
 
+  {% include "_ask_sheet.html" %}
+
   <!-- Bottom navigation bar: phones and the Duo's outer display only
        (the CSS hides it at 700px and wider, where the two-page layout takes
        over, and on the full article page). Dark/light is the same switch as
@@ -174,6 +182,10 @@
       <svg class="bottom-nav__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-save"/></svg>
       <span>Saved</span>
     </a>
+    <button type="button" class="bottom-nav__item bottom-nav__item--ask" data-ask-open aria-label="Ask a question about the articles">
+      <svg class="bottom-nav__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-search"/></svg>
+      <span>Ask</span>
+    </button>
     <a href="{{ '/account/profile' if reader else '/account/login?next=/account/profile' }}" class="bottom-nav__item {% if request.path.startswith('/account/') %}is-active{% endif %}">
       <svg class="bottom-nav__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"/></svg>
       <span>Account</span>
@@ -190,6 +202,7 @@
   </script>
   <script src="/static/js/actions.js?v=3"></script>
   <script src="/static/js/newsletter.js?v=1" defer></script>
+  <script src="/static/js/ask.js?v=1" defer></script>
 
   <script>
     // No-op on a regular browser visit -- window.Capacitor only exists when

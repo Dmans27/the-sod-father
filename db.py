@@ -1,6 +1,6 @@
 """
-Tiny database layer for reader accounts, saved stories, comments and
-newsletter subscribers.
+Tiny database layer for reader accounts, saved stories, comments,
+newsletter subscribers, and the article-search index and usage counts.
 
 Articles themselves still live in JSON files (content.py) -- this is only
 for the data that *readers* create, which has to survive Render deploys
@@ -118,6 +118,27 @@ SCHEMA = [
         error      TEXT,
         created_at TEXT NOT NULL,
         PRIMARY KEY (issue_id, email)
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS article_chunks (
+        id           TEXT PRIMARY KEY,
+        slug         TEXT NOT NULL,
+        title        TEXT NOT NULL,
+        chunk_index  INTEGER NOT NULL,
+        text         TEXT NOT NULL,
+        embedding    TEXT NOT NULL,
+        content_hash TEXT NOT NULL,
+        created_at   TEXT NOT NULL
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_chunks_slug ON article_chunks (slug)",
+    """
+    CREATE TABLE IF NOT EXISTS ask_usage (
+        day TEXT NOT NULL,
+        key TEXT NOT NULL,
+        n   INTEGER NOT NULL,
+        PRIMARY KEY (day, key)
     )
     """,
     "CREATE INDEX IF NOT EXISTS idx_comments_slug ON comments (slug, created_at)",

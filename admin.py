@@ -309,6 +309,41 @@ def newsletter_send_chunk(issue_id):
     return jsonify(ok=True, **result)
 
 
+@admin_bp.get("/search-index")
+@login_required
+def search_index():
+    """Status of the "Ask" search: is it switched on, and how much of the
+    site is indexed. Rebuild is only needed after changing the embedding model."""
+    import ask_engine
+    from readers import csrf_token
+    status, error = {}, None
+    try:
+        status = ask_engine.index_status()
+    except Exception as exc:  # database unreachable: say so instead of a 500
+        error = str(exc)
+    return render_template("admin/search_index.html", enabled=ask_engine.enabled(),
+                           status=status, error=error, csrf=csrf_token(),
+                           embed_model=ask_engine.embed_model(), chat_model=ask_engine.chat_model())
+
+
+@admin_bp.post("/search-index/rebuild")
+@login_required
+def search_index_rebuild():
+    import ask_engine
+    from readers import _csrf_ok
+    if not _csrf_ok():
+        flash("Your session expired. Try again.", "warning")
+    elif not ask_engine.enabled():
+        flash("Add OPENAI_API_KEY in Render first, then rebuild.", "warning")
+    else:
+        try:
+            r = ask_engine.sync_index(force=True)
+            flash(f"Rebuilt: {r['articles']} articles, {r['chunks']} pieces indexed.", "success")
+        except Exception as exc:
+            flash(f"Couldn't rebuild the index: {exc}", "warning")
+    return redirect(url_for("admin.search_index"))
+
+
 @admin_bp.get("/authors")
 @login_required
 def authors_list():

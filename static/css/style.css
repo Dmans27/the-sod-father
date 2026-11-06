@@ -1903,3 +1903,133 @@ html.nl-open { overflow: hidden; }
 .user-menu__theme[aria-checked="true"] .site-switch__knob { transform: translateX(18px); }
 .is-dark .user-menu__theme { border-top-color: rgba(255, 255, 255, 0.12); }
 .is-dark .user-menu__theme:hover, .is-dark .user-menu__theme:focus-visible { background: rgba(255, 255, 255, 0.08); }
+
+/* ── Ask: chat screen that answers from the articles ──
+   Phones: a full-screen sheet that slides up from the bottom. 700px and wider:
+   a floating panel in the bottom-right corner. Hidden (and inert) until
+   opened; the slide animates because ask.js adds .is-open a frame after
+   un-hiding it. */
+.ask {
+  position: fixed; inset: 0; z-index: 450;
+  visibility: hidden; pointer-events: none;
+  transition: visibility 0s linear 0.45s;
+}
+.ask.is-open { visibility: visible; pointer-events: auto; transition-delay: 0s; }
+.ask__backdrop { position: absolute; inset: 0; background: rgba(20, 28, 23, 0); transition: background 0.4s ease; }
+.ask.is-open .ask__backdrop { background: rgba(20, 28, 23, 0.5); }
+.ask__sheet {
+  position: absolute; left: 0; right: 0; bottom: 0; top: 0;
+  display: flex; flex-direction: column;
+  background: #fff; color: var(--ink);
+  transform: translateY(100%);
+  transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.ask.is-open .ask__sheet { transform: translateY(0); }
+.ask__head {
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+  padding: max(env(safe-area-inset-top), 18px) 18px 12px;
+  border-bottom: 1px solid var(--line);
+}
+.ask__title { margin: 0; font-family: var(--font-serif); font-size: 24px; font-weight: 800; line-height: 1.15; color: var(--ink); }
+.ask__slashes { color: var(--gold); }
+.ask__title-light { font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--fairway); margin-left: 6px; vertical-align: middle; }
+.ask__sub { margin: 4px 0 0; font-size: 13px; color: var(--ink-faint); }
+.ask__close {
+  flex: none; width: 38px; height: 38px; border: none; border-radius: 50%;
+  background: rgba(27, 42, 31, 0.08); color: var(--ink); font-size: 24px; line-height: 1; cursor: pointer;
+}
+.ask__close:hover { background: rgba(27, 42, 31, 0.14); }
+
+.ask__log { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 16px 8px; display: flex; flex-direction: column; gap: 14px; -webkit-overflow-scrolling: touch; }
+.ask__msg { display: flex; flex-direction: column; max-width: 92%; gap: 8px; }
+.ask__msg--user { align-self: flex-end; align-items: flex-end; }
+.ask__msg--bot { align-self: flex-start; }
+.ask__bubble { padding: 11px 14px; border-radius: 16px; font-family: var(--font-sans); font-size: 15.5px; line-height: 1.55; overflow-wrap: anywhere; }
+.ask__msg--bot .ask__bubble { background: #f1f4f1; color: var(--ink); border-bottom-left-radius: 5px; }
+.ask__msg--user .ask__bubble { background: #1b4332; color: #fff; border-bottom-right-radius: 5px; white-space: pre-wrap; }
+.ask__msg--error .ask__bubble { background: rgba(164, 48, 63, 0.1); color: #7d2432; }
+.ask__bubble p { margin: 0 0 10px; }
+.ask__bubble p:last-child, .ask__bubble ul:last-child { margin-bottom: 0; }
+.ask__bubble ul { margin: 0 0 10px; padding-left: 20px; }
+.ask__bubble li { margin: 0 0 4px; }
+
+.ask__msg--typing .ask__bubble { display: inline-flex; gap: 5px; padding: 14px 16px; }
+.ask__msg--typing span { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-faint); animation: ask-dot 1.1s infinite ease-in-out; }
+.ask__msg--typing span:nth-child(2) { animation-delay: 0.15s; }
+.ask__msg--typing span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes ask-dot { 0%, 80%, 100% { opacity: 0.25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-3px); } }
+
+.ask__sources { display: flex; flex-direction: column; gap: 6px; }
+.ask__source {
+  display: flex; flex-direction: column; gap: 2px; padding: 9px 12px; border: 1px solid var(--line);
+  border-left: 3px solid var(--gold); border-radius: 8px; text-decoration: none; color: var(--ink); background: #fff;
+}
+.ask__source:hover { background: #f6f8f6; }
+.ask__source-title { font-family: var(--font-serif); font-weight: 700; font-size: 15px; line-height: 1.3; }
+.ask__source-pill { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--fairway); }
+
+.ask__chips { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.ask__chips[hidden] { display: none; }
+.ask__chip {
+  border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 999px;
+  padding: 8px 14px; font-family: var(--font-sans); font-size: 14px; text-align: left; cursor: pointer;
+}
+.ask__chip:hover { border-color: var(--fairway-deep); }
+
+.ask__form { display: flex; align-items: flex-end; gap: 10px; padding: 10px 14px 6px; border-top: 1px solid var(--line); }
+.ask__input {
+  flex: 1; min-width: 0; resize: none; max-height: 120px; padding: 11px 14px;
+  border: 1px solid rgba(27, 42, 31, 0.22); border-radius: 20px; background: #fff; color: var(--ink);
+  font-family: var(--font-sans); font-size: 16px; line-height: 1.4;
+}
+.ask__input:focus { outline: 2px solid var(--fairway-deep); outline-offset: 1px; }
+.ask__send {
+  flex: none; width: 44px; height: 44px; border: none; border-radius: 50%; cursor: pointer;
+  background: #1b4332; color: #fff; display: flex; align-items: center; justify-content: center;
+}
+.ask__send svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.ask__send:disabled { opacity: 0.5; cursor: default; }
+.ask__note { margin: 0; padding: 0 18px 10px; min-height: 1.4em; font-size: 12.5px; color: var(--ink-faint); text-align: center; }
+.ask__note.is-error { color: #a4262c; }
+html.ask-open { overflow: hidden; }
+
+@media (min-width: 700px) {
+  .ask__sheet {
+    left: auto; top: auto; right: 24px; bottom: 24px; width: 440px; height: min(720px, calc(100vh - 48px));
+    border-radius: 18px; box-shadow: 0 18px 60px rgba(0, 0, 0, 0.3); overflow: hidden;
+    transform: translateY(32px); opacity: 0;
+    transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease;
+    padding-bottom: 0;
+  }
+  .ask.is-open .ask__sheet { transform: none; opacity: 1; }
+  .ask__head { padding-top: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ask__sheet, .ask__backdrop { transition-duration: 0.01s; }
+}
+
+/* Search buttons: the magnifier in the header (larger screens) ... */
+.header-tools { display: flex; align-items: center; gap: 10px; justify-self: end; }
+.header-ask {
+  display: none; align-items: center; justify-content: center; width: 38px; height: 38px; border-radius: 50%;
+  border: 1px solid rgba(27, 42, 31, 0.22); background: transparent; color: #1b2a1f; cursor: pointer;
+}
+.header-ask:hover { border-color: rgba(27, 42, 31, 0.5); }
+.header-ask svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+@media (min-width: 700px) { .header-ask { display: inline-flex; } }
+/* ... and the middle button of the bottom bar on phones. */
+.bottom-nav__item--ask { color: var(--fairway-deep); }
+
+.is-dark .ask__sheet { background: #1c231f; }
+.is-dark .ask__close { background: rgba(255, 255, 255, 0.12); }
+.is-dark .ask__close:hover { background: rgba(255, 255, 255, 0.22); }
+.is-dark .ask__msg--bot .ask__bubble { background: #2c352f; }
+.is-dark .ask__msg--user .ask__bubble { background: #2f5a43; }
+.is-dark .ask__msg--error .ask__bubble { background: rgba(255, 120, 135, 0.14); color: #ffb0b9; }
+.is-dark .ask__source, .is-dark .ask__chip { background: #232c26; }
+.is-dark .ask__source:hover { background: #2c352f; }
+.is-dark .ask__input { background: #232c26; border-color: rgba(255, 255, 255, 0.22); }
+.is-dark .ask__send { background: #2f5a43; }
+.is-dark .ask__note.is-error { color: #ffb4ab; }
+.is-dark .header-ask { color: rgba(228, 233, 229, 0.8); border-color: rgba(255, 255, 255, 0.2); }
