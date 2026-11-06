@@ -1,5 +1,5 @@
 """
-Writing and sending the /Column newsletter.
+Writing and sending the \\\\Mansfield newsletter.
 
 An "issue" is a subject line, a short intro, a handful of published stories
 and a sign-off. It is stored in the database (table newsletter_issues) so it
@@ -8,7 +8,7 @@ and delivered one email per subscriber through Resend's HTTP API.
 
 Settings (Render -> Environment):
   RESEND_API_KEY     required to send anything
-  NEWSLETTER_FROM    e.g.  /Column <news@yourdomain.com>. Until you own and
+  NEWSLETTER_FROM    e.g.  Mansfield <news@yourdomain.com>. Until you own and
                      verify a domain this stays on Resend's test sender, which
                      only delivers to your own Resend account email.
   NEWSLETTER_REPLY_TO  optional, where replies go
@@ -38,7 +38,7 @@ import db
 from content import CATEGORIES, get_article, get_articles
 
 RESEND_URL = "https://api.resend.com/emails"
-DEFAULT_FROM = "/Column <onboarding@resend.dev>"
+DEFAULT_FROM = "Mansfield <onboarding@resend.dev>"
 CHUNK_SECONDS = 18          # stay well under gunicorn's 30s worker timeout
 MAX_SUBJECT = 150
 MAX_PREVIEW = 200
@@ -228,7 +228,7 @@ def render_issue(issue, email=None, name=""):
     }
     html = render_template("email/newsletter.html", **ctx)
 
-    lines = [f"/COLUMN  -  Issue No. {number}  -  {date_text}", ""]
+    lines = [f"\\\\MANSFIELD  -  Issue No. {number}  -  {date_text}", ""]
     if ctx["greeting"]:
         lines += [ctx["greeting"], ""]
     for p in ctx["intro"]:
@@ -237,7 +237,7 @@ def render_issue(issue, email=None, name=""):
         lines += [st["title"].upper()] + ([st["dek"]] if st["dek"] else []) + [st["url"], ""]
     for p in ctx["outro"]:
         lines += [p, ""]
-    lines += ["--", "/Column  " + site_url(), f"Unsubscribe: {unsub}"]
+    lines += ["--", "\\\\Mansfield  " + site_url(), f"Unsubscribe: {unsub}"]
     if ctx["address"]:
         lines.append(ctx["address"])
     return html, "\n".join(lines)

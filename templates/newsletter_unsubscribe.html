@@ -1,11 +1,11 @@
 {% extends "base.html" %}
-{% block title %}Unsubscribe — /Column{% endblock %}
+{% block title %}Unsubscribe — \\Mansfield{% endblock %}
 
 {% block content %}
 <section class="account-card">
   <h1 class="account-card__title">Unsubscribe</h1>
   {% if state == 'confirm' %}
-    <p class="account-card__sub">Stop sending the /Column newsletter to <strong>{{ email }}</strong>?</p>
+    <p class="account-card__sub">Stop sending the \\Mansfield newsletter to <strong>{{ email }}</strong>?</p>
     <form method="post" action="/newsletter/unsubscribe?e={{ email|urlencode }}&amp;t={{ token|urlencode }}" class="account-form">
       <button type="submit" class="account-btn">Yes, unsubscribe me</button>
     </form>
