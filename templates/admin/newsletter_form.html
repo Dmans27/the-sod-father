@@ -65,8 +65,14 @@
 
   <div class="nl-editor__side">
     {% if issue.id %}
-      <h2 class="admin-section-title">Preview <span>of the saved draft</span></h2>
-      <iframe class="nl-preview" src="{{ url_for('admin.newsletter_preview', issue_id=issue.id) }}" title="Email preview"></iframe>
+      <div class="nl-preview-head">
+        <h2 class="admin-section-title" style="margin:0;">Preview <span>of the saved draft</span></h2>
+        <div class="nl-preview-toggle" role="group" aria-label="Preview size">
+          <button type="button" class="admin-btn is-active" data-nl-width="760">Desktop</button>
+          <button type="button" class="admin-btn" data-nl-width="390">Phone</button>
+        </div>
+      </div>
+      <iframe class="nl-preview" id="nl-preview" src="{{ url_for('admin.newsletter_preview', issue_id=issue.id) }}" title="Email preview"></iframe>
     {% else %}
       <p class="admin-hint">Save the draft to see a preview of the email here.</p>
     {% endif %}
@@ -103,6 +109,13 @@
 
 <script>
 (function () {
+  var frame = document.getElementById('nl-preview');
+  Array.prototype.forEach.call(document.querySelectorAll('[data-nl-width]'), function (btn) {
+    btn.addEventListener('click', function () {
+      if (frame) frame.style.maxWidth = btn.getAttribute('data-nl-width') + 'px';
+      Array.prototype.forEach.call(document.querySelectorAll('[data-nl-width]'), function (b) { b.classList.toggle('is-active', b === btn); });
+    });
+  });
   var csrf = {{ csrf|tojson }};
   var url = {{ url_for('admin.newsletter_send_chunk', issue_id=issue.id)|tojson }};
   var send = document.getElementById('nl-send');

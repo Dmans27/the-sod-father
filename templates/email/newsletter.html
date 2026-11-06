@@ -1,54 +1,126 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="color-scheme" content="light">
+<meta name="color-scheme" content="light only">
+<meta name="supported-color-schemes" content="light only">
 <title>{{ issue.subject }}</title>
+{# Email clients ignore most CSS, so the layout is tables with inline styles.
+   This block only adds what inline styles can't: on a phone (under 640px) the
+   side-by-side story rows stack and the page margins shrink. #}
+<style>
+  body { margin: 0; padding: 0; background: #ffffff; }
+  img { border: 0; outline: none; text-decoration: none; -ms-interpolation-mode: bicubic; }
+  a { color: #1b4332; }
+  @media only screen and (max-width: 640px) {
+    .pad { padding-left: 20px !important; padding-right: 20px !important; }
+    .stack { display: block !important; width: 100% !important; box-sizing: border-box; }
+    .stack-img { padding: 22px 0 0 0 !important; }
+    .stack-text { padding: 14px 0 22px 0 !important; }
+    .thumb { width: 100% !important; max-width: 100% !important; }
+    .wordmark { font-size: 46px !important; }
+    .lead-title { font-size: 28px !important; }
+    .meta-cell { display: block !important; width: 100% !important; text-align: center !important; padding: 2px 0 !important; }
+  }
+</style>
 </head>
-<body style="margin:0;padding:0;background:#f1ead8;">
+<body style="margin:0;padding:0;background:#ffffff;">
 {# Hidden preview text: the grey snippet inbox lists show after the subject. #}
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#f1ead8;font-size:1px;line-height:1px;">{{ issue.preview or '' }}&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f1ead8;">
-<tr><td align="center" style="padding:24px 12px;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#faf6ec;border-radius:12px;overflow:hidden;">
-    <tr><td style="background:#1b4332;padding:22px 28px;text-align:center;">
-      <a href="{{ site_url }}" style="text-decoration:none;font-family:Georgia,'Times New Roman',serif;font-size:28px;font-weight:bold;letter-spacing:0.5px;color:#faf6ec;"><span style="color:#e3b94f;">/</span>Column</a>
-    </td></tr>
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#ffffff;font-size:1px;line-height:1px;">{{ issue.preview or '' }}&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;&#847;&zwnj;&nbsp;</div>
 
-    <tr><td style="padding:28px 28px 8px;font-family:Georgia,'Times New Roman',serif;font-size:17px;line-height:1.6;color:#2b362f;">
-      {% if greeting %}<p style="margin:0 0 16px;">{{ greeting }}</p>{% endif %}
-      {% for p in intro %}<p style="margin:0 0 16px;">{{ p }}</p>{% endfor %}
-    </td></tr>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#ffffff;">
+<tr><td align="center" style="padding:0;">
+<!--[if mso]><table role="presentation" width="720" align="center" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:720px;background:#ffffff;">
 
-    {% for st in stories %}
-    <tr><td style="padding:12px 28px;">
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border:1px solid #e3dcc6;border-radius:10px;overflow:hidden;background:#ffffff;">
-        {% if st.cover %}
-        <tr><td><a href="{{ st.url }}"><img src="{{ st.cover }}" alt="" width="544" style="display:block;width:100%;height:auto;border:0;"></a></td></tr>
-        {% endif %}
-        <tr><td style="padding:18px 20px 20px;font-family:Georgia,'Times New Roman',serif;">
-          {% if st.pill %}<div style="font-family:Menlo,Consolas,monospace;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#2d6a4f;margin:0 0 8px;">{{ st.pill }}</div>{% endif %}
-          <a href="{{ st.url }}" style="font-size:22px;line-height:1.25;font-weight:bold;color:#1b4332;text-decoration:none;">{{ st.title }}</a>
-          {% if st.dek %}<p style="margin:10px 0 0;font-size:16px;line-height:1.5;color:#4a5a4f;">{{ st.dek }}</p>{% endif %}
-          <p style="margin:14px 0 0;"><a href="{{ st.url }}" style="font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;color:#2d6a4f;text-decoration:none;">Read the story &rarr;</a></p>
-        </td></tr>
+  {# ── Masthead ─────────────────────────────────────────────── #}
+  <tr><td class="pad" style="padding:22px 32px 0;border-top:6px solid #1b4332;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+      <tr>
+        <td class="meta-cell" align="left" style="font-family:Menlo,Consolas,'Courier New',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#6b6b6b;">Issue No. {{ number }}</td>
+        <td class="meta-cell" align="right" style="font-family:Menlo,Consolas,'Courier New',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#6b6b6b;">{{ date_text }}</td>
+      </tr>
+    </table>
+  </td></tr>
+  <tr><td class="pad" align="center" style="padding:14px 32px 4px;">
+    <a href="{{ site_url }}" class="wordmark" style="text-decoration:none;font-family:Georgia,'Times New Roman',serif;font-size:64px;line-height:1.05;font-weight:bold;letter-spacing:-1px;color:#111111;"><span style="color:#b8860b;">/</span>Column</a>
+  </td></tr>
+  <tr><td class="pad" align="center" style="padding:6px 32px 20px;font-family:Menlo,Consolas,'Courier New',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#6b6b6b;">{{ tagline }}</td></tr>
+  <tr><td style="padding:0 32px;"><div style="border-bottom:4px double #111111;font-size:0;line-height:0;height:1px;">&nbsp;</div></td></tr>
+
+  {# ── Intro ────────────────────────────────────────────────── #}
+  {% if greeting or intro %}
+  <tr><td class="pad" style="padding:28px 32px 6px;font-family:Georgia,'Times New Roman',serif;font-size:19px;line-height:1.65;color:#1a1a1a;">
+    {% if greeting %}<p style="margin:0 0 16px;font-weight:bold;">{{ greeting }}</p>{% endif %}
+    {% for p in intro %}<p style="margin:0 0 16px;">{{ p }}</p>{% endfor %}
+  </td></tr>
+  {% endif %}
+
+  {# ── Stories: the first is the lead, the rest sit beside a small photo ── #}
+  {% if stories %}
+  <tr><td class="pad" style="padding:18px 32px 0;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>
+      <td style="font-family:Menlo,Consolas,'Courier New',monospace;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#2d6a4f;padding-bottom:10px;border-bottom:1px solid #111111;">In this issue</td>
+    </tr></table>
+  </td></tr>
+  {% endif %}
+
+  {% for st in stories %}
+    {% if loop.first %}
+    <tr><td class="pad" style="padding:22px 32px 26px;">
+      {% if st.cover %}<a href="{{ st.url }}"><img src="{{ st.cover }}" alt="" width="656" style="display:block;width:100%;height:auto;border:0;"></a>{% endif %}
+      <div style="padding-top:{{ 18 if st.cover else 0 }}px;">
+        {% if st.pill %}<div style="font-family:Menlo,Consolas,'Courier New',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#2d6a4f;margin:0 0 10px;">{{ st.pill }}</div>{% endif %}
+        <a href="{{ st.url }}" class="lead-title" style="font-family:Georgia,'Times New Roman',serif;font-size:36px;line-height:1.15;font-weight:bold;color:#111111;text-decoration:none;">{{ st.title }}</a>
+        {% if st.dek %}<p style="margin:12px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:19px;line-height:1.55;color:#444444;">{{ st.dek }}</p>{% endif %}
+        <p style="margin:12px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#777777;">{% if st.author %}By {{ st.author }}{% endif %}{% if st.author and st.minutes %} &middot; {% endif %}{% if st.minutes %}{{ st.minutes }} min read{% endif %}</p>
+        <p style="margin:16px 0 0;"><a href="{{ st.url }}" style="display:inline-block;background:#1b4332;color:#ffffff;font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;text-decoration:none;padding:12px 22px;border-radius:4px;">Read the story &rarr;</a></p>
+      </div>
+    </td></tr>
+    {% else %}
+    <tr><td class="pad" style="padding:0 32px;">
+      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-top:1px solid #e3e3e3;">
+        <tr>
+          {% if st.cover %}
+          <td class="stack stack-img" width="240" valign="top" style="width:240px;padding:22px 24px 22px 0;">
+            <a href="{{ st.url }}"><img class="thumb" src="{{ st.cover }}" alt="" width="240" style="display:block;width:240px;max-width:100%;height:auto;border:0;"></a>
+          </td>
+          {% endif %}
+          <td class="stack stack-text" valign="top" style="padding:22px 0;">
+            {% if st.pill %}<div style="font-family:Menlo,Consolas,'Courier New',monospace;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;color:#2d6a4f;margin:0 0 8px;">{{ st.pill }}</div>{% endif %}
+            <a href="{{ st.url }}" style="font-family:Georgia,'Times New Roman',serif;font-size:24px;line-height:1.2;font-weight:bold;color:#111111;text-decoration:none;">{{ st.title }}</a>
+            {% if st.dek %}<p style="margin:8px 0 0;font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.5;color:#555555;">{{ st.dek }}</p>{% endif %}
+            <p style="margin:10px 0 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;color:#777777;">{% if st.author %}By {{ st.author }}{% endif %}{% if st.author and st.minutes %} &middot; {% endif %}{% if st.minutes %}{{ st.minutes }} min read{% endif %}</p>
+            <p style="margin:12px 0 0;"><a href="{{ st.url }}" style="font-family:Arial,Helvetica,sans-serif;font-size:14px;font-weight:bold;color:#1b4332;text-decoration:underline;">Read the story &rarr;</a></p>
+          </td>
+        </tr>
       </table>
     </td></tr>
-    {% endfor %}
-
-    {% if outro %}
-    <tr><td style="padding:16px 28px 8px;font-family:Georgia,'Times New Roman',serif;font-size:17px;line-height:1.6;color:#2b362f;">
-      {% for p in outro %}<p style="margin:0 0 16px;">{{ p }}</p>{% endfor %}
-    </td></tr>
     {% endif %}
+  {% endfor %}
 
-    <tr><td style="padding:24px 28px 30px;border-top:1px solid #e3dcc6;font-family:Arial,Helvetica,sans-serif;font-size:12.5px;line-height:1.6;color:#6b786f;text-align:center;">
+  {# ── Sign-off ─────────────────────────────────────────────── #}
+  {% if outro %}
+  <tr><td class="pad" style="padding:8px 32px 0;">
+    <div style="border-top:1px solid #e3e3e3;padding:26px 0 6px;font-family:Georgia,'Times New Roman',serif;font-size:19px;line-height:1.65;color:#1a1a1a;">
+      {% for p in outro %}<p style="margin:0 0 16px;">{{ p }}</p>{% endfor %}
+    </div>
+  </td></tr>
+  {% endif %}
+
+  {# ── Footer ───────────────────────────────────────────────── #}
+  <tr><td class="pad" style="padding:30px 32px 40px;">
+    <div style="border-top:1px solid #111111;padding-top:22px;text-align:center;font-family:Arial,Helvetica,sans-serif;font-size:12.5px;line-height:1.7;color:#777777;">
+      <a href="{{ site_url }}" style="text-decoration:none;font-family:Georgia,'Times New Roman',serif;font-size:22px;font-weight:bold;color:#111111;"><span style="color:#b8860b;">/</span>Column</a><br>
       You're getting this because you signed up for the /Column newsletter.<br>
-      <a href="{{ unsubscribe_url }}" style="color:#2d6a4f;">Unsubscribe</a> &middot; <a href="{{ site_url }}" style="color:#2d6a4f;">Visit /Column</a>
+      <a href="{{ unsubscribe_url }}" style="color:#1b4332;">Unsubscribe</a> &nbsp;&middot;&nbsp; <a href="{{ site_url }}" style="color:#1b4332;">Visit /Column</a>
       {% if address %}<br>{{ address }}{% endif %}
-    </td></tr>
-  </table>
+    </div>
+  </td></tr>
+
+</table>
+<!--[if mso]></td></tr></table><![endif]-->
 </td></tr>
 </table>
 </body>

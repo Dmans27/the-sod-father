@@ -12,15 +12,21 @@ forms call it with JavaScript (and get JSON back); with JavaScript off it
 still works as a normal form post and shows the /newsletter page with a
 message.
 """
-from flask import Blueprint, jsonify, render_template, request
+from pathlib import Path
+
+from flask import Blueprint, Response, abort, jsonify, render_template, request
+from PIL import Image, ImageOps
 from sqlalchemy.exc import IntegrityError
 
 import db
 import newsletter_send
-from content import CATEGORIES
+from content import CATEGORIES, get_article
 from readers import EMAIL_RE, _csrf_ok
 
 newsletter_bp = Blueprint("newsletter", __name__)
+
+PROJECT_ROOT = Path(__file__).parent
+UPLOADS_DIR = (PROJECT_ROOT / "static" / "uploads").resolve()
 
 MAX_NAME = 80
 MAX_PROFESSION = 80
@@ -133,3 +139,43 @@ def unsubscribe_submit():
         print("newsletter: could not unsubscribe:", exc)
         return _unsub_page(email, "error"), 500
     return _unsub_page(email, "done")
+
+
+# ── Cover photos for the email ───────────────────────────────────────────
+# Phone photos come in every shape (and tall ones make an email very long),
+# so emails use these evenly cropped versions instead of the originals.
+# Only an existing story's own cover file can be requested, never a path.
+
+IMAGE_VARIANTS = {"lead": (1360, 700), "thumb": (560, 420)}
+_image_cache = {}
+
+
+@newsletter_bp.get("/newsletter/img/<slug>/<variant>.jpg")
+def newsletter_image(slug, variant):
+    size = IMAGE_VARIANTS.get(variant)
+    article = get_article(slug)
+    cover = (article or {}).get("cover_image") or ""
+    if not size or not cover.startswith("/static/uploads/"):
+        abort(404)
+    path = (PROJECT_ROOT / cover.lstrip("/")).resolve()
+    if UPLOADS_DIR not in path.parents or not path.is_file():
+        abort(404)
+
+    key = (str(path), variant, int(path.stat().st_mtime))
+    data = _image_cache.get(key)
+    if data is None:
+        try:
+            with Image.open(path) as img:
+                img = ImageOps.exif_transpose(img).convert("RGB")
+                img = ImageOps.fit(img, size, Image.LANCZOS, centering=(0.5, 0.4))
+            import io
+            buf = io.BytesIO()
+            img.save(buf, format="JPEG", quality=82, optimize=True)
+            data = buf.getvalue()
+        except Exception as exc:
+            print("newsletter: could not crop cover:", exc)
+            abort(404)
+        if len(_image_cache) > 40:
+            _image_cache.clear()
+        _image_cache[key] = data
+    return Response(data, mimetype="image/jpeg", headers={"Cache-Control": "public, max-age=86400"})

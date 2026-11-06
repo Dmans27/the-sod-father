@@ -28,13 +28,14 @@ import json
 import os
 import re
 import time
+from datetime import datetime
 from urllib.parse import quote
 
 import requests
 from flask import current_app, render_template, request
 
 import db
-from content import get_article, get_articles
+from content import CATEGORIES, get_article, get_articles
 
 RESEND_URL = "https://api.resend.com/emails"
 DEFAULT_FROM = "/Column <onboarding@resend.dev>"
@@ -159,28 +160,64 @@ def _paragraphs(text):
     return [" ".join(p.split()) for p in re.split(r"\n\s*\n", text or "") if p.strip()]
 
 
+def _cover_url(article, slug, variant):
+    """Our own evenly-cropped copy of an uploaded cover; anything else (an
+    external image link) is used as it is."""
+    cover = article.get("cover_image") or ""
+    if cover.startswith("/static/uploads/"):
+        return f"{site_url()}/newsletter/img/{slug}/{variant}.jpg"
+    return absolute(cover)
+
+
 def _stories(issue):
     out = []
     for slug in issue["slugs"]:
         a = get_article(slug)
         if not a:
             continue  # unpublished or deleted since the issue was saved
+        first = not out
         out.append({
             "title": a["title"],
             "dek": a.get("dek") or "",
             "pill": a.get("pill") or "",
             "author": a.get("author") or "",
+            "minutes": a.get("read_minutes") or 0,
             "url": f"{site_url()}/article/{a['slug']}",
-            "cover": absolute(a.get("cover_image")),
+            "cover": _cover_url(a, slug, "lead" if first else "thumb"),
         })
     return out
+
+
+def _issue_number_and_date(issue):
+    """'Issue No. 3' is the issue's place in the order they were started; the
+    date is the day it was sent (or today, for a draft)."""
+    number = 1
+    try:
+        row = db.query_one(
+            "SELECT COUNT(*) AS n FROM newsletter_issues WHERE created_at < :c",
+            c=issue.get("created_at") or db.now_iso())
+        number = (row or {}).get("n", 0) + 1
+    except Exception:
+        pass
+    when = datetime.now()
+    sent_at = issue.get("sent_at")
+    if sent_at:
+        try:
+            when = datetime.strptime(sent_at, "%Y-%m-%dT%H:%M:%SZ")
+        except ValueError:
+            pass
+    return number, f"{when.strftime('%A, %B')} {when.day}, {when.year}"
 
 
 def render_issue(issue, email=None, name=""):
     """Returns (html, text) for one recipient (or a generic copy for preview)."""
     unsub = unsubscribe_url(email) if email else f"{site_url()}/newsletter/unsubscribe"
+    number, date_text = _issue_number_and_date(issue)
     ctx = {
         "issue": issue,
+        "number": number,
+        "date_text": date_text,
+        "tagline": " \u00b7 ".join(c["label"] for c in CATEGORIES.values()),
         "intro": _paragraphs(issue["intro"]),
         "outro": _paragraphs(issue["outro"]),
         "stories": _stories(issue),
@@ -191,7 +228,7 @@ def render_issue(issue, email=None, name=""):
     }
     html = render_template("email/newsletter.html", **ctx)
 
-    lines = []
+    lines = [f"/COLUMN  -  Issue No. {number}  -  {date_text}", ""]
     if ctx["greeting"]:
         lines += [ctx["greeting"], ""]
     for p in ctx["intro"]:
