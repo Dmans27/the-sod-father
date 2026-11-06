@@ -12,7 +12,7 @@
        of fallback-font text on a slow connection. -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;0,800;1,400;1,600;1,700&family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
   <script>
     // Apply the saved dark-mode choice before the page paints, so a dark
     // reader never sees a white flash on load (the menu toggle sets this).
@@ -52,11 +52,6 @@
 
   <header class="site-header">
     <div class="site-header__inner">
-      <button type="button" class="site-menu-toggle" id="site-menu-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="site-menu-overlay">
-        <span class="site-menu-toggle__bar"></span>
-        <span class="site-menu-toggle__bar"></span>
-        <span class="site-menu-toggle__bar"></span>
-      </button>
       <a href="/" class="site-brand">
         <span class="site-brand__text"><span class="site-brand__slashes">\\</span>Mansfield</span>
       </a>
@@ -97,13 +92,18 @@
             <a role="menuitem" class="user-menu__link user-menu__link--primary" href="/account/login{{ nxt }}">Sign in</a>
             <a role="menuitem" class="user-menu__link" href="/account/signup{{ nxt }}">Create account</a>
           {% endif %}
+          <button type="button" role="menuitemcheckbox" class="user-menu__theme" id="site-theme-toggle" data-site-theme aria-checked="false">
+            <span class="user-menu__theme-label">
+              <svg class="user-menu__theme-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"/></svg>
+              Dark mode
+            </span>
+            <span class="site-switch" aria-hidden="true"><span class="site-switch__knob"></span></span>
+          </button>
         </div>
       </div>
     </div>
-    <!-- Same categories as the hamburger drawer below (which stays for
-         now), as a horizontally scrolling row of chips right under the
-         brand bar -- lives inside the sticky header so it stays put while
-         the page scrolls. -->
+    <!-- Categories as a horizontally scrolling row of chips right under the
+         brand bar, inside the header. -->
     <nav class="category-bar" aria-label="Browse categories">
       <div class="category-bar__scroll" id="category-bar-scroll">
         {{ category_items() }}
@@ -130,40 +130,6 @@
     <nav class="category-bar" aria-label="Quick category navigation">
       <div class="category-bar__scroll" id="popbar-scroll">
         {{ category_items() }}
-      </div>
-    </nav>
-  </div>
-
-  <!-- Hamburger drawer: replaces the old inline nav row (it used to wrap
-       onto a second line on narrow screens, and sat right under the
-       status bar in the iOS app). Same tabs, just tucked behind the menu
-       button, same pattern as the other app. -->
-  <div class="site-menu-overlay" id="site-menu-overlay" aria-hidden="true">
-    <div class="site-menu-overlay__scrim" data-menu-close></div>
-    <nav class="site-menu" aria-label="Categories">
-      <div class="site-menu__header">
-        <span class="site-menu__title">Browse</span>
-        <button type="button" class="site-menu__close" data-menu-close aria-label="Close menu">&times;</button>
-      </div>
-      <a href="/" class="site-menu__link {% if not active_category %}is-active{% endif %}">All</a>
-      {% for key, cat in categories.items() %}
-        <a href="/category/{{ key }}" class="site-menu__link {% if active_category == key %}is-active{% endif %}">{{ cat.emoji }} {{ cat.label }}</a>
-      {% endfor %}
-      <button type="button" class="site-menu__theme" id="site-theme-toggle" data-site-theme role="switch" aria-checked="false">
-        <span class="site-menu__theme-label">
-          <svg class="site-menu__theme-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"/></svg>
-          Dark mode
-        </span>
-        <span class="site-switch" aria-hidden="true"><span class="site-switch__knob"></span></span>
-      </button>
-      <div class="site-menu__account">
-        {% if reader %}
-          <p class="site-menu__who">Signed in as {{ reader.display_name }}</p>
-          <a href="/account" class="site-menu__link">Saved stories</a>
-        {% else %}
-          <a href="/account/login" class="site-menu__link">Sign in</a>
-          <a href="/account/signup" class="site-menu__link">Create account</a>
-        {% endif %}
       </div>
     </nav>
   </div>
@@ -845,37 +811,5 @@
     })();
   </script>
 
-  <script>
-    // Hamburger menu drawer, present on every page (it's in base.html, not
-    // index.html) since the header is shared site-wide.
-    (function () {
-      var toggle = document.getElementById('site-menu-toggle');
-      var overlay = document.getElementById('site-menu-overlay');
-      if (!toggle || !overlay) return;
-
-      function openMenu() {
-        overlay.classList.add('is-open');
-        overlay.setAttribute('aria-hidden', 'false');
-        toggle.setAttribute('aria-expanded', 'true');
-        document.body.classList.add('site-menu-open');
-      }
-      function closeMenu() {
-        overlay.classList.remove('is-open');
-        overlay.setAttribute('aria-hidden', 'true');
-        toggle.setAttribute('aria-expanded', 'false');
-        document.body.classList.remove('site-menu-open');
-      }
-
-      toggle.addEventListener('click', function () {
-        if (overlay.classList.contains('is-open')) closeMenu(); else openMenu();
-      });
-      Array.prototype.forEach.call(overlay.querySelectorAll('[data-menu-close]'), function (el) {
-        el.addEventListener('click', closeMenu);
-      });
-      document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && overlay.classList.contains('is-open')) closeMenu();
-      });
-    })();
-  </script>
 </body>
 </html>
