@@ -4,15 +4,31 @@
 
 {# Link previews: when someone shares this page by email or text, these
    tags are what the preview card (title, blurb, picture) is built from. #}
-{% block head %}
+{% block seo %}
+  {% set url = site_base() ~ '/article/' ~ article.slug %}
+  <meta name="description" content="{{ article.dek }}">
+  <link rel="canonical" href="{{ url }}">
   <meta property="og:type" content="article">
   <meta property="og:site_name" content="\\Mansfield">
   <meta property="og:title" content="{{ article.title }}">
   <meta property="og:description" content="{{ article.dek }}">
-  <meta property="og:url" content="{{ request.url_root.rstrip('/') }}/article/{{ article.slug }}">
-  {% if article.cover_image %}<meta property="og:image" content="{{ (request.url_root.rstrip('/') ~ article.cover_image) if article.cover_image.startswith('/') else article.cover_image }}">{% endif %}
-  <meta name="twitter:card" content="{{ 'summary_large_image' if article.cover_image else 'summary' }}">
-  <meta name="description" content="{{ article.dek }}">
+  <meta property="og:url" content="{{ url }}">
+  <meta property="og:image" content="{{ share_image(article) }}">
+  {% if article.published_at %}<meta property="article:published_time" content="{{ article.published_at }}">{% endif %}
+  {% if article.author %}<meta property="article:author" content="{{ article.author }}">{% endif %}
+  <meta name="twitter:card" content="summary_large_image">
+  {# Structured data: lets Google show the story as an article (date, author). #}
+  <script type="application/ld+json">{{ {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": article.title,
+    "description": article.dek,
+    "image": [share_image(article)],
+    "datePublished": article.published_at,
+    "author": {"@type": "Person", "name": article.author},
+    "publisher": {"@type": "Organization", "name": "\\\\Mansfield"},
+    "mainEntityOfPage": url
+  }|tojson }}</script>
 {% endblock %}
 
 {% block body_class %}article-page{% endblock %}
@@ -48,6 +64,9 @@
       </button>
       <button type="button" class="story-action story-action--share" data-action="share" aria-label="Share story">
         <svg class="story-action__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-share"></use></svg><span class="story-action__label">Share</span>
+      </button>
+      <button type="button" class="story-action story-action--comment" data-action="comment" aria-label="Comments">
+        <svg class="story-action__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-comment"></use></svg><span class="story-action__label">Comments</span>
       </button>
     </div>
   </div>
@@ -176,8 +195,6 @@
         {% if article.author_position %}<span class="article__author-card-masthead-position">{{ article.author_position }}</span>{% endif %}
       </div>
     </div>
-
-    <div id="article-comments" data-slug="{{ article.slug }}"></div>
 
     {#
       "Back to all articles" is switched off for now (Danny: "I do not

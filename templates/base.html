@@ -215,7 +215,7 @@
     // Who's signed in (from the server session) -- read by static/js/actions.js.
     window.READER = {{ reader_state|tojson }};
   </script>
-  <script src="/static/js/actions.js?v=3"></script>
+  <script src="/static/js/actions.js?v=4"></script>
   <script src="/static/js/newsletter.js?v=1" defer></script>
   <script src="/static/js/ask.js?v=2" defer></script>
 
@@ -421,9 +421,7 @@
             '<div class="article__content" id="article-sheet-content">' + blocksHtml(short.blocks) + '</div>' +
             (short.truncated ? '<button type="button" class="article-sheet__readmore" id="article-sheet-readmore">Read more</button>' : '') +
             authorCardHtml +
-            '<div id="sheet-comments"></div>' +
           '</div>';
-        window.SodFather.mountComments(document.getElementById('sheet-comments'), article.slug);
         window.SodFather.applyReadingTheme();
 
         if (short.truncated) {
@@ -591,11 +589,6 @@
           } else {
             history.pushState({ articleSheet: slug }, '', '/article/' + slug);
           }
-        }
-        // Tapping "Comment" on a card opens the sheet and jumps to the
-        // comments (once the sheet's pop-in animation has started).
-        if (opts && opts.scrollTo === 'comments') {
-          setTimeout(window.SodFather.scrollToComments, 250);
         }
       }
       window.__openArticleSheet = openSheet;

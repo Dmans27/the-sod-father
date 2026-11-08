@@ -68,6 +68,7 @@
       b.classList.toggle('is-active', textStep > 0);
     });
     if (menu) menu.classList.toggle('is-dark', readingDark);
+    if (csheet) csheet.classList.toggle('is-dark', readingDark);
     var sw = document.getElementById('site-theme-toggle');
     if (sw) {
       sw.setAttribute('aria-checked', readingDark ? 'true' : 'false');
@@ -96,6 +97,8 @@
     return '<div class="author-pop__tools">' + textButtonHtml() + themeButtonHtml() +
       '<button type="button" class="story-action story-action--share" data-action="share" aria-label="Share story">' +
         icon('share') + '<span class="story-action__label">Share</span></button>' +
+      '<button type="button" class="story-action story-action--comment" data-action="comment" aria-label="Comments">' +
+        icon('comment') + '<span class="story-action__label">Comments</span></button>' +
     '</div>';
   }
 
@@ -106,10 +109,10 @@
     return '<div class="story-actions' + (compact ? ' story-actions--compact' : '') + '" data-slug="' + esc(slug) + '" data-title="' + esc(title) + '">' +
       '<button type="button" class="story-action story-action--save' + (saved ? ' is-saved' : '') + '" data-action="save" aria-pressed="' + saved + '" aria-label="' + (saved ? 'Unsave story' : 'Save story') + '">' +
         icon('save') + '<span class="story-action__label">' + (saved ? 'Saved' : 'Save') + '</span></button>' +
-      '<button type="button" class="story-action" data-action="comment" aria-label="Comments">' +
-        icon('comment') + '<span class="story-action__label">Comment</span><span class="story-action__count">' + (n || '') + '</span></button>' +
       '<button type="button" class="story-action" data-action="share" aria-label="Share story">' +
         icon('share') + '<span class="story-action__label">Share</span></button>' +
+      '<button type="button" class="story-action" data-action="comment" aria-label="Comments">' +
+        icon('comment') + '<span class="story-action__label">Comment</span><span class="story-action__count">' + (n || '') + '</span></button>' +
       (withTheme && !compact ? '<span class="story-actions__tools">' + textButtonHtml() + themeButtonHtml() + '</span>' : '') +
     '</div>';
   }
@@ -141,7 +144,7 @@
       var c = row.querySelector('.story-action__count');
       if (c) c.textContent = COUNTS[slug] || '';
     });
-    var head = document.querySelector('.comments[data-slug="' + slug + '"] .comments__count');
+    var head = document.querySelector('#csheet[data-slug="' + slug + '"] .comments__count');
     if (head) head.textContent = COUNTS[slug] ? '(' + COUNTS[slug] + ')' : '';
   }
 
@@ -313,34 +316,148 @@
     return li;
   }
 
-  function mountComments(container, slug) {
-    if (!container) return;
-    container.innerHTML =
-      '<section class="comments" id="comments" data-slug="' + esc(slug) + '">' +
-        '<h2 class="comments__title">Comments <span class="comments__count"></span></h2>' +
-        '<ul class="comments__list" data-empty="true"></ul>' +
-        '<p class="comments__loading">Loading&hellip;</p>' +
-        '<div class="comments__compose"></div>' +
+  // The comments live in one half-page panel that slides up from the bottom
+  // (built the first time it's needed). The Comment button on a story card,
+  // in the article header or in the bottom name tag all open this same panel.
+  var csheet = null, cLastFocus = null, cSlug = null;
+
+  function buildCsheet() {
+    csheet = document.createElement('div');
+    csheet.className = 'csheet';
+    csheet.id = 'csheet';
+    csheet.setAttribute('aria-hidden', 'true');
+    csheet.setAttribute('inert', '');
+    csheet.innerHTML =
+      '<div class="csheet__scrim" data-csheet-close></div>' +
+      '<section class="csheet__panel" role="dialog" aria-modal="true" aria-labelledby="csheet-title" tabindex="-1">' +
+        '<header class="csheet__head">' +
+          '<span class="csheet__grab" aria-hidden="true"></span>' +
+          '<div class="csheet__headtext">' +
+            '<h2 class="csheet__title" id="csheet-title">Comments <span class="comments__count"></span></h2>' +
+            '<p class="csheet__story"></p>' +
+          '</div>' +
+          '<button type="button" class="csheet__close" data-csheet-close aria-label="Close comments">&times;</button>' +
+        '</header>' +
+        '<div class="csheet__scroll">' +
+          '<ul class="comments__list" data-empty="true"></ul>' +
+          '<p class="comments__loading" hidden>Loading&hellip;</p>' +
+        '</div>' +
+        '<div class="csheet__compose comments__compose"></div>' +
       '</section>';
-    var root = container.querySelector('.comments');
-    var list = root.querySelector('.comments__list');
-    var loading = root.querySelector('.comments__loading');
-    var compose = root.querySelector('.comments__compose');
+    document.body.appendChild(csheet);
+
+    csheet.addEventListener('click', function (e) {
+      if (e.target.closest('[data-csheet-close]')) closeComments();
+    });
+    // Escape closes the comments first, without also closing a story
+    // sheet that may be open underneath.
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && csheet.classList.contains('is-open')) {
+        e.stopImmediatePropagation();
+        closeComments();
+      }
+    }, true);
+
+    // Swipe down on the header to dismiss (phones).
+    var panel = csheet.querySelector('.csheet__panel');
+    var head = csheet.querySelector('.csheet__head');
+    var startY = null, dy = 0;
+    head.addEventListener('touchstart', function (e) {
+      if (e.target.closest('button')) return;
+      startY = e.touches[0].clientY; dy = 0; panel.style.transition = 'none';
+    }, { passive: true });
+    head.addEventListener('touchmove', function (e) {
+      if (startY === null) return;
+      dy = Math.max(0, e.touches[0].clientY - startY);
+      panel.style.transform = 'translateY(' + dy + 'px)';
+    }, { passive: true });
+    function endDrag() {
+      if (startY === null) return;
+      startY = null; panel.style.transition = '';
+      var far = dy > 80; dy = 0;
+      panel.style.transform = '';
+      if (far) closeComments();
+    }
+    head.addEventListener('touchend', endDrag);
+    head.addEventListener('touchcancel', endDrag);
+
+    // When the on-screen keyboard opens, lift the panel above it.
+    if (window.visualViewport) {
+      var sync = function () {
+        var vv = window.visualViewport;
+        var kb = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
+        csheet.style.setProperty('--kb', kb + 'px');
+      };
+      window.visualViewport.addEventListener('resize', sync);
+      window.visualViewport.addEventListener('scroll', sync);
+    }
+  }
+
+  function openComments(slug, title) {
+    if (!csheet) buildCsheet();
+    if (csheet.classList.contains('is-open') && cSlug === slug) return;
+    cLastFocus = document.activeElement;
+    cSlug = slug;
+    csheet.setAttribute('data-slug', slug);
+    csheet.querySelector('.csheet__story').textContent = title || '';
+    csheet.removeAttribute('inert');
+    csheet.setAttribute('aria-hidden', 'false');
+    csheet.classList.toggle('is-dark', readingDark);
+    paintCount(slug, COUNTS[slug] || 0);
+    renderComments(slug);
+    // One frame later so the closed state is painted and the slide-up animates.
+    requestAnimationFrame(function () { csheet.classList.add('is-open'); });
+    setTimeout(function () {
+      var panel = csheet.querySelector('.csheet__panel');
+      if (csheet.classList.contains('is-open') && panel) { try { panel.focus({ preventScroll: true }); } catch (e) {} }
+    }, 380);
+  }
+
+  function closeComments() {
+    if (!csheet || !csheet.classList.contains('is-open')) return;
+    csheet.classList.remove('is-open');
+    csheet.setAttribute('aria-hidden', 'true');
+    csheet.setAttribute('inert', '');
+    cSlug = null;
+    if (document.activeElement && csheet.contains(document.activeElement)) document.activeElement.blur();
+    if (cLastFocus && cLastFocus.focus) { try { cLastFocus.focus({ preventScroll: true }); } catch (e) {} }
+  }
+
+  function renderComments(slug) {
+    var list = csheet.querySelector('.comments__list');
+    var loading = csheet.querySelector('.comments__loading');
+    var scroller = csheet.querySelector('.csheet__scroll');
+    var compose = csheet.querySelector('.csheet__compose');
+    list.innerHTML = '';
+    list.setAttribute('data-empty', 'false'); // no "be the first" line until we know
+    loading.hidden = false;
+    loading.textContent = 'Loading…';
+    scroller.scrollTop = 0;
 
     if (READER.signedIn) {
       compose.innerHTML =
-        '<form class="comments__form">' +
-          '<label class="comments__as">Commenting as <strong></strong></label>' +
-          '<textarea name="body" rows="3" maxlength="1000" placeholder="Add to the conversation&hellip;" required></textarea>' +
-          '<div class="comments__row"><span class="comments__error" role="alert"></span>' +
-          '<button type="submit" class="account-btn account-btn--small">Post comment</button></div>' +
+        '<form class="comments__form csheet__form">' +
+          '<div class="csheet__field">' +
+            '<textarea name="body" rows="1" maxlength="1000" placeholder="Add to the conversation&hellip;" aria-label="Your comment" required></textarea>' +
+            '<button type="submit" class="csheet__send" aria-label="Post comment">' +
+              '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h13"/><path d="M13 6l6 6-6 6"/></svg></button>' +
+          '</div>' +
+          '<div class="comments__row"><span class="comments__as">Commenting as <strong></strong></span>' +
+          '<span class="comments__error" role="alert"></span></div>' +
         '</form>';
       compose.querySelector('strong').textContent = READER.name;
       var form = compose.querySelector('form');
       var err = compose.querySelector('.comments__error');
+      var ta = form.elements.body;
+      ta.addEventListener('input', function () {
+        ta.style.height = 'auto';
+        ta.style.height = Math.min(ta.scrollHeight, 110) + 'px';
+      });
+      ta.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) { e.preventDefault(); form.requestSubmit(); }
+      });
       form.addEventListener('submit', function (e) {
         e.preventDefault();
-        var ta = form.elements.body;
         var text = ta.value.trim();
         if (!text) return;
         err.textContent = '';
@@ -348,11 +465,14 @@
         btn.disabled = true;
         api('POST', '/api/comments/' + encodeURIComponent(slug), { body: text }).then(function (res) {
           btn.disabled = false;
+          if (cSlug !== slug) return;
           if (res.ok) {
-            list.appendChild(commentEl(res.data.comment, slug, list));
-            list.removeAttribute('data-empty');
-            ta.value = '';
+            var li = commentEl(res.data.comment, slug, list);
+            list.appendChild(li);
+            list.setAttribute('data-empty', 'false');
+            ta.value = ''; ta.style.height = '';
             paintCount(slug, (COUNTS[slug] || 0) + 1);
+            scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
           } else if (res.status === 401) {
             location.href = loginUrl({ hash: '#comments' });
           } else if (res.data && res.data.error === 'slow_down') {
@@ -366,18 +486,19 @@
       });
     } else {
       compose.innerHTML =
-        '<div class="comments__signin"><p>Join the conversation.</p>' +
-        '<a class="account-btn account-btn--small" href="' + esc(loginUrl({ hash: '#comments' })) + '">Sign in to comment</a>' +
+        '<div class="comments__signin"><span>Join the conversation.</span>' +
+        '<a class="account-btn account-btn--small" href="' + esc(loginUrl({ hash: '#comments' })) + '">Sign in</a>' +
         '<a class="comments__alt" href="' + esc(loginUrl({ hash: '#comments' }).replace('/account/login', '/account/signup')) + '">Create an account</a></div>';
     }
 
     api('GET', '/api/comments/' + encodeURIComponent(slug)).then(function (res) {
-      loading.parentNode && loading.parentNode.removeChild(loading);
-      if (!res.ok) return;
+      if (cSlug !== slug) return; // closed, or switched to another story
+      loading.hidden = true;
+      if (!res.ok) { loading.hidden = false; loading.textContent = 'Couldn’t load comments.'; return; }
       res.data.comments.forEach(function (c) { list.appendChild(commentEl(c, slug, list)); });
-      if (res.data.comments.length) list.removeAttribute('data-empty');
+      list.setAttribute('data-empty', res.data.comments.length ? 'false' : 'true');
       paintCount(slug, res.data.comments.length);
-    }).catch(function () { loading.textContent = 'Couldn’t load comments.'; });
+    }).catch(function () { if (cSlug === slug) { loading.hidden = false; loading.textContent = 'Couldn’t load comments.'; } });
   }
 
   // ── Button clicks ────────────────────────────────────────────────────
@@ -398,26 +519,8 @@
     if (action === 'theme') { setDark(!readingDark); return; }
     if (action === 'save') toggleSave(slug);
     else if (action === 'share') openShare(slug, title);
-    else if (action === 'comment') {
-      var inSheet = !!btn.closest('.article-sheet');
-      var onArticlePage = !!document.getElementById('comments') && !document.getElementById('card-grid');
-      if (inSheet || onArticlePage) scrollToComments();
-      else if (window.__openArticleSheet) window.__openArticleSheet(slug, { scrollTo: 'comments' });
-      else location.href = '/article/' + slug + '#comments';
-    }
+    else if (action === 'comment') openComments(slug, title);
   }, true);
-
-  function scrollToComments() {
-    var target = document.getElementById('comments');
-    if (!target) return;
-    var scroller = target.closest('.article-sheet__scroll');
-    if (scroller) {
-      var delta = target.getBoundingClientRect().top - scroller.getBoundingClientRect().top - 12;
-      scroller.scrollTo({ top: scroller.scrollTop + delta, behavior: 'smooth' });
-    } else {
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }
 
   // Before / after slider: the range input is invisible but covers the
   // image, so dragging anywhere (mouse or finger) moves the divider. This
@@ -443,16 +546,15 @@
     actionsHtml: actionsHtml,
     popToolsHtml: popToolsHtml,
     applyReadingTheme: applyReadingTheme,
-    mountComments: mountComments,
-    scrollToComments: scrollToComments
+    openComments: openComments,
+    closeComments: closeComments
   };
 
-  // Static article page: mount the comments section (and honor #comments).
+  // Static article page: honor #comments (e.g. coming back from sign-in).
   document.addEventListener('DOMContentLoaded', function () {
     applyReadingTheme();
-    var host = document.getElementById('article-comments');
-    if (!host) return;
-    mountComments(host, host.getAttribute('data-slug'));
-    if (location.hash === '#comments') setTimeout(scrollToComments, 350);
+    if (location.hash !== '#comments') return;
+    var row = document.querySelector('body.article-page .story-actions[data-slug]');
+    if (row) setTimeout(function () { openComments(row.getAttribute('data-slug'), row.getAttribute('data-title')); }, 350);
   });
 })();

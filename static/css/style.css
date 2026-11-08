@@ -2060,3 +2060,77 @@ html.ask-open { overflow: hidden; }
 .is-dark .ask__send { background: #2f5a43; }
 .is-dark .ask__note.is-error { color: #ffb4ab; }
 .is-dark .header-ask { color: rgba(228, 233, 229, 0.8); border-color: rgba(255, 255, 255, 0.2); }
+
+/* ── Comments: half-page panel that slides up from the bottom ──
+   Opened by any Comment button (see static/js/actions.js, which builds the
+   markup). Half the screen tall, so the story stays visible above it; the
+   list scrolls on its own and the box to write a comment stays pinned at the
+   bottom. --kb is set by the script when the phone keyboard is open. */
+.csheet {
+  position: fixed; inset: 0; z-index: 320;
+  visibility: hidden; pointer-events: none;
+  transition: visibility 0s linear 0.4s;
+}
+.csheet.is-open { visibility: visible; pointer-events: auto; transition-delay: 0s; }
+.csheet__scrim { position: absolute; inset: 0; background: rgba(0, 0, 0, 0); transition: background 0.35s ease; }
+.csheet.is-open .csheet__scrim { background: rgba(0, 0, 0, 0.32); }
+.csheet__panel {
+  position: absolute; left: 0; right: 0; bottom: var(--kb, 0px);
+  max-width: 720px; margin: 0 auto;
+  height: 50vh; height: 50dvh; min-height: 340px; max-height: calc(100dvh - 24px - var(--kb, 0px));
+  display: flex; flex-direction: column;
+  background: #fff; color: var(--ink);
+  border-radius: 18px 18px 0 0; box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.22);
+  transform: translateY(100%);
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+  outline: none;
+}
+.csheet.is-open .csheet__panel { transform: translateY(0); }
+.csheet__head {
+  position: relative; flex: none;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 20px 14px 10px 18px; border-bottom: 1px solid var(--line);
+}
+.csheet__grab { position: absolute; top: 7px; left: 50%; width: 38px; height: 4px; margin-left: -19px; border-radius: 2px; background: rgba(27, 42, 31, 0.2); }
+.csheet__headtext { min-width: 0; flex: 1; }
+.csheet__title { margin: 0; font-family: var(--font-serif); font-size: 20px; font-weight: 700; line-height: 1.2; color: var(--fairway-deep); }
+.csheet__story { margin: 2px 0 0; font-size: 12.5px; color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.csheet__story:empty { display: none; }
+.csheet__close {
+  flex: none; width: 36px; height: 36px; border: none; border-radius: 50%;
+  background: rgba(27, 42, 31, 0.08); color: var(--ink); font-size: 24px; line-height: 1; cursor: pointer;
+}
+.csheet__close:hover { background: rgba(27, 42, 31, 0.14); }
+.csheet__scroll { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: 4px 18px 8px; }
+.csheet .comments__list[data-empty="true"]::before { padding: 14px 0 10px; }
+.csheet .comments__loading { margin: 14px 0; }
+.csheet .comment:last-child { border-bottom: none; }
+.csheet__compose.comments__compose { flex: none; margin: 0; padding: 10px 16px 12px; border-top: 1px solid var(--line); }
+.csheet__field { display: flex; align-items: flex-end; gap: 8px; }
+.csheet__form textarea {
+  flex: 1; width: auto; min-width: 0; min-height: 44px; max-height: 110px; box-sizing: border-box;
+  padding: 11px 16px; border-radius: 22px; resize: none; overflow-y: auto;
+}
+.csheet__send {
+  flex: none; width: 44px; height: 44px; border: none; border-radius: 50%; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #1b4332; color: #fff; cursor: pointer;
+}
+.csheet__send svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.csheet__send:disabled { opacity: 0.5; cursor: default; }
+.csheet__form .comments__row { margin-top: 6px; min-height: 1.3em; }
+.csheet__form .comments__as { display: block; margin: 0; font-size: 12.5px; color: var(--ink-faint); }
+.csheet .comments__signin { align-items: center; gap: 8px 14px; }
+.csheet .comments__signin span { color: var(--ink-soft); font-size: 15px; margin-right: auto; }
+
+.is-dark .csheet__panel { background: #1c231f; box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.6); }
+.is-dark .csheet__scrim { background-color: rgba(0, 0, 0, 0); }
+.is-dark .csheet.is-open .csheet__scrim { background: rgba(0, 0, 0, 0.5); }
+.is-dark .csheet__grab { background: rgba(255, 255, 255, 0.25); }
+.is-dark .csheet__close { background: rgba(255, 255, 255, 0.12); }
+.is-dark .csheet__close:hover { background: rgba(255, 255, 255, 0.22); }
+.is-dark .csheet__send { background: #2f5a43; }
+@media (prefers-reduced-motion: reduce) {
+  .csheet__panel, .csheet__scrim { transition-duration: 0.01s; }
+}
