@@ -1935,11 +1935,18 @@ html.nl-open { overflow: hidden; }
 .ask__slashes { color: var(--gold); }
 .ask__title-light { font-family: var(--font-mono); font-size: 12px; font-weight: 500; letter-spacing: 1.5px; text-transform: uppercase; color: var(--fairway); margin-left: 6px; vertical-align: middle; }
 .ask__sub { margin: 4px 0 0; font-size: 13px; color: var(--ink-faint); }
-.ask__close {
+.ask__tools { display: flex; align-items: center; gap: 8px; flex: none; }
+.ask__close, .ask__expand {
   flex: none; width: 38px; height: 38px; border: none; border-radius: 50%;
   background: rgba(27, 42, 31, 0.08); color: var(--ink); font-size: 24px; line-height: 1; cursor: pointer;
 }
-.ask__close:hover { background: rgba(27, 42, 31, 0.14); }
+/* Full-page toggle: only offered where the chat is a floating panel. */
+.ask__expand { display: none; align-items: center; justify-content: center; padding: 0; }
+.ask__expand svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.ask__expand-in { display: none; }
+.ask.is-wide .ask__expand-out { display: none; }
+.ask.is-wide .ask__expand-in { display: block; }
+.ask__close:hover, .ask__expand:hover { background: rgba(27, 42, 31, 0.14); }
 
 .ask__log { flex: 1; min-height: 0; overflow-y: auto; padding: 18px 16px 8px; display: flex; flex-direction: column; gap: 14px; -webkit-overflow-scrolling: touch; }
 .ask__msg { display: flex; flex-direction: column; max-width: 92%; gap: 8px; }
@@ -2004,6 +2011,26 @@ html.ask-open { overflow: hidden; }
   }
   .ask.is-open .ask__sheet { transform: none; opacity: 1; }
   .ask__head { padding-top: 18px; }
+  .ask__expand { display: inline-flex; }
+  .ask__sheet { transition: transform 0.45s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.3s ease,
+                right 0.35s ease, bottom 0.35s ease, width 0.35s ease, height 0.35s ease, border-radius 0.35s ease; }
+
+  /* Full page: the panel grows to fill the window. The conversation itself
+     stays in a centred column so lines don't stretch across a wide screen. */
+  .ask.is-wide .ask__sheet {
+    right: 0; bottom: 0; width: 100vw; height: 100vh; height: 100dvh;
+    border-radius: 0; box-shadow: none;
+  }
+  .ask.is-wide .ask__head,
+  .ask.is-wide .ask__log,
+  .ask.is-wide .ask__form,
+  .ask.is-wide .ask__note {
+    padding-left: max(18px, calc((100% - 860px) / 2));
+    padding-right: max(18px, calc((100% - 860px) / 2));
+  }
+  .ask.is-wide .ask__title { font-size: 28px; }
+  .ask.is-wide .ask__msg { max-width: 82%; }
+  .ask.is-wide .ask__bubble { font-size: 16.5px; }
 }
 @media (prefers-reduced-motion: reduce) {
   .ask__sheet, .ask__backdrop { transition-duration: 0.01s; }
@@ -2022,8 +2049,8 @@ html.ask-open { overflow: hidden; }
 .bottom-nav__item--ask { color: var(--fairway-deep); }
 
 .is-dark .ask__sheet { background: #1c231f; }
-.is-dark .ask__close { background: rgba(255, 255, 255, 0.12); }
-.is-dark .ask__close:hover { background: rgba(255, 255, 255, 0.22); }
+.is-dark .ask__close, .is-dark .ask__expand { background: rgba(255, 255, 255, 0.12); }
+.is-dark .ask__close:hover, .is-dark .ask__expand:hover { background: rgba(255, 255, 255, 0.22); }
 .is-dark .ask__msg--bot .ask__bubble { background: #2c352f; }
 .is-dark .ask__msg--user .ask__bubble { background: #2f5a43; }
 .is-dark .ask__msg--error .ask__bubble { background: rgba(255, 120, 135, 0.14); color: #ffb0b9; }

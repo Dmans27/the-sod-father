@@ -9,7 +9,14 @@
         <h2 class="ask__title" id="ask-title"><span class="ask__slashes">\\</span>Mansfield <span class="ask__title-light">Ask</span></h2>
         <p class="ask__sub" id="ask-sub">Answers come from the articles on this site.</p>
       </div>
-      <button type="button" class="ask__close" data-ask-close aria-label="Close">&times;</button>
+      <div class="ask__tools">
+        {# Larger screens only: ↖↘ makes the chat full page, ↘↖ brings it back. #}
+        <button type="button" class="ask__expand" id="ask-expand" data-ask-wide aria-pressed="false" aria-label="Full page" title="Full page">
+          <svg class="ask__expand-out" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H4v6"/><path d="M14 20h6v-6"/></svg>
+          <svg class="ask__expand-in" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 10h6V4"/><path d="M20 14h-6v6"/></svg>
+        </button>
+        <button type="button" class="ask__close" data-ask-close aria-label="Close">&times;</button>
+      </div>
     </header>
 
     <div class="ask__log" id="ask-log" role="log" aria-live="polite">

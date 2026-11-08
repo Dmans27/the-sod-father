@@ -156,6 +156,20 @@
   }
 
   // ── Opening and closing ────────────────────────────────────────────────
+  // Full-page mode (larger screens only; the button is hidden on phones).
+  var expandBtn = document.getElementById('ask-expand');
+  function setWide(on, remember) {
+    root.classList.toggle('is-wide', on);
+    if (expandBtn) {
+      expandBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+      var label = on ? 'Back to small window' : 'Full page';
+      expandBtn.setAttribute('aria-label', label);
+      expandBtn.setAttribute('title', label);
+    }
+    if (remember) { try { localStorage.setItem('sf-ask-wide', on ? '1' : '0'); } catch (e) {} }
+  }
+  try { if (localStorage.getItem('sf-ask-wide') === '1') setWide(true, false); } catch (e) {}
+
   function open() {
     if (root.classList.contains('is-open')) return;
     lastFocus = document.activeElement;
@@ -184,6 +198,7 @@
 
   document.addEventListener('click', function (e) {
     if (e.target.closest('[data-ask-open]')) { e.preventDefault(); open(); }
+    else if (e.target.closest('[data-ask-wide]')) { setWide(!root.classList.contains('is-wide'), true); }
     else if (e.target.closest('[data-ask-close]')) { close(); }
   });
   document.addEventListener('keydown', function (e) {

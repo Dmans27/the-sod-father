@@ -19,7 +19,22 @@
     try { if (localStorage.getItem('sf-theme') === 'dark') document.documentElement.classList.add('is-dark'); } catch (e) {}
   </script>
   <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="alternate" type="application/rss+xml" title="\\Mansfield" href="/feed.xml">
+  {# Link previews + search results. Pages override the `seo` block (stories do);
+     everything else gets these site-wide defaults. #}
+  {% block seo %}
+  <meta name="description" content="{{ site_tagline }}">
+  <link rel="canonical" href="{{ site_base() }}{{ request.path }}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="\\Mansfield">
+  <meta property="og:title" content="{{ self.title() }}">
+  <meta property="og:description" content="{{ site_tagline }}">
+  <meta property="og:url" content="{{ site_base() }}{{ request.path }}">
+  <meta property="og:image" content="{{ site_base() }}/og/default.png">
+  <meta name="twitter:card" content="summary_large_image">
+  {% endblock %}
   {% block head %}{% endblock %}
+  {{ analytics_html()|safe }}
 </head>
 <body class="{% block body_class %}{% endblock %}">
   <!-- Icon sprite for the Save / Comment / Share buttons (see
@@ -202,7 +217,7 @@
   </script>
   <script src="/static/js/actions.js?v=3"></script>
   <script src="/static/js/newsletter.js?v=1" defer></script>
-  <script src="/static/js/ask.js?v=1" defer></script>
+  <script src="/static/js/ask.js?v=2" defer></script>
 
   <script>
     // No-op on a regular browser visit -- window.Capacitor only exists when
