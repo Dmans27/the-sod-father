@@ -52,6 +52,16 @@
       "text": "Budget the conversation early and directly, even though it's the least fun part. A trip that quietly assumes everyone's comfortable with the same green fees and lodging tier is the most common way a group trip turns awkward later. Thirty seconds of directness up front saves a lot of passive-aggressive group chat messages afterward."
     },
     {
+      "type": "map",
+      "kind": "profile",
+      "url": "https://ai-app-repo.onrender.com/u/1/map",
+      "embed_url": "https://ai-app-repo.onrender.com/embed/u/1?style=dark",
+      "open_url": "https://ai-app-repo.onrender.com/u/1/map",
+      "style": "dark",
+      "height": "medium",
+      "caption": "Where I went to eat this trip"
+    },
+    {
       "type": "divider"
     },
     {
