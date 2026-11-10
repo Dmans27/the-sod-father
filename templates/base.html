@@ -321,6 +321,21 @@
             '" loading="lazy" allowfullscreen referrerpolicy="strict-origin-when-cross-origin" allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"></iframe></div>' +
             (block.caption ? '<figcaption>' + esc(block.caption) + '</figcaption>' : '') + '</figure>';
         }
+        if (block.type === 'map') {
+          // Same rule as the article page: only an address on an allowed map host.
+          var mapHosts = {{ map_embed_hosts()|tojson }};
+          var mapUrl;
+          try { mapUrl = new URL(block.embed_url || ''); } catch (e) { return ''; }
+          var mapLocal = mapUrl.protocol === 'http:' && (mapUrl.hostname === 'localhost' || mapUrl.hostname === '127.0.0.1');
+          if (!(mapUrl.protocol === 'https:' || mapLocal) || mapHosts.indexOf(mapUrl.host.toLowerCase()) < 0 ||
+              mapUrl.pathname.indexOf('/embed/') !== 0 || mapUrl.username) return '';
+          var mapSize = ['short', 'medium', 'tall'].indexOf(block.height) >= 0 ? block.height : 'medium';
+          return '<figure class="article__map article__map--' + mapSize + '"><div class="article__map-frame"><iframe src="' + esc(block.embed_url) +
+            '" title="' + esc(block.caption || 'Interactive map') + '" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen" ' +
+            'sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe></div>' +
+            '<figcaption>' + (block.caption ? esc(block.caption) + ' &middot; ' : '') + '<a href="' + esc(block.open_url || block.embed_url) +
+            '" target="_blank" rel="noopener noreferrer">Open the full map &nearr;</a></figcaption></figure>';
+        }
         if (block.type === 'link') {
           var external = block.kind === 'web';
           return '<a class="link-card" href="' + esc(block.href) + '"' + (external ? ' target="_blank" rel="noopener noreferrer"' : '') + '>' +

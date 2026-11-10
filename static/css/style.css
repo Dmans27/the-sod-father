@@ -1209,7 +1209,14 @@ body.article-sheet-open { overflow: hidden; }
 .article__video { margin: 22px 0; }
 .article__video-frame { position: relative; aspect-ratio: 16 / 9; border-radius: 14px; overflow: hidden; background: #000; }
 .article__video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
-.article__video figcaption, .compare figcaption { margin-top: 8px; font-size: 13.5px; line-height: 1.45; color: var(--ink-faint); }
+/* Interactive map from the ai-app (a map-only page in an iframe) */
+.article__map { margin: 22px 0; --map-h: 420px; }
+.article__map--short { --map-h: 300px; }
+.article__map--tall { --map-h: 560px; }
+.article__map-frame { position: relative; height: min(var(--map-h), 75vh); border-radius: 14px; overflow: hidden; background: #e9eceb; border: 1px solid rgba(27, 42, 31, 0.12); }
+.article__map-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.article__map figcaption a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.article__video figcaption, .article__map figcaption, .compare figcaption { margin-top: 8px; font-size: 13.5px; line-height: 1.45; color: var(--ink-faint); }
 
 .link-card {
   display: flex;

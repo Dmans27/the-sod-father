@@ -11,7 +11,9 @@ Categories are still a small, fixed, hand-curated set, so they stay as a
 plain dict here rather than becoming their own content type.
 """
 import json
+import os
 from pathlib import Path
+from urllib.parse import urlparse
 
 CONTENT_DIR = Path(__file__).parent / "content" / "articles"
 
@@ -94,10 +96,45 @@ BLOCK_TYPES = {
     "divider": "Divider",
     "gallery": "Gallery",
     "video": "Video (YouTube / Vimeo link)",
+    "map": "Interactive map",
     "link": "Link card",
     "compare": "Before / after slider",
     "embed": "Custom embed / code",
 }
+
+
+# ── Interactive maps from the ai-app ─────────────────────────────────────
+# A "map" block shows one of the maps built in the ai-app (a list, or a
+# whole profile) as a map-only page inside the story. Only addresses on the
+# hosts listed here can ever end up in an iframe -- same idea as the video
+# block only allowing YouTube/Vimeo. Set MAP_EMBED_HOSTS in Render (comma
+# separated, e.g. "ai-app-repo.onrender.com,maps.mansfield.com") if the
+# ai-app's address changes or gets a custom domain.
+DEFAULT_MAP_HOSTS = "ai-app-repo.onrender.com"
+LOCAL_HOSTNAMES = ("localhost", "127.0.0.1")
+
+
+def map_embed_hosts():
+    raw = os.environ.get("MAP_EMBED_HOSTS", "").strip() or DEFAULT_MAP_HOSTS
+    return [h.strip().lower() for h in raw.split(",") if h.strip()]
+
+
+def is_map_embed_url(url):
+    """True only for https://<allowed host>/embed/... (http is accepted
+    only for localhost, so the maps can be tried out on a laptop). Checked
+    both when a story is saved and again whenever it is displayed."""
+    try:
+        parsed = urlparse(url or "")
+    except ValueError:
+        return False
+    netloc = (parsed.netloc or "").lower()
+    if not netloc or "@" in netloc or netloc not in map_embed_hosts():
+        return False
+    if not parsed.path.startswith("/embed/"):
+        return False
+    if parsed.scheme == "https":
+        return True
+    return parsed.scheme == "http" and (parsed.hostname or "") in LOCAL_HOSTNAMES
 
 
 def _blocks_from_legacy(article):

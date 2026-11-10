@@ -17,7 +17,8 @@ Then open http://localhost:5050
 from flask import Flask, render_template, abort
 import os
 
-from content import get_articles, get_article, get_featured, get_related, CATEGORIES
+from content import (get_articles, get_article, get_featured, get_related, CATEGORIES,
+                     is_map_embed_url, map_embed_hosts)
 from admin import admin_bp
 from author_auth import author_bp
 from newsletter import newsletter_bp
@@ -34,6 +35,9 @@ app.register_blueprint(newsletter_bp)  # newsletter signup (see newsletter.py)
 app.register_blueprint(ask_bp)  # "Ask" chat answering from the articles (see ask.py)
 app.register_blueprint(seo_bp)  # robots.txt, sitemap.xml, feed.xml, share images (see seo.py)
 register_seo(app)  # canonical addresses + optional analytics for every page
+# Interactive map blocks (see content.py): templates use these two to check
+# that a map's address is on the allowed list before putting it in an iframe.
+app.jinja_env.globals.update(map_embed_ok=is_map_embed_url, map_embed_hosts=map_embed_hosts)
 readers.register(app)  # reader accounts: sign up, save, comment (see readers.py)
 
 

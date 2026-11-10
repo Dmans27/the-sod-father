@@ -310,6 +310,27 @@
   </div>
 </template>
 
+<template id="block-template-map">
+  <div class="admin-block" data-block-type="map">
+    {{ block_head('Interactive map') }}
+    <div class="admin-block__body">
+      <input type="text" class="admin-block__url" placeholder="Paste a map link from your app (a list or a profile map)" inputmode="url" autocapitalize="off">
+      <input type="text" class="admin-block__caption" placeholder="Caption (optional)">
+      <select class="admin-map__height" aria-label="Map height">
+        <option value="short">Short map</option>
+        <option value="medium">Medium map</option>
+        <option value="tall">Tall map</option>
+      </select>
+      <select class="admin-map__style" aria-label="Map style">
+        <option value="light">Light map style</option>
+        <option value="dark">Dark map style</option>
+        <option value="streets">Colourful street map</option>
+      </select>
+      <p class="admin-hint">Paste a list link (…/lists/your-list) or a profile map link (…/u/12/map). Readers can drag, zoom and tap the pins right inside the story. Only public lists show up.</p>
+    </div>
+  </div>
+</template>
+
 <template id="block-template-link">
   <div class="admin-block" data-block-type="link">
     {{ block_head('Link card') }}
@@ -472,6 +493,21 @@
         var vCap = node.querySelector('.admin-block__caption');
         vCap.name = fieldName('block_caption', id);
         if (data.caption) vCap.value = data.caption;
+      }
+
+      if (type === 'map') {
+        var mUrl = node.querySelector('.admin-block__url');
+        mUrl.name = fieldName('block_url', id);
+        if (data.url) mUrl.value = data.url;
+        var mCap = node.querySelector('.admin-block__caption');
+        mCap.name = fieldName('block_caption', id);
+        if (data.caption) mCap.value = data.caption;
+        var mHeight = node.querySelector('.admin-map__height');
+        mHeight.name = fieldName('block_map_height', id);
+        mHeight.value = data.height || 'medium';
+        var mStyle = node.querySelector('.admin-map__style');
+        mStyle.name = fieldName('block_map_style', id);
+        mStyle.value = data.style || 'light';
       }
 
       if (type === 'link') {

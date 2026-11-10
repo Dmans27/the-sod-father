@@ -22,7 +22,8 @@ from flask import (
     Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, session, url_for,
 )
 
-from content import BLOCK_TYPES, CATEGORIES, estimate_read_minutes, get_article, get_articles, get_featured, is_draft
+from content import (BLOCK_TYPES, CATEGORIES, LOCAL_HOSTNAMES, estimate_read_minutes, get_article,
+                     get_articles, get_featured, is_draft, map_embed_hosts)
 from authors import get_author, get_authors
 import story_store
 
@@ -420,6 +421,53 @@ def parse_video_url(raw):
     return None
 
 
+MAP_STYLES = ("light", "dark", "streets")
+MAP_HEIGHTS = {"short": 300, "medium": 420, "tall": 560}
+_MAP_SLUG = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,200}$")
+
+
+def parse_map_url(raw, style="light"):
+    """Turns a pasted ai-app map link into {kind, ident, embed_url, open_url},
+    or None if it isn't a map from an allowed host (content.map_embed_hosts).
+
+    Accepts the ordinary share links -- /lists/<slug> for one list and
+    /u/<id>/map for a whole profile -- as well as the /embed/... forms.
+    Like parse_video_url, the iframe address is always rebuilt here from the
+    extracted slug or id, never copied from what was pasted."""
+    raw = (raw or "").strip()
+    if not raw:
+        return None
+    if "://" not in raw:
+        raw = "https://" + raw
+    try:
+        parsed = urlparse(raw)
+    except ValueError:
+        return None
+    netloc = (parsed.netloc or "").lower()
+    if not netloc or "@" in netloc or netloc not in map_embed_hosts():
+        return None
+    # https everywhere; plain http only for localhost, for trying it out.
+    scheme = "http" if (parsed.scheme == "http" and (parsed.hostname or "") in LOCAL_HOSTNAMES) else "https"
+    base = f"{scheme}://{netloc}"
+    style = style if style in MAP_STYLES else "light"
+    path = parsed.path.rstrip("/")
+
+    m = re.match(r"^/(?:lists|embed/list)/([^/]+)$", path)
+    if m and _MAP_SLUG.match(m.group(1)):
+        slug = m.group(1)
+        return {"kind": "list", "ident": slug,
+                "embed_url": f"{base}/embed/list/{slug}?style={style}",
+                "open_url": f"{base}/lists/{slug}"}
+
+    m = re.match(r"^/(?:u/(\d{1,9})/map|embed/u/(\d{1,9}))$", path)
+    if m:
+        user_id = m.group(1) or m.group(2)
+        return {"kind": "profile", "ident": user_id,
+                "embed_url": f"{base}/embed/u/{user_id}?style={style}",
+                "open_url": f"{base}/u/{user_id}/map"}
+    return None
+
+
 def parse_list_items(text):
     """One item per line; a leading bullet or "1." the writer typed is stripped."""
     items = []
@@ -577,6 +625,27 @@ def _build_blocks_from_form(form, files, slug):
                     blocks.append({
                         "type": "video", "provider": provider, "video_id": video_id,
                         "url": raw_url, "embed_url": embed_url,
+                        "caption": form.get(f"block_caption_{bid}", "").strip(),
+                    })
+
+        elif btype == "map":
+            raw_url = form.get(f"block_url_{bid}", "").strip()
+            if raw_url:
+                style = form.get(f"block_map_style_{bid}", "light")
+                height = form.get(f"block_map_height_{bid}", "medium")
+                style = style if style in MAP_STYLES else "light"
+                height = height if height in MAP_HEIGHTS else "medium"
+                parsed = parse_map_url(raw_url, style)
+                if parsed is None:
+                    errors.append(
+                        f"The map link “{raw_url}” isn't a map I can embed. Paste a list link "
+                        "(…/lists/your-list) or a profile map link (…/u/12/map) from your app "
+                        f"({', '.join(map_embed_hosts())}).")
+                else:
+                    blocks.append({
+                        "type": "map", "kind": parsed["kind"], "url": raw_url,
+                        "embed_url": parsed["embed_url"], "open_url": parsed["open_url"],
+                        "style": style, "height": height,
                         "caption": form.get(f"block_caption_{bid}", "").strip(),
                     })
 

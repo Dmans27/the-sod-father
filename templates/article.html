@@ -155,6 +155,17 @@
                 {% if block.caption %}<figcaption>{{ block.caption }}</figcaption>{% endif %}
               </figure>
             {% endif %}
+          {% elif block.type == 'map' %}
+            {% if map_embed_ok(block.embed_url) %}
+              <figure class="article__map article__map--{{ block.height if block.height in ('short', 'medium', 'tall') else 'medium' }}">
+                <div class="article__map-frame">
+                  <iframe src="{{ block.embed_url }}" title="{{ block.caption or 'Interactive map' }}" loading="lazy"
+                          referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen"
+                          sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+                </div>
+                <figcaption>{% if block.caption %}{{ block.caption }} &middot; {% endif %}<a href="{{ block.open_url or block.embed_url }}" target="_blank" rel="noopener noreferrer">Open the full map &nearr;</a></figcaption>
+              </figure>
+            {% endif %}
           {% elif block.type == 'link' %}
             <a class="link-card" href="{{ block.href }}"{% if block.kind == 'web' %} target="_blank" rel="noopener noreferrer"{% endif %}>
               <div class="link-card__body">
