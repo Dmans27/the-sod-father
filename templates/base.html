@@ -339,17 +339,47 @@
             '<figcaption>' + (block.caption ? esc(block.caption) + ' &middot; ' : '') + '<a href="' + esc(block.open_url || block.embed_url) +
             '" target="_blank" rel="noopener noreferrer">Open the full map &nearr;</a></figcaption></figure>';
         }
-        if (block.type === 'place') {
-          // Same rule as maps: only an address on an allowed map host.
-          var placeHosts = {{ map_embed_hosts()|tojson }};
-          var placeUrl;
-          try { placeUrl = new URL(block.embed_url || ''); } catch (e) { return ''; }
-          var placeLocal = placeUrl.protocol === 'http:' && (placeUrl.hostname === 'localhost' || placeUrl.hostname === '127.0.0.1');
-          if (!(placeUrl.protocol === 'https:' || placeLocal) || placeHosts.indexOf(placeUrl.host.toLowerCase()) < 0 ||
-              placeUrl.pathname.indexOf('/embed/') !== 0 || placeUrl.username) return '';
-          var placeStyle = ['photo', 'wide', 'full', 'strip'].indexOf(block.style) >= 0 ? block.style : 'photo';
-          return '<figure class="article__place article__place--' + placeStyle + '"><iframe src="' + esc(block.embed_url) +
-            '" title="' + esc(block.caption || 'Place card') + '" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen" ' +
+        if (block.type === 'place' || block.type === 'places') {
+          // Same address the article page builds (content.place_embed_url).
+          var cardHosts = {{ map_embed_hosts()|tojson }};
+          var cardBase = String(block.base || '').replace(/\/+$/, '');
+          if (!cardBase && block.embed_url) { try { cardBase = new URL(block.embed_url).origin; } catch (e) {} }
+          var cardLocal = /^http:\/\/(localhost|127\.0\.0\.1)(:|$)/.test(cardBase);
+          var cardHost = ''; try { cardHost = new URL(cardBase).host.toLowerCase(); } catch (e) { return ''; }
+          if (!(cardBase.indexOf('https://') === 0 || cardLocal) || cardHosts.indexOf(cardHost) < 0) return '';
+          var cardVideo = function (p) { p = String(p || ''); return p ? (/^https?:\/\//.test(p) ? p : location.origin + p) : ''; };
+          var cardSlug = function (it) {
+            if (it.slug) return it.slug;
+            var m = /^\/embed\/card\/([^\/?#]+)/.exec((function () { try { return new URL(it.embed_url).pathname; } catch (e) { return ''; } })());
+            return m ? m[1] : '';
+          };
+          var cardSrc, cardClass;
+          if (block.type === 'place') {
+            var cs = cardSlug(block);
+            if (!cs) return '';
+            cardClass = ['photo', 'wide', 'full', 'strip'].indexOf(block.style) >= 0 ? block.style : 'photo';
+            var q = 'style=' + cardClass;
+            if (block.book_url) q += '&b=' + encodeURIComponent(block.book_url) + '&l=' + encodeURIComponent(block.book_label || '');
+            if (cardVideo(block.video)) q += '&v=' + encodeURIComponent(cardVideo(block.video));
+            cardSrc = cardBase + '/embed/card/' + cs + '?' + q;
+          } else {
+            cardClass = 'stack';
+            var list = [];
+            (block.items || []).slice(0, 8).forEach(function (it) {
+              var s = cardSlug(it);
+              if (!s) return;
+              var e = { s: s };
+              if (it.book_url) { e.b = it.book_url; if (it.book_label) e.l = it.book_label; }
+              if (cardVideo(it.video)) e.v = cardVideo(it.video);
+              list.push(e);
+            });
+            if (!list.length) return '';
+            var packed = btoa(unescape(encodeURIComponent(JSON.stringify(list)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            cardSrc = cardBase + '/embed/stack?d=' + packed;
+          }
+          return '<figure class="article__place article__place--' + cardClass + '">' +
+            (block.type === 'places' && block.heading ? '<h3 class="article__place-heading">' + esc(block.heading) + '</h3>' : '') +
+            '<iframe src="' + esc(cardSrc) + '" title="' + esc(block.heading || block.caption || 'Place card') + '" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen" ' +
             'sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>' +
             (block.caption ? '<figcaption>' + esc(block.caption) + '</figcaption>' : '') + '</figure>';
         }

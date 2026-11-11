@@ -18,7 +18,7 @@ from flask import Flask, render_template, abort
 import os
 
 from content import (get_articles, get_article, get_featured, get_related, CATEGORIES,
-                     is_map_embed_url, map_embed_hosts)
+                     is_map_embed_url, map_embed_hosts, place_embed_url)
 from admin import admin_bp
 from author_auth import author_bp
 from newsletter import newsletter_bp
@@ -28,7 +28,7 @@ import readers
 
 app = Flask(__name__)
 app.secret_key = os.environ.get("SECRET_KEY", "dev-only-insecure-key-change-me")
-app.config["MAX_CONTENT_LENGTH"] = 25 * 1024 * 1024  # 25MB -- plenty for a handful of phone photos per save
+app.config["MAX_CONTENT_LENGTH"] = 64 * 1024 * 1024  # 64MB -- a handful of phone photos plus a few short place videos (12MB each) per save
 app.register_blueprint(admin_bp)
 app.register_blueprint(author_bp)
 app.register_blueprint(newsletter_bp)  # newsletter signup (see newsletter.py)
@@ -37,7 +37,8 @@ app.register_blueprint(seo_bp)  # robots.txt, sitemap.xml, feed.xml, share image
 register_seo(app)  # canonical addresses + optional analytics for every page
 # Interactive map blocks (see content.py): templates use these two to check
 # that a map's address is on the allowed list before putting it in an iframe.
-app.jinja_env.globals.update(map_embed_ok=is_map_embed_url, map_embed_hosts=map_embed_hosts)
+app.jinja_env.globals.update(map_embed_ok=is_map_embed_url, map_embed_hosts=map_embed_hosts,
+                             place_embed_url=place_embed_url)
 readers.register(app)  # reader accounts: sign up, save, comment (see readers.py)
 
 

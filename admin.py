@@ -11,6 +11,7 @@ Render env var) protects the whole blueprint via a signed session cookie.
 That's enough for a single-writer site; it would need real accounts if
 other people start writing stories too.
 """
+import hashlib
 import os
 import re
 import secrets
@@ -425,6 +426,75 @@ MAP_STYLES = ("light", "dark", "streets")
 MAP_HEIGHTS = {"short": 300, "medium": 420, "tall": 560}
 # Looks for a single-business "Place card" (see parse_place_url).
 PLACE_STYLES = ("photo", "wide", "full", "strip")
+MAX_PLACES_IN_ROW = 8
+
+# The short clip a writer can attach to a place card (readers double-tap the
+# card to watch it). Kept small: it is stored in the site's repository.
+VIDEO_EXTS = (".mp4", ".m4v", ".mov", ".webm")
+MAX_VIDEO_BYTES = 12 * 1024 * 1024
+MAX_VIDEO_SECONDS = 15
+
+
+def _video_seconds(data):
+    """Length of an MP4/MOV clip in seconds, read from its 'mvhd' header; None
+    if it can't be worked out (the clip is then accepted as it is)."""
+    i = data.find(b"mvhd")
+    if i < 0 or i + 32 > len(data):
+        return None
+    if data[i + 4] == 1:       # version 1: 64-bit times
+        scale = int.from_bytes(data[i + 24:i + 28], "big")
+        length = int.from_bytes(data[i + 28:i + 36], "big")
+    else:
+        scale = int.from_bytes(data[i + 16:i + 20], "big")
+        length = int.from_bytes(data[i + 20:i + 24], "big")
+    return length / scale if scale else None
+
+
+def process_video(file_storage):
+    """Checks an uploaded clip. Returns (bytes, extension, error); bytes is None
+    when no file was chosen or it was refused (error says why)."""
+    if not file_storage or not file_storage.filename:
+        return None, "", None
+    name = file_storage.filename
+    ext = os.path.splitext(name)[1].lower()
+    if ext not in VIDEO_EXTS:
+        return None, "", f"The video “{name}” isn't an MP4, MOV or WebM file."
+    data = file_storage.stream.read(MAX_VIDEO_BYTES + 1)
+    if len(data) > MAX_VIDEO_BYTES:
+        return None, "", (f"The video “{name}” is bigger than {MAX_VIDEO_BYTES // (1024 * 1024)} MB. "
+                          "Trim it to about 5 seconds and export it smaller.")
+    if ext == ".webm":
+        looks_ok = data[:4] == b"\x1a\x45\xdf\xa3"
+    else:
+        looks_ok = data[4:8] in (b"ftyp", b"moov", b"mdat", b"wide", b"free", b"skip")
+    if not looks_ok:
+        return None, "", f"“{name}” doesn't look like a real video file."
+    if ext != ".webm":
+        seconds = _video_seconds(data)
+        if seconds is not None and seconds > MAX_VIDEO_SECONDS:
+            return None, "", (f"The video “{name}” is {seconds:.0f} seconds long. Place clips should be a "
+                              f"quick look (about 5 seconds, {MAX_VIDEO_SECONDS} at most).")
+    return data, ext, None
+
+
+def _clean_booking(url, label):
+    """The writer's booking / reservation link and button label, or (None, "")."""
+    url = (url or "").strip()
+    if not url:
+        return None, ""
+    if "://" not in url:
+        if re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", url) and not re.match(r"^[^/]+:\d+(/|$)", url):
+            return None, ""     # javascript:, mailto:, ... -- web links only
+        url = "https://" + url
+    try:
+        parsed = urlparse(url)
+        host = parsed.hostname or ""
+    except ValueError:
+        return None, ""
+    if (parsed.scheme not in ("http", "https") or "." not in host or parsed.username
+            or len(url) > 600):
+        return None, ""
+    return url, " ".join((label or "").split())[:30] or "Book"
 _MAP_SLUG = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,200}$")
 
 
@@ -495,7 +565,7 @@ def parse_place_url(raw, style="photo"):
     m = re.match(r"^/(?:listing|embed/card)/([^/]+)$", parsed.path.rstrip("/"))
     if m and _MAP_SLUG.match(m.group(1)):
         slug = m.group(1)
-        return {"slug": slug, "embed_url": f"{base}/embed/card/{slug}?style={style}",
+        return {"slug": slug, "base": base, "embed_url": f"{base}/embed/card/{slug}?style={style}",
                 "open_url": f"{base}/listing/{slug}"}
     return None
 
@@ -568,6 +638,23 @@ def _build_blocks_from_form(form, files, slug):
             images[repo_path] = processed
             return "/" + repo_path
         return form.get(existing_field, "").strip() or None
+
+    def video_for(field_name, existing_field, remove_field, stem):
+        """A newly uploaded clip wins; ticking "remove" drops it; otherwise the
+        clip the block already had is kept. Saved under a name that includes a
+        short fingerprint of the file, so a replaced clip never shows an old,
+        cached copy."""
+        processed, ext, problem = process_video(files.get(field_name))
+        if problem:
+            errors.append(problem)
+        elif processed is not None:
+            path = f"static/uploads/{slug}/{stem}-{hashlib.sha1(processed).hexdigest()[:8]}{ext}"
+            images[path] = processed
+            return "/" + path
+        if form.get(remove_field) == "1":
+            return None
+        existing = form.get(existing_field, "").strip()
+        return existing if existing.startswith("/static/uploads/") and ".." not in existing else None
 
     for bid in order:
         btype = form.get(f"block_type_{bid}", "")
@@ -693,12 +780,49 @@ def _build_blocks_from_form(form, files, slug):
                         "business's page link from your app (…/listing/its-name) "
                         f"({', '.join(map_embed_hosts())}).")
                 else:
+                    book_url, book_label = _clean_booking(
+                        form.get(f"block_book_{bid}", ""), form.get(f"block_book_label_{bid}", ""))
                     blocks.append({
-                        "type": "place", "slug": parsed["slug"], "url": raw_url,
-                        "embed_url": parsed["embed_url"], "open_url": parsed["open_url"],
-                        "style": style,
+                        "type": "place", "slug": parsed["slug"], "base": parsed["base"], "url": raw_url,
+                        "open_url": parsed["open_url"], "style": style,
+                        "book_url": book_url, "book_label": book_label if book_url else "",
+                        "video": video_for(f"block_video_{bid}", f"block_existing_video_{bid}",
+                                           f"block_remove_video_{bid}", f"video-{bid}"),
                         "caption": form.get(f"block_caption_{bid}", "").strip(),
                     })
+
+        elif btype == "places":
+            items, base = [], None
+            row_ids = [r for r in form.get(f"block_places_order_{bid}", "").split(",") if r.strip()]
+            for rid in row_ids[:MAX_PLACES_IN_ROW]:
+                raw_url = form.get(f"block_places_url_{bid}_{rid}", "").strip()
+                if not raw_url:
+                    continue
+                parsed = parse_place_url(raw_url, "photo")
+                if parsed is None:
+                    errors.append(
+                        f"The place link \u201c{raw_url}\u201d isn't a listing I can embed. Paste the "
+                        "business's page link from your app (…/listing/its-name) "
+                        f"({', '.join(map_embed_hosts())}).")
+                    continue
+                if base and parsed["base"] != base:
+                    errors.append("All the places in one swipe row need to come from the same app address.")
+                    continue
+                base = base or parsed["base"]
+                book_url, book_label = _clean_booking(
+                    form.get(f"block_places_book_{bid}_{rid}", ""), form.get(f"block_places_label_{bid}_{rid}", ""))
+                items.append({
+                    "slug": parsed["slug"], "url": raw_url,
+                    "book_url": book_url, "book_label": book_label if book_url else "",
+                    "video": video_for(f"block_places_video_{bid}_{rid}", f"block_places_existing_video_{bid}_{rid}",
+                                       f"block_places_remove_video_{bid}_{rid}", f"video-{bid}-{rid}"),
+                })
+            if items:
+                blocks.append({
+                    "type": "places", "base": base, "items": items,
+                    "heading": form.get(f"block_heading_{bid}", "").strip(),
+                    "caption": form.get(f"block_caption_{bid}", "").strip(),
+                })
 
         elif btype == "link":
             kind = form.get(f"block_link_kind_{bid}", "story")

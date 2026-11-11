@@ -10,10 +10,11 @@ of an edit to source code. This module just reads those files back out.
 Categories are still a small, fixed, hand-curated set, so they stay as a
 plain dict here rather than becoming their own content type.
 """
+import base64
 import json
 import os
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import urlencode, urlparse
 
 CONTENT_DIR = Path(__file__).parent / "content" / "articles"
 
@@ -98,6 +99,7 @@ BLOCK_TYPES = {
     "video": "Video (YouTube / Vimeo link)",
     "map": "Interactive map",
     "place": "Place card (business / hotel)",
+    "places": "Place cards (swipe row)",
     "link": "Link card",
     "compare": "Before / after slider",
     "embed": "Custom embed / code",
@@ -136,6 +138,78 @@ def is_map_embed_url(url):
     if parsed.scheme == "https":
         return True
     return parsed.scheme == "http" and (parsed.hostname or "") in LOCAL_HOSTNAMES
+
+
+def place_embed_url(block, site_origin):
+    """The address of the iframe for a "place" block (one business or hotel as a
+    card) or a "places" block (several in a swipe row), or None if it isn't one
+    from an allowed map host.
+
+    It is built here at display time, not saved with the story, because a
+    video the writer uploaded lives on this site and its full address (which
+    the card needs) depends on where the site is being shown from. Everything
+    goes back through is_map_embed_url, same as the map block."""
+    if not isinstance(block, dict):
+        return None
+    kind = block.get("type")
+
+    def origin_of(url):
+        try:
+            p = urlparse(url or "")
+        except ValueError:
+            return ""
+        return f"{p.scheme}://{p.netloc}" if p.scheme and p.netloc else ""
+
+    def slug_of(item):
+        slug = (item.get("slug") or "").strip()
+        if not slug:
+            path = urlparse(item.get("embed_url") or "").path   # blocks saved by the first version
+            slug = path.rsplit("/", 1)[-1] if path.startswith("/embed/card/") else ""
+        return slug
+
+    def video_url(path):
+        path = (path or "").strip()
+        if not path:
+            return ""
+        return path if path.startswith(("http://", "https://")) else (site_origin or "") + path
+
+    base = (block.get("base") or origin_of(block.get("embed_url"))).rstrip("/")
+    if not base:
+        return None
+
+    if kind == "place":
+        slug = slug_of(block)
+        if not slug:
+            return None
+        style = block.get("style") if block.get("style") in ("photo", "wide", "full", "strip") else "photo"
+        params = [("style", style)]
+        if block.get("book_url"):
+            params += [("b", block["book_url"]), ("l", block.get("book_label") or "")]
+        if video_url(block.get("video")):
+            params.append(("v", video_url(block.get("video"))))
+        url = f"{base}/embed/card/{slug}?{urlencode(params)}"
+    elif kind == "places":
+        items = []
+        for item in block.get("items") or []:
+            slug = slug_of(item)
+            if not slug:
+                continue
+            entry = {"s": slug}
+            if item.get("book_url"):
+                entry["b"] = item["book_url"]
+                if item.get("book_label"):
+                    entry["l"] = item["book_label"]
+            if video_url(item.get("video")):
+                entry["v"] = video_url(item.get("video"))
+            items.append(entry)
+        if not items:
+            return None
+        packed = base64.urlsafe_b64encode(
+            json.dumps(items[:8], separators=(",", ":"), ensure_ascii=False).encode("utf-8")).decode("ascii").rstrip("=")
+        url = f"{base}/embed/stack?d={packed}"
+    else:
+        return None
+    return url if is_map_embed_url(url) else None
 
 
 def _blocks_from_legacy(article):

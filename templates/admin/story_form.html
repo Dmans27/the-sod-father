@@ -343,7 +343,32 @@
         <option value="strip">Photo strip (swipeable pictures, then the details)</option>
         <option value="full">Full place page (gallery, hours, reviews)</option>
       </select>
-      <p class="admin-hint">Shows one business or hotel from your directory, with its Google pictures and live details. Readers can get directions, see photos, open the details and save it to their account.</p>
+      <input type="text" class="admin-place__book" placeholder="Booking or reservation link (optional)" inputmode="url" autocapitalize="off">
+      <input type="text" class="admin-place__book-label" placeholder="Button label, e.g. Book a room, Reserve a table (optional)" maxlength="30">
+      <div class="admin-place__video">
+        <label class="admin-place__video-label">Short video (optional)</label>
+        <input type="file" class="admin-place__video-file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.m4v,.webm">
+        <input type="hidden" class="admin-place__video-existing">
+        <label class="admin-place__video-remove" hidden><input type="checkbox" class="admin-place__video-remove-box"> Remove the current video</label>
+        <p class="admin-place__video-current" hidden></p>
+      </div>
+      <p class="admin-hint">Shows one business or hotel from your directory, with its Google pictures and live details. Readers can get directions, see photos, open the details and save it to their account. A video plays when a reader double-taps the card: use a clip of about 5 seconds, MP4 (H.264), under 12 MB. On an iPhone, Settings → Camera → Formats → Most Compatible records in that format.</p>
+    </div>
+  </div>
+</template>
+
+<template id="block-template-places">
+  <div class="admin-block" data-block-type="places">
+    {{ block_head('Place cards (swipe row)') }}
+    <div class="admin-block__body">
+      <input type="text" class="admin-places__heading" placeholder="Heading above the row, e.g. Where to stay in Vienna (optional)">
+      <div class="admin-places__rows"></div>
+      <div class="admin-gallery__actions">
+        <button type="button" class="admin-btn admin-places__add">+ Add a place</button>
+      </div>
+      <input type="text" class="admin-block__caption" placeholder="Caption under the row (optional)">
+      <input type="hidden" class="admin-places__order">
+      <p class="admin-hint">Up to 8 places in one swipe row: readers swipe through them. Each place can have its own Book / Reserve button and a short video that plays when the card is double-tapped.</p>
     </div>
   </div>
 </template>
@@ -537,6 +562,69 @@
         var pStyle = node.querySelector('.admin-place__style');
         pStyle.name = fieldName('block_place_style', id);
         pStyle.value = data.style || 'photo';
+        var pBook = node.querySelector('.admin-place__book');
+        pBook.name = fieldName('block_book', id);
+        if (data.book_url) pBook.value = data.book_url;
+        var pLabel = node.querySelector('.admin-place__book-label');
+        pLabel.name = fieldName('block_book_label', id);
+        if (data.book_label) pLabel.value = data.book_label;
+        wirePlaceVideo(node, 'block_video', 'block_existing_video', 'block_remove_video', id, data.video || '');
+      }
+
+      if (type === 'places') {
+        var plRows = node.querySelector('.admin-places__rows');
+        var plOrder = node.querySelector('.admin-places__order');
+        plOrder.name = fieldName('block_places_order', id);
+        var plHead = node.querySelector('.admin-places__heading');
+        plHead.name = fieldName('block_heading', id);
+        if (data.heading) plHead.value = data.heading;
+        var plCap = node.querySelector('.admin-block__caption');
+        plCap.name = fieldName('block_caption', id);
+        if (data.caption) plCap.value = data.caption;
+        var plSeq = 0;
+        function plSync() {
+          plOrder.value = Array.prototype.map.call(plRows.children, function (r) { return r.dataset.rowId; }).join(',');
+          node.querySelector('.admin-places__add').disabled = plRows.children.length >= 8;
+        }
+        node._syncGallery = plSync;   // refreshed with the other blocks whenever the order changes
+        function addPlaceRow(item) {
+          item = item || {};
+          plSeq += 1;
+          var rid = 'r' + plSeq;
+          var row = document.createElement('div');
+          row.className = 'admin-places__row';
+          row.dataset.rowId = rid;
+          row.innerHTML =
+            '<div class="admin-places__fields">' +
+              '<input type="text" class="admin-places__url" placeholder="Business page link (…/listing/its-name)" inputmode="url" autocapitalize="off">' +
+              '<input type="text" class="admin-place__book" placeholder="Booking or reservation link (optional)" inputmode="url" autocapitalize="off">' +
+              '<input type="text" class="admin-place__book-label" placeholder="Button label, e.g. Reserve a table (optional)" maxlength="30">' +
+              '<div class="admin-place__video">' +
+                '<label class="admin-place__video-label">Short video (optional)</label>' +
+                '<input type="file" class="admin-place__video-file" accept="video/mp4,video/quicktime,video/webm,.mp4,.mov,.m4v,.webm">' +
+                '<input type="hidden" class="admin-place__video-existing">' +
+                '<label class="admin-place__video-remove" hidden><input type="checkbox" class="admin-place__video-remove-box"> Remove the current video</label>' +
+                '<p class="admin-place__video-current" hidden></p>' +
+              '</div>' +
+            '</div>' +
+            '<button type="button" class="admin-block__remove" title="Remove place">&times;</button>';
+          var u = row.querySelector('.admin-places__url');
+          u.name = 'block_places_url_' + id + '_' + rid;
+          if (item.url) u.value = item.url;
+          var bk = row.querySelector('.admin-place__book');
+          bk.name = 'block_places_book_' + id + '_' + rid;
+          if (item.book_url) bk.value = item.book_url;
+          var bl = row.querySelector('.admin-place__book-label');
+          bl.name = 'block_places_label_' + id + '_' + rid;
+          if (item.book_label) bl.value = item.book_label;
+          wirePlaceVideo(row, 'block_places_video', 'block_places_existing_video', 'block_places_remove_video', id + '_' + rid, item.video || '');
+          row.querySelector('.admin-block__remove').addEventListener('click', function () { row.remove(); plSync(); });
+          plRows.appendChild(row);
+          plSync();
+        }
+        node.querySelector('.admin-places__add').addEventListener('click', function () { addPlaceRow(null); });
+        if (data.items && data.items.length) data.items.forEach(function (it) { addPlaceRow(it); });
+        else addPlaceRow(null);
       }
 
       if (type === 'link') {
@@ -682,6 +770,43 @@
       else container.appendChild(node);
       syncOrder();
       return node;
+    }
+
+    // The short-video part of a place card (also used for each row of a swipe row):
+    // names the fields, shows the clip that is already saved, and warns early about a long clip.
+    function wirePlaceVideo(scope, fileName, existingName, removeName, key, current) {
+      var file = scope.querySelector('.admin-place__video-file');
+      var keep = scope.querySelector('.admin-place__video-existing');
+      var rmWrap = scope.querySelector('.admin-place__video-remove');
+      var rmBox = scope.querySelector('.admin-place__video-remove-box');
+      var note = scope.querySelector('.admin-place__video-current');
+      file.name = fileName + '_' + key;
+      keep.name = existingName + '_' + key;
+      keep.value = current || '';
+      rmBox.name = removeName + '_' + key;
+      rmBox.value = '1';
+      if (current) {
+        rmWrap.hidden = false;
+        note.hidden = false;
+        note.textContent = 'Current video: ' + current.split('/').pop() + ' (choose a new file to replace it)';
+      }
+      file.addEventListener('change', function () {
+        var f = file.files && file.files[0];
+        note.hidden = !f && !current;
+        if (!f) return;
+        note.textContent = f.name + ' (' + (f.size / 1048576).toFixed(1) + ' MB)';
+        if (f.size > 12 * 1048576) { note.textContent += ' — too big: trim it to about 5 seconds and export it smaller.'; return; }
+        var probe = document.createElement('video');
+        probe.preload = 'metadata';
+        probe.onloadedmetadata = function () {
+          if (isFinite(probe.duration)) {
+            note.textContent = f.name + ' (' + probe.duration.toFixed(1) + ' s, ' + (f.size / 1048576).toFixed(1) + ' MB)' +
+              (probe.duration > 15 ? ' — too long: keep it to about 5 seconds.' : '');
+          }
+          URL.revokeObjectURL(probe.src);
+        };
+        probe.src = URL.createObjectURL(f);
+      });
     }
 
     function syncOrder() {

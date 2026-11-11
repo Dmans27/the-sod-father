@@ -2171,6 +2171,8 @@ html.ask-open { overflow: hidden; }
 .article__place iframe { display: block; width: 100%; height: 400px; border: 0; background: transparent; transition: height 0.3s ease; }
 .article__place--wide iframe { height: 300px; }
 .article__place--strip iframe { height: 420px; }
+.article__place--stack iframe { height: 440px; }
+.article__place-heading { margin: 0 0 10px; font-family: var(--font-serif); font-size: 22px; line-height: 1.25; }
 .article__place--full iframe { height: min(680px, 85vh); border: 1px solid rgba(27, 42, 31, 0.12); border-radius: 14px; background: #fff; transition: none; }
 @media (max-width: 560px) { .article__place--wide iframe { height: 520px; } }
 .article__place figcaption { margin-top: 8px; font-size: 13.5px; line-height: 1.45; color: var(--ink-faint); }

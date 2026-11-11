@@ -240,6 +240,15 @@
       if (b.type === 'gallery') {
         data.photos = (b.gallery || []).map(function (g) { return { image: g.existing || '', caption: g.caption || '' }; });
       }
+      if (b.type === 'places') {
+        // The rows have to exist before their saved values can be put back.
+        data.items = (v['block_places_order_{ID}'] || '').split(',').filter(Boolean).map(function (rid) {
+          return {
+            url: v['block_places_url_{ID}_' + rid] || '', book_url: v['block_places_book_{ID}_' + rid] || '',
+            book_label: v['block_places_label_{ID}_' + rid] || '', video: v['block_places_existing_video_{ID}_' + rid] || ''
+          };
+        });
+      }
       var node = ed.addBlock(b.type, data);
       if (!node) return;
       var id = node.dataset.blockId;

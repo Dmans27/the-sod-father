@@ -460,3 +460,12 @@ html.is-dark { color-scheme: dark; }
 .nl-confirm { display: block; margin: 0 0 12px; font-size: 14px; }
 .nl-progress { margin: 14px 0 0; font-weight: 700; color: var(--fairway-deep); }
 .is-dark .nl-story, .is-dark .nl-preview { background: #252d28; }
+
+/* Place cards: booking link + short video fields, and the rows of a swipe row */
+.admin-place__video { display: flex; flex-direction: column; gap: 6px; }
+.admin-place__video-label { font-size: 12.5px; font-weight: 700; color: var(--ink-soft); }
+.admin-place__video-current { margin: 0; font-size: 12.5px; color: var(--ink-soft); }
+.admin-place__video-remove { font-size: 12.5px; }
+.admin-places__rows { display: flex; flex-direction: column; gap: 10px; }
+.admin-places__row { display: flex; align-items: flex-start; gap: 10px; padding: 10px; border: 1px solid rgba(27, 42, 31, 0.14); border-radius: 10px; }
+.admin-places__fields { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }

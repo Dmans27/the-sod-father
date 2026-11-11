@@ -166,11 +166,13 @@
                 <figcaption>{% if block.caption %}{{ block.caption }} &middot; {% endif %}<a href="{{ block.open_url or block.embed_url }}" target="_blank" rel="noopener noreferrer">Open the full map &nearr;</a></figcaption>
               </figure>
             {% endif %}
-          {% elif block.type == 'place' %}
-            {% if map_embed_ok(block.embed_url) %}
-              {% set pstyle = block.style if block.style in ('photo', 'wide', 'full', 'strip') else 'photo' %}
+          {% elif block.type == 'place' or block.type == 'places' %}
+            {% set card_url = place_embed_url(block, site_base()) %}
+            {% if card_url %}
+              {% set pstyle = (block.style if block.style in ('photo', 'wide', 'full', 'strip') else 'photo') if block.type == 'place' else 'stack' %}
               <figure class="article__place article__place--{{ pstyle }}">
-                <iframe src="{{ block.embed_url }}" title="{{ block.caption or 'Place card' }}" loading="lazy"
+                {% if block.type == 'places' and block.heading %}<h3 class="article__place-heading">{{ block.heading }}</h3>{% endif %}
+                <iframe src="{{ card_url }}" title="{{ block.heading or block.caption or 'Place card' }}" loading="lazy"
                         referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen"
                         sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
                 {% if block.caption %}<figcaption>{{ block.caption }}</figcaption>{% endif %}
