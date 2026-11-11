@@ -17,7 +17,7 @@ import re
 import secrets
 from datetime import date, datetime
 from functools import wraps
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, quote, urlparse
 
 from flask import (
     Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, session, url_for,
@@ -498,6 +498,14 @@ def _clean_booking(url, label):
 _MAP_SLUG = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,200}$")
 
 
+def _clean_city_param(value):
+    """A city name from a pasted link: plain text, one line, 80 characters at most."""
+    city = " ".join(str(value or "").split())
+    if not city or len(city) > 80 or any(ord(ch) < 32 or ch in "<>\\" for ch in city):
+        return ""
+    return city
+
+
 def parse_map_url(raw, style="light"):
     """Turns a pasted ai-app map link into {kind, ident, embed_url, open_url},
     or None if it isn't a map from an allowed host (content.map_embed_hosts).
@@ -534,6 +542,13 @@ def parse_map_url(raw, style="light"):
     m = re.match(r"^/(?:u/(\d{1,9})/map|embed/u/(\d{1,9}))$", path)
     if m:
         user_id = m.group(1) or m.group(2)
+        # A city map link (…/embed/u/12?city=Vienna): the map opens zoomed to
+        # that city. The city is cleaned and re-encoded here, never copied raw.
+        city = _clean_city_param(parse_qs(parsed.query).get("city", [""])[0])
+        if city:
+            return {"kind": "profile", "ident": user_id, "city": city,
+                    "embed_url": f"{base}/embed/u/{user_id}?style={style}&city={quote(city)}",
+                    "open_url": f"{base}/embed/u/{user_id}?city={quote(city)}"}
         return {"kind": "profile", "ident": user_id,
                 "embed_url": f"{base}/embed/u/{user_id}?style={style}",
                 "open_url": f"{base}/u/{user_id}/map"}
@@ -758,12 +773,13 @@ def _build_blocks_from_form(form, files, slug):
                 if parsed is None:
                     errors.append(
                         f"The map link “{raw_url}” isn't a map I can embed. Paste a list link "
-                        "(…/lists/your-list) or a profile map link (…/u/12/map) from your app "
+                        "(…/lists/your-list), a profile map link (…/u/12/map) or a city map link from your app "
                         f"({', '.join(map_embed_hosts())}).")
                 else:
                     blocks.append({
                         "type": "map", "kind": parsed["kind"], "url": raw_url,
                         "embed_url": parsed["embed_url"], "open_url": parsed["open_url"],
+                        **({"city": parsed["city"]} if parsed.get("city") else {}),
                         "style": style, "height": height,
                         "caption": form.get(f"block_caption_{bid}", "").strip(),
                     })
