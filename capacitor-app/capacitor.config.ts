@@ -10,7 +10,12 @@ const config: CapacitorConfig = {
   webDir: 'www',
   server: {
     url: 'https://the-sod-father.onrender.com',
-    cleartext: false
+    cleartext: false,
+    // Shown instead of an error when the live site can't be reached (no
+    // signal, or Render is down). It lists the stories saved for offline
+    // reading. The file lives in www/. If the site address above ever
+    // changes, update SITE_URL inside www/offline.html too.
+    errorPath: 'offline.html'
   },
   plugins: {
     SplashScreen: {

@@ -50,3 +50,25 @@ regular website too.
 If you ever rename the splash background, update both
 `capacitor.config.ts` (`backgroundColor`) and the default splash image
 under `ios/App/App/Assets.xcassets/Splash.imageset` to match.
+
+## Native features (added)
+
+The live site detects the app (`static/js/native.js`) and turns on:
+
+- the real iOS share sheet (Share plugin)
+- small haptic taps on buttons, tabs and saving a story (Haptics plugin)
+- pull down at the top of a page to refresh
+- offline reading: saved stories are copied to the phone as plain text
+  (Preferences plugin) and `www/offline.html` shows them when the site
+  can't be reached (`server.errorPath` in `capacitor.config.ts`)
+
+After pulling these changes, install the plugins and sync once:
+
+```bash
+cd capacitor-app
+npm install
+npx cap sync ios
+```
+
+Then build and run from Xcode. If the site address changes, update it in
+`capacitor.config.ts` **and** `SITE_URL` in `www/offline.html`.

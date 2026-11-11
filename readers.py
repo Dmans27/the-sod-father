@@ -32,7 +32,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 import db
 import moderation
 from authors import get_author, get_author_by_email
-from content import CATEGORIES, get_article, map_embed_hosts
+from content import CATEGORIES, estimate_read_minutes, get_article, map_embed_hosts
 
 readers_bp = Blueprint("readers", __name__)
 
@@ -299,6 +299,35 @@ def api_save(slug):
         r=reader["id"], s=slug)
     _set_saved(reader["id"], slug, not already)
     return jsonify(saved=not already)
+
+
+# Plain-text copy of a story for offline reading in the iOS app (see
+# static/js/native.js and capacitor-app/www/offline.html). Only text-based
+# blocks are included -- photos, maps, videos and embeds need the internet
+# anyway. The app renders every value with textContent, never as HTML.
+_OFFLINE_TEXT_BLOCKS = {"paragraph", "subheading", "quote", "list", "tip", "takeaways", "table", "divider"}
+
+
+@readers_bp.get("/api/offline/<slug>")
+def api_offline_story(slug):
+    article = get_article(slug)
+    if not article:
+        return jsonify(error="not_found"), 404
+    blocks = []
+    for b in article.get("blocks") or []:
+        kind = b.get("type")
+        if kind not in _OFFLINE_TEXT_BLOCKS:
+            continue
+        blocks.append({k: b.get(k) for k in
+                       ("type", "text", "attribution", "style", "variant", "title", "items", "header", "rows")
+                       if b.get(k) is not None})
+    resp = jsonify(
+        slug=article["slug"], title=article.get("title", ""), dek=article.get("dek", ""),
+        author=article.get("author", ""), published_at=article.get("published_at", ""),
+        pill=article.get("pill", ""), read_minutes=estimate_read_minutes(article.get("blocks") or []),
+        blocks=blocks)
+    resp.headers["Cache-Control"] = "no-store"
+    return resp
 
 
 @readers_bp.get("/api/comments/<slug>")

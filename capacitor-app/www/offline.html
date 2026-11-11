@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Mansfield — offline</title>
+<style>
+  :root { --bg:#faf6ec; --ink:#2b362f; --soft:rgba(43,54,47,.72); --faint:rgba(43,54,47,.55); --line:rgba(27,42,31,.14); --green:#1b4332; --gold:#b8860b; --card:#fff; }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#1c231f; --ink:#e4e9e5; --soft:rgba(228,233,229,.78); --faint:rgba(228,233,229,.6); --line:rgba(255,255,255,.16); --green:#7ccaa0; --card:#252d28; }
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body { margin:0; background:var(--bg); color:var(--ink); font:17px/1.6 "Source Serif 4", Georgia, serif;
+         padding: calc(env(safe-area-inset-top) + 20px) 20px calc(env(safe-area-inset-bottom) + 40px); }
+  main { max-width: 680px; margin: 0 auto; }
+  .brand { font-weight:700; font-size:30px; letter-spacing:-.015em; color:var(--green); margin:0 0 4px; }
+  .brand span { color:var(--gold); }
+  h1 { font-size:22px; margin:26px 0 6px; line-height:1.25; }
+  .sub { margin:0 0 20px; color:var(--soft); font:15px/1.5 -apple-system, "IBM Plex Sans", sans-serif; }
+  button { font:700 15px -apple-system, "IBM Plex Sans", sans-serif; border-radius:10px; padding:12px 18px; cursor:pointer; border:1px solid var(--green); }
+  .primary { background:var(--green); color:var(--bg); }
+  .ghost { background:transparent; color:var(--green); }
+  .stories { list-style:none; margin:22px 0 0; padding:0; }
+  .stories li { border-top:1px solid var(--line); }
+  .stories li:last-child { border-bottom:1px solid var(--line); }
+  .stories a { display:block; padding:16px 2px; color:inherit; text-decoration:none; }
+  .pill { font:600 11.5px/1 ui-monospace, Menlo, monospace; letter-spacing:.04em; text-transform:uppercase; color:var(--soft); }
+  .stories h2 { margin:6px 0 4px; font-size:20px; line-height:1.3; color:var(--green); }
+  .meta { font:14px -apple-system, "IBM Plex Sans", sans-serif; color:var(--faint); }
+  .empty { margin-top:22px; color:var(--soft); font:15px/1.5 -apple-system, "IBM Plex Sans", sans-serif; }
+  .label { margin:26px 0 0; font:800 12.5px -apple-system, "IBM Plex Sans", sans-serif; letter-spacing:.07em; text-transform:uppercase; color:var(--faint); }
+  article h1 { font-size:30px; line-height:1.2; margin:10px 0 8px; color:var(--green); }
+  article .dek { color:var(--soft); margin:0 0 6px; font-size:19px; line-height:1.45; }
+  article p { margin:0 0 1em; }
+  article h2.sub-h { font-size:22px; margin:1.4em 0 .5em; color:var(--green); }
+  blockquote { margin:1.2em 0; padding:2px 0 2px 16px; border-left:3px solid var(--gold); font-style:italic; }
+  blockquote cite { display:block; margin-top:6px; font:14px -apple-system, sans-serif; font-style:normal; color:var(--faint); }
+  ul.list, ol.list { padding-left:1.3em; margin:0 0 1em; } .list li { margin-bottom:.4em; }
+  .tip { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:12px 14px; margin:1.2em 0; }
+  .tip b { display:block; font:800 12px -apple-system, sans-serif; letter-spacing:.06em; text-transform:uppercase; color:var(--gold); margin-bottom:4px; }
+  .tip p { margin:0; }
+  .take { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin:1.2em 0; }
+  .take h3 { margin:0 0 8px; font-size:18px; color:var(--green); }
+  .take ul { margin:0; padding-left:1.2em; }
+  .tablewrap { overflow-x:auto; margin:1.2em 0; } table { border-collapse:collapse; font:15px -apple-system, sans-serif; min-width:100%; }
+  th, td { border:1px solid var(--line); padding:8px 10px; text-align:left; } th { background:var(--card); }
+  hr { border:none; border-top:1px solid var(--line); margin:1.6em 0; }
+  .note { margin-top:28px; padding-top:14px; border-top:1px solid var(--line); color:var(--faint); font:14px/1.5 -apple-system, sans-serif; }
+  .back { margin:0 0 6px; padding:6px 0; background:none; border:none; color:var(--green); }
+</style>
+</head>
+<body>
+<main id="app"></main>
+<script>
+  // Shown by the iOS app when the live site can't be reached (see "errorPath" in
+  // capacitor.config.ts). Saved stories are copied to the phone by static/js/native.js
+  // on the live site and read back here from Capacitor Preferences. Everything
+  // below is built with textContent, never innerHTML.
+  //
+  // If the site's address ever changes, update this too (and capacitor.config.ts).
+  var SITE_URL = 'https://the-sod-father.onrender.com/';
+
+  var app = document.getElementById('app');
+  var Prefs = null;
+  try { Prefs = window.Capacitor && window.Capacitor.Plugins && window.Capacitor.Plugins.Preferences; } catch (e) {}
+
+  function el(tag, cls, text) {
+    var n = document.createElement(tag);
+    if (cls) n.className = cls;
+    if (text != null) n.textContent = text;
+    return n;
+  }
+  function add(parent) { for (var i = 1; i < arguments.length; i++) if (arguments[i]) parent.appendChild(arguments[i]); return parent; }
+
+  function brand() {
+    var b = el('p', 'brand'); b.appendChild(el('span', '', '\\\\')); b.appendChild(document.createTextNode('Mansfield')); return b;
+  }
+  function retryButton(label, primary) {
+    var b = el('button', primary ? 'primary' : 'ghost', label);
+    b.addEventListener('click', function () { location.href = SITE_URL; });
+    return b;
+  }
+
+  function getIndex() {
+    if (!Prefs) return Promise.resolve([]);
+    return Prefs.get({ key: 'offline:index' }).then(function (r) {
+      try { var a = JSON.parse(r && r.value); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+    }).catch(function () { return []; });
+  }
+  function getStory(slug) {
+    return Prefs.get({ key: 'offline:' + slug }).then(function (r) {
+      try { return JSON.parse(r && r.value); } catch (e) { return null; }
+    }).catch(function () { return null; });
+  }
+
+  function showHome() {
+    app.textContent = '';
+    add(app, brand(), el('h1', '', 'You’re offline'),
+      el('p', 'sub', 'We can’t reach \\\\Mansfield right now. Check your connection and try again.'),
+      retryButton('Try again', true));
+    getIndex().then(function (idx) {
+      if (!idx.length) {
+        add(app, el('p', 'empty', 'Stories you save while online show up here so you can read them without a connection.'));
+        return;
+      }
+      add(app, el('p', 'label', 'Saved stories — available offline'));
+      var ul = el('ul', 'stories');
+      idx.forEach(function (s) {
+        var li = el('li'); var a = el('a'); a.href = '#' + encodeURIComponent(s.slug);
+        add(a, el('span', 'pill', s.pill || ''), el('h2', '', s.title || s.slug), el('span', 'meta', s.author || ''));
+        li.appendChild(a); ul.appendChild(li);
+      });
+      app.appendChild(ul);
+    });
+  }
+
+  function renderBlock(b, root) {
+    var t = b.type;
+    if (t === 'paragraph') root.appendChild(el('p', '', b.text || ''));
+    else if (t === 'subheading') root.appendChild(el('h2', 'sub-h', b.text || ''));
+    else if (t === 'quote') {
+      var q = el('blockquote'); q.appendChild(el('p', '', b.text || ''));
+      if (b.attribution) q.appendChild(el('cite', '', b.attribution));
+      root.appendChild(q);
+    } else if (t === 'list') {
+      var l = el(b.style === 'numbered' ? 'ol' : 'ul', 'list');
+      (b.items || []).forEach(function (i) { l.appendChild(el('li', '', String(i))); });
+      root.appendChild(l);
+    } else if (t === 'tip') {
+      var tip = el('div', 'tip'); tip.appendChild(el('b', '', b.variant === 'warning' ? 'Heads up' : 'Pro tip'));
+      tip.appendChild(el('p', '', b.text || '')); root.appendChild(tip);
+    } else if (t === 'takeaways') {
+      var box = el('div', 'take'); box.appendChild(el('h3', '', b.title || 'Key takeaways'));
+      var u = el('ul'); (b.items || []).forEach(function (i) { u.appendChild(el('li', '', String(i))); });
+      box.appendChild(u); root.appendChild(box);
+    } else if (t === 'table') {
+      var wrap = el('div', 'tablewrap'), tb = el('table');
+      if (b.header) { var tr = el('tr'); b.header.forEach(function (c) { tr.appendChild(el('th', '', String(c))); }); var th = el('thead'); th.appendChild(tr); tb.appendChild(th); }
+      var body = el('tbody');
+      (b.rows || []).forEach(function (r) { var rr = el('tr'); r.forEach(function (c) { rr.appendChild(el('td', '', String(c))); }); body.appendChild(rr); });
+      tb.appendChild(body); wrap.appendChild(tb); root.appendChild(wrap);
+    } else if (t === 'divider') root.appendChild(el('hr'));
+  }
+
+  function showStory(slug) {
+    if (!Prefs) { showHome(); return; }
+    getStory(slug).then(function (s) {
+      if (!s) { showHome(); return; }
+      app.textContent = '';
+      var back = el('button', 'back', '‹ Saved stories');
+      back.addEventListener('click', function () { location.hash = ''; });
+      var art = el('article');
+      add(art, el('span', 'pill', s.pill || ''), el('h1', '', s.title || ''));
+      if (s.dek) art.appendChild(el('p', 'dek', s.dek));
+      art.appendChild(el('p', 'meta', [s.author, s.published_at, s.read_minutes ? s.read_minutes + ' min read' : ''].filter(Boolean).join(' · ')));
+      art.appendChild(el('hr'));
+      (s.blocks || []).forEach(function (b) { renderBlock(b, art); });
+      art.appendChild(el('p', 'note', 'Offline copy: photos, maps and videos appear when you’re back online.'));
+      art.appendChild(retryButton('Open the full story online', false));
+      add(app, back, art);
+      window.scrollTo(0, 0);
+    });
+  }
+
+  function route() {
+    var h = decodeURIComponent((location.hash || '').replace(/^#/, ''));
+    if (h) showStory(h); else showHome();
+  }
+  window.addEventListener('hashchange', route);
+  route();
+</script>
+</body>
+</html>

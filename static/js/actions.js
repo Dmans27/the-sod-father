@@ -179,8 +179,11 @@
     var was = isSaved(slug);
     paintSaved(slug, !was); // optimistic
     api('POST', '/api/save/' + encodeURIComponent(slug)).then(function (res) {
-      if (res.ok) paintSaved(slug, !!res.data.saved);
-      else if (res.status === 401) location.href = loginUrl({ then: 'save:' + slug });
+      if (res.ok) {
+        paintSaved(slug, !!res.data.saved);
+        // The iOS app listens for this to tap-feedback and refresh its offline copies (native.js).
+        document.dispatchEvent(new CustomEvent('mansfield:saved', { detail: { slug: slug, saved: !!res.data.saved } }));
+      } else if (res.status === 401) location.href = loginUrl({ then: 'save:' + slug });
       else paintSaved(slug, was);
     }).catch(function () { paintSaved(slug, was); });
   }
@@ -571,6 +574,7 @@
             list.appendChild(li);
             list.setAttribute('data-empty', 'false');
             ta.value = ''; ta.style.height = '';
+            if (window.MansfieldNative) MansfieldNative.haptic('success');
             paintCount(slug, (COUNTS[slug] || 0) + 1);
             scroller.scrollTo({ top: scroller.scrollHeight, behavior: 'smooth' });
           } else if (res.status === 401) {
@@ -622,7 +626,10 @@
     if (action === 'textsize') { textStep = (textStep + 1) % TEXT_SCALES.length; applyReadingTheme(); return; }
     if (action === 'theme') { setDark(!readingDark); return; }
     if (action === 'save') toggleSave(slug);
-    else if (action === 'share') openShare(slug, title);
+    else if (action === 'share') {
+      // Inside the iOS app use the real share sheet; on the web use our own menu.
+      if (!(window.MansfieldNative && MansfieldNative.share(location.origin + '/article/' + slug, title))) openShare(slug, title);
+    }
     else if (action === 'comment') openComments(slug, title);
   }, true);
 
