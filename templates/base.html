@@ -214,8 +214,11 @@
   <script>
     // Who's signed in (from the server session) -- read by static/js/actions.js.
     window.READER = {{ reader_state|tojson }};
+    // Hosts the story maps may come from -- places.js only listens to those.
+    window.MAP_HOSTS = {{ map_embed_hosts()|tojson }};
   </script>
   <script src="/static/js/actions.js?v=4"></script>
+  <script src="/static/js/places.js?v=1" defer></script>
   <script src="/static/js/newsletter.js?v=1" defer></script>
   <script src="/static/js/ask.js?v=2" defer></script>
 

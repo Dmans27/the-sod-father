@@ -1,5 +1,5 @@
 """
-Tiny database layer for reader accounts, saved stories, comments,
+Tiny database layer for reader accounts, saved stories, saved places, comments,
 newsletter subscribers, and the article-search index and usage counts.
 
 Articles themselves still live in JSON files (content.py) -- this is only
@@ -141,6 +141,25 @@ SCHEMA = [
         PRIMARY KEY (day, key)
     )
     """,
+    """
+    CREATE TABLE IF NOT EXISTS saved_places (
+        id           TEXT PRIMARY KEY,
+        reader_id    TEXT NOT NULL,
+        place_key    TEXT NOT NULL,
+        name         TEXT NOT NULL,
+        category     TEXT NOT NULL,
+        address      TEXT NOT NULL,
+        lat          DOUBLE PRECISION NOT NULL,
+        lng          DOUBLE PRECISION NOT NULL,
+        website      TEXT NOT NULL,
+        photo_url    TEXT NOT NULL,
+        listing_url  TEXT NOT NULL,
+        article_slug TEXT NOT NULL,
+        created_at   TEXT NOT NULL,
+        UNIQUE (reader_id, place_key)
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_saved_places_reader ON saved_places (reader_id, created_at)",
     "CREATE INDEX IF NOT EXISTS idx_comments_slug ON comments (slug, created_at)",
     "CREATE INDEX IF NOT EXISTS idx_saved_reader ON saved_articles (reader_id, created_at)",
 ]

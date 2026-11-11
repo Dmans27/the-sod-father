@@ -7,6 +7,8 @@ are for people who *read*.
   /account/signup, /account/login, POST /account/logout, /account (saved list)
   GET/POST /api/comments/<slug>, DELETE /api/comments/<comment_id>
   POST /api/save/<slug>   (toggles saved on/off)
+  GET/POST /api/places, DELETE /api/places/<id>   (places to try, saved from
+      the map pins inside stories -- see static/js/places.js)
 
 Signed-out visitors can still read everything and use Share. Save and
 Comment send them to sign in first, then bring them back to the story --
@@ -28,10 +30,11 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 import db
 from authors import get_author, get_author_by_email
-from content import CATEGORIES, get_article
+from content import CATEGORIES, get_article, map_embed_hosts
 
 readers_bp = Blueprint("readers", __name__)
 
+MAX_SAVED_PLACES = 500   # per reader -- a sanity cap, not a product limit
 MIN_PASSWORD_LENGTH = 8
 MAX_COMMENT_LENGTH = 1000
 COMMENT_COOLDOWN_SECONDS = 10
@@ -246,8 +249,13 @@ def account():
         "SELECT slug FROM saved_articles WHERE reader_id = :r ORDER BY created_at DESC",
         r=reader["id"])
     saved = [a for a in (get_article(r["slug"]) for r in rows) if a]
+    places = []
+    try:
+        places = saved_places(reader["id"])
+    except Exception as exc:
+        print("readers: could not load saved places:", exc)
     return render_template(
-        "account/saved.html", saved=saved, categories=CATEGORIES, active_category=None)
+        "account/saved.html", saved=saved, places=places, categories=CATEGORIES, active_category=None)
 
 
 @readers_bp.get("/account/profile")
@@ -257,15 +265,19 @@ def profile():
     reader = current_reader()
     if not reader:
         return redirect(url_for("readers.login", next="/account/profile"))
-    saved_count = 0
+    saved_count = places_count = 0
     try:
         row = db.query_one(
             "SELECT COUNT(*) AS n FROM saved_articles WHERE reader_id = :r", r=reader["id"])
         saved_count = int((row or {}).get("n", 0))
+        row = db.query_one(
+            "SELECT COUNT(*) AS n FROM saved_places WHERE reader_id = :r", r=reader["id"])
+        places_count = int((row or {}).get("n", 0))
     except Exception as exc:
-        print("readers: could not count saved stories:", exc)
+        print("readers: could not count saved stories/places:", exc)
     return render_template(
-        "account/profile.html", saved_count=saved_count, categories=CATEGORIES, active_category=None)
+        "account/profile.html", saved_count=saved_count, places_count=places_count,
+        categories=CATEGORIES, active_category=None)
 
 
 # ── JSON API: save + comments ────────────────────────────────────────────
@@ -349,6 +361,144 @@ def api_comment_delete(comment_id):
     if not is_admin and row["reader_id"] != reader["id"]:
         return jsonify(error="forbidden"), 403
     db.execute("DELETE FROM comments WHERE id = :id", id=comment_id)
+    return jsonify(ok=True)
+
+
+# ── Places to try ────────────────────────────────────────────────────────
+# Readers save a restaurant / place from a map pin inside a story. The map
+# (an iframe from the ai-app) only *asks* its parent page to save; the page's
+# script (static/js/places.js) checks who is asking and calls this API, so
+# a save always needs a signed-in reader and the CSRF token.
+#
+# Everything in the request is untrusted, so each field is checked and
+# trimmed before it is stored, and links must point at the map's own host.
+
+def _text(value, limit):
+    return " ".join(str(value or "").split())[:limit]
+
+
+def _link(value, host=None, limit=500):
+    """An http(s) link, optionally required to be on `host`; '' if not."""
+    from urllib.parse import urlparse
+    value = str(value or "").strip()
+    if not value or len(value) > limit:
+        return ""
+    try:
+        parsed = urlparse(value)
+    except ValueError:
+        return ""
+    if parsed.scheme not in ("http", "https") or not parsed.netloc or parsed.username:
+        return ""
+    if host and parsed.netloc.lower() != host:
+        return ""
+    return value
+
+
+def clean_place(raw):
+    """Validate the place a map sent us. Returns a dict ready to store, or
+    None if it isn't a place from one of our allowed map hosts."""
+    if not isinstance(raw, dict):
+        return None
+    key = str(raw.get("key") or "").strip().lower()
+    host, _, ident = key.rpartition(":")
+    if not (ident.isdigit() and 1 <= len(ident) <= 12) or host not in map_embed_hosts():
+        return None
+    name = _text(raw.get("name"), 120)
+    try:
+        lat, lng = float(raw.get("lat")), float(raw.get("lng"))
+    except (TypeError, ValueError):
+        return None
+    if not name or not (-90 <= lat <= 90 and -180 <= lng <= 180):
+        return None
+    return {
+        "key": key, "name": name,
+        "category": _text(raw.get("category"), 40).replace("_", " "),
+        "address": _text(raw.get("address"), 200),
+        "lat": lat, "lng": lng,
+        "website": _link(raw.get("website")),
+        "photo": _link(raw.get("photo"), host),
+        "listing": _link(raw.get("listing"), host),
+    }
+
+
+def saved_place_keys(reader_id):
+    rows = db.query("SELECT place_key FROM saved_places WHERE reader_id = :r", r=reader_id)
+    return [r["place_key"] for r in rows]
+
+
+def saved_places(reader_id):
+    """The reader's places for the account page, newest first. Each carries
+    a ready-made directions link and, when the story still exists, its title."""
+    rows = db.query(
+        "SELECT id, place_key, name, category, address, lat, lng, website, photo_url, "
+        "listing_url, article_slug, created_at FROM saved_places "
+        "WHERE reader_id = :r ORDER BY created_at DESC, id", r=reader_id)
+    out = []
+    for r in rows:
+        article = get_article(r["article_slug"]) if r["article_slug"] else None
+        out.append({
+            **r,
+            "directions": f"https://www.google.com/maps/dir/?api=1&destination={r['lat']},{r['lng']}",
+            "article": {"slug": article["slug"], "title": article["title"]} if article else None,
+        })
+    return out
+
+
+@readers_bp.get("/api/places")
+def api_places():
+    """The place keys this reader has saved (the map uses them to show
+    which pins are already saved). Signed-out readers just get none."""
+    reader = current_reader()
+    if not reader:
+        return jsonify(signedIn=False, keys=[])
+    return jsonify(signedIn=True, keys=saved_place_keys(reader["id"]))
+
+
+@readers_bp.post("/api/places")
+@reader_required_json
+def api_places_save():
+    """Save or unsave a place. Body: {place: {...}, article: "<slug>", saved: true|false}.
+    With no `saved` it toggles."""
+    reader = current_reader()
+    payload = request.get_json(silent=True) or {}
+    place = clean_place(payload.get("place"))
+    if not place:
+        return jsonify(error="bad_place"), 400
+    slug = str(payload.get("article") or "").strip()[:200]
+    if slug and not get_article(slug):
+        slug = ""
+
+    exists = db.query_one(
+        "SELECT 1 AS x FROM saved_places WHERE reader_id = :r AND place_key = :k",
+        r=reader["id"], k=place["key"])
+    want = payload.get("saved")
+    want = (not exists) if not isinstance(want, bool) else want
+
+    if want and not exists:
+        count = db.query_one("SELECT COUNT(*) AS n FROM saved_places WHERE reader_id = :r", r=reader["id"])
+        if int((count or {}).get("n", 0)) >= MAX_SAVED_PLACES:
+            return jsonify(error="too_many"), 400
+        try:
+            db.execute(
+                "INSERT INTO saved_places (id, reader_id, place_key, name, category, address, lat, lng, "
+                "website, photo_url, listing_url, article_slug, created_at) "
+                "VALUES (:id, :r, :k, :name, :cat, :addr, :lat, :lng, :web, :photo, :listing, :slug, :t)",
+                id=db.new_id(), r=reader["id"], k=place["key"], name=place["name"], cat=place["category"],
+                addr=place["address"], lat=place["lat"], lng=place["lng"], web=place["website"],
+                photo=place["photo"], listing=place["listing"], slug=slug, t=db.now_iso())
+        except IntegrityError:
+            pass  # saved twice at once
+    elif not want and exists:
+        db.execute("DELETE FROM saved_places WHERE reader_id = :r AND place_key = :k",
+                   r=reader["id"], k=place["key"])
+    return jsonify(saved=want, keys=saved_place_keys(reader["id"]))
+
+
+@readers_bp.delete("/api/places/<place_id>")
+@reader_required_json
+def api_places_delete(place_id):
+    reader = current_reader()
+    db.execute("DELETE FROM saved_places WHERE id = :id AND reader_id = :r", id=place_id, r=reader["id"])
     return jsonify(ok=True)
 
 

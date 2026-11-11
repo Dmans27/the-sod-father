@@ -2141,3 +2141,25 @@ html.ask-open { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .csheet__panel, .csheet__scrim { transition-duration: 0.01s; }
 }
+
+/* ── Places to try (saved from the story maps) ── */
+.account-section { margin: 34px 0 14px; font-size: 13px; font-weight: 800; letter-spacing: 0.07em; text-transform: uppercase; color: var(--ink-faint); }
+.place-list { display: grid; gap: 14px; }
+.place-card { display: flex; gap: 14px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+.place-card__photo { flex: 0 0 auto; width: 96px; height: 96px; border-radius: 10px; object-fit: cover; background: var(--cream-deep); }
+.place-card__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
+.place-card__cat { font-size: 11.5px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase; color: var(--fairway); }
+.place-card__name { margin: 0; font-family: var(--font-serif); font-size: 18px; line-height: 1.25; }
+.place-card__addr, .place-card__from { margin: 0; font-size: 14px; color: var(--ink-soft); }
+.place-card__from a { color: var(--fairway-deep); font-weight: 700; }
+.place-card__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.place-card__actions .account-btn { text-decoration: none; display: inline-block; }
+@media (max-width: 480px) { .place-card__photo { width: 76px; height: 76px; } }
+.is-dark .place-card { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.14); }
+
+/* Little confirmation after tapping Save on a map pin */
+.place-toast { position: fixed; left: 50%; bottom: calc(86px + env(safe-area-inset-bottom, 0px)); z-index: 300; max-width: min(92vw, 420px);
+  transform: translate(-50%, 16px); opacity: 0; pointer-events: none; padding: 11px 16px; border-radius: 12px; background: #1b2a1f; color: #fff;
+  font-size: 14px; line-height: 1.4; box-shadow: 0 8px 24px rgba(0,0,0,0.25); transition: opacity 0.25s ease, transform 0.25s ease; }
+.place-toast.is-on { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.place-toast a { color: #9ce0c0; font-weight: 700; margin-left: 4px; }

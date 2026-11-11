@@ -1,11 +1,13 @@
 {% extends "base.html" %}
-{% block title %}Saved stories — \\Mansfield{% endblock %}
+{% block title %}Saved — \\Mansfield{% endblock %}
 
 {% block content %}
 <section class="hero">
-  <h1 class="hero__title">Saved stories</h1>
+  <h1 class="hero__title">Saved</h1>
   <p class="hero__sub">Signed in as {{ reader.display_name }}.</p>
 </section>
+
+<h2 class="account-section" id="stories">Saved stories</h2>
 
 <div class="story-list">
   {% for article in saved %}
@@ -26,6 +28,29 @@
 {% if not saved %}
   <p class="empty-state">Nothing saved yet. Tap Save under any story and it will show up here.</p>
 {% endif %}
+
+<h2 class="account-section" id="places">Places to try</h2>
+
+<div class="place-list" id="places-list">
+  {% for place in places %}
+    <article class="place-card{% if place.photo_url %} has-photo{% endif %}">
+      {% if place.photo_url %}<img class="place-card__photo" src="{{ place.photo_url }}" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">{% endif %}
+      <div class="place-card__body">
+        {% if place.category %}<span class="place-card__cat">{{ place.category }}</span>{% endif %}
+        <h3 class="place-card__name">{{ place.name }}</h3>
+        {% if place.address %}<p class="place-card__addr">{{ place.address }}</p>{% endif %}
+        {% if place.article %}<p class="place-card__from">From <a href="/article/{{ place.article.slug }}">{{ place.article.title }}</a></p>{% endif %}
+        <div class="place-card__actions">
+          <a class="account-btn account-btn--small" href="{{ place.directions }}" target="_blank" rel="noopener noreferrer">Directions</a>
+          {% if place.website %}<a class="account-btn account-btn--small account-btn--ghost" href="{{ place.website }}" target="_blank" rel="noopener noreferrer">Website</a>{% endif %}
+          <button type="button" class="account-btn account-btn--small account-btn--ghost" data-remove-place="{{ place.id }}">Remove</button>
+        </div>
+      </div>
+    </article>
+  {% endfor %}
+</div>
+
+<p class="empty-state" id="places-empty"{% if places %} hidden{% endif %}>No places yet. Open a map inside a story, tap a pin and choose + Save to add restaurants and spots you want to try.</p>
 
 <form method="post" action="/account/logout" class="account-signout">
   <input type="hidden" name="csrf" value="{{ csrf_token }}">
