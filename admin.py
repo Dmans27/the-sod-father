@@ -539,6 +539,14 @@ def parse_map_url(raw, style="light"):
                 "embed_url": f"{base}/embed/list/{slug}?style={style}",
                 "open_url": f"{base}/lists/{slug}"}
 
+    # A custom map built in the app's My maps (…/embed/m/12).
+    m = re.match(r"^/embed/m/(\d{1,9})$", path)
+    if m:
+        map_id = m.group(1)
+        return {"kind": "custom", "ident": map_id,
+                "embed_url": f"{base}/embed/m/{map_id}?style={style}",
+                "open_url": f"{base}/embed/m/{map_id}"}
+
     m = re.match(r"^/(?:u/(\d{1,9})/map|embed/u/(\d{1,9}))$", path)
     if m:
         user_id = m.group(1) or m.group(2)
@@ -773,7 +781,7 @@ def _build_blocks_from_form(form, files, slug):
                 if parsed is None:
                     errors.append(
                         f"The map link “{raw_url}” isn't a map I can embed. Paste a list link "
-                        "(…/lists/your-list), a profile map link (…/u/12/map) or a city map link from your app "
+                        "(…/lists/your-list), a profile map link (…/u/12/map), or a city or custom map link from My maps in your app "
                         f"({', '.join(map_embed_hosts())}).")
                 else:
                     blocks.append({
