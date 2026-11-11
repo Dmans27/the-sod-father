@@ -54,9 +54,10 @@
     {
       "type": "map",
       "kind": "profile",
-      "url": "https://ai-app-repo.onrender.com/u/1/map",
-      "embed_url": "https://ai-app-repo.onrender.com/embed/u/1?style=streets",
-      "open_url": "https://ai-app-repo.onrender.com/u/1/map",
+      "url": "https://ai-app-repo.onrender.com/embed/u/1?city=Vienna",
+      "embed_url": "https://ai-app-repo.onrender.com/embed/u/1?style=streets&city=Vienna",
+      "open_url": "https://ai-app-repo.onrender.com/embed/u/1?city=Vienna",
+      "city": "Vienna",
       "style": "streets",
       "height": "medium",
       "caption": "Where I went to eat this trip"
