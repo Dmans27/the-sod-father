@@ -1,4 +1,4 @@
-# The Sod Father — iOS wrapper
+# Mansfield — iOS wrapper
 
 A thin Capacitor shell that loads the live site (https://the-sod-father.onrender.com)
 directly -- no local web assets are bundled, same pattern as the Dony and
@@ -16,8 +16,8 @@ project, so there's no `.xcworkspace` and no `pod install` step -- just
 open the `.xcodeproj` directly and Xcode resolves the Capacitor packages
 automatically the first time it builds.
 
-- **Bundle ID:** com.thesodfather.app
-- **Display name:** The Sod Father
+- **Bundle ID:** com.mansfield.app
+- **Display name:** Mansfield
 
 ## After changing the Render URL or app config
 

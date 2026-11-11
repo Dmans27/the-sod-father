@@ -5,8 +5,8 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // (Dony) iOS wrappers. The www/ folder only exists because Capacitor
 // requires one to be configured -- it's never actually shown.
 const config: CapacitorConfig = {
-  appId: 'com.thesodfather.app',
-  appName: 'The Sod Father',
+  appId: 'com.mansfield.app',
+  appName: 'Mansfield',
   webDir: 'www',
   server: {
     url: 'https://the-sod-father.onrender.com',

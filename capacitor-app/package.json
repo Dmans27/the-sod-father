@@ -1,8 +1,8 @@
 {
-  "name": "the-sod-father-app",
+  "name": "mansfield-app",
   "version": "1.0.0",
   "private": true,
-  "description": "iOS wrapper for The Sod Father (thin native shell loading the live site)",
+  "description": "iOS wrapper for Mansfield (thin native shell loading the live site)",
   "scripts": {
     "sync": "cap sync ios"
   },
