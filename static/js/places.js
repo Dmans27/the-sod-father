@@ -8,6 +8,8 @@
  *   map  -> page   { type: 'mansfield:hello' }                 "can I save places here?"
  *   page -> map    { type: 'mansfield:saved-state', signedIn, keys: [...] }
  *   map  -> page   { type: 'mansfield:save-place', place: {...} }   "toggle this one"
+ *   card -> page   { type: 'mansfield:resize', height, expand }       "make my frame this tall"
+ *                  (Place cards only -- they size themselves to the card inside.)
  *
  * Before doing anything we check the message really came from one of the map
  * iframes on this page AND from an allowed map host (window.MAP_HOSTS). The
@@ -34,7 +36,7 @@
   }
 
   function frames() {
-    return Array.prototype.slice.call(document.querySelectorAll('.article__map-frame iframe'));
+    return Array.prototype.slice.call(document.querySelectorAll('.article__map-frame iframe, .article__place iframe'));
   }
 
   function fromMapFrame(e) {
@@ -126,6 +128,17 @@
   window.addEventListener('message', function (e) {
     var d = e.data;
     if (!d || typeof d !== 'object' || !fromMapFrame(e)) return;
+    if (d.type === 'mansfield:resize') {
+      var box = frames().filter(function (f) { return f.contentWindow === e.source; })[0];
+      var h = Number(d.height);
+      if (!box || !box.closest('.article__place') || !isFinite(h)) return;
+      box.style.height = Math.max(120, Math.min(1400, Math.round(h))) + 'px';
+      if (d.expand) {
+        // Opening details/photos makes the card taller: keep it in view.
+        setTimeout(function () { box.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); }, 320);
+      }
+      return;
+    }
     if (d.type === 'mansfield:hello') {
       loadKeys().then(function () { tell(e.source, e.origin); });
     } else if (d.type === 'mansfield:save-place' && d.place) {
@@ -133,7 +146,7 @@
       var slug = articleSlug(frame);
       if (!READER.signedIn) { goSignIn(d.place, slug); return; }
       loadKeys().then(function () {
-        save(d.place, slug, keys.indexOf(String(d.place.key || '').toLowerCase()) < 0);
+        save(d.place, slug, keys.indexOf(String(d.place.key || '')) < 0);
       });
     }
   });

@@ -97,6 +97,7 @@ BLOCK_TYPES = {
     "gallery": "Gallery",
     "video": "Video (YouTube / Vimeo link)",
     "map": "Interactive map",
+    "place": "Place card (business / hotel)",
     "link": "Link card",
     "compare": "Before / after slider",
     "embed": "Custom embed / code",

@@ -423,6 +423,8 @@ def parse_video_url(raw):
 
 MAP_STYLES = ("light", "dark", "streets")
 MAP_HEIGHTS = {"short": 300, "medium": 420, "tall": 560}
+# Looks for a single-business "Place card" (see parse_place_url).
+PLACE_STYLES = ("photo", "wide", "full", "strip")
 _MAP_SLUG = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,200}$")
 
 
@@ -465,6 +467,36 @@ def parse_map_url(raw, style="light"):
         return {"kind": "profile", "ident": user_id,
                 "embed_url": f"{base}/embed/u/{user_id}?style={style}",
                 "open_url": f"{base}/u/{user_id}/map"}
+    return None
+
+
+def parse_place_url(raw, style="photo"):
+    """Turns a pasted directory listing link into a Place card block address, or
+    None if it isn't a listing from an allowed host (content.map_embed_hosts).
+
+    Accepts the ordinary page link, /listing/<slug>, as well as /embed/card/<slug>.
+    As with maps and videos, the iframe address is rebuilt here from the
+    extracted slug and never copied from what was pasted."""
+    raw = (raw or "").strip()
+    if not raw:
+        return None
+    if "://" not in raw:
+        raw = "https://" + raw
+    try:
+        parsed = urlparse(raw)
+    except ValueError:
+        return None
+    netloc = (parsed.netloc or "").lower()
+    if not netloc or "@" in netloc or netloc not in map_embed_hosts():
+        return None
+    scheme = "http" if (parsed.scheme == "http" and (parsed.hostname or "") in LOCAL_HOSTNAMES) else "https"
+    base = f"{scheme}://{netloc}"
+    style = style if style in PLACE_STYLES else "photo"
+    m = re.match(r"^/(?:listing|embed/card)/([^/]+)$", parsed.path.rstrip("/"))
+    if m and _MAP_SLUG.match(m.group(1)):
+        slug = m.group(1)
+        return {"slug": slug, "embed_url": f"{base}/embed/card/{slug}?style={style}",
+                "open_url": f"{base}/listing/{slug}"}
     return None
 
 
@@ -646,6 +678,25 @@ def _build_blocks_from_form(form, files, slug):
                         "type": "map", "kind": parsed["kind"], "url": raw_url,
                         "embed_url": parsed["embed_url"], "open_url": parsed["open_url"],
                         "style": style, "height": height,
+                        "caption": form.get(f"block_caption_{bid}", "").strip(),
+                    })
+
+        elif btype == "place":
+            raw_url = form.get(f"block_url_{bid}", "").strip()
+            if raw_url:
+                style = form.get(f"block_place_style_{bid}", "photo")
+                style = style if style in PLACE_STYLES else "photo"
+                parsed = parse_place_url(raw_url, style)
+                if parsed is None:
+                    errors.append(
+                        f"The place link \u201c{raw_url}\u201d isn't a listing I can embed. Paste the "
+                        "business's page link from your app (…/listing/its-name) "
+                        f"({', '.join(map_embed_hosts())}).")
+                else:
+                    blocks.append({
+                        "type": "place", "slug": parsed["slug"], "url": raw_url,
+                        "embed_url": parsed["embed_url"], "open_url": parsed["open_url"],
+                        "style": style,
                         "caption": form.get(f"block_caption_{bid}", "").strip(),
                     })
 

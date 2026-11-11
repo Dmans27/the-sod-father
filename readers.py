@@ -399,10 +399,14 @@ def clean_place(raw):
     None if it isn't a place from one of our allowed map hosts."""
     if not isinstance(raw, dict):
         return None
-    key = str(raw.get("key") or "").strip().lower()
+    key = str(raw.get("key") or "").strip()
     host, _, ident = key.rpartition(":")
-    if not (ident.isdigit() and 1 <= len(ident) <= 12) or host not in map_embed_hosts():
+    host, ident = host.lower(), ident.upper()
+    # A pin is "<host>:<number>"; a whole-business card is "<host>:L<number>".
+    number = ident[1:] if ident.startswith("L") else ident
+    if not (number.isdigit() and 1 <= len(number) <= 12) or host not in map_embed_hosts():
         return None
+    key = f"{host}:{ident}"
     name = _text(raw.get("name"), 120)
     try:
         lat, lng = float(raw.get("lat")), float(raw.get("lng"))

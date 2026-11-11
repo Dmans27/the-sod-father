@@ -331,6 +331,23 @@
   </div>
 </template>
 
+<template id="block-template-place">
+  <div class="admin-block" data-block-type="place">
+    {{ block_head('Place card (business / hotel)') }}
+    <div class="admin-block__body">
+      <input type="text" class="admin-block__url" placeholder="Paste the business's page link from your app (…/listing/its-name)" inputmode="url" autocapitalize="off">
+      <input type="text" class="admin-block__caption" placeholder="Caption (optional)">
+      <select class="admin-place__style" aria-label="Card style">
+        <option value="photo">Photo card (picture, name and buttons)</option>
+        <option value="wide">Wide card (photo beside the facts)</option>
+        <option value="strip">Photo strip (swipeable pictures, then the details)</option>
+        <option value="full">Full place page (gallery, hours, reviews)</option>
+      </select>
+      <p class="admin-hint">Shows one business or hotel from your directory, with its Google pictures and live details. Readers can get directions, see photos, open the details and save it to their account.</p>
+    </div>
+  </div>
+</template>
+
 <template id="block-template-link">
   <div class="admin-block" data-block-type="link">
     {{ block_head('Link card') }}
@@ -508,6 +525,18 @@
         var mStyle = node.querySelector('.admin-map__style');
         mStyle.name = fieldName('block_map_style', id);
         mStyle.value = data.style || 'light';
+      }
+
+      if (type === 'place') {
+        var pUrl = node.querySelector('.admin-block__url');
+        pUrl.name = fieldName('block_url', id);
+        if (data.url) pUrl.value = data.url;
+        var pCap = node.querySelector('.admin-block__caption');
+        pCap.name = fieldName('block_caption', id);
+        if (data.caption) pCap.value = data.caption;
+        var pStyle = node.querySelector('.admin-place__style');
+        pStyle.name = fieldName('block_place_style', id);
+        pStyle.value = data.style || 'photo';
       }
 
       if (type === 'link') {

@@ -339,6 +339,20 @@
             '<figcaption>' + (block.caption ? esc(block.caption) + ' &middot; ' : '') + '<a href="' + esc(block.open_url || block.embed_url) +
             '" target="_blank" rel="noopener noreferrer">Open the full map &nearr;</a></figcaption></figure>';
         }
+        if (block.type === 'place') {
+          // Same rule as maps: only an address on an allowed map host.
+          var placeHosts = {{ map_embed_hosts()|tojson }};
+          var placeUrl;
+          try { placeUrl = new URL(block.embed_url || ''); } catch (e) { return ''; }
+          var placeLocal = placeUrl.protocol === 'http:' && (placeUrl.hostname === 'localhost' || placeUrl.hostname === '127.0.0.1');
+          if (!(placeUrl.protocol === 'https:' || placeLocal) || placeHosts.indexOf(placeUrl.host.toLowerCase()) < 0 ||
+              placeUrl.pathname.indexOf('/embed/') !== 0 || placeUrl.username) return '';
+          var placeStyle = ['photo', 'wide', 'full', 'strip'].indexOf(block.style) >= 0 ? block.style : 'photo';
+          return '<figure class="article__place article__place--' + placeStyle + '"><iframe src="' + esc(block.embed_url) +
+            '" title="' + esc(block.caption || 'Place card') + '" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen" ' +
+            'sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>' +
+            (block.caption ? '<figcaption>' + esc(block.caption) + '</figcaption>' : '') + '</figure>';
+        }
         if (block.type === 'link') {
           var external = block.kind === 'web';
           return '<a class="link-card" href="' + esc(block.href) + '"' + (external ? ' target="_blank" rel="noopener noreferrer"' : '') + '>' +
