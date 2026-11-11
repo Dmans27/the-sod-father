@@ -25,6 +25,7 @@
       <input type="password" name="password" minlength="8" autocomplete="new-password" required>
     </label>
     <button type="submit" class="account-btn">Create account</button>
+    <p class="account-legal">By creating an account you agree to the <a href="/terms">Terms of Use</a> and <a href="/privacy">Privacy Policy</a>.</p>
   </form>
 
   <p class="account-card__foot">Already have an account? <a href="/account/login?next={{ next|urlencode }}{% if then %}&then={{ then|urlencode }}{% endif %}">Sign in</a></p>

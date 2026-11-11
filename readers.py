@@ -7,6 +7,7 @@ are for people who *read*.
   /account/signup, /account/login, POST /account/logout, /account (saved list)
   GET/POST /api/comments/<slug>, DELETE /api/comments/<comment_id>
   POST /api/save/<slug>   (toggles saved on/off)
+  (reporting, blocking and deleting an account are in safety.py)
   GET/POST /api/places, DELETE /api/places/<id>   (places to try, saved from
       the map pins inside stories -- see static/js/places.js)
 
@@ -29,6 +30,7 @@ from sqlalchemy.exc import IntegrityError
 from werkzeug.security import check_password_hash, generate_password_hash
 
 import db
+import moderation
 from authors import get_author, get_author_by_email
 from content import CATEGORIES, get_article, map_embed_hosts
 
@@ -93,7 +95,9 @@ def saved_slugs():
 def comment_counts():
     """{slug: number of comments} for the homepage's comment buttons."""
     try:
-        rows = db.query("SELECT slug, COUNT(*) AS n FROM comments GROUP BY slug")
+        rows = db.query(
+            "SELECT c.slug, COUNT(*) AS n FROM comments c WHERE " + moderation.VISIBLE_SQL +
+            " GROUP BY c.slug", **moderation.HIDE_PARAMS)
     except Exception as exc:
         print("readers: could not count comments:", exc)
         return {}
@@ -182,6 +186,8 @@ def signup_submit():
         error = "That doesn't look like a valid email address."
     elif len(password) < MIN_PASSWORD_LENGTH:
         error = f"Use a password of at least {MIN_PASSWORD_LENGTH} characters."
+    if not error and moderation.is_banned(email):
+        error = "This email address can't be used to create an account."
     if error:
         return render_template("account/signup.html", error=error, form=form, **ctx), 400
 
@@ -300,10 +306,16 @@ def api_comments(slug):
     if not get_article(slug):
         return jsonify(error="not_found"), 404
     reader = current_reader()
-    rows = db.query(
-        "SELECT c.id, c.body, c.created_at, c.reader_id, r.display_name "
-        "FROM comments c JOIN readers r ON r.id = c.reader_id "
-        "WHERE c.slug = :s ORDER BY c.created_at ASC", s=slug)
+    # Hidden (3+ reports, not yet reviewed) comments are left out for everyone,
+    # and a signed-in reader doesn't see comments from readers they blocked.
+    sql = ("SELECT c.id, c.body, c.created_at, c.reader_id, r.display_name "
+           "FROM comments c JOIN readers r ON r.id = c.reader_id "
+           "WHERE c.slug = :s AND " + moderation.VISIBLE_SQL)
+    params = {"s": slug, **moderation.HIDE_PARAMS}
+    if reader:
+        sql += " AND c.reader_id NOT IN (SELECT blocked_id FROM reader_blocks WHERE reader_id = :me)"
+        params["me"] = reader["id"]
+    rows = db.query(sql + " ORDER BY c.created_at ASC", **params)
     is_admin = bool(session.get("is_admin"))
     return jsonify(comments=[{
         "id": r["id"],
@@ -311,6 +323,7 @@ def api_comments(slug):
         "body": r["body"],
         "created_at": r["created_at"],
         "can_delete": is_admin or bool(reader and reader["id"] == r["reader_id"]),
+        "can_report": not (reader and reader["id"] == r["reader_id"]),
     } for r in rows])
 
 
@@ -327,6 +340,9 @@ def api_comment_create(slug):
         return jsonify(error="empty"), 400
     if len(body) > MAX_COMMENT_LENGTH:
         return jsonify(error="too_long", max=MAX_COMMENT_LENGTH), 400
+    problem = moderation.check_comment_text(body)
+    if problem:
+        return jsonify(error=problem), 400
 
     last = db.query_one(
         "SELECT created_at FROM comments WHERE reader_id = :r ORDER BY created_at DESC LIMIT 1",
@@ -344,7 +360,7 @@ def api_comment_create(slug):
         id=comment_id, s=slug, r=reader["id"], b=body, t=created)
     return jsonify(comment={
         "id": comment_id, "name": reader["display_name"], "body": body,
-        "created_at": created, "can_delete": True}), 201
+        "created_at": created, "can_delete": True, "can_report": False}), 201
 
 
 @readers_bp.delete("/api/comments/<comment_id>")
@@ -360,7 +376,7 @@ def api_comment_delete(comment_id):
         return jsonify(error="not_found"), 404
     if not is_admin and row["reader_id"] != reader["id"]:
         return jsonify(error="forbidden"), 403
-    db.execute("DELETE FROM comments WHERE id = :id", id=comment_id)
+    moderation.delete_comment(comment_id)
     return jsonify(ok=True)
 
 

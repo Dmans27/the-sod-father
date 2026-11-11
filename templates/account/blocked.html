@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Blocked readers — \\Mansfield{% endblock %}
+
+{% block content %}
+<section class="account-card">
+  <h1 class="account-card__title">Blocked readers</h1>
+  <p class="account-card__sub">You don&rsquo;t see comments from these readers. They aren&rsquo;t told.</p>
+
+  {% if blocked %}
+    <ul class="blocked-list">
+      {% for b in blocked %}
+        <li class="blocked-list__row">
+          <span class="blocked-list__name">{{ b.name }}</span>
+          <form method="post" action="/account/blocked/{{ b.id }}/unblock">
+            <input type="hidden" name="csrf" value="{{ csrf_token }}">
+            <button type="submit" class="account-btn account-btn--small account-btn--ghost">Unblock</button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p class="account-note">You haven&rsquo;t blocked anyone. To block someone, tap <strong>Block</strong> on one of their comments.</p>
+  {% endif %}
+  <p class="account-card__foot"><a href="/account/profile">Back to account</a></p>
+</section>
+{% endblock %}

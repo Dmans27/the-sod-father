@@ -177,6 +177,8 @@
       var list = document.getElementById('places-list');
       var empty = document.getElementById('places-empty');
       if (list && empty && !list.children.length) empty.hidden = false;
+      var count = document.getElementById('places-count');
+      if (count) { if (list && list.children.length) count.textContent = list.children.length; else count.remove(); }
     }).catch(function () { btn.disabled = false; });
   });
 })();

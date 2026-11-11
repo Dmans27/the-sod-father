@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Delete account — \\Mansfield{% endblock %}
+
+{% block content %}
+<section class="account-card">
+  <h1 class="account-card__title">Delete your account</h1>
+  <p class="account-card__sub">This permanently deletes the account for <strong>{{ reader.email }}</strong>. It can&rsquo;t be undone.</p>
+
+  <p class="account-note">What gets deleted straight away:</p>
+  <ul class="account-note-list">
+    <li>Your profile (name, email and password)</li>
+    <li>Your saved stories and places to try</li>
+    <li>Every comment you&rsquo;ve posted</li>
+    <li>Your reports and the readers you&rsquo;ve blocked</li>
+  </ul>
+
+  {% if error %}<p class="account-error" role="alert">{{ error }}</p>{% endif %}
+  <form method="post" action="/account/delete" class="account-form">
+    <input type="hidden" name="csrf" value="{{ csrf_token }}">
+    <label class="account-field">
+      <span>Enter your password to confirm</span>
+      <input type="password" name="password" autocomplete="current-password" required autofocus>
+    </label>
+    <label class="account-check">
+      <input type="checkbox" name="newsletter" value="yes" checked>
+      <span>Also remove this email address from the newsletter</span>
+    </label>
+    <label class="account-check">
+      <input type="checkbox" name="confirm" value="yes" required>
+      <span>I understand my account and everything above will be permanently deleted</span>
+    </label>
+    <button type="submit" class="account-btn account-btn--danger">Delete my account</button>
+  </form>
+  <p class="account-card__foot"><a href="/account/profile">No, keep my account</a></p>
+</section>
+{% endblock %}

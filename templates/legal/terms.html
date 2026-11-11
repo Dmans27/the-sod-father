@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Terms of Use — \\Mansfield{% endblock %}
+
+{% block content %}
+<article class="legal">
+  <h1 class="legal__title">Terms of Use</h1>
+  <p class="legal__meta">Last updated {{ updated }}</p>
+
+  <p>These terms cover your use of \\Mansfield, its website and its app. \\Mansfield is a personal project run by {{ operator }}. By using it, or by creating an account, you agree to these terms and to our <a href="/privacy">Privacy Policy</a>. If you do not agree, please do not use it.</p>
+
+  <h2>Your account</h2>
+  <p>You must be at least 13 to make an account. Give us a real email address, keep your password to yourself, and tell us if you think someone else has your account. You are responsible for what happens under your account. You can delete your account at any time from <a href="/account/profile">Account</a>.</p>
+
+  <h2>What you post</h2>
+  <p>Comments are your own words and you stay responsible for them. By posting you give \\Mansfield permission to show your comment on the site and app for as long as it stays up. You can delete your own comments whenever you like.</p>
+  <p>Do not post anything that is hateful, harassing, threatening, sexually explicit, violent or shocking for its own sake, illegal, misleading, or that shares someone else&rsquo;s private information. Do not post spam, advertising, or strings of links. Do not pretend to be someone else.</p>
+
+  <h2>How we keep comments safe</h2>
+  <p>There is zero tolerance for objectionable content or abusive behaviour here. To enforce that:</p>
+  <ul>
+    <li>Comments are checked automatically for offensive language and link spam when you post.</li>
+    <li>Every comment from someone else has a <strong>Report</strong> button. A comment that is reported by {{ hide_after }} different readers is hidden from everyone until the owner has reviewed it.</li>
+    <li>You can <strong>Block</strong> a reader to stop seeing their comments, and undo it under <a href="/account/blocked">Blocked readers</a>.</li>
+    <li>The owner reviews reports and may delete comments, and may remove accounts and stop the same email address from signing up again. We aim to act on reports within 24 hours.</li>
+  </ul>
+  <p>We may remove any content, and suspend or end any account, that breaks these terms.</p>
+
+  <h2>Our content</h2>
+  <p>The stories, photos and design on \\Mansfield belong to \\Mansfield and its authors. You are welcome to read them, share links to them, and quote short extracts with credit. Please do not copy whole stories or reuse our images without asking.</p>
+
+  <h2>Information, not advice</h2>
+  <p>Stories, recommendations, maps and places are shared for general interest. Opening times, prices and details change, so check with the place before you travel. Nothing here is professional, medical, legal or financial advice. Answers from Ask are written by an AI from our stories and can be wrong, so double-check anything important.</p>
+
+  <h2>Other people&rsquo;s websites and services</h2>
+  <p>The site links to and uses services run by other companies, such as map providers and the websites of places we mention. We do not control them and are not responsible for them.</p>
+
+  <h2>No guarantees</h2>
+  <p>\\Mansfield is provided as it is. We try to keep it running and accurate, but we do not promise it will always be available or error-free. To the extent the law allows, we are not liable for losses that come from using it. Nothing in these terms limits any rights you have by law that cannot be limited.</p>
+
+  <h2>Changes</h2>
+  <p>We may update these terms. The date at the top shows when they last changed, and using \\Mansfield after a change means you accept the new version.</p>
+
+  <h2>Contact</h2>
+  <p>Questions, complaints or reports: use the <a href="/contact">contact form</a>.</p>
+</article>
+{% endblock %}

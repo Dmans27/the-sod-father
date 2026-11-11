@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block title %}Contact — \\Mansfield{% endblock %}
+
+{% block content %}
+<section class="account-card">
+  <h1 class="account-card__title">Contact us</h1>
+  <p class="account-card__sub">Questions, feedback, a problem with a comment or your account? Send a message and it goes straight to Daniel.</p>
+
+  {% if sent %}
+    <p class="nl-success" role="status">Thanks &mdash; your message was sent. We&rsquo;ll reply by email if it needs an answer.</p>
+    <p class="account-card__foot"><a href="/">Back to the stories</a></p>
+  {% else %}
+    {% if error %}<p class="account-error" role="alert">{{ error }}</p>{% endif %}
+    <form method="post" action="/contact" class="account-form">
+      <input type="hidden" name="csrf" value="{{ csrf_token }}">
+      <label class="account-field">
+        <span>Your name</span>
+        <input type="text" name="name" value="{{ form.get('name', '') }}" maxlength="80" autocomplete="name" required>
+      </label>
+      <label class="account-field">
+        <span>Email <em>so we can reply &mdash; never shown publicly</em></span>
+        <input type="email" name="email" value="{{ form.get('email', '') }}" maxlength="254" autocomplete="email" autocapitalize="off" required>
+      </label>
+      <label class="account-field">
+        <span>Message</span>
+        <textarea name="message" rows="6" maxlength="2000" required>{{ form.get('message', '') }}</textarea>
+      </label>
+      <div class="nl-hp" aria-hidden="true"><label>Leave this empty <input type="text" name="website" tabindex="-1" autocomplete="off"></label></div>
+      <button type="submit" class="account-btn">Send message</button>
+    </form>
+    <p class="account-card__foot">Want to report a comment? Use the <strong>Report</strong> button on the comment itself &mdash; it&rsquo;s the fastest way.</p>
+  {% endif %}
+</section>
+{% endblock %}

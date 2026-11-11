@@ -23,6 +23,7 @@ from admin import admin_bp
 from author_auth import author_bp
 from newsletter import newsletter_bp
 from ask import ask_bp
+import safety
 from seo import seo_bp, register as register_seo
 import readers
 
@@ -40,6 +41,7 @@ register_seo(app)  # canonical addresses + optional analytics for every page
 app.jinja_env.globals.update(map_embed_ok=is_map_embed_url, map_embed_hosts=map_embed_hosts,
                              place_embed_url=place_embed_url)
 readers.register(app)  # reader accounts: sign up, save, comment (see readers.py)
+safety.register(app)  # privacy/terms/contact pages, report + block, delete account, admin review screens (see safety.py)
 
 
 @app.get("/")

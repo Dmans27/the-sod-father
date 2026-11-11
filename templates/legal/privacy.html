@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+{% block title %}Privacy Policy — \\Mansfield{% endblock %}
+
+{% block content %}
+<article class="legal">
+  <h1 class="legal__title">Privacy Policy</h1>
+  <p class="legal__meta">Last updated {{ updated }}</p>
+
+  <p>\\Mansfield is a personal project run by {{ operator }}. This page explains what information the site and its app collect, why, who else sees it, and what control you have. We have tried to keep it short and plain. If anything here is unclear, use the <a href="/contact">contact form</a>.</p>
+
+  <h2>The short version</h2>
+  <p>You can read every story without an account or giving us anything. If you make an account we store the details you give us so the account works. We do not sell your information, we do not show advertising, and we do not track you across other websites or apps. You can delete your account, and everything attached to it, yourself at any time from <a href="/account/profile">Account</a>.</p>
+
+  <h2>What we collect</h2>
+  <p><strong>Your account.</strong> When you sign up we store your display name, email address and a password. The password is stored only as a one-way scrambled hash, so nobody (including us) can read it. Your display name is shown next to any comments you post. Your email address is never shown publicly.</p>
+  <p><strong>What you save.</strong> Stories you save and places you save to your &ldquo;places to try&rdquo; list, so they are there next time you sign in.</p>
+  <p><strong>Comments, reports and blocks.</strong> Comments you write are public, with your display name. We also store reports you make about other people&rsquo;s comments and the list of readers you have blocked, so the tools keep working.</p>
+  <p><strong>Newsletter.</strong> If you subscribe we store your email address, and your name and profession if you choose to give them, plus which form you used. Each email includes an unsubscribe link.</p>
+  <p><strong>Messages you send us.</strong> If you use the contact form we store your name, email address and message so we can read and reply to it.</p>
+  <p><strong>Ask.</strong> When you use the Ask feature, your question is sent to an AI service (OpenAI) to write an answer from our stories. We do not keep a copy of your questions. To apply daily limits we keep a simple counter for your account, or for visitors without an account a scrambled form of the network address, which cannot be turned back into the address.</p>
+  <p><strong>Technical information.</strong> Like any website, our hosting provider&rsquo;s servers handle your network (IP) address and browser details when you visit, and may keep ordinary server logs. We use your network address briefly, in memory only, to slow down password guessing and form spam.</p>
+
+  <h2>Cookies and similar storage</h2>
+  <p>We use one essential cookie that keeps you signed in and protects forms from forgery. We also store a few preferences in your browser or device, such as light or dark reading mode and text size. These stay on your device. We do not use advertising or cross-site tracking cookies.</p>
+  <p>If we turn on visitor statistics, we use a privacy-focused service (GoatCounter or Plausible) that counts page views without cookies and without building profiles of individual visitors.</p>
+
+  <h2>Services that help us run the site</h2>
+  <p>We share only what each service needs to do its job:</p>
+  <ul>
+    <li><strong>Render</strong> hosts the site and its database, so your account data is stored there.</li>
+    <li><strong>GitHub</strong> stores the stories themselves. No reader information is stored there.</li>
+    <li><strong>OpenAI</strong> receives your question when you use Ask.</li>
+    <li><strong>Resend</strong> delivers newsletter emails to subscribers, so it handles subscribers&rsquo; email addresses.</li>
+    <li><strong>Mapbox and Google</strong> provide the maps and place information shown inside stories and in your places to try. When a map loads, your device connects to them and they receive technical information such as your network address.</li>
+    <li><strong>Google Fonts</strong> serves the typefaces used on the site, so your device requests them from Google.</li>
+  </ul>
+  <p>Each of these has its own privacy policy. We may also disclose information if the law requires it.</p>
+
+  <h2>How long we keep things</h2>
+  <p>Account information, saved items and comments are kept until you delete your account. Newsletter details are kept until you unsubscribe or ask us to remove them. Contact messages are kept until we have dealt with them and are then deleted. When you delete your account we remove the data described above straight away, although copies may remain in our hosting provider&rsquo;s backups for a short time before they are overwritten.</p>
+
+  <h2>Your choices and rights</h2>
+  <ul>
+    <li><strong>Delete your account.</strong> Go to <a href="/account/delete">Account &rarr; Delete account</a>. This permanently removes your account, saved stories and places, comments and blocks, and can also remove you from the newsletter.</li>
+    <li><strong>Unsubscribe.</strong> Use the link at the bottom of any newsletter email.</li>
+    <li><strong>See, correct or remove your information.</strong> Ask through the <a href="/contact">contact form</a> and we will help. Depending on where you live, you may have extra legal rights over your information, and we will respect them.</li>
+    <li><strong>Block or report.</strong> You can block a reader or report a comment from the comment itself. Blocked readers are listed under <a href="/account/blocked">Blocked readers</a> where you can undo it.</li>
+  </ul>
+
+  <h2>Children</h2>
+  <p>\\Mansfield is not meant for children under 13, and we do not knowingly collect information from them. If you believe a child has given us information, tell us through the contact form and we will delete it.</p>
+
+  <h2>Security</h2>
+  <p>Connections to the site are encrypted and passwords are stored as hashes. No system is perfectly secure, so please choose a password you do not use elsewhere.</p>
+
+  <h2>Changes to this policy</h2>
+  <p>If we change this policy we will update the date at the top, and if the change is significant we will say so on the site.</p>
+
+  <h2>Contact</h2>
+  <p>Questions or requests about your information: use the <a href="/contact">contact form</a>. We do not publish an email address, and your message reaches {{ operator }} directly.</p>
+</article>
+{% endblock %}

@@ -2,13 +2,12 @@
 {% block title %}Saved — \\Mansfield{% endblock %}
 
 {% block content %}
-<section class="hero">
-  <h1 class="hero__title">Saved</h1>
-  <p class="hero__sub">Signed in as {{ reader.display_name }}.</p>
-</section>
+<div class="saved-tabs" role="tablist" aria-label="Saved items">
+  <button type="button" class="saved-tab is-active" role="tab" id="tab-stories" aria-controls="panel-stories" aria-selected="true" data-tab="stories">Saved Stories{% if saved %} <span class="saved-tab__n">{{ saved|length }}</span>{% endif %}</button>
+  <button type="button" class="saved-tab" role="tab" id="tab-places" aria-controls="panel-places" aria-selected="false" tabindex="-1" data-tab="places">Saved Places{% if places %} <span class="saved-tab__n" id="places-count">{{ places|length }}</span>{% endif %}</button>
+</div>
 
-<h2 class="account-section" id="stories">Saved stories</h2>
-
+<section class="saved-panel" id="panel-stories" role="tabpanel" aria-labelledby="tab-stories">
 <div class="story-list">
   {% for article in saved %}
     {% set cat = categories[article.category] %}
@@ -29,8 +28,9 @@
   <p class="empty-state">Nothing saved yet. Tap Save under any story and it will show up here.</p>
 {% endif %}
 
-<h2 class="account-section" id="places">Places to try</h2>
+</section>
 
+<section class="saved-panel" id="panel-places" role="tabpanel" aria-labelledby="tab-places" hidden>
 <div class="place-list" id="places-list">
   {% for place in places %}
     <article class="place-card{% if place.photo_url %} has-photo{% endif %}">
@@ -52,8 +52,40 @@
 
 <p class="empty-state" id="places-empty"{% if places %} hidden{% endif %}>No places yet. Open a map inside a story, tap a pin and choose + Save to add restaurants and spots you want to try.</p>
 
+</section>
+
 <form method="post" action="/account/logout" class="account-signout">
   <input type="hidden" name="csrf" value="{{ csrf_token }}">
   <button type="submit" class="account-btn account-btn--ghost">Sign out</button>
 </form>
+<script>
+  // Saved Stories / Saved Places tabs. The address (#stories or #places) picks the
+  // tab, so links like /account#places still open the right one.
+  (function () {
+    var tabs = Array.prototype.slice.call(document.querySelectorAll('.saved-tab'));
+    function show(name, focus) {
+      if (name !== 'places') name = 'stories';
+      tabs.forEach(function (t) {
+        var on = t.getAttribute('data-tab') === name;
+        t.classList.toggle('is-active', on);
+        t.setAttribute('aria-selected', on ? 'true' : 'false');
+        t.tabIndex = on ? 0 : -1;
+        document.getElementById('panel-' + t.getAttribute('data-tab')).hidden = !on;
+        if (on && focus) t.focus();
+      });
+    }
+    function setHash(name) { try { history.replaceState(null, '', '#' + name); } catch (e) {} }
+    tabs.forEach(function (t, i) {
+      t.addEventListener('click', function () { var n = t.getAttribute('data-tab'); show(n); setHash(n); });
+      t.addEventListener('keydown', function (e) {
+        if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+        var next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+        var n = next.getAttribute('data-tab'); show(n, true); setHash(n);
+      });
+    });
+    function fromHash() { show(location.hash === '#places' ? 'places' : 'stories'); }
+    window.addEventListener('hashchange', fromHash);
+    fromHash();
+  })();
+</script>
 {% endblock %}

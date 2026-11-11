@@ -30,4 +30,12 @@
   <input type="hidden" name="csrf" value="{{ csrf_token }}">
   <button type="submit" class="account-btn account-btn--ghost">Sign out</button>
 </form>
+
+<ul class="account-links">
+  <li><a href="/account/blocked">Blocked readers</a></li>
+  <li><a href="/privacy">Privacy Policy</a></li>
+  <li><a href="/terms">Terms of Use</a></li>
+  <li><a href="/contact">Contact us</a></li>
+  <li><a href="/account/delete" class="account-links__danger">Delete account</a></li>
+</ul>
 {% endblock %}

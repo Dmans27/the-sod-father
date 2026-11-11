@@ -1,0 +1,42 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Reported comments{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <h1>Reported comments{% if items %} <span style="font-weight:400;color:var(--ink-faint);">({{ items|length }})</span>{% endif %}</h1>
+</div>
+
+<p class="admin-hint">
+  Readers report comments with the Report button. A comment is hidden from everyone once it has {{ hide_after }} reports,
+  and stays hidden until you decide. <strong>Keep</strong> puts it back for good (more reports won't hide it again),
+  <strong>Delete</strong> removes it, and <strong>Delete &amp; ban</strong> also removes the reader&rsquo;s account and stops that email signing up again.
+</p>
+
+{% if not items %}
+  <p class="admin-empty">Nothing waiting for review. 🎉</p>
+{% else %}
+  <div class="admin-table">
+    {% for c in items %}
+      <div class="admin-card admin-report">
+        <div class="admin-report__head">
+          <strong>{{ c.display_name }}</strong>
+          <span class="admin-report__meta">{{ c.email }} &middot; on <a href="/article/{{ c.slug }}" target="_blank" rel="noopener">{{ c.title }}</a> &middot; {{ c.created_at }}</span>
+        </div>
+        <p class="admin-report__body">{{ c.body }}</p>
+        <p class="admin-report__why">
+          <span class="admin-row__badge" style="margin-left:0;{% if c.hidden %}color:#7d2432;background:rgba(164,48,63,0.12);{% endif %}">{{ c.n }} report{{ '' if c.n == 1 else 's' }} &middot; {{ 'hidden from readers' if c.hidden else 'still visible' }}</span>
+          {{ c.reasons|join(', ') }}
+        </p>
+        <div class="admin-report__actions">
+          {% for action, label, cls in [('keep', 'Keep', ''), ('delete', 'Delete', ''), ('ban', 'Delete & ban reader', 'admin-btn--danger')] %}
+          <form method="post" action="{{ url_for('review.reports_action', comment_id=c.id, action=action) }}"{% if action != 'keep' %} data-confirm="{{ 'Delete this comment?' if action == 'delete' else 'Delete this reader and their comments, and ban their email address?' }}" onsubmit="return confirm(this.dataset.confirm);"{% endif %}>
+            <input type="hidden" name="csrf" value="{{ csrf_token }}">
+            <button type="submit" class="admin-btn {{ cls }}">{{ label }}</button>
+          </form>
+          {% endfor %}
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}

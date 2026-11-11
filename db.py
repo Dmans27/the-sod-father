@@ -159,6 +159,50 @@ SCHEMA = [
         UNIQUE (reader_id, place_key)
     )
     """,
+    # App Store safety: reports on comments, the owner's "reviewed, keep it"
+    # marks, readers blocking other readers, and contact-form messages.
+    """
+    CREATE TABLE IF NOT EXISTS comment_reports (
+        id         TEXT PRIMARY KEY,
+        comment_id TEXT NOT NULL,
+        reader_id  TEXT NOT NULL,
+        reason     TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        UNIQUE (comment_id, reader_id)
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_reports_comment ON comment_reports (comment_id)",
+    """
+    CREATE TABLE IF NOT EXISTS comment_moderation (
+        comment_id TEXT PRIMARY KEY,
+        status     TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS reader_blocks (
+        reader_id  TEXT NOT NULL,
+        blocked_id TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        PRIMARY KEY (reader_id, blocked_id)
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS contact_messages (
+        id         TEXT PRIMARY KEY,
+        name       TEXT NOT NULL,
+        email      TEXT NOT NULL,
+        message    TEXT NOT NULL,
+        status     TEXT NOT NULL,
+        created_at TEXT NOT NULL
+    )
+    """,
+    """
+    CREATE TABLE IF NOT EXISTS banned_emails (
+        email      TEXT PRIMARY KEY,
+        created_at TEXT NOT NULL
+    )
+    """,
     "CREATE INDEX IF NOT EXISTS idx_saved_places_reader ON saved_places (reader_id, created_at)",
     "CREATE INDEX IF NOT EXISTS idx_comments_slug ON comments (slug, created_at)",
     "CREATE INDEX IF NOT EXISTS idx_saved_reader ON saved_articles (reader_id, created_at)",

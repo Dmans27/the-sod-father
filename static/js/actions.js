@@ -313,7 +313,107 @@
       });
       head.appendChild(del);
     }
+
+    // Report + Block on other people's comments (App Store rule 1.2). A comment
+    // reported by 3 readers is hidden by the server until the owner reviews it.
+    if (c.can_report !== false) addSafetyTools(li, c, slug, list);
     return li;
+  }
+
+  var REPORT_REASONS = [
+    ['spam', 'Spam'], ['abuse', 'Harassment or hate'],
+    ['inappropriate', 'Sexual or violent'], ['other', 'Something else']
+  ];
+
+  function dropComment(li, slug, list) {
+    if (li.parentNode) li.parentNode.removeChild(li);
+    paintCount(slug, (COUNTS[slug] || 1) - 1);
+    if (!list.children.length) list.setAttribute('data-empty', 'true');
+  }
+
+  function toolButton(label) {
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'comment__tool';
+    b.textContent = label;
+    return b;
+  }
+
+  function addSafetyTools(li, c, slug, list) {
+    var tools = document.createElement('div');
+    tools.className = 'comment__tools';
+    var report = toolButton('Report');
+    tools.appendChild(report);
+
+    report.addEventListener('click', function () {
+      if (!READER.signedIn) { location.href = loginUrl({ hash: '#comments' }); return; }
+      tools.innerHTML = '';
+      var ask = document.createElement('span');
+      ask.className = 'comment__notice';
+      ask.textContent = 'Why are you reporting this?';
+      tools.appendChild(ask);
+      var reasons = document.createElement('div');
+      reasons.className = 'comment__reasons';
+      REPORT_REASONS.forEach(function (r) {
+        var chip = document.createElement('button');
+        chip.type = 'button';
+        chip.className = 'comment__reason';
+        chip.textContent = r[1];
+        chip.addEventListener('click', function () {
+          Array.prototype.forEach.call(reasons.children, function (x) { x.disabled = true; });
+          api('POST', '/api/comments/' + encodeURIComponent(c.id) + '/report', { reason: r[0] }).then(function (res) {
+            if (res.status === 401) { location.href = loginUrl({ hash: '#comments' }); return; }
+            if (!res.ok) {
+              Array.prototype.forEach.call(reasons.children, function (x) { x.disabled = false; });
+              ask.textContent = 'Couldn’t send that. Please try again.';
+              return;
+            }
+            if (res.data && res.data.hidden) { dropComment(li, slug, list); return; }
+            tools.innerHTML = '';
+            var thanks = document.createElement('span');
+            thanks.className = 'comment__notice';
+            thanks.textContent = 'Thanks — we’ll review this comment.';
+            tools.appendChild(thanks);
+          }).catch(function () {
+            Array.prototype.forEach.call(reasons.children, function (x) { x.disabled = false; });
+            ask.textContent = 'Couldn’t send that. Check your connection.';
+          });
+        });
+        reasons.appendChild(chip);
+      });
+      var cancel = document.createElement('button');
+      cancel.type = 'button';
+      cancel.className = 'comment__reason comment__reason--cancel';
+      cancel.textContent = 'Cancel';
+      cancel.addEventListener('click', function () {
+        if (tools.parentNode) { var fresh = li.querySelector('.comment__tools'); if (fresh) fresh.remove(); addSafetyTools(li, c, slug, list); }
+      });
+      reasons.appendChild(cancel);
+      tools.appendChild(reasons);
+    });
+
+    if (READER.signedIn) {
+      var block = toolButton('Block');
+      var armed = false;
+      block.addEventListener('click', function () {
+        if (!armed) {
+          armed = true;
+          block.textContent = 'Tap again to block ' + c.name;
+          setTimeout(function () { armed = false; block.textContent = 'Block'; }, 3500);
+          return;
+        }
+        block.disabled = true;
+        api('POST', '/api/comments/' + encodeURIComponent(c.id) + '/block').then(function (res) {
+          if (!res.ok) { block.disabled = false; armed = false; block.textContent = 'Block'; return; }
+          var ids = (res.data && res.data.hidden_ids) || [];
+          Array.prototype.slice.call(list.children).forEach(function (el) {
+            if (ids.indexOf(el.getAttribute('data-id')) !== -1) dropComment(el, slug, list);
+          });
+        }).catch(function () { block.disabled = false; armed = false; block.textContent = 'Block'; });
+      });
+      tools.appendChild(block);
+    }
+    li.appendChild(tools);
   }
 
   // The comments live in one half-page panel that slides up from the bottom
@@ -477,6 +577,10 @@
             location.href = loginUrl({ hash: '#comments' });
           } else if (res.data && res.data.error === 'slow_down') {
             err.textContent = 'Easy -- wait a few seconds before posting again.';
+          } else if (res.data && res.data.error === 'blocked_words') {
+            err.textContent = 'Please keep it civil — that comment contains language we don’t allow.';
+          } else if (res.data && res.data.error === 'too_many_links') {
+            err.textContent = 'Please use no more than two links in a comment.';
           } else if (res.data && res.data.error === 'too_long') {
             err.textContent = 'That’s too long (1,000 characters max).';
           } else {

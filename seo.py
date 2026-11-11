@@ -127,7 +127,8 @@ def sitemap():
     base = site_base()
     articles = get_articles()
     urls = [(base + "/", articles[0].get("published_at") if articles else None),
-            (base + "/newsletter", None)]
+            (base + "/newsletter", None),
+            (base + "/privacy", None), (base + "/terms", None), (base + "/contact", None)]
 
     for key, cat in CATEGORIES.items():
         in_cat = [a for a in articles if a["category"] == key]

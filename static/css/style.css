@@ -2177,3 +2177,79 @@ html.ask-open { overflow: hidden; }
 @media (max-width: 560px) { .article__place--wide iframe { height: 520px; } }
 .article__place figcaption { margin-top: 8px; font-size: 13.5px; line-height: 1.45; color: var(--ink-faint); }
 @media (prefers-reduced-motion: reduce) { .article__place iframe { transition: none; } }
+
+/* ── Safety & trust: legal pages, contact form, delete account, report / block ── */
+.footer-legal { margin: 10px 0 0; display: flex; justify-content: center; gap: 18px; flex-wrap: wrap; }
+.footer-legal a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.footer-legal a:hover { color: var(--ink); }
+
+.legal { max-width: 680px; margin: 0 auto; padding: 28px 0 10px; font-size: 16px; line-height: 1.65; color: var(--ink); }
+.legal__title { font-family: var(--font-serif); font-size: 32px; font-weight: 700; letter-spacing: -0.015em; color: var(--fairway-deep); margin: 0 0 4px; }
+.legal__meta { margin: 0 0 22px; color: var(--ink-faint); font-size: 14px; }
+.legal h2 { font-family: var(--font-serif); font-size: 21px; line-height: 1.3; color: var(--fairway-deep); margin: 30px 0 8px; }
+.legal p { margin: 0 0 14px; }
+.legal ul { margin: 0 0 14px; padding-left: 22px; }
+.legal li { margin-bottom: 8px; }
+.legal a { color: var(--fairway-deep); font-weight: 700; }
+
+.account-field textarea {
+  width: 100%; box-sizing: border-box; padding: 12px 14px;
+  border: 1px solid rgba(27, 42, 31, 0.22); border-radius: 10px;
+  font-family: var(--font-sans); font-size: 16px; line-height: 1.5; color: var(--ink); background: #fff; resize: vertical;
+}
+.account-field textarea:focus { outline: 2px solid var(--fairway-deep); outline-offset: 1px; }
+.account-legal { margin: 14px 0 0; font-size: 13px; line-height: 1.5; color: var(--ink-faint); text-align: center; }
+.account-legal a { color: var(--fairway-deep); font-weight: 700; }
+.account-note { margin: 0 0 8px; color: var(--ink-soft); font-size: 15px; }
+.account-note-list { margin: 0 0 22px; padding-left: 20px; color: var(--ink-soft); font-size: 15px; line-height: 1.6; }
+.account-check { display: flex; align-items: flex-start; gap: 10px; margin: 0 0 14px; font-size: 14.5px; line-height: 1.45; color: var(--ink); cursor: pointer; }
+.account-check input { width: 18px; height: 18px; margin: 2px 0 0; flex-shrink: 0; accent-color: var(--fairway-deep); }
+.account-btn--danger { background: #a33; }
+.account-btn--danger:hover { background: #8a2a2a; }
+.account-links { list-style: none; margin: 26px 0 0; padding: 18px 0 0; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; gap: 10px 22px; font-size: 14.5px; }
+.account-links a { color: var(--fairway-deep); font-weight: 700; }
+.account-links__danger { color: #a33 !important; }
+.blocked-list { list-style: none; margin: 0 0 8px; padding: 0; }
+.blocked-list__row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); }
+.blocked-list__name { font-weight: 800; color: var(--ink); }
+.blocked-list form { margin: 0; }
+
+/* Report / Block under each comment */
+.comment__tools { display: flex; align-items: center; gap: 14px; margin-top: 6px; flex-wrap: wrap; }
+.comment__tool {
+  border: none; background: transparent; padding: 2px 0; color: var(--ink-faint);
+  font-family: var(--font-sans); font-size: 12.5px; font-weight: 700; cursor: pointer;
+}
+.comment__tool:hover { color: #a33; }
+.comment__notice { margin: 6px 0 0; font-size: 13px; color: var(--ink-soft); }
+.comment__reasons { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.comment__reason {
+  border: 1px solid var(--line); background: transparent; color: var(--ink);
+  font-family: var(--font-sans); font-size: 12.5px; font-weight: 600; padding: 5px 10px; border-radius: 999px; cursor: pointer;
+}
+.comment__reason:hover { border-color: var(--fairway-deep); color: var(--fairway-deep); }
+.comment__reason--cancel { border-color: transparent; color: var(--ink-faint); }
+
+.is-dark .legal h2, .is-dark .legal__title { color: #cfe7d9; }
+.is-dark .legal a, .is-dark .account-legal a, .is-dark .account-links a { color: #7ccaa0; }
+.is-dark .account-field textarea { background: #252d28; border-color: rgba(255, 255, 255, 0.22); color: var(--ink); }
+.is-dark .account-btn--danger { background: #c04a4a; }
+.is-dark .account-btn--danger:hover { background: #a63e3e; }
+.is-dark .account-links__danger, .is-dark .comment__tool:hover { color: #ff8a80 !important; }
+.is-dark .comment__reason:hover { border-color: #7ccaa0; color: #7ccaa0; }
+
+/* ── Account: Saved Stories / Saved Places tabs ── */
+.saved-tabs { display: flex; margin: 0 0 6px; border-bottom: 1px solid var(--line); }
+.saved-tab {
+  flex: 1; border: none; background: transparent; cursor: pointer;
+  padding: 16px 8px 13px; margin-bottom: -1px;
+  font-family: var(--font-sans); font-size: 15.5px; font-weight: 700; color: var(--ink-faint);
+  border-bottom: 3px solid transparent; -webkit-tap-highlight-color: transparent;
+}
+.saved-tab:hover { color: var(--ink); }
+.saved-tab.is-active { color: var(--fairway-deep); border-bottom-color: var(--gold); }
+.saved-tab:focus-visible { outline: 2px solid var(--fairway-deep); outline-offset: -2px; border-radius: 6px; }
+.saved-tab__n { display: inline-block; min-width: 20px; padding: 1px 6px; margin-left: 4px; border-radius: 999px; background: var(--line); font-size: 12px; font-weight: 800; color: var(--ink-soft); text-align: center; }
+.saved-panel { padding-top: 14px; }
+.saved-panel[hidden] { display: none; }
+.is-dark .saved-tab.is-active { color: #cfe7d9; }

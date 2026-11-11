@@ -1,0 +1,40 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Messages{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <h1>Contact messages{% if new_count %} <span style="font-weight:400;color:var(--ink-faint);">({{ new_count }} new)</span>{% endif %}</h1>
+</div>
+
+<p class="admin-hint">
+  Messages sent from the Contact page. Readers&rsquo; email addresses are only shown here, never on the site.
+  Press <strong>Reply</strong> to answer from your own email app, then mark it done.
+</p>
+
+{% if not items %}
+  <p class="admin-empty">No messages yet.</p>
+{% else %}
+  <div class="admin-table">
+    {% for m in items %}
+      <div class="admin-card admin-report{% if m.status == 'done' %} admin-report--done{% endif %}">
+        <div class="admin-report__head">
+          <strong>{{ m.name }}</strong>
+          <span class="admin-report__meta">{{ m.email }} &middot; {{ m.created_at }}{% if m.status == 'new' %} &middot; <strong>new</strong>{% endif %}</span>
+        </div>
+        <p class="admin-report__body">{{ m.message }}</p>
+        <div class="admin-report__actions">
+          <a class="admin-btn admin-btn--primary" href="mailto:{{ m.email }}?subject=Re%3A%20your%20message">Reply</a>
+          <form method="post" action="{{ url_for('review.messages_action', message_id=m.id, action=('done' if m.status == 'new' else 'reopen')) }}">
+            <input type="hidden" name="csrf" value="{{ csrf_token }}">
+            <button type="submit" class="admin-btn">{{ 'Mark done' if m.status == 'new' else 'Reopen' }}</button>
+          </form>
+          <form method="post" action="{{ url_for('review.messages_action', message_id=m.id, action='delete') }}" onsubmit="return confirm('Delete this message?');">
+            <input type="hidden" name="csrf" value="{{ csrf_token }}">
+            <button type="submit" class="admin-btn admin-btn--danger">Delete</button>
+          </form>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+{% endif %}
+{% endblock %}
