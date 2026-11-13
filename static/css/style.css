@@ -2436,3 +2436,13 @@ html.ask-open { overflow: hidden; }
 @media (max-width: 699px) {
   .article-sheet { max-height: calc(100vh - 50px); max-height: calc(100dvh - 50px); }
 }
+
+/* ── Article text color ──
+   Body paragraphs in stories use --color-inkBase. Light layout: #222222. In dark mode the
+   variable flips to the light text color so the paragraphs stay readable. Delete this block to
+   go back to the old color (--ink, #2b362f). */
+:root { --color-inkBase: #222222; }
+.article-sheet.is-dark,
+body.article-page.is-dark,
+html.is-dark { --color-inkBase: #e4e9e5; }
+.article__content p { color: var(--color-inkBase, var(--ink)); }
