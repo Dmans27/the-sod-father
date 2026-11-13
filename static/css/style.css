@@ -2428,3 +2428,11 @@ html.ask-open { overflow: hidden; }
   html:not(.book-open) .hero-story__meta { font-size: 13px; }
   html:not(.book-open) .hero-story__media { border-radius: 20px; }
 }
+
+/* ── Phone: the story sheet opens higher ──
+   The pop-up story sheet used to top out at 90% of the screen height. On a phone it now rises
+   to sit just under the status bar / Dynamic Island (50px from the top). Delete this block to
+   go back to the old height. */
+@media (max-width: 699px) {
+  .article-sheet { max-height: calc(100vh - 50px); max-height: calc(100dvh - 50px); }
+}
