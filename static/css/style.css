@@ -2262,25 +2262,24 @@ html.ask-open { overflow: hidden; }
    right-hand page of the two-page layout (the window minus the feed on the
    left, so it follows the divider as you drag it), the full window once the
    feed is dragged shut, or the window on a story's own address. The column
-   fills that page (--pad of space at each side, up to 1400px of text) and the
-   type grows with it, so a wider page gets bigger text rather than just longer
-   lines. Reading-size changes (the AA button) still work: the sizes below
+   keeps a margin at each side (--pad) and grows to at most 880px of text, and
+   the type grows with it (up to 23px) so the line length stays about the same. Reading-size changes (the AA button) still work: the sizes below
    multiply by --read-scale. */
 @media (min-width: 1000px) {
   .article { --rp: min(100vw, 1700px); }
   .article-sheet { --rp: calc(100vw - var(--book-left, 0px)); }
   .article,
   .article-sheet {
-    --pad: clamp(28px, calc(var(--rp) * 0.04), 96px);
-    --w: min(1400px, calc(var(--rp) - 2 * var(--pad)));
+    --pad: clamp(28px, calc(var(--rp) * 0.05), 64px);
+    --w: min(880px, calc(var(--rp) - 2 * var(--pad)));
     --col: calc(var(--w) + 2 * var(--pad));
-    --t-title: clamp(34px, calc(var(--rp) * 0.04), 72px);
-    --t-dek: clamp(19px, calc(var(--rp) * 0.0165), 32px);
-    --t-body: clamp(19px, calc(var(--rp) * 0.0165), 32px);
-    --t-sub: clamp(26px, calc(var(--rp) * 0.024), 46px);
-    --t-quote: clamp(22px, calc(var(--rp) * 0.021), 38px);
-    --t-ui: clamp(14.5px, calc(var(--rp) * 0.0085), 19px);
-    --t-meta: clamp(12.5px, calc(var(--rp) * 0.0072), 16px);
+    --t-title: clamp(34px, calc(var(--rp) * 0.034), 58px);
+    --t-dek: clamp(19px, calc(var(--rp) * 0.0135), 25px);
+    --t-body: clamp(20px, calc(var(--rp) * 0.0145), 23px);
+    --t-sub: clamp(26px, calc(var(--rp) * 0.02), 34px);
+    --t-quote: clamp(22px, calc(var(--rp) * 0.017), 29px);
+    --t-ui: clamp(14.5px, calc(var(--rp) * 0.0075), 17px);
+    --t-meta: clamp(12.5px, calc(var(--rp) * 0.0066), 14.5px);
   }
   /* A story's own address: let the page fill the window instead of the 1080px feed width. */
   body.article-page .site-main { max-width: none; width: 100%; margin: 0; padding-left: 0; padding-right: 0; }
@@ -2305,12 +2304,12 @@ html.ask-open { overflow: hidden; }
   .article__title { font-size: var(--t-title); line-height: 1.08; letter-spacing: -0.022em; margin: 0 0 16px; text-wrap: balance; }
   .article__dek { font-size: var(--t-dek); line-height: 1.45; margin: 0 0 26px; max-width: 32em; text-wrap: pretty; }
   .article__byline { gap: 14px; margin: 0 0 20px; padding-bottom: 24px; }
-  .article__avatar { width: clamp(46px, calc(var(--rp) * 0.028), 66px); height: clamp(46px, calc(var(--rp) * 0.028), 66px); box-shadow: 0 0 0 3px var(--cream-deep); }
+  .article__avatar { width: clamp(46px, calc(var(--rp) * 0.026), 56px); height: clamp(46px, calc(var(--rp) * 0.026), 56px); box-shadow: 0 0 0 3px var(--cream-deep); }
   .article__meta { font-size: var(--t-meta); }
 
   /* Cover photo: a little wider than the text, softly lifted. */
   html .article-sheet .article-sheet__hero {
-    width: min(calc(var(--w) + 160px), calc(100% - 2 * var(--pad))); max-width: none; margin: 10px auto 34px;
+    width: min(calc(var(--w) + 100px), calc(100% - 2 * var(--pad))); max-width: none; margin: 10px auto 34px;
     border-radius: 22px; box-shadow: 0 14px 36px rgba(27, 42, 31, 0.18);
   }
   .article__hero { margin: 10px 24px 34px; border-radius: 22px; box-shadow: 0 14px 36px rgba(27, 42, 31, 0.18); }
@@ -2341,7 +2340,7 @@ html.ask-open { overflow: hidden; }
   .article__gallery-slide { flex-basis: 72%; }
   .article__video, .article__map { margin: 32px 0; }
   .article__video-frame, .article__map-frame { border-radius: 18px; }
-  .article__map { --map-h: clamp(520px, calc(var(--rp) * 0.32), 760px); }
+  .article__map { --map-h: 520px; }
   .article__map--short { --map-h: 380px; }
   .article__map--tall { --map-h: 660px; }
 
@@ -2386,7 +2385,7 @@ html.ask-open { overflow: hidden; }
   .is-dark .article-sheet__body .article__author-card,
   .is-dark .article__body .article__author-card { background: rgba(255, 255, 255, 0.04); }
   .article-sheet__body .article__author-card-avatar,
-  .article__body .article__author-card-avatar { width: clamp(58px, calc(var(--rp) * 0.036), 84px); height: clamp(58px, calc(var(--rp) * 0.036), 84px); }
+  .article__body .article__author-card-avatar { width: clamp(58px, calc(var(--rp) * 0.032), 68px); height: clamp(58px, calc(var(--rp) * 0.032), 68px); }
   .article-sheet__body .article__author-card-label,
   .article__body .article__author-card-label { font-size: calc(var(--t-meta) * 0.95); }
   .article-sheet__body .article__author-card-name,
