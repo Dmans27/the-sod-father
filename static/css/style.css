@@ -2260,51 +2260,57 @@ html.ask-open { overflow: hidden; }
 
    Everything is sized from --rp, the width of the page the story is on: the
    right-hand page of the two-page layout (the window minus the feed on the
-   left), the full window once the feed is dragged shut, or the 1080px page on
-   a story's own address. So the type grows with the space it has and a story
-   reads the same whether it sits beside the feed or fills the screen.
-   --w is the text width (never wider than about 70 letters across),
-   --col that plus 48px of padding either side. Reading-size changes (the AA
-   button) still work: the body sizes below multiply by --read-scale. */
+   left, so it follows the divider as you drag it), the full window once the
+   feed is dragged shut, or the window on a story's own address. The column
+   fills that page (--pad of space at each side, up to 1400px of text) and the
+   type grows with it, so a wider page gets bigger text rather than just longer
+   lines. Reading-size changes (the AA button) still work: the sizes below
+   multiply by --read-scale. */
 @media (min-width: 1000px) {
-  .article { --rp: min(100vw, 1080px); }
+  .article { --rp: min(100vw, 1700px); }
   .article-sheet { --rp: calc(100vw - var(--book-left, 0px)); }
   .article,
   .article-sheet {
-    --w: min(820px, calc(var(--rp) - 96px));
-    --col: calc(var(--w) + 96px);
-    --t-title: clamp(34px, calc(var(--rp) * 0.042), 54px);
-    --t-dek: clamp(18px, calc(var(--rp) * 0.015), 24px);
-    --t-body: clamp(19px, calc(var(--rp) * 0.0125), 21px);
-    --t-sub: clamp(25px, calc(var(--rp) * 0.019), 31px);
+    --pad: clamp(28px, calc(var(--rp) * 0.04), 96px);
+    --w: min(1400px, calc(var(--rp) - 2 * var(--pad)));
+    --col: calc(var(--w) + 2 * var(--pad));
+    --t-title: clamp(34px, calc(var(--rp) * 0.04), 72px);
+    --t-dek: clamp(19px, calc(var(--rp) * 0.0165), 32px);
+    --t-body: clamp(19px, calc(var(--rp) * 0.0165), 32px);
+    --t-sub: clamp(26px, calc(var(--rp) * 0.024), 46px);
+    --t-quote: clamp(22px, calc(var(--rp) * 0.021), 38px);
+    --t-ui: clamp(14.5px, calc(var(--rp) * 0.0085), 19px);
+    --t-meta: clamp(12.5px, calc(var(--rp) * 0.0072), 16px);
   }
+  /* A story's own address: let the page fill the window instead of the 1080px feed width. */
+  body.article-page .site-main { max-width: none; width: 100%; margin: 0; padding-left: 0; padding-right: 0; }
 
   /* The reading column. */
   .article { max-width: var(--col); }
-  .article__header { padding: 44px 48px 0; }
-  .article__body { padding: 0 48px 18px; }
+  .article__header { padding: 44px var(--pad) 0; }
+  .article__body { padding: 0 var(--pad) 18px; }
   html .article-sheet .article-sheet__header,
-  html .article-sheet .article-sheet__body { max-width: var(--col); padding-left: 48px; padding-right: 48px; }
+  html .article-sheet .article-sheet__body { max-width: var(--col); padding-left: var(--pad); padding-right: var(--pad); }
   html .article-sheet .article-sheet__header { padding-top: 76px; }
-  .article-sheet__sticky-bar { padding-left: max(72px, calc((100% - var(--col)) / 2 + 48px)); }
+  .article-sheet__sticky-bar { padding-left: max(72px, calc((100% - var(--col)) / 2 + var(--pad))); }
   .article__author-pop { max-width: var(--col); }
-  .article__sticky-bar { max-width: var(--col); padding-left: 48px; padding-right: 48px; }
+  .article__sticky-bar { max-width: var(--col); padding-left: var(--pad); padding-right: var(--pad); }
   .article-sheet__author-pop .article__author-card,
   .article-sheet__author-pop .author-pop__tools { max-width: var(--col); }
   .article-sheet__close { width: 42px; height: 42px; top: 20px; font-size: 22px; }
 
   /* Headline block: a bigger title, a lighter dek, a gold dot on the label. */
-  .article__pill { display: inline-flex; align-items: center; font-size: 11.5px; padding: 6px 12px 6px 10px; border-radius: 999px; margin-bottom: 20px; }
+  .article__pill { display: inline-flex; align-items: center; font-size: clamp(11.5px, calc(var(--rp) * 0.0068), 15px); padding: 6px 12px 6px 10px; border-radius: 999px; margin-bottom: 20px; }
   .article__pill::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--gold); margin-right: 8px; flex: none; }
   .article__title { font-size: var(--t-title); line-height: 1.08; letter-spacing: -0.022em; margin: 0 0 16px; text-wrap: balance; }
   .article__dek { font-size: var(--t-dek); line-height: 1.45; margin: 0 0 26px; max-width: 32em; text-wrap: pretty; }
   .article__byline { gap: 14px; margin: 0 0 20px; padding-bottom: 24px; }
-  .article__avatar { width: 46px; height: 46px; box-shadow: 0 0 0 3px var(--cream-deep); }
-  .article__meta { font-size: 12.5px; }
+  .article__avatar { width: clamp(46px, calc(var(--rp) * 0.028), 66px); height: clamp(46px, calc(var(--rp) * 0.028), 66px); box-shadow: 0 0 0 3px var(--cream-deep); }
+  .article__meta { font-size: var(--t-meta); }
 
   /* Cover photo: a little wider than the text, softly lifted. */
   html .article-sheet .article-sheet__hero {
-    width: min(calc(var(--w) + 160px), calc(100% - 96px)); max-width: none; margin: 10px auto 34px;
+    width: min(calc(var(--w) + 160px), calc(100% - 2 * var(--pad))); max-width: none; margin: 10px auto 34px;
     border-radius: 22px; box-shadow: 0 14px 36px rgba(27, 42, 31, 0.18);
   }
   .article__hero { margin: 10px 24px 34px; border-radius: 22px; box-shadow: 0 14px 36px rgba(27, 42, 31, 0.18); }
@@ -2316,13 +2322,13 @@ html.ask-open { overflow: hidden; }
   .article__list li { margin-bottom: 0.55em; }
   .article__subheading { font-size: calc(var(--t-sub) * var(--read-scale, 1)); line-height: 1.2; margin: 1.9em 0 0.55em; }
   .article__quote { margin: 36px 0; padding: 4px 0 4px 28px; border-left-width: 4px; }
-  .article__quote p { font-size: calc(clamp(22px, calc(var(--rp) * 0.0175), 27px) * var(--read-scale, 1)); line-height: 1.4; }
-  .article__quote cite { font-size: 14px; }
+  .article__quote p { font-size: calc(var(--t-quote) * var(--read-scale, 1)); line-height: 1.4; }
+  .article__quote cite { font-size: var(--t-ui); }
   .article__tip { margin: 30px 0; padding: 18px 22px 16px; border-radius: 14px; }
-  .article__tip p { font-size: calc(18.5px * var(--read-scale, 1)); }
+  .article__tip p { font-size: calc(var(--t-body) * 0.92 * var(--read-scale, 1)); }
   .article__takeaways { padding: 22px 26px 12px; border-radius: 16px; }
-  .article__takeaways li { font-size: calc(19.5px * var(--read-scale, 1)); padding-left: 26px; }
-  .article__table { font-size: calc(17px * var(--read-scale, 1)); }
+  .article__takeaways li { font-size: calc(var(--t-body) * 0.96 * var(--read-scale, 1)); padding-left: 26px; }
+  .article__table { font-size: calc(var(--t-body) * 0.85 * var(--read-scale, 1)); }
   .article__table th, .article__table td { padding: 13px 16px; }
   .article__divider { margin: 40px 0; }
   .article__photo { margin: 32px 0; }
@@ -2330,12 +2336,12 @@ html.ask-open { overflow: hidden; }
   .article__gallery-slide img { border-radius: 18px; box-shadow: 0 8px 26px rgba(27, 42, 31, 0.16); }
   .article__photo figcaption,
   .article__gallery-slide figcaption,
-  .article__video figcaption, .article__map figcaption, .article__place figcaption { font-size: 14.5px; margin-top: 10px; }
+  .article__video figcaption, .article__map figcaption, .article__place figcaption { font-size: calc(var(--t-ui) * 0.97); margin-top: 10px; }
   .article__gallery { margin: 32px -4px; }
   .article__gallery-slide { flex-basis: 72%; }
   .article__video, .article__map { margin: 32px 0; }
   .article__video-frame, .article__map-frame { border-radius: 18px; }
-  .article__map { --map-h: 520px; }
+  .article__map { --map-h: clamp(520px, calc(var(--rp) * 0.32), 760px); }
   .article__map--short { --map-h: 380px; }
   .article__map--tall { --map-h: 660px; }
 
@@ -2349,7 +2355,7 @@ html.ask-open { overflow: hidden; }
   .article__place--strip iframe { height: 470px; }
   .article__place--stack iframe { height: 520px; }
   .article__place--full iframe { height: min(760px, 85vh); border-radius: 18px; }
-  .article__place-heading { font-size: 26px; margin-bottom: 14px; }
+  .article__place-heading { font-size: calc(var(--t-sub) * 0.85); margin-bottom: 14px; }
 
   /* Save / Share / Comment: bigger, with a soft pill that appears on hover. */
   .article__byline + .story-actions,
@@ -2360,7 +2366,7 @@ html.ask-open { overflow: hidden; }
   .article-sheet__body .story-actions .story-action--text,
   .article__byline + .story-actions .story-action--theme,
   .article-sheet__body .story-actions .story-action--theme {
-    min-height: 44px; padding: 8px 14px; gap: 8px; font-size: 14.5px; border-radius: 999px;
+    min-height: calc(var(--t-ui) * 3); padding: 8px 14px; gap: 8px; font-size: var(--t-ui); border-radius: 999px;
     transition: background-color 0.15s ease, color 0.15s ease;
   }
   .article__byline + .story-actions .story-action:hover,
@@ -2368,10 +2374,10 @@ html.ask-open { overflow: hidden; }
   .is-dark .article__byline + .story-actions .story-action:hover,
   .is-dark .article-sheet__body .story-actions .story-action:hover { background: rgba(255, 255, 255, 0.09); }
   .article__byline + .story-actions .story-action__icon,
-  .article-sheet__body .story-actions .story-action__icon { width: 22px; height: 22px; }
+  .article-sheet__body .story-actions .story-action__icon { width: calc(var(--t-ui) * 1.5); height: calc(var(--t-ui) * 1.5); }
 
   /* "Read more" and the sign-off card. */
-  .article-sheet__readmore { margin: 8px 0 34px; padding: 15px 30px; font-size: 16px; box-shadow: 0 8px 20px rgba(45, 106, 79, 0.28); transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease; }
+  .article-sheet__readmore { margin: 8px 0 34px; padding: 15px 30px; font-size: calc(var(--t-ui) * 1.1); box-shadow: 0 8px 20px rgba(45, 106, 79, 0.28); transition: transform 0.15s ease, box-shadow 0.15s ease, background-color 0.15s ease; }
   .article-sheet__readmore:hover { transform: translateY(-1px); box-shadow: 0 10px 24px rgba(45, 106, 79, 0.34); }
   .article-sheet__body .article__author-card,
   .article__body .article__author-card {
@@ -2380,15 +2386,15 @@ html.ask-open { overflow: hidden; }
   .is-dark .article-sheet__body .article__author-card,
   .is-dark .article__body .article__author-card { background: rgba(255, 255, 255, 0.04); }
   .article-sheet__body .article__author-card-avatar,
-  .article__body .article__author-card-avatar { width: 58px; height: 58px; }
+  .article__body .article__author-card-avatar { width: clamp(58px, calc(var(--rp) * 0.036), 84px); height: clamp(58px, calc(var(--rp) * 0.036), 84px); }
   .article-sheet__body .article__author-card-label,
-  .article__body .article__author-card-label { font-size: 11.5px; }
+  .article__body .article__author-card-label { font-size: calc(var(--t-meta) * 0.95); }
   .article-sheet__body .article__author-card-name,
-  .article__body .article__author-card-name { font-size: 15px; }
+  .article__body .article__author-card-name { font-size: var(--t-ui); }
   .article-sheet__body .article__author-card-masthead-brand,
-  .article__body .article__author-card-masthead-brand { font-size: 17px; }
+  .article__body .article__author-card-masthead-brand { font-size: calc(var(--t-ui) * 1.2); }
   .article-sheet__body .article__author-card-masthead-position,
-  .article__body .article__author-card-masthead-position { font-size: 11.5px; }
+  .article__body .article__author-card-masthead-position { font-size: calc(var(--t-meta) * 0.95); }
   .comments { margin-top: 44px; }
 
   /* Header: the category tabs were 11px, which is tiny on a big screen. */
