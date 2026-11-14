@@ -2464,3 +2464,35 @@ html.is-dark { --color-inkBase: #e4e9e5; }
 @media (max-width: 560px) {
   .article__byline { flex-direction: column; gap: 8px; }
 }
+
+/* ── iPad: a slightly narrower reading column ──
+   Touch screens 700px wide and up (iPads). The text column is 15px narrower than before while a
+   story sits beside the feed, and 35px narrower when it fills the whole screen (the full-width
+   book page, or the story's own page). Change --ipad-trim below to adjust; delete this block to
+   go back to the old width. */
+@media (min-width: 700px) and (pointer: coarse) {
+  .article, .article-sheet { --ipad-trim: 15px; }
+  html.book-full .article-sheet,
+  body.article-page .article { --ipad-trim: 35px; }
+}
+/* iPad held upright (700-999px): the column is padded in a little on each side. */
+@media (min-width: 700px) and (max-width: 999px) and (pointer: coarse) {
+  .article__header { padding-left: calc(4px + var(--ipad-trim) / 2); padding-right: calc(4px + var(--ipad-trim) / 2); }
+  .article__body { padding-left: calc(4px + var(--ipad-trim) / 2); padding-right: calc(4px + var(--ipad-trim) / 2); }
+  .article__hero { margin-left: calc(var(--ipad-trim) / 2); margin-right: calc(var(--ipad-trim) / 2); }
+  .article-sheet__header { padding-left: calc(24px + var(--ipad-trim) / 2); padding-right: calc(max(24px, env(safe-area-inset-right, 0px)) + var(--ipad-trim) / 2); }
+  html.book-full .article-sheet__header { padding-left: calc(max(24px, env(safe-area-inset-left, 0px)) + var(--ipad-trim) / 2); }
+  .article-sheet__body { padding-left: calc(24px + var(--ipad-trim) / 2); padding-right: calc(24px + var(--ipad-trim) / 2); }
+  .article-sheet__hero {
+    width: min(calc(672px - var(--ipad-trim)), calc(100% - 48px - var(--ipad-trim)));
+    margin-left: max(calc(24px + var(--ipad-trim) / 2), calc((100% - 720px) / 2 + 24px + var(--ipad-trim) / 2));
+  }
+}
+/* iPad held sideways (1000px and up): same trim, applied to the column's width and padding. */
+@media (min-width: 1000px) and (pointer: coarse) {
+  .article, .article-sheet {
+    --pad: calc(clamp(28px, calc(var(--rp) * 0.05), 64px) + var(--ipad-trim) / 2);
+    --w: min(calc(880px - var(--ipad-trim)), calc(var(--rp) - 2 * var(--pad)));
+    --col: calc(var(--w) + 2 * var(--pad));
+  }
+}
