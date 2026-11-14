@@ -2511,3 +2511,9 @@ html.is-dark { --color-inkBase: #ebe6dc; }
    Delete this block to go back. */
 .article { padding-bottom: 50px; }
 .article-sheet__inner { padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
+
+/* ── One name bar only ──
+   The bottom name tag now stays on screen, so the sign-off card that used to close the story is
+   hidden (it showed the same name twice). Delete this block to bring the sign-off card back. */
+.article__body > .article__author-card,
+.article-sheet__body > .article__author-card { display: none; }

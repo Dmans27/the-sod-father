@@ -532,6 +532,15 @@
         var h = authorPop.offsetHeight;
         if (h > 0) inner.style.paddingBottom = (h + 16) + 'px';
       }
+      // Shows the bottom name bar once you are 450px in, or from the start when
+      // the story is too short to ever scroll that far. It replaces the
+      // sign-off card at the end of the story, so it has to be there.
+      function updatePop() {
+        if (!authorPop || !scrollEl) return;
+        var room = scrollEl.scrollHeight - scrollEl.clientHeight;
+        var shortStory = scrollEl.clientHeight > 0 && room < 500;
+        authorPop.classList.toggle('is-visible', scrollEl.scrollTop >= 450 || shortStory);
+      }
       window.addEventListener('resize', fitPopSpace);
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitPopSpace);
 
@@ -654,6 +663,8 @@
         renderSheet(article);
         overlay.classList.add('is-open');
         overlay.setAttribute('aria-hidden', 'false');
+        fitPopSpace();
+        requestAnimationFrame(function () { fitPopSpace(); updatePop(); });
         document.body.classList.add('article-sheet-open');
         document.documentElement.classList.add('book-open');
         // A fresh open always starts with the feed visible.
@@ -714,7 +725,7 @@
         scrollEl.addEventListener('scroll', function () {
           var y = scrollEl.scrollTop;
           if (stickyBar) stickyBar.classList.toggle('is-visible', y >= 200 && y <= 400);
-          if (authorPop) authorPop.classList.toggle('is-visible', y >= 450);
+          updatePop();
         }, { passive: true });
       }
 
@@ -739,7 +750,8 @@
         var visible = y >= 200 && y <= 400;
         bar.classList.toggle('is-visible', visible);
         // Bottom "Written by" name tag: slides up at 450px and stays.
-        if (pop) pop.classList.toggle('is-visible', y >= 450);
+        var room = document.documentElement.scrollHeight - window.innerHeight;
+        if (pop) pop.classList.toggle('is-visible', y >= 450 || room < 500);
         // Also hides the site header underneath -- see the CSS rule on
         // body.has-sticky-author-bar .site-header for why.
         document.body.classList.toggle('has-sticky-author-bar', visible);
