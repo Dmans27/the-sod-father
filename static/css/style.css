@@ -2438,13 +2438,13 @@ html.ask-open { overflow: hidden; }
 }
 
 /* ── Article text color ──
-   Body paragraphs in stories use --color-inkBase. Light layout: #222222. In dark mode the
+   Body paragraphs in stories use --color-inkBase. Light layout: #2b2724 (warm charcoal). In dark mode the
    variable flips to the light text color so the paragraphs stay readable. Delete this block to
    go back to the old color (--ink, #2b362f). */
-:root { --color-inkBase: #222222; }
+:root { --color-inkBase: #2b2724; }
 .article-sheet.is-dark,
 body.article-page.is-dark,
-html.is-dark { --color-inkBase: #e4e9e5; }
+html.is-dark { --color-inkBase: #ebe6dc; }
 .article__content p { color: var(--color-inkBase, var(--ink)); }
 
 /* ── Phone and iPad: centered headline block ──
