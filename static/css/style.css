@@ -2446,3 +2446,21 @@ html.ask-open { overflow: hidden; }
 body.article-page.is-dark,
 html.is-dark { --color-inkBase: #e4e9e5; }
 .article__content p { color: var(--color-inkBase, var(--ink)); }
+
+/* ── Phone and iPad: centered headline block ──
+   Same centered headline as on large screens (which has its own copy of this inside the
+   desktop block): label, title, subtitle and the author line sit in the middle. The
+   Save / Share / Comment row and the reading tools keep their usual place. Delete this block
+   to go back to left-aligned headers on phones and iPads. */
+@media (max-width: 999px) {
+  .article__header,
+  .article-sheet__header { text-align: center; }
+  .article__title,
+  .article__dek { margin-left: auto; margin-right: auto; text-wrap: balance; }
+  .article__byline { justify-content: center; }
+  .article__meta { text-align: center; text-wrap: balance; }
+}
+/* On a phone the author line is long, so the photo sits above it instead of beside it. */
+@media (max-width: 560px) {
+  .article__byline { flex-direction: column; gap: 8px; }
+}
