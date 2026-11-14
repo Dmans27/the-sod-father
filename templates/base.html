@@ -696,13 +696,13 @@
       // Author name bar at the top: visible only from 200-400px of the
       // sheet's own scroll (not the page's), since the sheet scrolls
       // internally rather than the whole window. Then, from 500-800px, the
-      // "Written by" name tag slides up from the bottom instead. After that
-      // only the sign-off card at the very end of the story is left.
+      // "Written by" name tag slides up from the bottom and then stays for
+      // the rest of the story (no upper limit).
       if (scrollEl && (stickyBar || authorPop)) {
         scrollEl.addEventListener('scroll', function () {
           var y = scrollEl.scrollTop;
           if (stickyBar) stickyBar.classList.toggle('is-visible', y >= 200 && y <= 400);
-          if (authorPop) authorPop.classList.toggle('is-visible', y >= 450 && y <= 1600);
+          if (authorPop) authorPop.classList.toggle('is-visible', y >= 450);
         }, { passive: true });
       }
 
@@ -726,8 +726,8 @@
         var y = window.scrollY || window.pageYOffset;
         var visible = y >= 200 && y <= 400;
         bar.classList.toggle('is-visible', visible);
-        // Bottom "Written by" name tag: slides up from 500-800px.
-        if (pop) pop.classList.toggle('is-visible', y >= 450 && y <= 1600);
+        // Bottom "Written by" name tag: slides up at 450px and stays.
+        if (pop) pop.classList.toggle('is-visible', y >= 450);
         // Also hides the site header underneath -- see the CSS rule on
         // body.has-sticky-author-bar .site-header for why.
         document.body.classList.toggle('has-sticky-author-bar', visible);
