@@ -70,6 +70,18 @@
     {
       "type": "paragraph",
       "text": "None of this is complicated, which is sort of the point — the trips that actually happen aren't the ones with the best course list, they're the ones where somebody just made the decisions instead of waiting for consensus."
+    },
+    {
+      "type": "place",
+      "slug": "the-miners-coffee-naschmarkt",
+      "base": "https://ai-app-repo.onrender.com",
+      "url": "https://ai-app-repo.onrender.com/listing/the-miners-coffee-naschmarkt",
+      "open_url": "https://ai-app-repo.onrender.com/listing/the-miners-coffee-naschmarkt",
+      "style": "photo",
+      "book_url": null,
+      "book_label": "",
+      "video": null,
+      "caption": "Good coffee"
     }
   ],
   "read_minutes": 2
