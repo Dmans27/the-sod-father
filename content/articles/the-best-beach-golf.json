@@ -14,10 +14,6 @@
   "status": "published",
   "blocks": [
     {
-      "type": "paragraph",
-      "text": "Recently, I have moved to Vienna where my wife is living and I have since hailed from Chicago where the food scene is top-notch. I did not know just how good the food culture would be until I dove right in and was open to everything. Vienna is really known to have a super good coffee culture and you could find good coffee in just about any one of their 21 districts."
-    },
-    {
       "type": "place",
       "slug": "the-miners-coffee-naschmarkt",
       "base": "https://ai-app-repo.onrender.com",
@@ -28,6 +24,10 @@
       "book_label": "",
       "video": "/static/uploads/the-best-beach-golf/video-bmwepjq722-e63152df.mov",
       "caption": "Miners Coffee"
+    },
+    {
+      "type": "paragraph",
+      "text": "Recently, I have moved to Vienna where my wife is living and I have since hailed from Chicago where the food scene is top-notch. I did not know just how good the food culture would be until I dove right in and was open to everything. Vienna is really known to have a super good coffee culture and you could find good coffee in just about any one of their 21 districts."
     },
     {
       "type": "paragraph",
