@@ -2502,3 +2502,12 @@ html.is-dark { --color-inkBase: #ebe6dc; }
     padding-right: var(--pad);
   }
 }
+
+/* ── Extra space at the bottom of stories ──
+   The story's own page gets 20px of extra room under the end of the story.
+   In the pop-up sheet the bottom name bar now stays on screen, so the sheet's scroll area gets
+   bottom space equal to that bar (base.html measures it and sets the exact value; this is the
+   fallback) so the last sentence scrolls clear of it instead of hiding underneath.
+   Delete this block to go back. */
+.article { padding-bottom: 20px; }
+.article-sheet__inner { padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }

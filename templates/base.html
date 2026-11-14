@@ -520,8 +520,20 @@
           authorPop.classList.remove('is-visible');
           window.SodFather.applyReadingTheme();
         }
+        fitPopSpace();
         if (scrollEl) scrollEl.scrollTop = 0;
       }
+
+      // The bottom name bar now stays on screen once it appears, so the
+      // sheet's scroll area gets bottom space equal to the bar's height (plus
+      // a little air) -- the last sentence then scrolls clear of the bar.
+      function fitPopSpace() {
+        if (!authorPop || !inner) return;
+        var h = authorPop.offsetHeight;
+        if (h > 0) inner.style.paddingBottom = (h + 16) + 'px';
+      }
+      window.addEventListener('resize', fitPopSpace);
+      if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitPopSpace);
 
       // 700px and wider: the story opens as the right-hand page of a book
       // with the feed staying on the left (all layout is in the CSS media
