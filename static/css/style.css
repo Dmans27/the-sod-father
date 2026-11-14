@@ -2473,7 +2473,7 @@ html.is-dark { --color-inkBase: #e4e9e5; }
 @media (min-width: 1000px) and (pointer: coarse) {
   .article, .article-sheet { --ipad-trim: 30px; }
   html.book-full .article-sheet,
-  body.article-page .article { --ipad-trim: 65px; }
+  body.article-page .article { --ipad-trim: 165px; }
 }
 /* The trim, applied to the column's width and padding. */
 @media (min-width: 1000px) and (pointer: coarse) {
