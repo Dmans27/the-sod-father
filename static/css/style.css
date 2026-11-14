@@ -2496,3 +2496,21 @@ html.is-dark { --color-inkBase: #e4e9e5; }
     --col: calc(var(--w) + 2 * var(--pad));
   }
 }
+
+/* ── Story page: name bars run edge to edge ──
+   On a story's own page, the author bar that drops in from the top and the name tag that slides
+   up from the bottom now stretch the full width of the window, from both ends of the page. What
+   is inside them still lines up with the text column. Delete this block to go back to the
+   narrower bars. */
+.article__sticky-bar,
+.article__author-pop { max-width: none; }
+.article__sticky-bar {
+  padding-left: max(20px, calc((100% - 720px) / 2 + 20px));
+  padding-right: 20px;
+}
+@media (min-width: 1000px) {
+  .article__sticky-bar {
+    padding-left: max(var(--pad), calc((100% - var(--col)) / 2 + var(--pad)));
+    padding-right: var(--pad);
+  }
+}
