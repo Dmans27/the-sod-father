@@ -2509,5 +2509,5 @@ html.is-dark { --color-inkBase: #ebe6dc; }
    bottom space equal to that bar (base.html measures it and sets the exact value; this is the
    fallback) so the last sentence scrolls clear of it instead of hiding underneath.
    Delete this block to go back. */
-.article { padding-bottom: 20px; }
+.article { padding-bottom: 10px; }
 .article-sheet__inner { padding-bottom: calc(110px + env(safe-area-inset-bottom, 0px)); }
