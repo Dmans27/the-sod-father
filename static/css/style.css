@@ -21,9 +21,9 @@
   --font-serif: "Source Serif 4", Georgia, "Times New Roman", serif;
   --font-sans: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  /* Article body text. Serif to match the headlines; set this to
-     var(--font-sans) to go back to a sans-serif body. */
-  --font-body: "Source Serif 4", Georgia, "Times New Roman", serif;
+  /* Article body text: Nunito Sans (warm, rounded sans). To go back to the
+     serif body, use: "Source Serif 4", Georgia, "Times New Roman", serif */
+  --font-body: "Nunito Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 * { box-sizing: border-box; }
