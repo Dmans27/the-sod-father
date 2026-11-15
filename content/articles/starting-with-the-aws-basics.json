@@ -1,0 +1,35 @@
+{
+  "slug": "starting-with-the-aws-basics",
+  "title": "Starting with the AWS Basics",
+  "dek": "There is a lot to know about AWS",
+  "category": "it",
+  "subcategory": "networking",
+  "author": "Daniel Mansfield",
+  "author_slug": "daniel-mansfield",
+  "author_photo": "/static/uploads/authors/daniel-mansfield/photo.jpg",
+  "author_position": "Staff Writer",
+  "published_at": "2026-11-15",
+  "cover_image": null,
+  "featured": false,
+  "status": "published",
+  "blocks": [
+    {
+      "type": "subheading",
+      "text": "Amazon EC2 (Elastic Compute Cloud)"
+    },
+    {
+      "type": "list",
+      "style": "bulleted",
+      "items": [
+        "It runs Linux or Windows virtual servers (instances) in the cloud, managed remotely through a browser, CLI or API.",
+        "It is IaaS, and other AWS services use it underneath for processing, database hosting and serverless computing.",
+        "You choose the OS, storage, number of vCPUs and CPU type (Intel, AMD or Graviton, the AWS-designed processor).",
+        "Pricing: reserve instances for a set period, or pay as you go.",
+        "Dedicated physical server: one used only by your organization. You can run it with or without a hypervisor, run your own virtualization, and control instance placement.",
+        "Elastic means you can resize or customize it at any time. It can also scale automatically, adding or removing instances based on traffic.",
+        "The “C2” in EC2 comes from the two Cs in “Compute Cloud.”"
+      ]
+    }
+  ],
+  "read_minutes": 1
+}
