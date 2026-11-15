@@ -12,12 +12,14 @@ That's enough for a single-writer site; it would need real accounts if
 other people start writing stories too.
 """
 import hashlib
+import json
 import os
 import re
 import secrets
+import urllib.request
 from datetime import date, datetime
 from functools import wraps
-from urllib.parse import parse_qs, quote, urlparse
+from urllib.parse import parse_qs, quote, urlencode, urlparse
 
 from flask import (
     Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, session, url_for,
@@ -1011,6 +1013,44 @@ def _build_doc_from_form(form, files, slug, existing, draft=False):
     }
 
     return doc, images, errors, warnings
+
+
+# ── Place search for the story editor ───────────────────────────────────
+# The place-card block can search the directory by name instead of making you
+# paste a link. The browser asks THIS route (so it stays behind the admin
+# login and no cross-site permissions are needed), and this route asks the
+# directory app's public typeahead. Only results with a clean slug are
+# returned, and the card address is rebuilt here, never copied from the
+# directory's response.
+
+@admin_bp.get("/place-search")
+@login_required
+def place_search():
+    q = (request.args.get("q") or "").strip()[:80]
+    if len(q) < 2:
+        return jsonify({"results": []})
+    host = map_embed_hosts()[0]
+    scheme = "http" if host.split(":")[0] in LOCAL_HOSTNAMES else "https"
+    url = f"{scheme}://{host}/api/listings/search?{urlencode({'q': q})}"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "mansfield-admin"})
+        with urllib.request.urlopen(req, timeout=20) as resp:
+            data = json.loads(resp.read(200000).decode("utf-8"))
+    except Exception:
+        return jsonify({"results": [], "error": "Couldn't reach the directory just now. Try again in a moment."})
+    results = []
+    for r in (data.get("results") or [])[:8]:
+        slug = str(r.get("slug") or "")
+        if not _MAP_SLUG.match(slug):
+            continue
+        results.append({
+            "slug": slug,
+            "name": str(r.get("name") or slug)[:120],
+            "city": str(r.get("city") or "")[:80],
+            "category": str(r.get("category") or "")[:60],
+            "url": f"{scheme}://{host}/listing/{slug}",
+        })
+    return jsonify({"results": results})
 
 
 # ── Story routes ─────────────────────────────────────────────────────────

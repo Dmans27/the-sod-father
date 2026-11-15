@@ -484,3 +484,67 @@ html.is-dark { color-scheme: dark; }
 .admin-btn--danger:hover { background: rgba(164, 48, 63, 0.1); }
 .is-dark .admin-report { background: #252d28; }
 .is-dark .admin-btn--danger { color: #ffb4ab; border-color: rgba(255, 138, 128, 0.4); }
+
+/* ── Phone-friendly editor tools (static/js/story-tools.js) ──
+   Everything below is additive and safe to delete as one block. */
+.admin-tools { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.admin-tools__btn { padding: 8px 14px; font-size: 13.5px; }
+.admin-paste { margin-top: 12px; padding: 14px; background: #fff; border: 1px solid var(--line); border-radius: 12px; display: flex; flex-direction: column; gap: 10px; }
+.admin-paste[hidden] { display: none; }
+.admin-paste__text { width: 100%; box-sizing: border-box; padding: 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; font-size: 16px; line-height: 1.5; resize: vertical; background: #fff; color: var(--ink); }
+.admin-paste__mode { display: flex; flex-wrap: wrap; gap: 6px 18px; font-size: 14px; font-weight: 600; }
+.admin-paste__actions { display: flex; gap: 10px; }
+.admin-paste__msg { margin: 0; font-size: 13.5px; color: var(--ink-soft); }
+.admin-paste__msg:empty { display: none; }
+
+.admin-block__fold, .admin-block__move { border: none; background: none; color: var(--ink-faint); cursor: pointer; border-radius: 6px; padding: 4px 8px; font-size: 14px; line-height: 1; min-width: 32px; min-height: 32px; }
+.admin-block__fold:hover, .admin-block__move:hover { background: rgba(27, 42, 31, 0.08); }
+.admin-block__summary { flex: 2; min-width: 0; display: none; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 13px; color: var(--ink-soft); }
+.admin-block.is-collapsed .admin-block__summary { display: block; }
+.admin-block.is-collapsed .admin-block__label { flex: 0 0 auto; }
+.admin-block.is-collapsed .admin-block__body { display: none; }
+.admin-block.is-collapsed .admin-block__head { border-bottom: 0; }
+@media (hover: none) { .admin-block__handle { display: none; } } /* dragging doesn't work on touch; use the arrows */
+
+.admin-psearch { display: flex; flex-direction: column; gap: 6px; }
+.admin-psearch__input { width: 100%; box-sizing: border-box; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; font-size: 16px; background: #fff; color: var(--ink); }
+.admin-psearch__status { margin: 0; font-size: 13px; color: var(--ink-soft); }
+.admin-psearch__status:empty { display: none; }
+.admin-psearch__results { display: flex; flex-direction: column; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.admin-psearch__results:empty { display: none; }
+.admin-psearch__item { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 12px; border: 0; border-bottom: 1px solid var(--line); background: #fff; color: var(--ink); font: inherit; text-align: left; cursor: pointer; min-height: 48px; }
+.admin-psearch__item:last-child { border-bottom: 0; }
+.admin-psearch__item span { font-size: 12.5px; color: var(--ink-faint); }
+
+.admin-addfab, .admin-addsheet-backdrop, .admin-addsheet-title { display: none; }
+
+@media (max-width: 760px) {
+  /* 16px text stops iOS zooming the page when a field is tapped */
+  .admin-block__body textarea, .admin-block__body input[type="text"], .admin-block__body select,
+  .admin-field input, .admin-field select, .admin-field textarea { font-size: 16px; }
+  .admin-block__head { padding: 6px 8px; }
+
+  /* One "+ Add block" button that opens a menu */
+  .admin-addfab { display: inline-flex; align-items: center; position: fixed; right: 16px; bottom: calc(92px + env(safe-area-inset-bottom, 0px)); z-index: 40; background: #1b4332; color: #fff; border: 0; border-radius: 999px; padding: 14px 20px; font: 700 15px/1 inherit; min-height: 48px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.28); }
+  .admin-builder__add { display: none; }
+  .admin-builder__add.is-sheet-open { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; position: fixed; left: 0; right: 0; bottom: 0; z-index: 60; background: #fff; padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px)); border-radius: 18px 18px 0 0; max-height: 70vh; overflow-y: auto; box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.25); }
+  .admin-addsheet-title { display: block; grid-column: 1 / -1; font-weight: 800; font-size: 15px; }
+  .admin-builder__add .admin-builder__add-label { display: none; }
+  .admin-builder__add .admin-block-add { min-height: 48px; justify-content: flex-start; }
+  .admin-addsheet-backdrop.is-open { display: block; position: fixed; inset: 0; z-index: 50; background: rgba(0, 0, 0, 0.4); }
+
+  /* Save draft / Publish stay at the bottom while you scroll the story */
+  #story-form .admin-form__actions { position: sticky; bottom: 0; z-index: 30; margin: 0 -20px; padding: 10px 20px calc(10px + env(safe-area-inset-bottom, 0px)); background: var(--cream-deep); border-top: 1px solid var(--line); box-shadow: 0 -6px 16px rgba(0, 0, 0, 0.08); flex-wrap: wrap; gap: 8px; }
+  #story-form .admin-form__actions .admin-btn { min-height: 48px; font-size: 15px; flex: 1 1 auto; white-space: nowrap; padding-left: 12px; padding-right: 12px; }
+  #story-form .admin-form__actions .admin-btn--primary { flex: 2 1 auto; }
+  #story-form .admin-form__actions a.admin-btn { flex: 0 0 auto; padding-left: 14px; padding-right: 14px; }
+  #story-form .admin-form__actions .admin-draft-status { order: -1; flex: 1 0 100%; font-size: 12.5px; }
+  #story-form .admin-form__actions .admin-draft-status:empty { display: none; }
+}
+
+.is-dark .admin-paste, .is-dark .admin-psearch__item, .is-dark .admin-builder__add.is-sheet-open { background: #252d28; color: var(--ink); }
+.is-dark .admin-paste__text, .is-dark .admin-psearch__input { background: #1a211d; color: var(--ink); border-color: rgba(255, 255, 255, 0.2); }
+.is-dark .admin-psearch__results, .is-dark .admin-psearch__item { border-color: rgba(255, 255, 255, 0.14); }
+.is-dark .admin-block__fold:hover, .is-dark .admin-block__move:hover { background: rgba(255, 255, 255, 0.1); }
+@media (max-width: 760px) { .is-dark #story-form .admin-form__actions { background: #1a211d; border-top-color: rgba(255, 255, 255, 0.12); } }
+.is-dark .admin-addfab { background: #2d6a4f; }
