@@ -1,0 +1,245 @@
+{
+  "slug": "aws-foundations-study-sheet-saa-c03",
+  "title": "AWS Foundations: Global Infrastructure, Shared Responsibility and the Well-Architected Framework",
+  "dek": "One study sheet covering four early SAA-C03 lessons, with the exam cues that tie them together.",
+  "category": "it",
+  "subcategory": "careers",
+  "author": "Daniel Mansfield",
+  "author_slug": "daniel-mansfield",
+  "author_photo": "/static/uploads/authors/daniel-mansfield/photo.jpg",
+  "author_position": "Staff Writer",
+  "published_at": "2026-11-15",
+  "cover_image": null,
+  "featured": false,
+  "status": "draft",
+  "blocks": [
+    {
+      "type": "paragraph",
+      "text": "These are my notes from the first four lessons of an AWS Solutions Architect Associate (SAA-C03) course: how AWS is laid out around the world, who is responsible for what, and the framework AWS uses to judge a good design. They connect, so I kept them in one sheet."
+    },
+    {
+      "type": "subheading",
+      "text": "1. Global infrastructure"
+    },
+    {
+      "type": "paragraph",
+      "text": "AWS has the largest global footprint of the major cloud providers and serves about a million active customers in more than 190 countries. It's built from three pieces."
+    },
+    {
+      "type": "list",
+      "style": "bulleted",
+      "items": [
+        "**Availability zone (AZ):** one or more data centers with their own power, networking and connectivity, usually within about 100 km (60 miles) of each other",
+        "**Region:** a group of multiple AZs in a geographic area. Running in two or more AZs gives you fault tolerance, and the AZs stay inside one country, which helps with data residency rules",
+        "**Edge network:** points of presence made up of edge locations and regional edge caches. They work as a content delivery network (CDN), so users get cached content from nearby instead of from your origin server"
+      ]
+    },
+    {
+      "type": "tip",
+      "variant": "tip",
+      "text": "Replicate data to a second region for disaster recovery and backups. Use edge locations when the goal is lower latency for users around the world."
+    },
+    {
+      "type": "subheading",
+      "text": "2. The shared responsibility model"
+    },
+    {
+      "type": "paragraph",
+      "text": "The one-line version: AWS is responsible for security **of** the cloud, and you are responsible for security **in** the cloud."
+    },
+    {
+      "type": "list",
+      "style": "bulleted",
+      "items": [
+        "**Of the cloud (AWS):** the physical data centers, hardware, networking, the host operating system and the virtualization layer (hypervisor)",
+        "**In the cloud (you):** your data, the guest operating system, security groups, network ACLs, encryption settings, and identity and access management (IAM)"
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "How much you own depends on the type of service."
+    },
+    {
+      "type": "list",
+      "style": "bulleted",
+      "items": [
+        "**EC2 (infrastructure as a service):** you patch the guest OS, set up the firewall rules (security groups and network ACLs), turn on encryption and manage access. AWS handles the host OS",
+        "**Abstracted services such as S3, DynamoDB and Lambda:** AWS handles almost everything underneath. You still manage your data, encryption options, endpoints and IAM policies"
+      ]
+    },
+    {
+      "type": "paragraph",
+      "text": "The model also covers IT controls, which come in three kinds."
+    },
+    {
+      "type": "list",
+      "style": "bulleted",
+      "items": [
+        "**Inherited controls:** you get them from AWS, like the physical and environmental protection of the data centers",
+        "**Shared controls:** both sides apply them in their own layer. Patch management (AWS patches the host OS, you patch your guest OS), configuration management and security awareness training are the examples to remember",
+        "**Customer-specific controls:** only you handle them, such as zone security, which means keeping your data inside network boundaries you define"
+      ]
+    },
+    {
+      "type": "takeaways",
+      "title": "Quick answers to common exam questions",
+      "items": [
+        "Patching the guest OS on EC2: you",
+        "Patching the host OS and hypervisor: AWS",
+        "Managing IAM users and access keys: you",
+        "Maintaining the servers under Lambda: AWS",
+        "Zone security for your data: you",
+        "Physical security of the data centers: AWS",
+        "Encryption for RDS: AWS builds the features and you switch them on"
+      ]
+    },
+    {
+      "type": "subheading",
+      "text": "3. The Well-Architected Framework"
+    },
+    {
+      "type": "paragraph",
+      "text": "The AWS Well-Architected Framework is a body of best practices for designing secure, reliable, efficient workloads. You answer its questions about your architecture and it shows where you're weak. A question like \"How do you protect your data at rest?\" exposes a gap quickly if your honest answer is \"I don't.\""
+    },
+    {
+      "type": "list",
+      "style": "bulleted",
+      "items": [
+        "It is organized into pillars, and each pillar lists design patterns (what works) and anti-patterns (what to avoid)",
+        "It's guidance, not a strict rule. A prototype or test environment doesn't need every recommendation",
+        "A production workload should follow it, because regulations, data protection laws and uptime commitments are real",
+        "It helps you decide trade-offs. For example, you can trade reliability for lower cost in a test environment that has no SLA, but you don't make that trade in production with strict recovery time and recovery point objectives (RTO and RPO)",
+        "Security is the one thing companies almost never trade away"
+      ]
+    },
+    {
+      "type": "subheading",
+      "text": "4. The six pillars"
+    },
+    {
+      "type": "subheading",
+      "text": "Operational excellence"
+    },
+    {
+      "type": "paragraph",
+      "text": "Running operations well so the business gets value. Think of supporting processes like scaffolding around a house. Examples are post-incident reviews, regular game days to test disaster recovery, and small, reversible changes."
+    },
+    {
+      "type": "list",
+      "style": "bulleted",
+      "items": [
+        "Principles: perform operations as code, make frequent small reversible changes, refine procedures often, anticipate failure, learn from failures",
+        "Areas: organization, prepare, operate, evolve"
+      ]
+    },
+    {
+      "type": "subheading",
+      "text": "Security"
+    },
+    {
+      "type": "paragraph",
+      "text": "Protecting data, systems and assets. Traceability matters here: log API calls and track changes (AWS Config is the example), and give people least privilege."
+    },
+    {
+      "type": "list",
+      "style": "bulleted",
+      "items": [
+        "Principles: strong identity foundation, enable traceability, apply security at all layers, automate security best practices, protect data in transit and at rest, keep people away from data, prepare for security events",
+        "Areas: foundation for security, identity and access management, detection, infrastructure protection, data protection, incident response"
+      ]
+    },
+    {
+      "type": "subheading",
+      "text": "Reliability"
+    },
+    {
+      "type": "paragraph",
+      "text": "The keyword is **recovery**. Systems should recover from outages and scale to meet demand. EC2 Auto Scaling across multiple AZs with a load balancer, and cross-region replication of databases and S3 buckets, are the examples."
+    },
+    {
+      "type": "list",
+      "style": "bulleted",
+      "items": [
+        "Principles: automatically recover from failure, test recovery procedures, scale horizontally, stop guessing capacity, manage change through automation",
+        "Areas: foundations, workload architecture, change management, failure management"
+      ]
+    },
+    {
+      "type": "subheading",
+      "text": "Performance efficiency"
+    },
+    {
+      "type": "paragraph",
+      "text": "Using resources efficiently and staying efficient as demand changes, for example by moving to serverless."
+    },
+    {
+      "type": "list",
+      "style": "bulleted",
+      "items": [
+        "Principles: democratize advanced technologies, go global in minutes, use serverless architectures, experiment more often, consider mechanical sympathy",
+        "Areas: selection, review, monitoring, trade-offs"
+      ]
+    },
+    {
+      "type": "subheading",
+      "text": "Cost optimization"
+    },
+    {
+      "type": "paragraph",
+      "text": "Delivering business value at the lowest price. Pay-as-you-go means you pay only for what you use and don't have to forecast demand."
+    },
+    {
+      "type": "list",
+      "style": "bulleted",
+      "items": [
+        "Principles: implement cloud financial management, adopt a consumption model, measure overall efficiency, stop spending money on undifferentiated heavy lifting, analyze and attribute expenditure",
+        "Areas: practice cloud financial management, expenditure and usage awareness, cost-effective resources, manage demand and supply, optimize over time"
+      ]
+    },
+    {
+      "type": "subheading",
+      "text": "Sustainability"
+    },
+    {
+      "type": "paragraph",
+      "text": "Reducing the long-term environmental impact of your workloads. It uses a shared model like security: AWS is responsible for the sustainability **of** the cloud, and you are responsible for sustainability **in** the cloud, by using fewer resources."
+    },
+    {
+      "type": "list",
+      "style": "bulleted",
+      "items": [
+        "Principles: understand your impact, establish sustainability goals, maximize utilization, adopt more efficient hardware and software, use managed services, reduce downstream impact",
+        "Areas: region selection, user behavior patterns, software and architecture patterns, data patterns, hardware patterns, development and deployment process"
+      ]
+    },
+    {
+      "type": "divider"
+    },
+    {
+      "type": "subheading",
+      "text": "Exam cues"
+    },
+    {
+      "type": "takeaways",
+      "title": "Match the phrase to the answer",
+      "items": [
+        "Of the cloud versus in the cloud: AWS versus you",
+        "Guest OS patching: you. Host OS patching: AWS",
+        "High availability: multiple AZs. Disaster recovery: multiple regions",
+        "Lower latency worldwide: edge locations and a CDN",
+        "Recovery, Auto Scaling or cross-region replication: reliability pillar",
+        "Going serverless or using resources efficiently: performance efficiency pillar",
+        "Pay-as-you-go or avoiding forecasting: cost optimization pillar",
+        "Least privilege, traceability or encryption: security pillar",
+        "Game days or small reversible changes: operational excellence pillar",
+        "Environmental impact or maximizing utilization: sustainability pillar"
+      ]
+    },
+    {
+      "type": "quote",
+      "text": "Security is the one thing you don't trade away for anything else.",
+      "attribution": "Study note"
+    }
+  ],
+  "read_minutes": 5
+}
