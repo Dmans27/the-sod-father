@@ -15,15 +15,15 @@
   "blocks": [
     {
       "type": "place",
-      "slug": "bellissimo-pizza",
+      "slug": "the-miners-coffee-naschmarkt",
       "base": "https://ai-app-repo.onrender.com",
-      "url": "https://ai-app-repo.onrender.com/listing/bellissimo-pizza",
-      "open_url": "https://ai-app-repo.onrender.com/listing/bellissimo-pizza",
-      "style": "photo",
+      "url": "https://ai-app-repo.onrender.com/listing/the-miners-coffee-naschmarkt",
+      "open_url": "https://ai-app-repo.onrender.com/listing/the-miners-coffee-naschmarkt",
+      "style": "wide",
       "book_url": null,
       "book_label": "",
       "video": null,
-      "caption": "Bellissimo Pizza"
+      "caption": "The Miners Coffee"
     }
   ],
   "read_minutes": 1
