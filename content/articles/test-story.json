@@ -1,0 +1,30 @@
+{
+  "slug": "test-story",
+  "title": "Test story",
+  "dek": "Testing this one",
+  "category": "lifestyle",
+  "subcategory": "",
+  "author": "Daniel Mansfield",
+  "author_slug": "daniel-mansfield",
+  "author_photo": "/static/uploads/authors/daniel-mansfield/photo.jpg",
+  "author_position": "Staff Writer",
+  "published_at": "2026-11-15",
+  "cover_image": null,
+  "featured": false,
+  "status": "published",
+  "blocks": [
+    {
+      "type": "place",
+      "slug": "bellissimo-pizza",
+      "base": "https://ai-app-repo.onrender.com",
+      "url": "https://ai-app-repo.onrender.com/listing/bellissimo-pizza",
+      "open_url": "https://ai-app-repo.onrender.com/listing/bellissimo-pizza",
+      "style": "photo",
+      "book_url": null,
+      "book_label": "",
+      "video": null,
+      "caption": "Bellissimo Pizza"
+    }
+  ],
+  "read_minutes": 1
+}
