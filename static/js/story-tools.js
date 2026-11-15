@@ -209,13 +209,18 @@
 
   var addRow = document.querySelector('.admin-builder__add');
   if (addRow) {
-    var fab = el('button', 'admin-addfab', '+ Add block');
+    // A round green + that lives in the bottom bar (with Publish / Save draft)
+    var fab = el('button', 'admin-addfab', '+');
     fab.type = 'button';
+    fab.setAttribute('aria-label', 'Add block');
     fab.setAttribute('aria-expanded', 'false');
+    var bar = form.querySelector('.admin-form__actions');
+    var cancelLink = bar && bar.querySelector('a.admin-btn');
+    if (cancelLink) cancelLink.setAttribute('aria-label', 'Cancel');
     var backdrop = el('div', 'admin-addsheet-backdrop');
     var sheetTitle = el('div', 'admin-addsheet-title', 'Add a block');
     addRow.insertBefore(sheetTitle, addRow.firstChild);
-    document.body.appendChild(fab);
+    if (bar) bar.insertBefore(fab, bar.firstChild); else document.body.appendChild(fab);
     document.body.appendChild(backdrop);
 
     function setSheet(open) {
