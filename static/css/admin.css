@@ -562,3 +562,21 @@ html.is-dark { color-scheme: dark; }
   #story-form .admin-form__actions .admin-btn { font-size: 14px; padding-left: 8px; padding-right: 8px; }
   #story-form .admin-form__actions a.admin-btn { padding: 0; }
 }
+
+/* ── Hamburger menu (phones): menu button on the left, "\\Mansfield admin" on the right ── */
+.admin-menu-btn, .admin-nav-backdrop { display: none; }
+@media (max-width: 760px) {
+  .admin-header__inner { flex-wrap: nowrap; }
+  .admin-menu-btn { order: 0; display: inline-flex; flex-direction: column; justify-content: center; gap: 5px; width: 44px; height: 44px; margin-left: -10px; padding: 0 10px; border: 0; background: none; cursor: pointer; }
+  .admin-menu-btn span { display: block; height: 2px; border-radius: 2px; background: #fff; }
+  .admin-header__brand { order: 2; margin-left: auto; }
+
+  .admin-header__nav { position: fixed; top: 0; left: 0; bottom: 0; z-index: 100; width: min(82vw, 300px); box-sizing: border-box; display: flex; flex-direction: column; flex-wrap: nowrap; gap: 0; overflow-y: auto; background: var(--fairway-deep); padding: calc(max(env(safe-area-inset-top), 20px) + 16px) 20px calc(24px + env(safe-area-inset-bottom, 0px)); box-shadow: 8px 0 30px rgba(0, 0, 0, 0.3); transform: translateX(-105%); visibility: hidden; transition: transform 0.22s ease, visibility 0s linear 0.22s; }
+  .admin-header__nav a { padding: 15px 4px; font-size: 16px; border-bottom: 1px solid rgba(255, 255, 255, 0.12); }
+  .admin-header__nav .admin-theme-toggle { margin-top: 16px; align-self: flex-start; }
+  body.is-nav-open .admin-header__nav { transform: none; visibility: visible; transition: transform 0.22s ease; }
+  .admin-nav-backdrop { display: block; position: fixed; inset: 0; z-index: 90; background: rgba(0, 0, 0, 0.45); opacity: 0; pointer-events: none; transition: opacity 0.22s ease; }
+  body.is-nav-open .admin-nav-backdrop { opacity: 1; pointer-events: auto; }
+  body.is-nav-open { overflow: hidden; }
+}
+.is-dark .admin-header__nav { background: #131916; }
