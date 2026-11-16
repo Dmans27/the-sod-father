@@ -421,11 +421,11 @@ a { color: inherit; }
      word-wrap come across as-is; direction: ltr isn't meaningful for an
      English-only site so it's left out. */
   color: var(--ink);
-  font-family: var(--font-body);
+  font-family: var(--font-1),-apple-system,Arial,Helvetica,Roboto,system-ui,sans-serif;
   font-size: calc(18px * var(--read-scale, 1));
   font-weight: 400;
-  line-height: 1.66;
-  line-height: calc(28 / 18);
+  line-height: 1.86;
+  line-height: calc(30 / 18);
   margin: 0 0 1em 0;
   word-wrap: break-word;
 }
