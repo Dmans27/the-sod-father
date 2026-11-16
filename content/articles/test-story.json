@@ -14,6 +14,10 @@
   "status": "published",
   "blocks": [
     {
+      "type": "paragraph",
+      "text": "testing this to see [how it works ](https://www.theatlantic.com/newsletters/?utm_source=google&utm_medium=cr&utm_campaign=holiday2020&gad_source=1&gad_campaignid=23880693546&gbraid=0AAAAADye0ITwACt04PDeHeS5cxC8HTOem&gclid=Cj0KCQiA8OrXBhDEARIsAECtlx6_dRMIbu4zSFWk-1j6mmAPemI02m661q51pp4iZWr89cENZ1epk1waAinPEALw_wcB)"
+    },
+    {
       "type": "place",
       "slug": "the-miners-coffee-naschmarkt",
       "base": "https://ai-app-repo.onrender.com",
