@@ -604,3 +604,26 @@ html.is-dark { color-scheme: dark; }
 .admin-suggest__opt.is-used .admin-suggest__label::after { content: " \2713 used"; color: var(--fairway); }
 .is-dark .admin-suggest__opt { background: #1a211d; color: var(--ink); border-color: rgba(255, 255, 255, 0.18); }
 .is-dark .admin-suggest__opt:hover { background: #2c352f; }
+
+/* ── Check this draft: the list of things to look at (static/js/story-tools.js) ── */
+.admin-paste__actions { flex-wrap: wrap; }
+.admin-check { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; border-top: 1px solid var(--line); }
+.admin-check[hidden] { display: none; }
+.admin-check__head { margin: 0; font-size: 14.5px; font-weight: 700; }
+.admin-check__list { display: flex; flex-direction: column; gap: 10px; }
+.admin-check__list:empty { display: none; }
+.admin-check__foot:empty { display: none; }
+.admin-check__item { display: flex; flex-direction: column; gap: 6px; padding: 12px 14px; border: 1px solid var(--line); border-left: 4px solid #b8860b; border-radius: 10px; background: #fff; }
+.admin-check__item--differs { border-left-color: #a4303f; }
+.admin-check__item--missing { border-left-color: #1d6fa5; }
+.admin-check__kind { font-size: 11px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: var(--ink-faint); }
+.admin-check__draft { margin: 0; font-size: 15px; font-weight: 600; line-height: 1.4; }
+.admin-check__note { margin: 0; font-size: 14px; line-height: 1.45; }
+.admin-check__quote { margin: 0; font-size: 13.5px; line-height: 1.45; color: var(--ink-soft); }
+.admin-check__quote.is-unconfirmed { font-style: italic; }
+.admin-check__find { align-self: flex-start; border: 1px solid var(--line); background: none; color: var(--ink); font: inherit; font-size: 13px; font-weight: 700; padding: 7px 12px; min-height: 38px; border-radius: 8px; cursor: pointer; }
+.is-dark .admin-check__item { background: #1a211d; border-color: rgba(255, 255, 255, 0.16); border-left-color: #d9a441; }
+.is-dark .admin-check__item--differs { border-left-color: #ff8a80; }
+.is-dark .admin-check__item--missing { border-left-color: #7fb8e0; }
+.is-dark .admin-check { border-top-color: rgba(255, 255, 255, 0.14); }
+.is-dark .admin-check__find { border-color: rgba(255, 255, 255, 0.2); }

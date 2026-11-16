@@ -1065,8 +1065,9 @@ def place_search():
 
 
 # ── Writing helpers (ai_tools.py) ───────────────────────────────────────
-# Two admin-only endpoints the story editor calls: a draft from a pasted
-# transcript, and title / summary / category suggestions. Each call is
+# Admin-only endpoints the story editor calls: a draft from a pasted
+# transcript, a check of that draft against the transcript, and title /
+# summary / category suggestions. Each call is
 # counted against AI_DAILY_CAP so a stuck button can't run up the bill.
 
 def _ai_call(work):
@@ -1102,6 +1103,18 @@ def ai_draft():
     if len(text.strip()) < 200:  # checked here so a slip doesn't use up one of the day's calls
         return jsonify(ok=False, error="Paste a longer transcript or notes first (at least a few sentences)."), 400
     return _ai_call(lambda ai: ai.draft_from_transcript(text, str(body.get("style") or "study")))
+
+
+@admin_bp.post("/ai/check")
+@login_required
+def ai_check():
+    body = request.get_json(silent=True) or {}
+    draft, transcript = str(body.get("draft") or ""), str(body.get("text") or "")
+    if len(draft.strip()) < 120:
+        return jsonify(ok=False, error="There's no draft to check yet."), 400
+    if len(transcript.strip()) < 200:
+        return jsonify(ok=False, error="Paste the transcript the draft came from first."), 400
+    return _ai_call(lambda ai: ai.check_draft(draft, transcript))
 
 
 @admin_bp.post("/ai/suggest")

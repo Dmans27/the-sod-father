@@ -566,12 +566,115 @@
         tGo.textContent = 'Write draft';
         if (!d.ok) { tMsg.textContent = d.error || 'Something went wrong. Please try again.'; return; }
         pasteText.value = d.draft;
-        pasteMsg.textContent = 'Draft ready. Read it through and change anything you like, then tap Build blocks.' +
+        pasteMsg.textContent = 'Draft ready. Tap Check this draft to compare it with the transcript, change anything you like, then tap Build blocks.' +
           (d.cut ? ' The transcript was very long, so only the first part was used.' : '');
         tMsg.textContent = '';
         tPanel.hidden = true;
         panel.hidden = false;
         if (panel.scrollIntoView) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    // -- Check this draft against the transcript --
+    // Sends the draft and the transcript back to the model and lists what it
+    // could not match. The server looks up every quote in the real transcript,
+    // so each item says whether the quote was confirmed.
+    var cBtn = el('button', 'admin-btn', 'Check this draft');
+    cBtn.type = 'button';
+    panel.querySelector('.admin-paste__actions').insertBefore(cBtn, closeBtn);
+    var cBox = el('div', 'admin-check');
+    cBox.hidden = true;
+    var cHead = el('p', 'admin-check__head');
+    cHead.setAttribute('role', 'status');
+    cHead.setAttribute('aria-live', 'polite');
+    var cList = el('div', 'admin-check__list');
+    var cFoot = el('p', 'admin-hint admin-check__foot');
+    cBox.appendChild(cHead);
+    cBox.appendChild(cList);
+    cBox.appendChild(cFoot);
+    panel.appendChild(cBox);
+
+    var KINDS = {
+      unsupported: 'Not in the transcript',
+      differs: 'Different from the transcript',
+      missing: 'Left out of the draft'
+    };
+
+    function norm(t) { return String(t || '').toLowerCase().replace(/\s+/g, ' ').trim(); }
+
+    // Put the cursor on a statement: in the paste box if the draft is still
+    // there, otherwise in the block that holds it.
+    function findInDraft(text) {
+      // the checker copies a line as written in the draft ("- bullet", "## Heading"); blocks hold it without the marker
+      var clean = norm(text).replace(/^(?:[-*\u2022]|\d+[.)]|#{1,6}|!tip:|!warning:)\s+/, '');
+      var needle = clean.slice(0, 60);
+      if (!needle) return false;
+      var areas = [pasteText].concat(Array.prototype.slice.call(container.querySelectorAll('.admin-block textarea, .admin-block input[type="text"]')));
+      for (var i = 0; i < areas.length; i++) {
+        var ta = areas[i];
+        var raw = ta.value;
+        var at = raw.toLowerCase().replace(/\s/g, ' ').indexOf(needle.slice(0, 30));
+        if (at < 0) continue;
+        var block = ta.closest ? ta.closest('.admin-block') : null;
+        if (block && block.classList.contains('is-collapsed')) setCollapsed(block, false);
+        ta.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        try { ta.focus({ preventScroll: true }); ta.setSelectionRange(at, Math.min(raw.length, at + clean.length)); } catch (e) {}
+        return true;
+      }
+      return false;
+    }
+
+    function issueCard(it) {
+      var card = el('div', 'admin-check__item admin-check__item--' + it.kind);
+      card.appendChild(el('span', 'admin-check__kind', KINDS[it.kind] || 'Check this'));
+      if (it.draft_text) card.appendChild(el('p', 'admin-check__draft', '“' + it.draft_text + '”'));
+      if (it.note) card.appendChild(el('p', 'admin-check__note', it.note));
+      if (it.source_quote) {
+        var q = el('p', 'admin-check__quote');
+        q.appendChild(el('strong', null, it.quote_found ? 'Transcript says: ' : 'Checker’s quote (not found word for word in the transcript, so look this one up yourself): '));
+        q.appendChild(document.createTextNode('“' + it.source_quote + '”'));
+        if (!it.quote_found) q.classList.add('is-unconfirmed');
+        card.appendChild(q);
+      }
+      if (it.draft_text) {
+        var go = el('button', 'admin-check__find', 'Find in draft');
+        go.type = 'button';
+        go.addEventListener('click', function () {
+          if (!findInDraft(it.draft_text)) go.textContent = 'Not found (already changed?)';
+        });
+        card.appendChild(go);
+      }
+      return card;
+    }
+
+    cBtn.addEventListener('click', function () {
+      var draft = pasteText.value.trim() || storyText();
+      var transcript = tText.value.trim();
+      cBox.hidden = false;
+      cList.textContent = '';
+      cFoot.textContent = '';
+      if (draft.length < 120) { cHead.textContent = 'There’s no draft to check yet. Write one with Draft from transcript, or build your blocks first.'; return; }
+      if (transcript.length < 200) {
+        cHead.textContent = 'To check a draft I need the transcript it came from. Tap Draft from transcript, paste the transcript in that box, then come back here and tap Check this draft.';
+        return;
+      }
+      cBtn.disabled = true;
+      cBtn.textContent = 'Checking…';
+      cHead.textContent = 'Comparing the draft with the transcript. This can take up to a minute.';
+      aiPost('/admin/ai/check', { draft: draft, text: transcript }).then(function (d) {
+        cBtn.disabled = false;
+        cBtn.textContent = 'Check this draft';
+        if (!d.ok) { cHead.textContent = d.error || 'Something went wrong. Please try again.'; return; }
+        var issues = d.issues || [];
+        if (!issues.length) {
+          cHead.textContent = 'Nothing flagged. The checker found no statement that goes against the transcript.';
+        } else {
+          cHead.textContent = issues.length + (issues.length === 1 ? ' thing' : ' things') + ' to look at:';
+          issues.forEach(function (it) { cList.appendChild(issueCard(it)); });
+        }
+        cFoot.textContent = 'This is a second opinion from the same kind of AI, so it can miss things or flag something that is fine. ' +
+          'It only compares the draft with your transcript; it does not know whether the transcript itself is right. ' +
+          'Still check numbers and names yourself.' + (d.cut ? ' The text was very long, so only the first part was compared.' : '');
       });
     });
 
