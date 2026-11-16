@@ -292,21 +292,34 @@
       // gallery, video, link card, before/after). Everything here goes
       // through esc() -- same markup and class names as templates/article.html.
       var esc = window.SodFather.esc;
+      // [words](https://...) in story text becomes an underlined link; everything else is escaped.
+      // Same rule as textlinks.py -- keep the two in step.
+      var LINK_RE = /\[([^\[\]]{1,300})\]\((https?:\/\/[^\s()<>\[\]"']{1,2000})\)/g;
+      function inlineLinks(text) {
+        text = text == null ? '' : String(text);
+        var out = '', pos = 0, m;
+        LINK_RE.lastIndex = 0;
+        while ((m = LINK_RE.exec(text))) {
+          out += esc(text.slice(pos, m.index)) + '<a href="' + esc(m[2]) + '" target="_blank" rel="noopener noreferrer">' + esc(m[1]) + '</a>';
+          pos = m.index + m[0].length;
+        }
+        return out + esc(text.slice(pos));
+      }
       var VIDEO_PREFIXES = ['https://www.youtube-nocookie.com/embed/', 'https://player.vimeo.com/video/'];
       function newBlockHtml(block) {
         var items, html;
         if (block.type === 'list') {
           var numbered = block.style === 'numbered', tag = numbered ? 'ol' : 'ul';
-          items = (block.items || []).map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('');
+          items = (block.items || []).map(function (i) { return '<li>' + inlineLinks(i) + '</li>'; }).join('');
           return '<' + tag + ' class="article__list' + (numbered ? ' article__list--numbered' : '') + '">' + items + '</' + tag + '>';
         }
         if (block.type === 'tip') {
           var warn = block.variant === 'warning';
           return '<aside class="article__tip article__tip--' + (warn ? 'warning' : 'tip') + '"><span class="article__tip-label">' +
-            (warn ? 'Heads up' : 'Pro tip') + '</span><p>' + esc(block.text) + '</p></aside>';
+            (warn ? 'Heads up' : 'Pro tip') + '</span><p>' + inlineLinks(block.text) + '</p></aside>';
         }
         if (block.type === 'takeaways') {
-          items = (block.items || []).map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('');
+          items = (block.items || []).map(function (i) { return '<li>' + inlineLinks(i) + '</li>'; }).join('');
           return '<section class="article__takeaways"><h2 class="article__takeaways-title">' + esc(block.title || 'Key takeaways') + '</h2><ul>' + items + '</ul></section>';
         }
         if (block.type === 'table') {
@@ -412,11 +425,11 @@
       }
 
       function blockHtml(block) {
-        if (block.type === 'paragraph') return '<p>' + block.text + '</p>';
-        if (block.type === 'subheading') return '<h2 class="article__subheading">' + block.text + '</h2>';
+        if (block.type === 'paragraph') return '<p>' + inlineLinks(block.text) + '</p>';
+        if (block.type === 'subheading') return '<h2 class="article__subheading">' + esc(block.text) + '</h2>';
         if (block.type === 'quote') {
-          return '<blockquote class="article__quote"><p>' + block.text + '</p>' +
-            (block.attribution ? '<cite>' + block.attribution + '</cite>' : '') + '</blockquote>';
+          return '<blockquote class="article__quote"><p>' + esc(block.text) + '</p>' +
+            (block.attribution ? '<cite>' + esc(block.attribution) + '</cite>' : '') + '</blockquote>';
         }
         if (block.type === 'photo') {
           return '<figure class="article__photo"><img src="' + block.image + '" alt="' + (block.caption || '') + '" loading="lazy">' +

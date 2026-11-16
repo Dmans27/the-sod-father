@@ -2517,3 +2517,18 @@ html.is-dark { --color-inkBase: #ebe6dc; }
    hidden (it showed the same name twice). Delete this block to bring the sign-off card back. */
 .article__body > .article__author-card,
 .article-sheet__body > .article__author-card { display: none; }
+
+/* ── Links inside story text: underlined, in the accent color ──
+   A writer makes one with [words](https://address) in a paragraph, list,
+   tip or takeaway (see textlinks.py). Covers the article page and the
+   pop-up sheet, which both use .article__content. */
+.article__content p a,
+.article__content li a {
+  color: var(--fairway);
+  text-decoration: underline;
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 3px;
+  overflow-wrap: anywhere;
+}
+.article__content p a:hover,
+.article__content li a:hover { color: var(--fairway-deep); }

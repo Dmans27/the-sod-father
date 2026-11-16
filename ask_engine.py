@@ -42,6 +42,7 @@ import requests
 
 import db
 from content import get_article, get_articles
+from textlinks import plain_text
 
 CHUNK_TARGET = 900          # characters per piece
 CHUNK_MAX = 1200
@@ -131,13 +132,13 @@ def article_text(article):
     for block in article.get("blocks") or []:
         kind = block.get("type")
         if kind in ("paragraph", "quote", "tip"):
-            parts.append((block.get("text") or "").strip())
+            parts.append(plain_text(block.get("text") or "").strip())
         elif kind == "subheading":
             parts.append("## " + (block.get("text") or "").strip())
         elif kind in ("list", "takeaways"):
             if block.get("title"):
                 parts.append(str(block["title"]).strip())
-            parts.extend("- " + str(item).strip() for item in block.get("items") or [])
+            parts.extend("- " + plain_text(item).strip() for item in block.get("items") or [])
         elif kind == "table":
             for row in block.get("rows") or []:
                 if isinstance(row, (list, tuple)):

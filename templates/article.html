@@ -93,7 +93,7 @@
       <div class="article__content">
         {% for block in article.blocks %}
           {% if block.type == 'paragraph' %}
-            <p>{{ block.text }}</p>
+            <p>{{ block.text|inline_links }}</p>
           {% elif block.type == 'subheading' %}
             <h2 class="article__subheading">{{ block.text }}</h2>
           {% elif block.type == 'quote' %}
@@ -109,17 +109,17 @@
           {% elif block.type == 'list' %}
             {% set numbered = block.style == 'numbered' %}
             <{{ 'ol' if numbered else 'ul' }} class="article__list{% if numbered %} article__list--numbered{% endif %}">
-              {% for item in block['items'] %}<li>{{ item }}</li>{% endfor %}
+              {% for item in block['items'] %}<li>{{ item|inline_links }}</li>{% endfor %}
             </{{ 'ol' if numbered else 'ul' }}>
           {% elif block.type == 'tip' %}
             <aside class="article__tip article__tip--{{ 'warning' if block.variant == 'warning' else 'tip' }}">
               <span class="article__tip-label">{{ 'Heads up' if block.variant == 'warning' else 'Pro tip' }}</span>
-              <p>{{ block.text }}</p>
+              <p>{{ block.text|inline_links }}</p>
             </aside>
           {% elif block.type == 'takeaways' %}
             <section class="article__takeaways">
               <h2 class="article__takeaways-title">{{ block.title or 'Key takeaways' }}</h2>
-              <ul>{% for item in block['items'] %}<li>{{ item }}</li>{% endfor %}</ul>
+              <ul>{% for item in block['items'] %}<li>{{ item|inline_links }}</li>{% endfor %}</ul>
             </section>
           {% elif block.type == 'table' %}
             <div class="article__table-wrap">

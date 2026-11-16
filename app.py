@@ -14,6 +14,7 @@ Run it:
     python app.py
 Then open http://localhost:5050
 """
+from textlinks import inline_links
 from flask import Flask, render_template, abort
 import os
 
@@ -38,6 +39,7 @@ app.register_blueprint(seo_bp)  # robots.txt, sitemap.xml, feed.xml, share image
 register_seo(app)  # canonical addresses + optional analytics for every page
 # Interactive map blocks (see content.py): templates use these two to check
 # that a map's address is on the allowed list before putting it in an iframe.
+app.jinja_env.filters["inline_links"] = inline_links  # [words](https://...) in story text (see textlinks.py)
 app.jinja_env.globals.update(map_embed_ok=is_map_embed_url, map_embed_hosts=map_embed_hosts,
                              place_embed_url=place_embed_url)
 readers.register(app)  # reader accounts: sign up, save, comment (see readers.py)

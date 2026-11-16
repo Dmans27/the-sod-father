@@ -302,6 +302,7 @@
       if (next) { container.insertBefore(next, block); ed.syncOrder(); block.scrollIntoView({ block: 'center', behavior: 'smooth' }); }
     });
     if (block.dataset.blockType === 'place') enhancePlace(block);
+    addLinkTool(block);
   }
 
   collapseAllBtn.addEventListener('click', function () {
@@ -373,6 +374,88 @@
     input.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(run, 350); });
     // Enter must not submit the whole story form.
     input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); run(); } });
+  }
+
+  // ───────────────────────────── 5. Add a link inside text ─────────────────────────────
+  // Highlight some words, tap "Add link", paste the address. The words become
+  // [words](https://address) in the text; readers see them underlined.
+
+  function addLinkTool(block) {
+    var type = block.dataset.blockType;
+    if (['paragraph', 'list', 'tip', 'takeaways'].indexOf(type) < 0) return;
+    var body = block.querySelector('.admin-block__body');
+    var ta = body && body.querySelector('textarea.admin-block__text');
+    if (!ta || block.querySelector('.admin-linktool')) return;
+
+    var bar = el('div', 'admin-linktool');
+    var btn = el('button', 'admin-linktool__btn', '🔗 Add link');
+    btn.type = 'button';
+    var row = el('div', 'admin-linktool__row');
+    row.hidden = true;
+    var input = el('input', 'admin-linktool__input');
+    input.type = 'text';
+    input.placeholder = 'Paste the web address';
+    input.setAttribute('inputmode', 'url');
+    input.setAttribute('autocapitalize', 'off');
+    input.setAttribute('autocorrect', 'off');
+    input.autocomplete = 'off';
+    input.setAttribute('aria-label', 'Link address');
+    var ok = el('button', 'admin-btn admin-btn--primary', 'Insert');
+    ok.type = 'button';
+    var cancel = el('button', 'admin-btn', 'Cancel');
+    cancel.type = 'button';
+    var msg = el('p', 'admin-linktool__msg');
+    msg.setAttribute('role', 'status');
+    row.appendChild(input);
+    row.appendChild(ok);
+    row.appendChild(cancel);
+    bar.appendChild(btn);
+    bar.appendChild(row);
+    bar.appendChild(msg);
+    ta.parentNode.insertBefore(bar, ta.nextSibling);
+
+    // Remember the highlighted words: tapping a button can clear the selection on some phones.
+    var sel = null;
+    function remember() { sel = ta.selectionStart !== ta.selectionEnd ? { s: ta.selectionStart, e: ta.selectionEnd } : null; }
+    document.addEventListener('selectionchange', function () { if (document.activeElement === ta) remember(); });
+    ['pointerdown', 'mousedown', 'touchstart'].forEach(function (n) {
+      btn.addEventListener(n, function () { remember(); }, { passive: true });
+    });
+
+    function close() { row.hidden = true; input.value = ''; }
+
+    btn.addEventListener('click', function () {
+      if (document.activeElement === ta) remember();
+      if (!sel || sel.s === sel.e || sel.e > ta.value.length) {
+        msg.textContent = 'First highlight the words you want to link, then tap Add link.';
+        row.hidden = true;
+        return;
+      }
+      var picked = ta.value.slice(sel.s, sel.e);
+      if (/\n/.test(picked)) { msg.textContent = 'Highlight words on one line only.'; row.hidden = true; return; }
+      msg.textContent = 'Linking “' + (picked.length > 40 ? picked.slice(0, 40) + '…' : picked) + '”';
+      row.hidden = false;
+      input.focus();
+    });
+
+    function insert() {
+      var url = input.value.trim();
+      if (url && !/^https?:\/\//i.test(url) && /^[^\s\/]+\.[^\s]+$/.test(url)) url = 'https://' + url;
+      if (!/^https?:\/\/[^\s()<>\[\]"']+$/i.test(url)) { msg.textContent = 'That doesn’t look like a web address. It should start with https://'; return; }
+      var v = ta.value;
+      var picked = v.slice(sel.s, sel.e).replace(/[\[\]]/g, '');
+      var made = '[' + picked + '](' + url + ')';
+      ta.value = v.slice(0, sel.s) + made + v.slice(sel.e);
+      var caret = sel.s + made.length;
+      ta.dispatchEvent(new Event('input', { bubbles: true }));
+      sel = null;
+      close();
+      msg.textContent = 'Link added.';
+      try { ta.focus({ preventScroll: true }); ta.setSelectionRange(caret, caret); } catch (e) {}
+    }
+    ok.addEventListener('click', insert);
+    cancel.addEventListener('click', function () { close(); sel = null; msg.textContent = ''; });
+    input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); insert(); } });
   }
 
   // ───────────────────────────── wiring ─────────────────────────────

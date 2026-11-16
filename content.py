@@ -16,6 +16,8 @@ import os
 from pathlib import Path
 from urllib.parse import urlencode, urlparse
 
+from textlinks import plain_text
+
 CONTENT_DIR = Path(__file__).parent / "content" / "articles"
 
 # Each category can have subcategories: {key: "Label"}, shown in this order.
@@ -284,10 +286,10 @@ def words_in_blocks(blocks):
     for block in blocks:
         kind = block.get("type")
         if kind in ("paragraph", "quote", "subheading", "tip"):
-            words += len((block.get("text") or "").split())
+            words += len(plain_text(block.get("text") or "").split())
         elif kind in ("list", "takeaways"):
             for item in block.get("items") or []:
-                words += len(str(item).split())
+                words += len(plain_text(item).split())
     return words
 
 
