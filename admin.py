@@ -6,42 +6,112 @@ everything straight to GitHub (github_content.py) -- which is also what
 keeps content alive across Render restarts, since the free tier has no
 persistent disk.
 
-Auth is intentionally simple: one shared password (ADMIN_PASSWORD, set as a
-Render env var) protects the whole blueprint via a signed session cookie.
-That's enough for a single-writer site; it would need real accounts if
-other people start writing stories too.
+Auth has two steps. The organization password (ADMIN_PASSWORD, a Render env
+var) gets a person through the door; then they sign in to their own writer
+account, so each writer only sees and edits their own stories. One account
+is the owner, who alone can publish. See the "Auth" section below.
 """
 import hashlib
 import json
 import os
 import re
 import secrets
+import time
 import urllib.request
 from datetime import date, datetime
 from functools import wraps
 from urllib.parse import parse_qs, quote, urlencode, urlparse
 
+from werkzeug.security import check_password_hash, generate_password_hash
 from flask import (
     Blueprint, abort, current_app, flash, jsonify, redirect, render_template, request, session, url_for,
 )
 
 from content import (BLOCK_TYPES, CATEGORIES, LOCAL_HOSTNAMES, estimate_read_minutes, get_article,
                      get_articles, get_featured, is_draft, map_embed_hosts)
-from authors import get_author, get_authors
+from authors import get_author, get_authors, public_fields
 import story_store
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
 
 
 # ── Auth ──────────────────────────────────────────────────────────────────
+# Two steps:
+#
+#   1. The organization password (ADMIN_PASSWORD), shared by everyone who
+#      writes for the site.
+#   2. "Who's writing?" -- each person signs in to their own writer account
+#      (the author profiles in content/authors/). Their stories are kept
+#      apart: a writer only sees and edits their own.
+#
+# The OWNER is the writer account named in ADMIN_OWNERS (default
+# daniel-mansfield; several can be listed, separated by commas). Only the
+# owner can publish, feature a story, change a published story, see other
+# writers' stories, or open the Newsletter, Subscribers, Reports, Messages,
+# Authors and Search pages. Other writers save drafts and press "Submit for
+# review"; the owner reads them and publishes.
+#
+# The organization password is shared, so by itself it makes nobody the
+# owner. An owner account signs in with OWNER_PASSWORD (a Render env var)
+# when that is set, and otherwise with the account's own password.
+
+WRITER_MAX_TRIES = 8          # wrong passwords for one account before a pause
+WRITER_LOCK_SECONDS = 300
+_writer_fails = {}            # slug -> [wrong tries, locked until (epoch seconds)]
+
+
+def owner_slugs():
+    raw = os.environ.get("ADMIN_OWNERS", "").strip() or "daniel-mansfield"
+    return {part.strip() for part in raw.split(",") if part.strip()}
+
+
+def current_writer():
+    """The signed-in writer's account (without the password hash), or None."""
+    slug = session.get("writer")
+    return public_fields(get_author(slug)) if slug else None
+
+
+def is_owner():
+    return bool(session.get("is_admin")) and session.get("writer") in owner_slugs()
+
+
+def _safe_next():
+    """Only ever send someone back to a page inside the admin."""
+    target = request.args.get("next") or ""
+    return target if target.startswith("/admin") and not target.startswith("//") else None
+
 
 def login_required(view):
     @wraps(view)
     def wrapped(*args, **kwargs):
         if not session.get("is_admin"):
             return redirect(url_for("admin.login", next=request.path))
+        if not current_writer():
+            session.pop("writer", None)
+            return redirect(url_for("admin.who", next=request.path))
         return view(*args, **kwargs)
     return wrapped
+
+
+def owner_required(view):
+    """For pages and actions only the owner may use."""
+    @wraps(view)
+    def wrapped(*args, **kwargs):
+        if not is_owner():
+            if request.method == "GET":
+                flash("That page is for the site owner.", "warning")
+                return redirect(url_for("admin.dashboard"))
+            abort(403)
+        return view(*args, **kwargs)
+    return login_required(wrapped)
+
+
+@admin_bp.app_context_processor
+def _admin_context():
+    """Lets every admin page know who is signed in (for the menu and buttons)."""
+    if not session.get("is_admin"):
+        return {}
+    return {"admin_writer": current_writer(), "admin_is_owner": is_owner()}
 
 
 @admin_bp.get("/login")
@@ -61,7 +131,7 @@ def login_submit():
     if secrets.compare_digest(submitted, configured):
         session.clear()
         session["is_admin"] = True
-        return redirect(request.args.get("next") or url_for("admin.dashboard"))
+        return redirect(url_for("admin.who", next=_safe_next()))
 
     return render_template("admin/login.html", not_configured=False, error="Wrong password.")
 
@@ -69,7 +139,109 @@ def login_submit():
 @admin_bp.get("/logout")
 def logout():
     session.pop("is_admin", None)
+    session.pop("writer", None)
     return redirect(url_for("admin.login"))
+
+
+# ── Step 2: which writer is this? ────────────────────────────────────────
+
+def _who_page(error=None, picked="", status=200):
+    from readers import csrf_token
+    owners = owner_slugs()
+    writers = [public_fields(a) for a in get_authors()]
+    return render_template(
+        "admin/who.html", writers=writers, owners=owners, error=error, picked=picked,
+        csrf=csrf_token(), owner_password_set=bool(os.environ.get("OWNER_PASSWORD")),
+        has_owner=any(w["slug"] in owners for w in writers)), status
+
+
+def _writer_password_ok(author, password):
+    owner_password = os.environ.get("OWNER_PASSWORD", "")
+    if author["slug"] in owner_slugs() and owner_password:
+        return secrets.compare_digest(password, owner_password)
+    try:
+        return check_password_hash(author.get("password_hash") or "", password)
+    except ValueError:
+        return False
+
+
+@admin_bp.get("/who")
+def who():
+    if not session.get("is_admin"):
+        return redirect(url_for("admin.login", next=_safe_next()))
+    return _who_page(picked=request.args.get("writer", ""))
+
+
+@admin_bp.post("/who")
+def who_submit():
+    from readers import _csrf_ok
+    if not session.get("is_admin"):
+        return redirect(url_for("admin.login"))
+    if not _csrf_ok():
+        return _who_page(error="Your session expired. Try again.", status=400)
+
+    slug = request.form.get("writer", "").strip()
+    author = get_author(slug) if _MAP_SLUG.match(slug) else None
+    if not author:
+        return _who_page(error="Pick your name first.", status=400)
+
+    tries, locked_until = _writer_fails.get(slug, [0, 0])
+    if time.time() < locked_until:
+        return _who_page(error="Too many wrong passwords for that account. Wait a few minutes and try again.",
+                         picked=slug, status=429)
+
+    if not _writer_password_ok(author, request.form.get("password", "")):
+        tries += 1
+        _writer_fails[slug] = [0, time.time() + WRITER_LOCK_SECONDS] if tries >= WRITER_MAX_TRIES else [tries, 0]
+        return _who_page(error="Wrong password for that account.", picked=slug, status=400)
+
+    _writer_fails.pop(slug, None)
+    session["writer"] = slug
+    return redirect(_safe_next() or url_for("admin.dashboard"))
+
+
+@admin_bp.get("/switch")
+def switch_writer():
+    """Back to "Who's writing?" without asking for the organization password again."""
+    session.pop("writer", None)
+    return redirect(url_for("admin.who"))
+
+
+@admin_bp.get("/who/new")
+def who_new():
+    from readers import csrf_token
+    if not session.get("is_admin"):
+        return redirect(url_for("admin.login"))
+    return render_template("admin/who_new.html", errors=[], form={}, csrf=csrf_token())
+
+
+@admin_bp.post("/who/new")
+def who_new_submit():
+    """A new writer makes their own account. Being past the organization
+    password is what allows it; the account can only ever be an ordinary
+    writer, since the owner is named in ADMIN_OWNERS."""
+    import author_auth
+    from readers import _csrf_ok, csrf_token
+    if not session.get("is_admin"):
+        return redirect(url_for("admin.login"))
+    errors = [] if _csrf_ok() else ["Your session expired. Try again."]
+    doc, images = None, {}
+    if not errors:
+        doc, images, errors = author_auth.build_new_author(request.form, request.files)
+    if errors:
+        return render_template("admin/who_new.html", errors=errors, form=request.form, csrf=csrf_token()), 400
+    try:
+        published, _message = story_store.save_author(doc, images, is_update=False)
+    except Exception as exc:
+        current_app.logger.exception("Creating writer %s failed", doc["slug"])
+        return render_template("admin/who_new.html", errors=[f"The account was not saved: {exc}"],
+                               form=request.form, csrf=csrf_token()), 502
+    if published:
+        flash("Account created. It takes a minute or two to appear here while the site redeploys. "
+              "Then pick your name and sign in.", "success")
+    else:
+        flash("Account created (dev mode). Pick your name and sign in.", "success")
+    return redirect(url_for("admin.who"))
 
 
 # ── Dashboard ────────────────────────────────────────────────────────────
@@ -77,14 +249,26 @@ def logout():
 @admin_bp.get("/")
 @login_required
 def dashboard():
+    """Two tabs, Drafts and Published. A writer sees their own stories. The
+    owner sees their own too, and can switch to everyone's."""
+    me = session["writer"]
+    owner = is_owner()
+    scope = "all" if owner and request.args.get("scope") == "all" else "mine"
+    tab = "published" if request.args.get("tab") == "published" else "drafts"
+
     everything = get_articles(include_drafts=True)
-    drafts = [x for x in everything if is_draft(x)]
-    published = [x for x in everything if not is_draft(x)]
-    featured = get_featured(published)
+    visible = everything if scope == "all" else [x for x in everything if x.get("author_slug") == me]
+    drafts = sorted((x for x in visible if is_draft(x)), key=lambda x: x.get("review") != "ready")
+    published = [x for x in visible if not is_draft(x)]
+    featured = get_featured([x for x in everything if not is_draft(x)])
+    waiting = [x for x in everything
+               if owner and is_draft(x) and x.get("review") == "ready" and x.get("author_slug") != me]
     return render_template(
         "admin/dashboard.html",
+        tab=tab, scope=scope,
         drafts=drafts,
         articles=published,
+        waiting=waiting,
         categories=CATEGORIES,
         featured_slugs={x["slug"] for x in featured},
     )
@@ -101,7 +285,7 @@ def _subscribers():
 
 
 @admin_bp.get("/subscribers")
-@login_required
+@owner_required
 def subscribers_list():
     """Everyone who signed up for the newsletter (footer, /newsletter page or
     the pop-up). Read-only; use the CSV download to move them to an email tool."""
@@ -123,7 +307,7 @@ def _csv_cell(value):
 
 
 @admin_bp.get("/subscribers.csv")
-@login_required
+@owner_required
 def subscribers_csv():
     import csv
     import io
@@ -184,7 +368,7 @@ def _issue_form_page(issue, errors=None, status=200):
 
 
 @admin_bp.get("/newsletter")
-@login_required
+@owner_required
 def newsletter_list():
     import newsletter_send as ns
     error = None
@@ -197,14 +381,14 @@ def newsletter_list():
 
 
 @admin_bp.get("/newsletter/new")
-@login_required
+@owner_required
 def newsletter_new():
     return _issue_form_page({"id": None, "subject": "", "preview": "", "intro": "", "outro": "",
                              "slugs": [], "status": "draft"})
 
 
 @admin_bp.post("/newsletter/new")
-@login_required
+@owner_required
 def newsletter_create():
     import newsletter_send as ns
     issue, errors = ns.clean_issue_form(request.form)
@@ -216,13 +400,13 @@ def newsletter_create():
 
 
 @admin_bp.get("/newsletter/<issue_id>")
-@login_required
+@owner_required
 def newsletter_edit(issue_id):
     return _issue_form_page(_issue_or_404(issue_id))
 
 
 @admin_bp.post("/newsletter/<issue_id>")
-@login_required
+@owner_required
 def newsletter_update(issue_id):
     import newsletter_send as ns
     current = _issue_or_404(issue_id)
@@ -238,7 +422,7 @@ def newsletter_update(issue_id):
 
 
 @admin_bp.post("/newsletter/<issue_id>/delete")
-@login_required
+@owner_required
 def newsletter_delete(issue_id):
     import newsletter_send as ns
     from readers import _csrf_ok
@@ -252,7 +436,7 @@ def newsletter_delete(issue_id):
 
 
 @admin_bp.get("/newsletter/<issue_id>/preview")
-@login_required
+@owner_required
 def newsletter_preview(issue_id):
     import newsletter_send as ns
     html, _text = ns.render_issue(_issue_or_404(issue_id), name="Alex Reader")
@@ -260,7 +444,7 @@ def newsletter_preview(issue_id):
 
 
 @admin_bp.post("/newsletter/<issue_id>/test")
-@login_required
+@owner_required
 def newsletter_test(issue_id):
     import newsletter_send as ns
     from readers import EMAIL_RE, _csrf_ok
@@ -286,7 +470,7 @@ def newsletter_test(issue_id):
 
 
 @admin_bp.post("/newsletter/<issue_id>/send")
-@login_required
+@owner_required
 def newsletter_send_chunk(issue_id):
     """Called repeatedly by the editor page's JavaScript; each call emails a
     batch (about 18 seconds' worth) and reports progress as JSON."""
@@ -314,7 +498,7 @@ def newsletter_send_chunk(issue_id):
 
 
 @admin_bp.get("/search-index")
-@login_required
+@owner_required
 def search_index():
     """Status of the "Ask" search: is it switched on, and how much of the
     site is indexed. Rebuild is only needed after changing the embedding model."""
@@ -342,7 +526,7 @@ def search_index():
 
 
 @admin_bp.post("/search-index/rebuild")
-@login_required
+@owner_required
 def search_index_rebuild():
     import ask_engine
     from readers import _csrf_ok
@@ -360,12 +544,40 @@ def search_index_rebuild():
 
 
 @admin_bp.get("/authors")
-@login_required
+@owner_required
 def authors_list():
     # Read-only -- authors manage their own profiles at /authors/me. This
     # is just so Danny can see at a glance who's signed up (and share the
     # sign-up link/password with them) without digging through the repo.
-    return render_template("admin/authors.html", authors=get_authors())
+    from readers import csrf_token
+    return render_template("admin/authors.html", authors=[public_fields(a) for a in get_authors()],
+                           owners=owner_slugs(), csrf=csrf_token())
+
+
+@admin_bp.post("/authors/<slug>/password")
+@owner_required
+def author_set_password(slug):
+    """The owner gives a writer a new password (for when they forget theirs).
+    Like every author change it is saved through GitHub, so it takes effect
+    after the redeploy, a minute or two later."""
+    from readers import _csrf_ok
+    author = get_author(slug) if _MAP_SLUG.match(slug) else None
+    if not author:
+        abort(404)
+    new_password = request.form.get("new_password", "")
+    if not _csrf_ok():
+        flash("Your session expired. Try again.", "warning")
+    elif len(new_password) < 8:
+        flash("The new password needs at least 8 characters.", "warning")
+    else:
+        try:
+            published, _message = story_store.save_author(
+                {**author, "password_hash": generate_password_hash(new_password)}, {}, is_update=True)
+            flash(f"New password set for {author['name']}."
+                  + (" It works after the site redeploys (a minute or two)." if published else ""), "success")
+        except Exception as exc:
+            flash(f"The password was not changed: {exc}", "warning")
+    return redirect(url_for("admin.authors_list"))
 
 
 # ── Story form helpers ──────────────────────────────────────────────────
@@ -1129,8 +1341,51 @@ def ai_suggest():
 
 # ── Story routes ─────────────────────────────────────────────────────────
 
-def _wants_draft():
-    return request.form.get("action") == "draft"
+def _action():
+    """What the pressed button asks for: "draft", "review" (a writer handing a
+    story to the owner) or "publish". Only the owner can publish, so a
+    writer's "publish" is treated as a request for review."""
+    action = request.form.get("action")
+    if action == "draft":
+        return "draft"
+    if action == "review" or not is_owner():
+        return "review"
+    return "publish"
+
+
+def _can_edit(article):
+    """The owner can open any story. A writer can open only their own, and
+    only while it is still a draft: once published it is the owner's to change."""
+    if is_owner():
+        return True
+    return bool(article) and article.get("author_slug") == session.get("writer") and is_draft(article)
+
+
+def _story_form():
+    """The submitted form. For a writer, the author is always themselves and
+    the owner-only fields are dropped, whatever the page sent."""
+    if is_owner():
+        return request.form
+    form = request.form.copy()
+    form["author_slug"] = session["writer"]
+    form.pop("author_custom", None)
+    form.pop("featured", None)
+    return form
+
+
+def _finish_doc(doc, existing, action):
+    """Applies the review rules to a story that has just been read from the form."""
+    existing = existing or {}
+    if action == "review":
+        doc["status"] = "draft"                  # checked like a publish, saved as a draft
+        doc["review"] = "ready"
+        doc["submitted_at"] = date.today().isoformat()
+    elif action == "draft" and existing.get("review") == "ready":
+        doc["review"] = "ready"                  # saving again doesn't pull it out of the owner's queue
+        doc["submitted_at"] = existing.get("submitted_at") or date.today().isoformat()
+    if not is_owner():
+        doc["featured"] = False
+    return doc
 
 
 def _slug_from_hint():
@@ -1144,7 +1399,7 @@ def _slug_from_hint():
         return "", None
     slug = slugify(raw)
     prior = get_article(slug, include_drafts=True)
-    if prior is not None and not is_draft(prior):
+    if prior is not None and (not is_draft(prior) or not _can_edit(prior)):
         return "", None
     return slug, prior
 
@@ -1160,7 +1415,7 @@ def _render_form(mode, article, errors):
         mode=mode,
         article=article,
         categories=CATEGORIES,
-        authors=get_authors(),
+        authors=[public_fields(x) for x in get_authors()],
         block_types=BLOCK_TYPES,
         story_choices=_story_choices(),
         errors=errors,
@@ -1185,9 +1440,13 @@ def _save_error_text(exc):
             "has probably expired and needs replacing." % exc)
 
 
-def _flash_save(published, message, warnings, draft):
-    flash(_draft_message(published) if draft else message,
-          "success" if published else "warning")
+def _flash_save(published, message, warnings, draft, action=None):
+    if action == "review":
+        flash("Sent for review. It stays off the site until the owner publishes it."
+              + (" (Saving takes a minute or two to show up.)" if published else ""), "success")
+    else:
+        flash(_draft_message(published) if draft else message,
+              "success" if published else "warning")
     for w in warnings:
         flash("Skipped in the draft: " + w, "warning")
 
@@ -1201,7 +1460,8 @@ def story_new():
 @admin_bp.post("/story/new")
 @login_required
 def story_create():
-    draft = _wants_draft()
+    action = _action()
+    draft = action == "draft"
     slug, existing = _slug_from_hint()
     if not slug:
         title = request.form.get("title", "").strip()
@@ -1209,17 +1469,18 @@ def story_create():
         slug = unique_slug(slugify(title or ("untitled-draft" if draft else "story")), taken)
 
     doc, images, errors, warnings = _build_doc_from_form(
-        request.form, request.files, slug, existing=existing, draft=draft)
+        _story_form(), request.files, slug, existing=existing, draft=draft)
 
     if errors:
         return _render_form("new", doc, errors), 400
+    _finish_doc(doc, existing, action)
 
     try:
         published, message = story_store.save_story(doc, images, is_update=existing is not None)
     except Exception as exc:  # GitHub rejected the commit, token expired, etc.
         current_app.logger.exception("Saving story %s failed", slug)
         return _render_form("new", doc, [_save_error_text(exc)]), 502
-    _flash_save(published, message, warnings, draft)
+    _flash_save(published, message, warnings, draft, action)
     return redirect(url_for("admin.dashboard"))
 
 
@@ -1236,7 +1497,8 @@ def story_save_draft():
         slug = unique_slug(slugify(title or "untitled-draft"), taken)
 
     doc, images, _errors, warnings = _build_doc_from_form(
-        request.form, request.files, slug, existing=existing, draft=True)
+        _story_form(), request.files, slug, existing=existing, draft=True)
+    _finish_doc(doc, existing, "draft")
     try:
         published, message = story_store.save_story(doc, images, is_update=existing is not None)
     except Exception as exc:  # GitHub down / token problem: tell the editor, don't 500
@@ -1258,6 +1520,12 @@ def story_edit(slug):
     article = get_article(slug, include_drafts=True)
     if not article:
         abort(404)
+    if not _can_edit(article):
+        if article.get("author_slug") == session.get("writer"):
+            flash("That story is published, so only the owner can change it now.", "warning")
+        else:
+            flash("That story belongs to another writer.", "warning")
+        return redirect(url_for("admin.dashboard"))
     return _render_form("edit", article, [])
 
 
@@ -1267,18 +1535,22 @@ def story_update(slug):
     existing = get_article(slug, include_drafts=True)
     if not existing:
         abort(404)
+    if not _can_edit(existing):
+        abort(403)
 
-    draft = _wants_draft()
+    action = _action()
+    draft = action == "draft"
     doc, images, errors, warnings = _build_doc_from_form(
-        request.form, request.files, slug, existing=existing, draft=draft)
+        _story_form(), request.files, slug, existing=existing, draft=draft)
 
     if errors:
         return _render_form("edit", doc, errors), 400
+    _finish_doc(doc, existing, action)
 
     try:
         published, message = story_store.save_story(doc, images, is_update=True)
     except Exception as exc:  # GitHub rejected the commit, token expired, etc.
         current_app.logger.exception("Saving story %s failed", slug)
         return _render_form("edit", doc, [_save_error_text(exc)]), 502
-    _flash_save(published, message, warnings, draft)
+    _flash_save(published, message, warnings, draft, action)
     return redirect(url_for("admin.dashboard"))

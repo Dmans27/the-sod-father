@@ -2,45 +2,63 @@
 {% block title %}Stories{% endblock %}
 
 {% macro story_row(article, is_draft) %}
-  <a href="{{ url_for('admin.story_edit', slug=article.slug) }}" class="admin-row">
+  {# A writer can open their drafts; a published story is the owner's to change, so for a writer it links to the live page. #}
+  {% set editable = admin_is_owner or is_draft %}
+  <a href="{% if editable %}{{ url_for('admin.story_edit', slug=article.slug) }}{% else %}/article/{{ article.slug }}{% endif %}" class="admin-row"{% if not editable %} target="_blank" rel="noopener"{% endif %}>
     {% if article.cover_image %}
       <div class="admin-row__thumb" style="background-image: url('{{ article.cover_image }}'); background-size: cover; background-position: center;"></div>
     {% endif %}
     <div class="admin-row__main">
       <div class="admin-row__title">
         {{ article.title }}
-        {% if is_draft %}<span class="admin-row__badge admin-row__badge--draft">Draft</span>{% endif %}
+        {% if is_draft and article.review == 'ready' %}<span class="admin-row__badge admin-row__badge--review">{% if admin_is_owner %}Ready for review{% else %}Sent for review{% endif %}</span>{% endif %}
         {% if article.slug in featured_slugs %}<span class="admin-row__badge">★ Featured</span>{% endif %}
       </div>
       <div class="admin-row__meta">
-        {{ article.pill or 'No category yet' }} &middot; {{ article.published_at }} &middot; {% if article.author %}by {{ article.author }}{% else %}no author yet{% endif %}
+        {{ article.pill or 'No category yet' }} &middot; {{ article.published_at }}{% if scope == 'all' %} &middot; {% if article.author %}by {{ article.author }}{% else %}no author yet{% endif %}{% endif %}
       </div>
     </div>
-    <span class="admin-row__edit">{% if is_draft %}Continue →{% else %}Edit →{% endif %}</span>
+    <span class="admin-row__edit">{% if not editable %}View ↗{% elif is_draft %}{% if admin_is_owner and article.review == 'ready' %}Review →{% else %}Continue →{% endif %}{% else %}Edit →{% endif %}</span>
   </a>
 {% endmacro %}
 
 {% block admin_content %}
 <div class="admin-page-head">
-  <h1>Stories</h1>
+  <h1>{% if scope == 'all' %}All stories{% else %}My stories{% endif %}</h1>
   <a href="{{ url_for('admin.story_new') }}" class="admin-btn admin-btn--primary">+ New story</a>
 </div>
 
-{% if not articles and not drafts %}
-  <p class="admin-empty">No stories yet — write your first one.</p>
+{% if waiting %}
+  <a class="admin-review-banner" href="{{ url_for('admin.dashboard', scope='all', tab='drafts') }}">
+    <strong>{{ waiting|length }} {{ 'story' if waiting|length == 1 else 'stories' }} waiting for your review</strong>
+    <span>{% for w in waiting[:3] %}{{ w.author or 'A writer' }}: {{ w.title }}{% if not loop.last %} &middot; {% endif %}{% endfor %}{% if waiting|length > 3 %} &middot; and more{% endif %}</span>
+  </a>
 {% endif %}
 
-{% if drafts %}
-  <h2 class="admin-section-title">Drafts <span>{{ drafts|length }}</span></h2>
-  <div class="admin-table">
-    {% for article in drafts %}{{ story_row(article, true) }}{% endfor %}
-  </div>
-{% endif %}
+<div class="admin-tabbar">
+  <nav class="admin-tabs" aria-label="Stories">
+    <a href="{{ url_for('admin.dashboard', tab='drafts', scope=scope if scope == 'all' else none) }}" class="admin-tab{% if tab == 'drafts' %} is-active{% endif %}"{% if tab == 'drafts' %} aria-current="page"{% endif %}>Drafts <span>{{ drafts|length }}</span></a>
+    <a href="{{ url_for('admin.dashboard', tab='published', scope=scope if scope == 'all' else none) }}" class="admin-tab{% if tab == 'published' %} is-active{% endif %}"{% if tab == 'published' %} aria-current="page"{% endif %}>Published <span>{{ articles|length }}</span></a>
+  </nav>
+  {% if admin_is_owner %}
+    <nav class="admin-scope" aria-label="Whose stories">
+      <a href="{{ url_for('admin.dashboard', tab=tab) }}" class="{% if scope == 'mine' %}is-active{% endif %}">Mine</a>
+      <a href="{{ url_for('admin.dashboard', tab=tab, scope='all') }}" class="{% if scope == 'all' %}is-active{% endif %}">All writers</a>
+    </nav>
+  {% endif %}
+</div>
 
-{% if articles %}
-  <h2 class="admin-section-title">Published <span>{{ articles|length }}</span></h2>
+{% set rows = drafts if tab == 'drafts' else articles %}
+{% if rows %}
   <div class="admin-table">
-    {% for article in articles %}{{ story_row(article, false) }}{% endfor %}
+    {% for article in rows %}{{ story_row(article, tab == 'drafts') }}{% endfor %}
   </div>
+{% elif tab == 'drafts' %}
+  <p class="admin-empty">No drafts{% if scope == 'all' %} from anyone{% endif %}. Start one with <strong>+ New story</strong>.</p>
+{% else %}
+  <p class="admin-empty">
+    Nothing published yet.
+    {% if not admin_is_owner %}When a draft is ready, open it and press <strong>Submit for review</strong>. It shows up here once the owner publishes it.{% endif %}
+  </p>
 {% endif %}
 {% endblock %}

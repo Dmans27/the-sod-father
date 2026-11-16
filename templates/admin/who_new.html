@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Create your writer account — \\Mansfield</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/admin.css">
+  <script>
+    try { if (localStorage.getItem('sf-theme') === 'dark') document.documentElement.classList.add('is-dark'); } catch (e) {}
+  </script>
+</head>
+<body class="admin-login-body">
+  <main class="admin-login">
+    <div class="admin-login__card admin-login__card--wide">
+      <div class="admin-login__brand">\\Mansfield <span>admin</span></div>
+      <h1 class="admin-who__title">Create your writer account</h1>
+      <p class="admin-hint">Your name, photo and bio appear next to your stories. Your drafts are only visible to you and the owner.</p>
+
+      {% if errors %}
+        <div class="admin-login__error"><ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul></div>
+      {% endif %}
+
+      <form method="post" action="{{ url_for('admin.who_new_submit') }}" enctype="multipart/form-data">
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <label class="admin-field"><span>Name</span>
+          <input type="text" name="name" value="{{ form.get('name', '') }}" autocomplete="name" required></label>
+        <label class="admin-field"><span>Email</span>
+          <input type="text" name="email" value="{{ form.get('email', '') }}" inputmode="email" autocomplete="email" autocapitalize="off" required></label>
+        <label class="admin-field"><span>Password (at least 8 characters)</span>
+          <input type="password" name="password" autocomplete="new-password" minlength="8" required></label>
+        <label class="admin-field"><span>Password again</span>
+          <input type="password" name="confirm_password" autocomplete="new-password" minlength="8" required></label>
+        <label class="admin-field"><span>Position (optional, e.g. Staff Writer)</span>
+          <input type="text" name="position" value="{{ form.get('position', '') }}"></label>
+        <label class="admin-field"><span>Short bio (optional)</span>
+          <textarea name="bio" rows="3">{{ form.get('bio', '') }}</textarea></label>
+        <label class="admin-field"><span>Photo (optional)</span>
+          <input type="file" name="photo" accept="image/*"></label>
+        <button type="submit" class="admin-btn admin-btn--primary admin-btn--block">Create account</button>
+      </form>
+      <p class="admin-login__footnote"><a href="{{ url_for('admin.who') }}">Back to sign in</a></p>
+    </div>
+  </main>
+</body>
+</html>

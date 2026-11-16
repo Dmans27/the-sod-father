@@ -627,3 +627,52 @@ html.is-dark { color-scheme: dark; }
 .is-dark .admin-check__item--missing { border-left-color: #7fb8e0; }
 .is-dark .admin-check { border-top-color: rgba(255, 255, 255, 0.14); }
 .is-dark .admin-check__find { border-color: rgba(255, 255, 255, 0.2); }
+
+/* ── Stories front page: Drafts / Published tabs ── */
+.admin-tabbar { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 10px 16px; margin-bottom: 16px; border-bottom: 1px solid var(--line); }
+.admin-tabs { display: flex; gap: 4px; }
+.admin-tab { display: inline-flex; align-items: center; gap: 8px; padding: 12px 16px; min-height: 44px; margin-bottom: -1px; border-bottom: 3px solid transparent; color: var(--ink-faint); font-weight: 700; font-size: 15px; text-decoration: none; }
+.admin-tab span { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(27, 42, 31, 0.08); color: var(--ink-soft); }
+.admin-tab:hover { color: var(--ink); }
+.admin-tab.is-active { color: var(--fairway-deep); border-bottom-color: var(--fairway-deep); }
+.admin-tab.is-active span { background: var(--fairway-deep); color: #fff; }
+.admin-scope { display: inline-flex; margin-bottom: 8px; padding: 3px; border: 1px solid var(--line); border-radius: 999px; background: #fff; }
+.admin-scope a { padding: 6px 14px; border-radius: 999px; font-size: 13px; font-weight: 700; color: var(--ink-faint); text-decoration: none; }
+.admin-scope a.is-active { background: var(--fairway-deep); color: #fff; }
+.admin-review-banner { display: flex; flex-direction: column; gap: 2px; margin-bottom: 18px; padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(184, 134, 11, 0.45); background: rgba(184, 134, 11, 0.1); color: var(--ink); text-decoration: none; }
+.admin-review-banner span { font-size: 13px; color: var(--ink-soft); }
+.admin-review-banner:hover { border-color: #b8860b; }
+.admin-row__badge--review { color: #7a5200; background: rgba(184, 134, 11, 0.18); }
+.admin-review-note { margin-bottom: 18px; }
+.admin-header__nav a.admin-header__who { opacity: 0.95; }
+.admin-pwreset { margin-top: 8px; font-size: 13px; }
+.admin-pwreset summary { cursor: pointer; font-weight: 700; color: var(--fairway); }
+.admin-pwreset form { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px; }
+.admin-pwreset input { flex: 1 1 200px; min-width: 0; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; font-size: 16px; background: #fff; color: var(--ink); }
+
+/* ── "Who's writing?" (second sign-in step) ── */
+.admin-who__title { margin: 0 0 14px; font-size: 22px; color: var(--fairway-deep); }
+.admin-who__list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.admin-who__item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; min-height: 56px; border: 1px solid var(--line); border-radius: 12px; cursor: pointer; }
+.admin-who__item:has(input:checked) { border-color: var(--fairway-deep); box-shadow: inset 0 0 0 1px var(--fairway-deep); background: rgba(45, 106, 79, 0.07); }
+.admin-who__item input { flex: 0 0 auto; width: 18px; height: 18px; accent-color: var(--fairway-deep); }
+.admin-who__avatar { flex: 0 0 40px; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--fairway-deep) center / cover no-repeat; color: #fff; font-weight: 800; }
+.admin-who__name { display: flex; flex-direction: column; min-width: 0; font-weight: 700; line-height: 1.25; }
+.admin-who__name em { font-style: normal; font-size: 11px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: var(--fairway); margin-left: 6px; }
+.admin-who__name small { font-weight: 500; font-size: 12.5px; color: var(--ink-faint); }
+
+.is-dark .admin-tab span { background: rgba(255, 255, 255, 0.12); color: var(--ink); }
+.is-dark .admin-tab.is-active { color: #a8dcbf; border-bottom-color: #7ccaa0; }
+.is-dark .admin-tab.is-active span { background: #2d6a4f; color: #fff; }
+.is-dark .admin-scope { background: #1a211d; border-color: rgba(255, 255, 255, 0.18); }
+.is-dark .admin-scope a.is-active { background: #2d6a4f; }
+.is-dark .admin-review-banner { background: rgba(227, 185, 79, 0.12); border-color: rgba(227, 185, 79, 0.4); }
+.is-dark .admin-row__badge--review { color: #ecc968; background: rgba(227, 185, 79, 0.18); }
+.is-dark .admin-pwreset input { background: #1a211d; color: var(--ink); border-color: rgba(255, 255, 255, 0.2); }
+.is-dark .admin-who__title { color: #a8dcbf; }
+.is-dark .admin-who__item:has(input:checked) { border-color: #7ccaa0; box-shadow: inset 0 0 0 1px #7ccaa0; background: rgba(124, 202, 160, 0.1); }
+
+/* Owner-only fields stay in the story form for a writer but are not shown */
+.admin-field[hidden], .admin-hint[hidden] { display: none; }
+/* On a phone the writer's button reads "Submit" so the bottom bar stays on one row */
+@media (max-width: 760px) { #story-form .admin-form__actions .admin-btn__more { display: none; } }

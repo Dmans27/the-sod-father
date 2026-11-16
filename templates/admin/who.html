@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Who's writing? — \\Mansfield</title>
+  <link rel="stylesheet" href="/static/css/style.css">
+  <link rel="stylesheet" href="/static/css/admin.css">
+  <script>
+    try { if (localStorage.getItem('sf-theme') === 'dark') document.documentElement.classList.add('is-dark'); } catch (e) {}
+  </script>
+</head>
+<body class="admin-login-body">
+  <main class="admin-login">
+    <div class="admin-login__card admin-login__card--wide">
+      <div class="admin-login__brand">\\Mansfield <span>admin</span></div>
+      <h1 class="admin-who__title">Who's writing?</h1>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}<p class="admin-login__notice">{{ message }}</p>{% endfor %}
+      {% endwith %}
+      {% if error %}<p class="admin-login__error">{{ error }}</p>{% endif %}
+
+      {% if not writers %}
+        <p class="admin-hint">No writer accounts yet. Create yours to get started.</p>
+      {% else %}
+        <form method="post" action="{{ url_for('admin.who_submit') }}{% if request.args.get('next') %}?next={{ request.args.get('next')|urlencode }}{% endif %}" id="who-form">
+          <input type="hidden" name="csrf" value="{{ csrf }}">
+          <div class="admin-who__list" role="radiogroup" aria-label="Your account">
+            {% for w in writers %}
+              <label class="admin-who__item">
+                <input type="radio" name="writer" value="{{ w.slug }}" data-owner="{{ '1' if w.slug in owners else '0' }}" {% if picked == w.slug or writers|length == 1 %}checked{% endif %} required>
+                {% if w.photo %}
+                  <span class="admin-who__avatar" style="background-image: url('{{ w.photo }}');"></span>
+                {% else %}
+                  <span class="admin-who__avatar">{{ w.name[:1] }}</span>
+                {% endif %}
+                <span class="admin-who__name">{{ w.name }}{% if w.slug in owners %} <em>Owner</em>{% endif %}<small>{{ w.position or 'Writer' }}</small></span>
+              </label>
+            {% endfor %}
+          </div>
+          <label class="admin-field">
+            <span id="who-pw-label">Your password</span>
+            <input type="password" name="password" autocomplete="current-password" required>
+          </label>
+          <button type="submit" class="admin-btn admin-btn--primary admin-btn--block">Continue</button>
+        </form>
+        {% if not has_owner %}
+          <p class="admin-login__error" style="margin-top:14px;">No owner account was found, so nobody can publish. Check <code>ADMIN_OWNERS</code> in Render.</p>
+        {% endif %}
+      {% endif %}
+
+      <p class="admin-login__footnote">New here? <a href="{{ url_for('admin.who_new') }}">Create your writer account</a></p>
+      <p class="admin-login__footnote"><a href="{{ url_for('admin.logout') }}">Log out</a></p>
+    </div>
+  </main>
+  <script>
+    // The owner's account uses the owner password when one is set; say so on the label.
+    (function () {
+      var label = document.getElementById('who-pw-label');
+      var ownerPw = {{ 'true' if owner_password_set else 'false' }};
+      if (!label) return;
+      function sync() {
+        var picked = document.querySelector('input[name="writer"]:checked');
+        label.textContent = picked && picked.getAttribute('data-owner') === '1' && ownerPw ? 'Owner password' : 'Your password';
+      }
+      Array.prototype.forEach.call(document.querySelectorAll('input[name="writer"]'), function (r) { r.addEventListener('change', sync); });
+      sync();
+    })();
+  </script>
+</body>
+</html>

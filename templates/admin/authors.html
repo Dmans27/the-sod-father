@@ -7,9 +7,10 @@
 </div>
 
 <p class="admin-hint">
-  Writers set up their own profile at <code>/authors/signup</code> (they'll need the sign-up
-  password you set as <code>AUTHOR_SIGNUP_PASSWORD</code>). Once they're here, pick them from
-  the Author dropdown when writing a story.
+  To add a writer, give them the organization password. After they enter it they tap
+  <strong>Create your writer account</strong> on the "Who's writing?" screen. Writers see only their
+  own stories and send drafts to you with <strong>Submit for review</strong>; only you can publish.
+  If a writer forgets their password, set a new one for them below.
 </p>
 
 {% if not authors %}
@@ -26,6 +27,18 @@
         <div class="admin-row__main">
           <div class="admin-row__title">{{ author.name }}{% if author.position %} <span style="font-weight:400;color:var(--ink-faint);">— {{ author.position }}</span>{% endif %}</div>
           <div class="admin-row__meta">{{ author.email }}{% if author.bio %} &middot; {{ author.bio }}{% endif %}</div>
+          {% if author.slug in owners %}
+            <div class="admin-row__meta"><strong>Owner.</strong> Signs in with the owner password (<code>OWNER_PASSWORD</code> in Render) when one is set.</div>
+          {% else %}
+            <details class="admin-pwreset">
+              <summary>Set a new password</summary>
+              <form method="post" action="{{ url_for('admin.author_set_password', slug=author.slug) }}">
+                <input type="hidden" name="csrf" value="{{ csrf }}">
+                <input type="password" name="new_password" minlength="8" placeholder="New password (8+ characters)" autocomplete="new-password" required>
+                <button type="submit" class="admin-btn">Save</button>
+              </form>
+            </details>
+          {% endif %}
         </div>
       </div>
     {% endfor %}

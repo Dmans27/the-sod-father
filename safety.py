@@ -23,7 +23,7 @@ from werkzeug.security import check_password_hash
 
 import db
 import moderation
-from admin import login_required
+from admin import owner_required
 from content import CATEGORIES, get_article
 from readers import (EMAIL_RE, _csrf_ok, current_reader, reader_required_json)
 
@@ -245,7 +245,7 @@ def api_block(comment_id):
 # ── Owner's review screens (admin password) ──────────────────────────────
 
 @review_bp.get("/reports")
-@login_required
+@owner_required
 def reports():
     rows = db.query(
         "SELECT c.id, c.slug, c.body, c.created_at, c.reader_id, r.display_name, r.email, "
@@ -271,7 +271,7 @@ def reports():
 
 
 @review_bp.post("/reports/<comment_id>/<action>")
-@login_required
+@owner_required
 def reports_action(comment_id, action):
     if not _csrf_ok():
         abort(400)
@@ -304,7 +304,7 @@ def reports_action(comment_id, action):
 
 
 @review_bp.get("/messages")
-@login_required
+@owner_required
 def messages():
     rows = db.query("SELECT id, name, email, message, status, created_at FROM contact_messages "
                     "ORDER BY CASE WHEN status = 'new' THEN 0 ELSE 1 END, created_at DESC")
@@ -313,7 +313,7 @@ def messages():
 
 
 @review_bp.post("/messages/<message_id>/<action>")
-@login_required
+@owner_required
 def messages_action(message_id, action):
     if not _csrf_ok():
         abort(400)

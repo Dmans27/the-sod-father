@@ -3,7 +3,8 @@
 
 {% block admin_content %}
 {% set a = article or {} %}
-{% set is_published = mode == 'edit' and a.get('status', 'published') != 'draft' %}
+{# Only the owner ever edits a published story; for a writer this page is always a draft. #}
+{% set is_published = mode == 'edit' and a.get('status', 'published') != 'draft' and admin_is_owner %}
 {% set existing_blocks = a.get('blocks', []) %}
 
 <div class="admin-page-head">
@@ -20,6 +21,16 @@
   <div class="admin-flash admin-flash--error">
     <strong>Fix the following:</strong>
     <ul>{% for e in errors %}<li>{{ e }}</li>{% endfor %}</ul>
+  </div>
+{% endif %}
+
+{% if a.get('review') == 'ready' and not is_published %}
+  <div class="admin-flash admin-flash--success admin-review-note">
+    {% if admin_is_owner %}
+      <strong>Waiting for your review.</strong> {{ a.get('author') or 'A writer' }} submitted this{% if a.get('submitted_at') %} on {{ a.get('submitted_at') }}{% endif %}. Read it, change anything you need, then press Publish story.
+    {% else %}
+      <strong>Sent for review.</strong> The owner will read it and publish it. You can still make changes and save.
+    {% endif %}
   </div>
 {% endif %}
 
@@ -60,11 +71,16 @@
     <label class="admin-field">
       <span>Author</span>
       <select name="author_slug" id="author-select">
-        <option value="">Choose an author…</option>
-        {% for author in authors %}
-          <option value="{{ author.slug }}" data-photo="{{ author.photo or '' }}" {% if a.get('author_slug') == author.slug %}selected{% endif %}>{{ author.name }}</option>
-        {% endfor %}
-        <option value="__other__" {% if a.get('author') and not a.get('author_slug') %}selected{% endif %}>Other (type a name)</option>
+        {% if admin_is_owner %}
+          <option value="">Choose an author…</option>
+          {% for author in authors %}
+            <option value="{{ author.slug }}" data-photo="{{ author.photo or '' }}" {% if a.get('author_slug') == author.slug or (mode == 'new' and not a.get('author') and admin_writer and admin_writer.slug == author.slug) %}selected{% endif %}>{{ author.name }}</option>
+          {% endfor %}
+          <option value="__other__" {% if a.get('author') and not a.get('author_slug') %}selected{% endif %}>Other (type a name)</option>
+        {% else %}
+          {# A writer's stories are always their own (the server enforces this too). #}
+          <option value="{{ admin_writer.slug }}" data-photo="{{ admin_writer.photo or '' }}" selected>{{ admin_writer.name }}</option>
+        {% endif %}
       </select>
       <div id="author-preview" class="admin-author-preview" style="display:none;">
         <img id="author-preview-photo" class="admin-thumb admin-thumb--avatar" alt="">
@@ -80,10 +96,11 @@
     </label>
   </div>
 
-  <label class="admin-field admin-field--checkbox">
-    <span><input type="checkbox" name="featured" value="1" {% if a.get('featured') %}checked{% endif %}> Feature this story on the homepage</span>
+  {# Featuring is the owner's call. The checkbox stays in the page for a writer (the preview script reads it) but is hidden and ignored. #}
+  <label class="admin-field admin-field--checkbox"{% if not admin_is_owner %} hidden{% endif %}>
+    <span><input type="checkbox" name="featured" value="1" {% if a.get('featured') and admin_is_owner %}checked{% endif %}{% if not admin_is_owner %} disabled{% endif %}> Feature this story on the homepage</span>
   </label>
-  <p class="admin-hint" style="margin-top:-12px;">
+  <p class="admin-hint" style="margin-top:-12px;"{% if not admin_is_owner %} hidden{% endif %}>
     Shows big, up top, above the regular story list. Up to 3 stories can be featured at once,
     newest first — if more than 3 are checked, the oldest checked ones just stop showing up top.
   </p>
@@ -127,7 +144,11 @@
   </section>
 
   <div class="admin-form__actions">
-    <button type="submit" name="action" value="publish" class="admin-btn admin-btn--primary" id="publish-btn">{% if is_published %}Save changes{% else %}Publish story{% endif %}</button>
+    {% if admin_is_owner %}
+      <button type="submit" name="action" value="publish" class="admin-btn admin-btn--primary" id="publish-btn">{% if is_published %}Save changes{% else %}Publish story{% endif %}</button>
+    {% else %}
+      <button type="submit" name="action" value="review" class="admin-btn admin-btn--primary" id="publish-btn">Submit<span class="admin-btn__more"> for review</span></button>
+    {% endif %}
     {% if is_published %}
       <button type="submit" name="action" value="draft" formnovalidate class="admin-btn" id="move-to-drafts-btn">Move to drafts</button>
     {% else %}
@@ -140,6 +161,7 @@
     <p class="admin-hint admin-draft-note">
       Not ready? <strong>Save draft</strong> keeps it off the site so you can come back to it from
       the Stories list. While you type, a copy is also saved automatically in this browser.
+      {% if not admin_is_owner %}When it's finished, <strong>Submit for review</strong> sends it to the owner, who publishes it.{% endif %}
     </p>
   {% endif %}
 </form>

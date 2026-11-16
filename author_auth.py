@@ -72,6 +72,25 @@ def signup_submit():
     if not secrets.compare_digest(form.get("signup_password", ""), configured):
         errors.append("That sign-up password isn't right -- check with whoever invited you.")
 
+    doc, images, more_errors = build_new_author(form, request.files)
+    errors.extend(more_errors)
+    if errors:
+        return render_template("authors/signup.html", not_configured=False, errors=errors, form=form), 400
+
+    published, message = story_store.save_author(doc, images, is_update=False)
+    if published:
+        flash("Account created! It takes a minute or two to go live on the deploy -- come back and sign in shortly.", "success")
+    else:
+        flash("Account created locally (dev mode). " + message, "warning")
+    return redirect(url_for("author_auth.login"))
+
+
+def build_new_author(form, files):
+    """Checks a new-account form and builds the author record. Returns
+    (doc, images, errors); doc is None when there are errors. Used by the
+    public sign-up page here and by the admin's "create your writer account"
+    page (admin.py), so both make accounts the same way."""
+    errors = []
     name = form.get("name", "").strip()
     email = form.get("email", "").strip().lower()
     password = form.get("password", "")
@@ -91,14 +110,14 @@ def signup_submit():
         errors.append("Passwords don't match.")
 
     if errors:
-        return render_template("authors/signup.html", not_configured=False, errors=errors, form=form), 400
+        return None, {}, errors
 
     existing_slugs = {a["slug"] for a in get_authors()}
     slug = _unique_slug(_slugify(name), existing_slugs)
 
     images = {}
     photo_path = None
-    processed = story_store.process_image(request.files.get("photo"))
+    processed = story_store.process_image(files.get("photo"))
     if processed is not None:
         photo_path = f"static/uploads/authors/{slug}/photo.jpg"
         images[photo_path] = processed
@@ -112,13 +131,7 @@ def signup_submit():
         "bio": bio,
         "position": position,
     }
-
-    published, message = story_store.save_author(doc, images, is_update=False)
-    if published:
-        flash("Account created! It takes a minute or two to go live on the deploy -- come back and sign in shortly.", "success")
-    else:
-        flash("Account created locally (dev mode). " + message, "warning")
-    return redirect(url_for("author_auth.login"))
+    return doc, images, []
 
 
 # ── Sign in / out ────────────────────────────────────────────────────────
