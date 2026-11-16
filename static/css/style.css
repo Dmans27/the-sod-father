@@ -2532,3 +2532,15 @@ html.is-dark { --color-inkBase: #ebe6dc; }
 }
 .article__content p a:hover,
 .article__content li a:hover { color: var(--fairway-deep); }
+
+/* ── Ask: places and story links inside an answer ── */
+.ask__inline-link { color: var(--fairway); text-decoration: underline; text-underline-offset: 2px; }
+.ask__places { display: flex; flex-direction: column; gap: 6px; margin-bottom: 6px; }
+.ask__places-label { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink-faint); }
+.ask__place { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); text-decoration: none; min-height: 44px; }
+.ask__place:hover { background: #f6f8f6; }
+.ask__place svg { flex: 0 0 20px; width: 20px; height: 20px; fill: none; stroke: var(--fairway); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.ask__place-name { flex: 1; min-width: 0; font-family: var(--font-sans); font-weight: 700; font-size: 14.5px; line-height: 1.3; }
+.ask__place-go { flex: 0 0 auto; font-family: var(--font-sans); font-size: 12.5px; font-weight: 700; color: var(--fairway); }
+.is-dark .ask__place { background: #232c26; }
+.is-dark .ask__place:hover { background: #2c352f; }

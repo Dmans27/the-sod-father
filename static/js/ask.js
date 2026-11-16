@@ -47,10 +47,33 @@
     scrollDown();
   }
 
-  function addBot(html, sources, extraClass) {
+  // A story title the answer mentions becomes a link to that story. Both the
+  // answer and the title are already escaped, so this only ever adds our own <a>.
+  function linkTitles(html, sources) {
+    (sources || []).forEach(function (s) {
+      var title = esc(s.title || '');
+      if (title.length < 6) return;
+      var at = html.indexOf(title);
+      if (at < 0) return;
+      html = html.slice(0, at) + '<a class="ask__inline-link" href="' + esc(s.url) + '">' + title + '</a>' + html.slice(at + title.length);
+    });
+    return html;
+  }
+
+  function placesHtml(places) {
+    if (!places || !places.length) return '';
+    return '<div class="ask__places"><span class="ask__places-label">Places mentioned</span>' + places.map(function (p) {
+      if (!/^https:\/\//.test(p.url || '')) return '';
+      return '<a class="ask__place" href="' + esc(p.url) + '" target="_blank" rel="noopener">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>' +
+        '<span class="ask__place-name">' + esc(p.name) + '</span><span class="ask__place-go">View place</span></a>';
+    }).join('') + '</div>';
+  }
+
+  function addBot(html, sources, extraClass, places) {
     var el = document.createElement('div');
     el.className = 'ask__msg ask__msg--bot' + (extraClass ? ' ' + extraClass : '');
-    var inner = '<div class="ask__bubble">' + html + '</div>';
+    var inner = '<div class="ask__bubble">' + html + '</div>' + placesHtml(places);
     if (sources && sources.length) {
       inner += '<div class="ask__sources">' + sources.map(function (s) {
         return '<a class="ask__source" href="' + esc(s.url) + '">' +
@@ -136,7 +159,7 @@
         history.push({ role: 'user', content: question });
         if (d.matched) {
           history.push({ role: 'assistant', content: d.answer });
-          addBot(format(d.answer), d.sources);
+          addBot(linkTitles(format(d.answer), d.sources), d.sources, null, d.places);
         } else {
           var msg = "I haven't written about that yet, so I can't answer it from the articles.";
           history.push({ role: 'assistant', content: msg });

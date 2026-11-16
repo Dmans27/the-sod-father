@@ -592,3 +592,15 @@ html.is-dark { color-scheme: dark; }
 .admin-linktool__msg:empty { display: none; }
 .is-dark .admin-linktool__btn { background: #2c352f; color: var(--ink); border-color: rgba(255, 255, 255, 0.18); }
 .is-dark .admin-linktool__input { background: #1a211d; color: var(--ink); border-color: rgba(255, 255, 255, 0.2); }
+
+/* ── Writing helpers: suggestion buttons (static/js/story-tools.js) ── */
+.admin-suggest__list { display: flex; flex-direction: column; gap: 8px; }
+.admin-suggest__list:empty { display: none; }
+.admin-suggest__opt { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; width: 100%; padding: 11px 14px; min-height: 48px; border: 1px solid var(--line); border-radius: 10px; background: #fff; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.admin-suggest__opt:hover { background: var(--cream); }
+.admin-suggest__label { font-size: 11px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: var(--ink-faint); }
+.admin-suggest__text { font-size: 15px; font-weight: 600; line-height: 1.35; }
+.admin-suggest__opt.is-used { border-color: var(--fairway); box-shadow: inset 0 0 0 1px var(--fairway); }
+.admin-suggest__opt.is-used .admin-suggest__label::after { content: " \2713 used"; color: var(--fairway); }
+.is-dark .admin-suggest__opt { background: #1a211d; color: var(--ink); border-color: rgba(255, 255, 255, 0.18); }
+.is-dark .admin-suggest__opt:hover { background: #2c352f; }

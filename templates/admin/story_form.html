@@ -23,7 +23,7 @@
   </div>
 {% endif %}
 
-<form method="post" enctype="multipart/form-data" class="admin-form" id="story-form" data-draft-key="{{ a.get('slug') or 'new' }}">
+<form method="post" enctype="multipart/form-data" class="admin-form" id="story-form" data-draft-key="{{ a.get('slug') or 'new' }}" data-csrf="{{ csrf }}">
   <input type="hidden" name="draft_slug" id="draft-slug" value="{{ a.get('slug', '') }}">
   <div class="admin-form__grid">
     <label class="admin-field">
@@ -1090,5 +1090,5 @@
     renderPreview();
   })();
 </script>
-<script src="/static/js/story-tools.js?v=1" defer></script>
+<script src="/static/js/story-tools.js?v=3" defer></script>
 {% endblock %}

@@ -117,4 +117,6 @@ def ask():
         return jsonify(ok=False, error="Something went wrong. Please try again.",
                        remaining=_remaining(key, limit), limit=limit), 500
 
+    if key != "admin":
+        ask_engine.log_question(question, result)
     return jsonify(ok=True, remaining=_remaining(key, limit), limit=limit, **result)

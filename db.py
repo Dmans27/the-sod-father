@@ -142,6 +142,17 @@ SCHEMA = [
     )
     """,
     """
+    CREATE TABLE IF NOT EXISTS ask_questions (
+        id        TEXT PRIMARY KEY,
+        asked_at  TEXT NOT NULL,
+        question  TEXT NOT NULL,
+        matched   INTEGER NOT NULL,
+        score     REAL NOT NULL,
+        top_slug  TEXT NOT NULL
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_ask_questions_at ON ask_questions (asked_at)",
+    """
     CREATE TABLE IF NOT EXISTS saved_places (
         id           TEXT PRIMARY KEY,
         reader_id    TEXT NOT NULL,

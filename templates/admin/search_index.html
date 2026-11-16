@@ -31,4 +31,38 @@
     <span class="admin-hint" style="margin-left:10px;">Re-reads every story. Costs a few cents at most.</span>
   </form>
 {% endif %}
+
+<h2 class="admin-section-title" style="margin-top:34px;">What readers ask</h2>
+{% if not logging_on %}
+  <p class="admin-hint">
+    Off. To see the questions readers type into Ask (and spot stories worth writing), add
+    <code>ASK_LOG_QUESTIONS</code> = <code>1</code> in Render &rarr; Environment. Only the question text is
+    kept, with no name, account or network address, for {{ log_days }} days. The privacy page
+    changes its wording by itself when this is on.
+  </p>
+{% elif not questions %}
+  <p class="admin-empty">On. No questions yet (your own questions while signed in as admin are not kept).</p>
+{% else %}
+  <p class="admin-hint">Kept for {{ log_days }} days, newest first. No names or addresses are stored, and your own questions as admin are left out.</p>
+  {% if unanswered %}
+    <h3 class="admin-field-label" style="margin:18px 0 8px;">Not answered yet: story ideas ({{ unanswered|length }})</h3>
+    <div class="admin-table">
+      {% for q in unanswered %}
+        <div class="admin-row" style="cursor: default;"><div class="admin-row__main">
+          <div class="admin-row__title">{{ q.question }}</div>
+          <div class="admin-row__meta">{{ q.asked_at[:10] }}</div>
+        </div></div>
+      {% endfor %}
+    </div>
+  {% endif %}
+  <h3 class="admin-field-label" style="margin:18px 0 8px;">All questions ({{ questions|length }})</h3>
+  <div class="admin-table">
+    {% for q in questions %}
+      <div class="admin-row" style="cursor: default;"><div class="admin-row__main">
+        <div class="admin-row__title">{{ q.question }}</div>
+        <div class="admin-row__meta">{{ q.asked_at[:10] }} &middot; {% if q.matched %}answered{% if q.story_title %} from &ldquo;{{ q.story_title }}&rdquo;{% endif %}{% else %}not answered{% endif %}</div>
+      </div></div>
+    {% endfor %}
+  </div>
+{% endif %}
 {% endblock %}

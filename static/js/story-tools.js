@@ -5,6 +5,8 @@
  *  2. Add-block sheet -- on small screens, one "+ Add block" button opens a menu.
  *  3. Block controls  -- move up/down (drag doesn't work on a phone) and collapse.
  *  4. Place search    -- search the directory by name instead of pasting a link.
+ *  5. Add link        -- highlight words in a text block and link them.
+ *  6. Writing helpers  -- draft a story from a transcript; suggest a title, summary, category.
  *
  * It only runs on the editor page and builds on window.__storyEditor
  * (set up by the inline script in templates/admin/story_form.html).
@@ -178,7 +180,10 @@
 
   pasteBtn.addEventListener('click', function () {
     panel.hidden = !panel.hidden;
-    if (!panel.hidden) pasteText.focus();
+    if (!panel.hidden) {
+      Array.prototype.forEach.call(builderHead.querySelectorAll('.admin-paste'), function (p) { if (p !== panel) p.hidden = true; });
+      pasteText.focus();
+    }
   });
   closeBtn.addEventListener('click', function () { panel.hidden = true; });
 
@@ -456,6 +461,166 @@
     ok.addEventListener('click', insert);
     cancel.addEventListener('click', function () { close(); sel = null; msg.textContent = ''; });
     input.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); insert(); } });
+  }
+
+  // ───────────────────────────── 6. Writing helpers ─────────────────────────────
+  // "Draft from transcript" and "Suggest title" ask the server (admin.py -> ai_tools.py),
+  // which asks the same AI model the Ask feature uses. Nothing is published or changed
+  // until you tap something: the draft lands in the paste box for you to read first.
+
+  var csrf = form.getAttribute('data-csrf') || '';
+
+  function aiPost(path, body) {
+    return fetch(path, {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': csrf },
+      body: JSON.stringify(body)
+    }).then(function (r) {
+      return r.json().catch(function () {
+        return { ok: false, error: r.ok ? 'Unexpected reply from the server. You may need to sign in again.' : 'The server had a problem or took too long (' + r.status + '). Please try again.' };
+      });
+    }, function () {
+      return { ok: false, error: 'Couldn’t reach the server. Check your connection and try again.' };
+    });
+  }
+
+  function storyText() {
+    var parts = [];
+    Array.prototype.forEach.call(container.querySelectorAll('.admin-block'), function (b) {
+      var t = b.dataset.blockType;
+      if (['paragraph', 'subheading', 'quote', 'tip', 'list', 'takeaways'].indexOf(t) < 0) return;
+      var title = b.querySelector('.admin-block__title');
+      if (title && title.value.trim()) parts.push(title.value.trim());
+      var ta = b.querySelector('textarea.admin-block__text');
+      var v = ta ? ta.value.trim() : '';
+      if (v) parts.push((t === 'subheading' ? '## ' : '') + v.replace(/\[([^\[\]]+)\]\((https?:\/\/[^\s()]+)\)/g, '$1'));
+    });
+    return parts.join('\n\n');
+  }
+
+  if (builderHead) {
+    // -- Draft from transcript --
+    var tBtn = el('button', 'admin-btn admin-tools__btn', 'Draft from transcript');
+    tBtn.type = 'button';
+    var tPanel = el('div', 'admin-paste');
+    tPanel.hidden = true;
+    tPanel.innerHTML =
+      '<p class="admin-hint">Paste a transcript or rough notes. The assistant writes a draft with subheadings, ' +
+      'bullets and key takeaways, in its own words, and puts it in the paste box for you to check before anything is built. ' +
+      'It can get details wrong, so read it against what you learned.</p>' +
+      '<textarea class="admin-paste__text" rows="9" placeholder="Paste the transcript or your notes here"></textarea>' +
+      '<div class="admin-paste__mode">' +
+      '<label><input type="radio" name="ai_style" value="study" checked> Study sheet</label>' +
+      '<label><input type="radio" name="ai_style" value="article"> Article</label></div>' +
+      '<div class="admin-paste__actions"></div>' +
+      '<p class="admin-paste__msg" role="status" aria-live="polite"></p>';
+    var tText = tPanel.querySelector('.admin-paste__text');
+    var tMsg = tPanel.querySelector('.admin-paste__msg');
+    var tGo = el('button', 'admin-btn admin-btn--primary', 'Write draft');
+    tGo.type = 'button';
+    var tClose = el('button', 'admin-btn', 'Close');
+    tClose.type = 'button';
+    tPanel.querySelector('.admin-paste__actions').appendChild(tGo);
+    tPanel.querySelector('.admin-paste__actions').appendChild(tClose);
+
+    // -- Suggest title, summary, category --
+    var sBtn = el('button', 'admin-btn admin-tools__btn', 'Suggest title');
+    sBtn.type = 'button';
+    var sPanel = el('div', 'admin-paste admin-suggest');
+    sPanel.hidden = true;
+    var sMsg = el('p', 'admin-paste__msg');
+    sMsg.setAttribute('role', 'status');
+    sMsg.setAttribute('aria-live', 'polite');
+    var sList = el('div', 'admin-suggest__list');
+    var sActions = el('div', 'admin-paste__actions');
+    var sAgain = el('button', 'admin-btn', 'Try again');
+    sAgain.type = 'button';
+    var sClose = el('button', 'admin-btn', 'Close');
+    sClose.type = 'button';
+    sActions.appendChild(sAgain);
+    sActions.appendChild(sClose);
+    sPanel.appendChild(sMsg);
+    sPanel.appendChild(sList);
+    sPanel.appendChild(sActions);
+
+    toolsRow.appendChild(tBtn);
+    toolsRow.appendChild(sBtn);
+    builderHead.appendChild(tPanel);
+    builderHead.appendChild(sPanel);
+
+    tBtn.addEventListener('click', function () {
+      tPanel.hidden = !tPanel.hidden;
+      if (!tPanel.hidden) { panel.hidden = true; sPanel.hidden = true; tText.focus(); }
+    });
+    tClose.addEventListener('click', function () { tPanel.hidden = true; });
+
+    tGo.addEventListener('click', function () {
+      var raw = tText.value.trim();
+      if (raw.length < 200) { tMsg.textContent = 'Paste a longer transcript or notes first.'; return; }
+      tGo.disabled = true;
+      tGo.textContent = 'Writing…';
+      tMsg.textContent = 'Writing the draft. This can take up to a minute.';
+      var style = tPanel.querySelector('input[name="ai_style"]:checked').value;
+      aiPost('/admin/ai/draft', { text: raw, style: style }).then(function (d) {
+        tGo.disabled = false;
+        tGo.textContent = 'Write draft';
+        if (!d.ok) { tMsg.textContent = d.error || 'Something went wrong. Please try again.'; return; }
+        pasteText.value = d.draft;
+        pasteMsg.textContent = 'Draft ready. Read it through and change anything you like, then tap Build blocks.' +
+          (d.cut ? ' The transcript was very long, so only the first part was used.' : '');
+        tMsg.textContent = '';
+        tPanel.hidden = true;
+        panel.hidden = false;
+        if (panel.scrollIntoView) panel.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+
+    function option(label, text, meta) {
+      var b = el('button', 'admin-suggest__opt');
+      b.type = 'button';
+      b.appendChild(el('span', 'admin-suggest__label', label));
+      b.appendChild(el('span', 'admin-suggest__text', text));
+      b.addEventListener('click', function () {
+        applyMeta(meta);
+        Array.prototype.forEach.call(sList.querySelectorAll('.admin-suggest__opt'), function (o) {
+          if (o.querySelector('.admin-suggest__label').textContent === label) o.classList.remove('is-used');
+        });
+        b.classList.add('is-used');
+        sMsg.textContent = label + ' set. You can still change it at the top of the page.';
+      });
+      return b;
+    }
+
+    function runSuggest() {
+      var text = storyText();
+      sList.textContent = '';
+      if (text.length < 120) { sMsg.textContent = 'Write a little more of the story first, then ask for suggestions.'; return; }
+      sBtn.disabled = true;
+      sAgain.disabled = true;
+      sMsg.textContent = 'Reading your story…';
+      aiPost('/admin/ai/suggest', { text: text, title: (form.elements.title && form.elements.title.value) || '' }).then(function (d) {
+        sBtn.disabled = false;
+        sAgain.disabled = false;
+        if (!d.ok) { sMsg.textContent = d.error || 'Something went wrong. Please try again.'; return; }
+        sMsg.textContent = 'Tap one to use it.';
+        (d.titles || []).forEach(function (t) { sList.appendChild(option('Title', t, { title: t })); });
+        if (d.dek) sList.appendChild(option('Summary', d.dek, { dek: d.dek }));
+        if (d.category) {
+          sList.appendChild(option('Category', d.category_label + (d.subcategory_label ? ' · ' + d.subcategory_label : ''),
+            { category: d.category, subcategory: d.subcategory }));
+        }
+      });
+    }
+
+    sBtn.addEventListener('click', function () {
+      if (!sPanel.hidden) { sPanel.hidden = true; return; }
+      sPanel.hidden = false;
+      panel.hidden = true;
+      tPanel.hidden = true;
+      runSuggest();
+    });
+    sAgain.addEventListener('click', runSuggest);
+    sClose.addEventListener('click', function () { sPanel.hidden = true; });
   }
 
   // ───────────────────────────── wiring ─────────────────────────────

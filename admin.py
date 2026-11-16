@@ -325,7 +325,18 @@ def search_index():
         status = ask_engine.index_status()
     except Exception as exc:  # database unreachable: say so instead of a 500
         error = str(exc)
+    questions = []
+    if ask_engine.log_enabled() and not error:
+        try:
+            questions = ask_engine.recent_questions()
+        except Exception as exc:
+            print("ask: could not read questions:", exc)
+    for q in questions:
+        story = get_article(q["top_slug"]) if q.get("top_slug") else None
+        q["story_title"] = story["title"] if story else ""
     return render_template("admin/search_index.html", enabled=ask_engine.enabled(),
+                           logging_on=ask_engine.log_enabled(), log_days=ask_engine.log_days(),
+                           questions=questions, unanswered=[q for q in questions if not q["matched"]],
                            status=status, error=error, csrf=csrf_token(),
                            embed_model=ask_engine.embed_model(), chat_model=ask_engine.chat_model())
 
@@ -1053,6 +1064,56 @@ def place_search():
     return jsonify({"results": results})
 
 
+# ── Writing helpers (ai_tools.py) ───────────────────────────────────────
+# Two admin-only endpoints the story editor calls: a draft from a pasted
+# transcript, and title / summary / category suggestions. Each call is
+# counted against AI_DAILY_CAP so a stuck button can't run up the bill.
+
+def _ai_call(work):
+    import ai_tools
+    import ask as ask_limits
+    import ask_engine
+    from readers import _csrf_ok
+    if not _csrf_ok():
+        return jsonify(ok=False, error="Your session expired. Reload the page and try again."), 400
+    if not ask_engine.enabled():
+        return jsonify(ok=False, error="Add OPENAI_API_KEY in Render to switch the writing helpers on."), 503
+    cap = ai_tools.daily_cap()
+    try:
+        if ask_limits._used("ai:admin") >= cap:
+            return jsonify(ok=False, error=f"You've used today's {cap} helper calls. They reset at midnight UTC."), 429
+        ask_limits._count("ai:admin")
+    except Exception as exc:  # the counter lives in the database; don't block writing if it's unreachable
+        print("ai: usage counter unavailable:", exc)
+    try:
+        return jsonify(ok=True, **work(ai_tools))
+    except ai_tools.AiError as exc:
+        return jsonify(ok=False, error=str(exc)), 502
+    except Exception as exc:
+        print("ai: unexpected failure:", exc)
+        return jsonify(ok=False, error="Something went wrong. Please try again."), 500
+
+
+@admin_bp.post("/ai/draft")
+@login_required
+def ai_draft():
+    body = request.get_json(silent=True) or {}
+    text = str(body.get("text") or "")
+    if len(text.strip()) < 200:  # checked here so a slip doesn't use up one of the day's calls
+        return jsonify(ok=False, error="Paste a longer transcript or notes first (at least a few sentences)."), 400
+    return _ai_call(lambda ai: ai.draft_from_transcript(text, str(body.get("style") or "study")))
+
+
+@admin_bp.post("/ai/suggest")
+@login_required
+def ai_suggest():
+    body = request.get_json(silent=True) or {}
+    text = str(body.get("text") or "")
+    if len(text.strip()) < 120:
+        return jsonify(ok=False, error="Write a little more of the story first, then ask for suggestions."), 400
+    return _ai_call(lambda ai: ai.suggest_meta(text, str(body.get("title") or "")))
+
+
 # ── Story routes ─────────────────────────────────────────────────────────
 
 def _wants_draft():
@@ -1075,6 +1136,11 @@ def _slug_from_hint():
     return slug, prior
 
 
+def _csrf_token():
+    from readers import csrf_token
+    return csrf_token()
+
+
 def _render_form(mode, article, errors):
     return render_template(
         "admin/story_form.html",
@@ -1085,6 +1151,7 @@ def _render_form(mode, article, errors):
         block_types=BLOCK_TYPES,
         story_choices=_story_choices(),
         errors=errors,
+        csrf=_csrf_token(),
     )
 
 

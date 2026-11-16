@@ -60,7 +60,9 @@ def _clean(value, limit):
 
 @safety_bp.get("/privacy")
 def privacy():
-    return _page("legal/privacy.html", updated=LEGAL_UPDATED, operator=OPERATOR)
+    import ask_engine  # the Ask paragraph says whether questions are kept, read from the same switch that controls it
+    return _page("legal/privacy.html", updated=LEGAL_UPDATED, operator=OPERATOR,
+                 ask_logging=ask_engine.log_enabled(), ask_log_days=ask_engine.log_days())
 
 
 @safety_bp.get("/terms")
