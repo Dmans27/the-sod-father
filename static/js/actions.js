@@ -637,8 +637,8 @@
   }, true);
 
   // ── Share a map (readers with an account only) ───────────────────────
-  // The "Share map" button under a story's map. A guest is sent to sign in
-  // and comes back to this page. A signed-in reader gets the phone's own
+  // The share button on a story's map. A guest gets a sign-in pop-up and
+  // comes back to the story. A signed-in reader gets the phone's own
   // share sheet (inside the iOS app, or any browser that has one), and our
   // share menu otherwise. Only links to an allowed map host are ever shared.
   function mapShareTitle(btn) {
@@ -650,12 +650,105 @@
     return name ? 'Map from \u201C' + name + '\u201D' : 'A map from \\\\Mansfield';
   }
 
+  // The map's own full-screen button is missing where the device has no full
+  // screen (iPhone), so the share button moves up one place there (style.css).
+  if (!(document.fullscreenEnabled || document.webkitFullscreenEnabled)) {
+    document.documentElement.classList.add('no-map-fullscreen');
+  }
+
+  // "Sign in to share" pop-up for a guest: email and password right there,
+  // with Create an account underneath. It signs in without leaving the page,
+  // then reloads the story so the reader can tap Share.
+  var signIn = null;
+  function buildSignIn() {
+    signIn = document.createElement('div');
+    signIn.className = 'share-menu signin-pop';
+    signIn.setAttribute('aria-hidden', 'true');
+    signIn.innerHTML =
+      '<div class="share-menu__scrim" data-signin-close></div>' +
+      '<div class="share-menu__panel signin-pop__panel" role="dialog" aria-modal="true" aria-labelledby="signin-pop-title">' +
+        '<button type="button" class="signin-pop__close" data-signin-close aria-label="Close">&times;</button>' +
+        '<h2 class="signin-pop__title" id="signin-pop-title">Sign in to share</h2>' +
+        '<p class="signin-pop__sub">Sharing maps is for readers with an account.</p>' +
+        '<p class="account-error signin-pop__error" role="alert" hidden></p>' +
+        '<form class="account-form signin-pop__form" method="post" action="/account/login">' +
+          '<input type="hidden" name="csrf"><input type="hidden" name="next">' +
+          '<label class="account-field"><span>Email</span>' +
+            '<input type="email" name="email" autocomplete="email" autocapitalize="off" required></label>' +
+          '<label class="account-field"><span>Password</span>' +
+            '<input type="password" name="password" autocomplete="current-password" required></label>' +
+          '<button type="submit" class="account-btn">Sign in</button>' +
+        '</form>' +
+        '<p class="signin-pop__foot">New here? <a class="signin-pop__create" href="/account/signup">Create account</a></p>' +
+      '</div>';
+    document.body.appendChild(signIn);
+
+    signIn.addEventListener('click', function (e) {
+      if (e.target.closest('[data-signin-close]')) closeSignIn();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && signIn.classList.contains('is-open')) closeSignIn();
+    });
+
+    var form = signIn.querySelector('form');
+    var error = signIn.querySelector('.signin-pop__error');
+    var submit = form.querySelector('button[type="submit"]');
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      error.hidden = true;
+      submit.disabled = true;
+      submit.textContent = 'Signing in\u2026';
+      var next = form.elements.next.value;
+      fetch('/account/login', { method: 'POST', body: new FormData(form), credentials: 'same-origin' })
+        .then(function (res) {
+          if (res.ok) { location.href = next; return; }      // signed in: reload the story
+          submit.disabled = false;
+          submit.textContent = 'Sign in';
+          error.textContent = res.status === 429
+            ? 'Too many attempts. Try again in a few minutes.'
+            : 'That email and password don\u2019t match.';
+          error.hidden = false;
+          form.elements.password.value = '';
+          form.elements.password.focus();
+        })
+        .catch(function () {
+          submit.disabled = false;
+          submit.textContent = 'Sign in';
+          error.textContent = 'Couldn\u2019t reach the server. Check your connection and try again.';
+          error.hidden = false;
+        });
+    });
+  }
+
+  function closeSignIn() {
+    if (!signIn) return;
+    signIn.classList.remove('is-open');
+    signIn.setAttribute('aria-hidden', 'true');
+  }
+
+  function openSignIn(fromBtn) {
+    if (!signIn) buildSignIn();
+    // Come back to the story itself, also when it was open in the pop-up sheet on the home page.
+    var sheet = fromBtn && fromBtn.closest('.article-sheet__inner');
+    var row = sheet && sheet.querySelector('[data-slug]');
+    var next = row ? '/article/' + row.getAttribute('data-slug') : location.pathname + location.search;
+    var form = signIn.querySelector('form');
+    form.elements.csrf.value = READER.csrf || '';
+    form.elements.next.value = next;
+    signIn.querySelector('.signin-pop__create').href = '/account/signup?next=' + encodeURIComponent(next);
+    signIn.querySelector('.signin-pop__error').hidden = true;
+    signIn.classList.toggle('is-dark', readingDark);
+    signIn.classList.add('is-open');
+    signIn.setAttribute('aria-hidden', 'false');
+    setTimeout(function () { try { form.elements.email.focus(); } catch (e) {} }, 320);
+  }
+
   document.addEventListener('click', function (e) {
     var btn = e.target.closest('.map-share');
     if (!btn) return;
     e.preventDefault();
     e.stopPropagation();
-    if (!READER.signedIn) { location.href = loginUrl(); return; }
+    if (!READER.signedIn) { openSignIn(btn); return; }
 
     var url;
     try { url = new URL(btn.getAttribute('data-map-share') || ''); } catch (err) { return; }

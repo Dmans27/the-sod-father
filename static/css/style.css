@@ -2545,8 +2545,29 @@ html.is-dark { --color-inkBase: #ebe6dc; }
 .is-dark .ask__place { background: #232c26; }
 .is-dark .ask__place:hover { background: #2c352f; }
 
-/* ── "Share map" button under a story's map (readers with an account) ── */
-.article__map figcaption { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
-.map-share { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; padding: 7px 14px; min-height: 36px; border: 1px solid var(--line); border-radius: 999px; background: none; color: var(--fairway); font-family: var(--font-sans); font-size: 13.5px; font-weight: 700; line-height: 1; cursor: pointer; }
-.map-share:hover { background: rgba(45, 106, 79, 0.08); }
-.map-share__icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+/* ── Share button on a story's map ──
+   Sits on the map, under the map's own zoom and full-screen buttons, and is
+   sized and styled to match them (those live inside the map's iframe: 10px
+   in from the corner, 29px buttons, 10px apart). */
+.map-share { position: absolute; z-index: 2; top: 118px; right: 10px; width: 29px; height: 29px; padding: 0; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 4px; background: #fff; color: #333; box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1); cursor: pointer; }
+.no-map-fullscreen .map-share { top: 79px; }                 /* no full-screen button above it (iPhone) */
+.map-share::after { content: ""; position: absolute; inset: -5px; }   /* a bigger target for a finger */
+.map-share:hover { background: #f2f2f2; }
+.map-share:focus-visible { outline: 2px solid var(--fairway); outline-offset: 2px; }
+.map-share__icon { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── "Sign in to share" pop-up (built on the share menu's sheet) ── */
+.signin-pop__panel { padding: 22px 20px calc(20px + env(safe-area-inset-bottom)); max-width: 420px; }
+.signin-pop__close { position: absolute; top: 10px; right: 12px; width: 36px; height: 36px; border: 0; border-radius: 50%; background: none; color: var(--ink-faint); font-size: 24px; line-height: 1; cursor: pointer; }
+.signin-pop__title { margin: 0 0 4px; font-family: var(--font-serif); font-size: 22px; color: var(--fairway-deep); }
+.signin-pop__sub { margin: 0 0 16px; font-family: var(--font-sans); font-size: 14.5px; color: var(--ink-soft); }
+.signin-pop__error { margin: 0 0 14px; }
+.signin-pop__error[hidden] { display: none; }
+.signin-pop__form { font-family: var(--font-sans); }
+.signin-pop__foot { margin: 16px 0 0; text-align: center; font-family: var(--font-sans); font-size: 15px; color: var(--ink-soft); }
+.signin-pop__foot a { color: var(--fairway-deep); font-weight: 700; }
+@media (min-width: 700px) {
+  /* a centred box on larger screens */
+  .signin-pop .signin-pop__panel { top: 50%; bottom: auto; border-radius: 18px; transform: translateY(calc(-50% + 16px)); }
+  .signin-pop.is-open .signin-pop__panel { transform: translateY(-50%); }
+}

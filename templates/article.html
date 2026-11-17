@@ -162,10 +162,11 @@
                   <iframe src="{{ block.embed_url }}" title="{{ block.caption or 'Interactive map' }}" loading="lazy"
                           referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen"
                           sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+                  {# Share button, sitting on the map under its zoom and full-screen buttons. Readers with an
+                     account get the share sheet; a guest gets a sign-in pop-up (static/js/actions.js). #}
+                  <button type="button" class="map-share" data-map-share="{{ block.open_url or block.embed_url }}" data-title="{{ block.caption or '' }}" aria-label="Share map" title="Share map"><svg class="map-share__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-share"/></svg></button>
                 </div>
-                <figcaption>{% if block.caption %}{{ block.caption }} &middot; {% endif %}<a href="{{ block.open_url or block.embed_url }}" target="_blank" rel="noopener noreferrer">Open the full map &nearr;</a>
-                  {# Sharing a map is for readers with an account; a guest's button sends them to sign in (static/js/actions.js). #}
-                  <button type="button" class="map-share" data-map-share="{{ block.open_url or block.embed_url }}" data-title="{{ block.caption or '' }}"><svg class="map-share__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-share"/></svg><span>{{ 'Share map' if reader_state.signedIn else 'Sign in to share map' }}</span></button></figcaption>
+                <figcaption>{% if block.caption %}{{ block.caption }} &middot; {% endif %}<a href="{{ block.open_url or block.embed_url }}" target="_blank" rel="noopener noreferrer">Open the full map &nearr;</a></figcaption>
               </figure>
             {% endif %}
           {% elif block.type == 'place' or block.type == 'places' %}
