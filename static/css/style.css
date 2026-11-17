@@ -2687,3 +2687,76 @@ html.mlist-open, html.mlist-open body { overflow: hidden; }
   body.has-mapstory .site-main, body.has-mapstory .site-header, body.has-mapstory .site-footer, .mapstory__bar { transition: none; }
   body.mapstory-open .mapstory { transition: none; }
 }
+
+/* ── Route stories (phones): the linked places are numbered stops ──
+   "This story is a route" in the editor; static/js/map-story.js adds body.has-route once
+   the map has matched the stops, sets --route-strip (176px + the status bar) and toggles
+   body.route-reading once the story card reaches the strip. */
+.route-num { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: 21px; height: 21px;
+  padding: 0 5px; margin-right: 5px; border-radius: 999px; background: var(--c, #2f9e7e); color: #fff; font: 700 12px/1 var(--font-sans);
+  vertical-align: 2px; text-decoration: none; }
+.route-num[hidden] { display: none; }
+.mapstory__strip { display: none; }
+.article__content .route-now { position: relative; }
+.article__content .route-now::before { content: ""; position: absolute; left: -12px; top: 0.3em; bottom: 0.3em; width: 3px; border-radius: 2px;
+  background: var(--route-c, #2f9e7e); }
+.article__content .route-flash { animation: route-flash 1.8s ease; border-radius: 6px; }
+@keyframes route-flash { 0%, 35% { background-color: rgba(45, 106, 79, 0.14); box-shadow: 0 0 0 8px rgba(45, 106, 79, 0.14); }
+  100% { background-color: transparent; box-shadow: 0 0 0 8px transparent; } }
+
+.route-card { margin: 34px 0 8px; border: 1px solid var(--line); border-radius: 22px; overflow: hidden; background: #fff;
+  box-shadow: 0 8px 28px rgba(27, 42, 31, 0.1); font-family: var(--font-sans); }
+.route-card__map { display: block; width: 100%; height: 160px; padding: 0; border: 0; background: #212326; cursor: pointer; }
+.route-card__map svg { display: block; width: 100%; height: 100%; }
+.route-card__body { padding: 16px 18px 18px; }
+.route-card__h { margin: 0; font: 700 22px/1.2 var(--font-serif); color: var(--ink); }
+.route-card__sub { margin: 4px 0 10px; font-size: 13.5px; color: var(--ink-faint); }
+.route-card__list { list-style: none; margin: 0; padding: 0; }
+.route-card__list button { display: flex; align-items: center; gap: 11px; width: 100%; padding: 9px 0; border: 0; border-top: 1px solid var(--line);
+  background: none; color: var(--ink); font: 400 15px var(--font-sans); text-align: left; cursor: pointer; }
+.route-card__list .route-num { flex: 0 0 auto; width: 24px; height: 24px; margin: 0; vertical-align: 0; }
+.route-card__list b { flex: 1; min-width: 0; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.route-card__leg { font-size: 12.5px; color: var(--ink-faint); white-space: nowrap; }
+.route-card__go { display: flex; align-items: center; justify-content: center; min-height: 48px; margin-top: 14px; padding: 0 18px; border-radius: 999px;
+  background: #1b4332; color: #fff; font-weight: 700; font-size: 15px; text-decoration: none; text-align: center; }
+.route-card__go + .route-card__go { margin-top: 8px; }
+.route-card__row { display: flex; gap: 10px; margin-top: 10px; }
+.route-card__row > button, .route-card .map-share.route-card__share { position: static; flex: 1; width: auto; height: 46px; display: flex; align-items: center; justify-content: center;
+  border: 0; border-radius: 999px; background: #eef1ef; color: #1c1f1d; box-shadow: none; font: 700 15px var(--font-sans); cursor: pointer; }
+.route-card .map-share.route-card__share::after { display: none; }
+.is-dark .route-card, html.is-dark .route-card { background: #232b26; box-shadow: none; }
+.is-dark .route-card__row > button, html.is-dark .route-card__row > button,
+.is-dark .route-card .map-share.route-card__share, html.is-dark .route-card .map-share.route-card__share { background: #2f3832; color: var(--ink); }
+
+@media (max-width: 640px) {
+  /* A taller strip of map above a route story: tall enough to stay put while you read (see below). */
+  body.has-route .mapstory-peek { height: var(--route-strip, 220px); align-items: flex-end; justify-content: flex-start; padding: 0 14px 12px; }
+  body.has-route .article__sticky-bar { display: none; }
+  body.has-route.route-reading .popbar { visibility: hidden; transform: translateY(-110%); }
+  /* While reading, the map comes in front of the story but only its top strip shows (and takes taps). */
+  body.has-route .mapstory { clip-path: inset(0 0 0 0 round 0 0 0 0); }
+  body.has-route.route-reading:not(.mapstory-open) .mapstory { z-index: 14;
+    clip-path: inset(0 0 calc(100% - var(--route-strip, 220px)) 0 round 0 0 20px 20px); }
+  body.has-route.mapstory-open .mapstory { transition: z-index 0s linear 0.42s, clip-path 0.42s cubic-bezier(0.22, 0.8, 0.25, 1); }
+  body.has-route.mapstory-closing .mapstory { transition: clip-path 0.42s cubic-bezier(0.22, 0.8, 0.25, 1); }
+
+  body.has-route.route-reading:not(.mapstory-open) .mapstory__strip { display: block; position: absolute; left: 0; right: 0; top: 0; z-index: 2;
+    height: var(--route-strip, 220px); padding: 0; border: 0; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+  .mapstory__prog { position: absolute; left: 14px; right: 14px; top: calc(env(safe-area-inset-top, 0px) + 6px); display: flex; gap: 4px; }
+  .mapstory__prog i { flex: 1; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.3); transition: background-color 0.3s ease; }
+  .mapstory__prog i.is-on { background: #fff; }
+  .mapstory__now { position: absolute; left: 14px; bottom: 12px; max-width: calc(100% - 84px); box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 14px 6px 6px; border-radius: 999px; background: rgba(16, 18, 20, 0.74); border: 0.5px solid rgba(255, 255, 255, 0.2);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #fff; font: 700 14px var(--font-sans); white-space: nowrap; }
+  .mapstory__now .route-num { width: 24px; height: 24px; margin: 0; vertical-align: 0; flex: 0 0 auto; }
+  .mapstory__now .route-num[hidden] + .mapstory__now-name { padding-left: 8px; }
+  .mapstory__now-name { overflow: hidden; text-overflow: ellipsis; }
+  .mapstory__now small { flex: 0 0 auto; font-size: 13px; font-weight: 500; opacity: 0.68; }
+  .mapstory__expand { position: absolute; right: 14px; bottom: 10px; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: rgba(16, 18, 20, 0.74); border: 0.5px solid rgba(255, 255, 255, 0.2); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .mapstory__expand svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+}
+@media (max-width: 640px) and (prefers-reduced-motion: reduce) {
+  body.has-route.mapstory-open .mapstory, body.has-route.mapstory-closing .mapstory { transition: none; }
+  .article__content .route-flash { animation: none; }
+}

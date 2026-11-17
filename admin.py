@@ -1232,6 +1232,8 @@ def _build_doc_from_form(form, files, slug, existing, draft=False):
         "featured": form.get("featured") == "1",
         # Phones: the story's map sits behind the story card (templates/article.html, static/js/map-story.js).
         "map_behind": form.get("map_behind") == "1",
+        # ...and its linked places are numbered stops in reading order (static/js/map-story.js).
+        "map_route": form.get("map_behind") == "1" and form.get("map_route") == "1",
         "status": "draft" if draft else "published",
         "blocks": blocks,
         "read_minutes": estimate_read_minutes(blocks),

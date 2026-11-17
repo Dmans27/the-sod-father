@@ -157,7 +157,7 @@
 
   // ── Reading the form into a plain object ──
   var TOP_TEXT = ['title', 'dek', 'category', 'subcategory', 'author_slug', 'author_custom', 'published_at'];
-  var TOP_CHECK = ['featured', 'remove_cover_image', 'map_behind'];
+  var TOP_CHECK = ['featured', 'remove_cover_image', 'map_behind', 'map_route'];
 
   function capture() {
     var fields = {};
