@@ -1230,6 +1230,8 @@ def _build_doc_from_form(form, files, slug, existing, draft=False):
         "published_at": published_at,
         "cover_image": cover_image,
         "featured": form.get("featured") == "1",
+        # Phones: the story's map sits behind the story card (templates/article.html, static/js/map-story.js).
+        "map_behind": form.get("map_behind") == "1",
         "status": "draft" if draft else "published",
         "blocks": blocks,
         "read_minutes": estimate_read_minutes(blocks),

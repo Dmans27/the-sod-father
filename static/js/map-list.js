@@ -266,8 +266,8 @@
     if (!btn) return;
     e.preventDefault();
     e.stopPropagation();
-    var fig = btn.closest('.article__map');
-    var frame = fig && fig.querySelector('.article__map-frame iframe');
+    var fig = btn.closest('.article__map, .mapstory');   // a story's map, or the map behind a travel map story
+    var frame = fig && fig.querySelector('.article__map-frame iframe, .mapstory__frame');
     var from = frame && frameOrigin(frame);
     if (!from) return;
     origin = from;

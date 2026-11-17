@@ -105,6 +105,16 @@
     newest first — if more than 3 are checked, the oldest checked ones just stop showing up top.
   </p>
 
+  <label class="admin-field admin-field--checkbox">
+    <span><input type="checkbox" name="map_behind" value="1" {% if a.get('map_behind') %}checked{% endif %}> Travel map story (phones)</span>
+  </label>
+  <p class="admin-hint" style="margin-top:-12px;">
+    On phones, the story's map sits full screen behind the story: readers see a strip of it above the
+    story and can slide the story away to explore it, then slide back to where they were reading.
+    Needs an Interactive map block (the first one is used). Links in your text to a place's page in
+    your directory (…/listing/its-name) open the map at that place. Computers show the map in the story as usual.
+  </p>
+
   <label class="admin-field">
     <span>Cover photo {% if a.get('cover_image') %}(currently set — upload a new one to replace it){% endif %}</span>
     {% if a.get('cover_image') %}
