@@ -731,6 +731,9 @@
         var link = e.target.closest('a[data-slug]');
         if (!link) return;
         if (!grid.contains(link) && link.className.indexOf('hero-story') === -1) return;
+        // A travel map story on a phone opens as its own page, where its map sits behind the story.
+        var picked = articlesBySlug[link.getAttribute('data-slug')];
+        if (picked && picked.map_behind && window.matchMedia('(max-width: 640px)').matches) return;
         e.preventDefault();
         openSheet(link.getAttribute('data-slug'));
       });
