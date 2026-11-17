@@ -224,6 +224,7 @@
   </script>
   <script src="/static/js/actions.js?v=7"></script>
   <script src="/static/js/native.js?v=1" defer></script>
+  <script src="/static/js/map-list.js?v=1" defer></script>
   <script src="/static/js/places.js?v=1" defer></script>
   <script src="/static/js/newsletter.js?v=1" defer></script>
   <script src="/static/js/ask.js?v=3" defer></script>
@@ -365,7 +366,8 @@
             '" title="' + esc(block.caption || 'Interactive map') + '" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen" ' +
             'sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>' +
             '<button type="button" class="map-share" data-map-share="' + esc(mapShare) + '" data-title="' + esc(block.caption || '') +
-            '" aria-label="Share map" title="Share map"><svg class="map-share__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-share"></use></svg></button></div>' +
+            '" aria-label="Share map" title="Share map"><svg class="map-share__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-share"></use></svg></button>' +
+            '<button type="button" class="map-list" aria-label="Show places as a list" title="List"><svg class="map-share__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg></button></div>' +
             '<figcaption>' + (block.caption ? esc(block.caption) + ' &middot; ' : '') + '<a href="' + esc(mapOpen) +
             '" target="_blank" rel="noopener noreferrer">Open the full map &nearr;</a></figcaption></figure>';
         }

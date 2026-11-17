@@ -167,6 +167,8 @@
                   {# Share button, sitting on the map under its zoom and full-screen buttons. Readers with an
                      account get the share sheet; a guest gets a sign-in pop-up (static/js/actions.js). #}
                   <button type="button" class="map-share" data-map-share="{{ mlinks.share }}" data-title="{{ block.caption or '' }}" aria-label="Share map" title="Share map"><svg class="map-share__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-share"/></svg></button>
+                  {# Phones only: the map's places as a scrolling list of cards (static/js/map-list.js). #}
+                  <button type="button" class="map-list" aria-label="Show places as a list" title="List"><svg class="map-share__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg></button>
                 </div>
                 <figcaption>{% if block.caption %}{{ block.caption }} &middot; {% endif %}<a href="{{ mlinks.open }}" target="_blank" rel="noopener noreferrer">Open the full map &nearr;</a></figcaption>
               </figure>

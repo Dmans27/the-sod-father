@@ -2571,3 +2571,61 @@ html.is-dark { --color-inkBase: #ebe6dc; }
   .signin-pop .signin-pop__panel { top: 50%; bottom: auto; border-radius: 18px; transform: translateY(calc(-50% + 16px)); }
   .signin-pop.is-open .signin-pop__panel { transform: translateY(-50%); }
 }
+
+/* ── List button on a story's map (phones), under the share button ── */
+.map-list { position: absolute; z-index: 2; top: 157px; right: 10px; width: 29px; height: 29px; padding: 0; display: none; align-items: center; justify-content: center; border: 0; border-radius: 4px; background: #fff; color: #333; box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1); cursor: pointer; }
+.no-map-fullscreen .map-list { top: 118px; }
+.map-list::after { content: ""; position: absolute; inset: -5px; }
+.map-list:focus-visible { outline: 2px solid var(--fairway); outline-offset: 2px; }
+@media (max-width: 640px) { .map-list { display: flex; } }
+
+/* ── The list of places (static/js/map-list.js) ── */
+html.mlist-open, html.mlist-open body { overflow: hidden; }
+.mlist { position: fixed; inset: 0; z-index: 320; visibility: hidden; font-family: var(--font-sans); }
+.mlist.is-open { visibility: visible; }
+.mlist__scrim { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.4); opacity: 0; transition: opacity 0.25s ease; }
+.mlist.is-open .mlist__scrim { opacity: 1; }
+.mlist__panel { position: absolute; left: 0; right: 0; bottom: 0; max-height: 86vh; max-height: 86dvh; display: flex; flex-direction: column;
+  background: rgba(20, 20, 22, 0.9); -webkit-backdrop-filter: blur(18px) saturate(160%); backdrop-filter: blur(18px) saturate(160%);
+  color: #fff; border-radius: 20px 20px 0 0; box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.35);
+  transform: translateY(100%); transition: transform 0.32s cubic-bezier(0.22, 0.8, 0.25, 1); }
+.mlist.is-open .mlist__panel { transform: translateY(0); }
+.mlist__head { flex: 0 0 auto; display: flex; align-items: center; gap: 10px; padding: 14px 14px 10px 18px; }
+.mlist__title { flex: 1; min-width: 0; margin: 0; font-family: var(--font-sans); font-size: 17px; font-weight: 800; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mlist__count { margin-left: 7px; font-weight: 600; opacity: 0.6; }
+.mlist__close { flex: 0 0 auto; width: 34px; height: 34px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.14); color: #fff; font-size: 20px; line-height: 1; cursor: pointer; }
+.mlist__status { margin: 4px 18px 18px; font-size: 14px; color: rgba(255, 255, 255, 0.75); }
+.mlist__status[hidden] { display: none; }
+.mlist__list { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; display: flex; flex-direction: column; gap: 10px; padding: 2px 12px calc(16px + env(safe-area-inset-bottom, 0px)); }
+.mlist__list:empty { display: none; }
+.mlist__card { display: flex; align-items: stretch; gap: 12px; width: 100%; padding: 8px; box-sizing: border-box; text-align: left; font: inherit; color: #fff; background: rgba(255, 255, 255, 0.07); border: 0.5px solid rgba(255, 255, 255, 0.1); border-radius: 16px; cursor: pointer; }
+.mlist__card:active { background: rgba(255, 255, 255, 0.14); }
+.mlist__img, .mlist__ph { flex: 0 0 88px; width: 88px; height: 88px; border-radius: 12px; object-fit: cover; background-color: #2b2f36; }
+.mlist__info { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 4px; }
+.mlist__name { font-size: 15px; font-weight: 800; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.mlist__addr { font-size: 12.5px; line-height: 1.35; color: rgba(255, 255, 255, 0.65); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.mlist__meta { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: rgba(255, 255, 255, 0.7); }
+.mlist__rating { color: #f5b301; font-weight: 800; }
+.mlist__cat { text-transform: capitalize; }
+
+/* The second card: the place's listing, over the list, with "Back to listing" */
+.mlist__detail { position: absolute; left: 0; right: 0; bottom: 0; height: 92vh; height: 92dvh; display: flex; flex-direction: column; background: #fff; color: #1c1f1d;
+  border-radius: 20px 20px 0 0; overflow: hidden; box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.35);
+  transform: translateY(100%); transition: transform 0.32s cubic-bezier(0.22, 0.8, 0.25, 1); }
+.mlist__detail[hidden] { display: none; }
+.mlist.is-detail .mlist__detail { transform: translateY(0); }
+.mlist__bar { flex: 0 0 auto; padding: 12px; border-bottom: 1px solid #e3e6e4; }
+.mlist__back { font: inherit; font-size: 14px; font-weight: 700; padding: 9px 16px; min-height: 40px; border: 0; border-radius: 999px; background: #eef1ef; color: #1c1f1d; cursor: pointer; }
+.mlist__detail-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: env(safe-area-inset-bottom, 0px); }
+.mlist__frame { display: block; width: 100%; height: 100%; border: 0; }
+.mlist__hero { display: block; width: 100%; height: 240px; object-fit: cover; background: #d9ddda; }
+.mlist__simple-body { padding: 16px 18px 24px; display: flex; flex-direction: column; gap: 10px; }
+.mlist__simple-name { margin: 0; font-family: var(--font-sans); font-size: 22px; font-weight: 800; color: #1c1f1d; }
+.mlist__simple-meta { display: flex; gap: 10px; font-size: 13.5px; color: #4a514d; }
+.mlist__simple-meta .mlist__rating { color: #b8780a; }
+.mlist__simple-addr, .mlist__simple-note { margin: 0; font-size: 14.5px; line-height: 1.5; }
+.mlist__simple-note { padding-left: 12px; border-left: 3px solid #2f9e7e; font-style: italic; }
+.mlist__actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 4px; }
+.mlist__actions a { padding: 9px 16px; border-radius: 999px; background: #eef1ef; color: #1c1f1d; font-weight: 700; font-size: 13.5px; text-decoration: none; }
+.mlist__actions a.is-primary { background: #1d6fa5; color: #fff; }
+@media (prefers-reduced-motion: reduce) { .mlist__panel, .mlist__detail, .mlist__scrim { transition: none; } }
