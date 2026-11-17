@@ -39,7 +39,21 @@
   document.body.appendChild(layer);
 
   // Load the map once the story itself has loaded (phones only).
-  function load() { if (!frame.getAttribute('src')) frame.setAttribute('src', src); }
+  // The map runs under the phone's status bar; tell it how tall that is (an iframe can't see it).
+  function safeTop() {
+    var probe = document.createElement('div');
+    probe.style.cssText = 'position:fixed;top:0;left:0;width:1px;visibility:hidden;pointer-events:none;height:env(safe-area-inset-top, 0px)';
+    document.body.appendChild(probe);
+    var h = Math.round(probe.getBoundingClientRect().height) || 0;
+    probe.remove();
+    return h;
+  }
+  function load() {
+    if (frame.getAttribute('src')) return;
+    var url = src;
+    try { var x = new URL(src); x.searchParams.set('safe', String(safeTop())); url = x.toString(); } catch (e) {}
+    frame.setAttribute('src', url);
+  }
   function loadSoon() {
     if (!phone.matches) return;
     if (document.readyState === 'complete') setTimeout(load, 250);
