@@ -2544,3 +2544,9 @@ html.is-dark { --color-inkBase: #ebe6dc; }
 .ask__place-go { flex: 0 0 auto; font-family: var(--font-sans); font-size: 12.5px; font-weight: 700; color: var(--fairway); }
 .is-dark .ask__place { background: #232c26; }
 .is-dark .ask__place:hover { background: #2c352f; }
+
+/* ── "Share map" button under a story's map (readers with an account) ── */
+.article__map figcaption { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+.map-share { display: inline-flex; align-items: center; gap: 6px; margin-left: auto; padding: 7px 14px; min-height: 36px; border: 1px solid var(--line); border-radius: 999px; background: none; color: var(--fairway); font-family: var(--font-sans); font-size: 13.5px; font-weight: 700; line-height: 1; cursor: pointer; }
+.map-share:hover { background: rgba(45, 106, 79, 0.08); }
+.map-share__icon { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }

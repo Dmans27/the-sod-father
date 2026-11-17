@@ -163,7 +163,9 @@
                           referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen"
                           sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
                 </div>
-                <figcaption>{% if block.caption %}{{ block.caption }} &middot; {% endif %}<a href="{{ block.open_url or block.embed_url }}" target="_blank" rel="noopener noreferrer">Open the full map &nearr;</a></figcaption>
+                <figcaption>{% if block.caption %}{{ block.caption }} &middot; {% endif %}<a href="{{ block.open_url or block.embed_url }}" target="_blank" rel="noopener noreferrer">Open the full map &nearr;</a>
+                  {# Sharing a map is for readers with an account; a guest's button sends them to sign in (static/js/actions.js). #}
+                  <button type="button" class="map-share" data-map-share="{{ block.open_url or block.embed_url }}" data-title="{{ block.caption or '' }}"><svg class="map-share__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-share"/></svg><span>{{ 'Share map' if reader_state.signedIn else 'Sign in to share map' }}</span></button></figcaption>
               </figure>
             {% endif %}
           {% elif block.type == 'place' or block.type == 'places' %}

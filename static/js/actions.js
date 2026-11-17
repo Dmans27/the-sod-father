@@ -218,13 +218,16 @@
     menu.setAttribute('aria-hidden', 'true');
   }
 
-  function openShare(slug, title) {
+  // Shares a story by default. Pass opts.url (and opts.what, e.g. "map") to share something else.
+  function openShare(slug, title, opts) {
     if (!menu) buildMenu();
-    var url = location.origin + '/article/' + slug;
+    var url = (opts && opts.url) || location.origin + '/article/' + slug;
+    var what = (opts && opts.what) || 'story';
+    menu.querySelector('.share-menu__panel').setAttribute('aria-label', 'Share this ' + what);
     menu.querySelector('.share-menu__title').textContent = title;
     menu.querySelector('#share-email').href =
       'mailto:?subject=' + encodeURIComponent(title) +
-      '&body=' + encodeURIComponent('I thought you’d like this story from \\\\Mansfield:\n\n' + title + '\n' + url);
+      '&body=' + encodeURIComponent('I thought you’d like this ' + what + ' from \\\\Mansfield:\n\n' + title + '\n' + url);
 
     var copy = menu.querySelector('#share-copy');
     copy.querySelector('span').textContent = 'Copy link';
@@ -631,6 +634,44 @@
       if (!(window.MansfieldNative && MansfieldNative.share(location.origin + '/article/' + slug, title))) openShare(slug, title);
     }
     else if (action === 'comment') openComments(slug, title);
+  }, true);
+
+  // ── Share a map (readers with an account only) ───────────────────────
+  // The "Share map" button under a story's map. A guest is sent to sign in
+  // and comes back to this page. A signed-in reader gets the phone's own
+  // share sheet (inside the iOS app, or any browser that has one), and our
+  // share menu otherwise. Only links to an allowed map host are ever shared.
+  function mapShareTitle(btn) {
+    var given = btn.getAttribute('data-title');
+    if (given) return given;
+    var story = btn.closest('.article-sheet__inner, .article');
+    var h = story && story.querySelector('h1');
+    var name = h ? h.textContent.replace(/\s+/g, ' ').trim() : '';
+    return name ? 'Map from \u201C' + name + '\u201D' : 'A map from \\\\Mansfield';
+  }
+
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('.map-share');
+    if (!btn) return;
+    e.preventDefault();
+    e.stopPropagation();
+    if (!READER.signedIn) { location.href = loginUrl(); return; }
+
+    var url;
+    try { url = new URL(btn.getAttribute('data-map-share') || ''); } catch (err) { return; }
+    var hosts = window.MAP_HOSTS || [];
+    if (url.protocol !== 'https:' || url.username || hosts.indexOf(url.host.toLowerCase()) < 0) return;
+    var title = mapShareTitle(btn);
+
+    if (window.MansfieldNative && MansfieldNative.share(url.href, title)) return;
+    if (navigator.share) {
+      navigator.share({ title: title, text: title, url: url.href }).catch(function (err) {
+        // Closing the share sheet is not an error; anything else falls back to our menu.
+        if (!err || err.name !== 'AbortError') openShare(null, title, { url: url.href, what: 'map' });
+      });
+      return;
+    }
+    openShare(null, title, { url: url.href, what: 'map' });
   }, true);
 
   // Before / after slider: the range input is invisible but covers the
