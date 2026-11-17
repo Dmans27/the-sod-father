@@ -22,7 +22,8 @@
 
   var HOSTS = (window.MAP_HOSTS || []).map(function (h) { return String(h).toLowerCase(); });
   var SLUG = /^[A-Za-z0-9][A-Za-z0-9_-]{0,200}$/;
-  var COLORS = { food: '#E2574C', coffee: '#C6935A', bars: '#B368F7', wine: '#B4436C', rooftops: '#5AC8E8', shops: '#F5B301', other: '#2f9e7e' };
+  var COLORS = { food: '#E2574C', coffee: '#C6935A', bars: '#B368F7', wine: '#B4436C', rooftops: '#5AC8E8', shops: '#F5B301',
+                 hotels: '#5B7CFA', sights: '#E8833A', other: '#2f9e7e' };
 
   // Same groups as the map's pins, so a card without a picture gets its pin colour.
   function categoryColor(category) {
@@ -31,6 +32,8 @@
     if (c.indexOf('bar') >= 0 || c.indexOf('cocktail') >= 0) return COLORS.bars;
     if (c.indexOf('wine') >= 0) return COLORS.wine;
     if (c.indexOf('rooftop') >= 0) return COLORS.rooftops;
+    if (/hotel|hostel|lodging|guest ?house|apartment|resort|\binn\b/.test(c)) return COLORS.hotels;
+    if (/museum|gallery|sight|attraction|landmark|monument|palace|church|cathedral|castle|park|tourist/.test(c)) return COLORS.sights;
     if (c.indexOf('shop') >= 0) return COLORS.shops;
     if (c.indexOf('restaurant') >= 0 || c.indexOf('food') >= 0) return COLORS.food;
     return COLORS.other;

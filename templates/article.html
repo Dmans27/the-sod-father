@@ -50,6 +50,8 @@
             sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
     <div class="mapstory__bar">
       <button type="button" class="mapstory__back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Back to story</button>
+      {# Sharing works here too: readers with an account get the share sheet, guests the sign-in pop-up (static/js/actions.js). #}
+      <button type="button" class="map-share mapstory__share" data-map-share="{{ map_links(behind.block).share }}" data-title="{{ behind.block.caption or '' }}" aria-label="Share map" title="Share map"><svg class="map-share__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-share"/></svg></button>
       <button type="button" class="map-list mapstory__list" aria-label="Show places as a list" title="List"><svg class="map-share__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg></button>
     </div>
   </div>

@@ -2677,9 +2677,11 @@ html.mlist-open, html.mlist-open body { overflow: hidden; }
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25); cursor: pointer; }
   .mapstory__back { display: inline-flex; align-items: center; gap: 6px; height: 46px; padding: 0 20px 0 14px; border-radius: 999px;
     font-family: var(--font-sans); font-size: 15px; font-weight: 700; }
-  .map-list.mapstory__list { position: static; display: flex; width: 46px; height: 46px; border-radius: 50%; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25); }
-  .map-list.mapstory__list::after { display: none; }
-  .mapstory__list .map-share__icon { width: 19px; height: 19px; }
+  .map-list.mapstory__list, .map-share.mapstory__share { position: static; display: flex; width: 46px; height: 46px; border-radius: 50%; box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25); }
+  .mapstory__share { pointer-events: auto; border: 0.5px solid rgba(255, 255, 255, 0.2); color: #fff; background: rgba(22, 23, 26, 0.6);
+    -webkit-backdrop-filter: blur(16px) saturate(160%); backdrop-filter: blur(16px) saturate(160%); cursor: pointer; }
+  .map-list.mapstory__list::after, .map-share.mapstory__share::after { display: none; }
+  .mapstory__list .map-share__icon, .mapstory__share .map-share__icon { width: 19px; height: 19px; }
 }
 @media (max-width: 640px) and (prefers-reduced-motion: reduce) {
   body.has-mapstory .site-main, body.has-mapstory .site-header, body.has-mapstory .site-footer, .mapstory__bar { transition: none; }
