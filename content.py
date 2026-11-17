@@ -14,7 +14,7 @@ import base64
 import json
 import os
 from pathlib import Path
-from urllib.parse import urlencode, urlparse
+from urllib.parse import parse_qsl, urlencode, urlparse, urlunparse
 
 from textlinks import plain_text
 
@@ -140,6 +140,40 @@ def is_map_embed_url(url):
     if parsed.scheme == "https":
         return True
     return parsed.scheme == "http" and (parsed.hostname or "") in LOCAL_HOSTNAMES
+
+
+MAP_STYLE_NAMES = ("light", "dark", "streets")
+
+
+def map_links(block):
+    """The two addresses a story's map hands out, both showing the map in the
+    same style (light / dark / streets) the story shows it in:
+
+      "open"   the "Open the full map" link
+      "share"  what the share button sends
+
+    The directory's map page falls back to the plain light style when the
+    address has no ?style=..., and stories saved before this only kept the
+    style on the iframe address. So the style is added here, when the story is
+    shown, which fixes old stories as well as new ones. The pop-up sheet does
+    the same in JavaScript (templates/base.html, mapLinks)."""
+    if not isinstance(block, dict):
+        return {"open": "", "share": ""}
+    embed = block.get("embed_url") or ""
+    open_url = block.get("open_url") or embed
+    try:
+        parsed = urlparse(open_url)
+        if parsed.path.startswith("/embed/"):
+            query = parse_qsl(parsed.query, keep_blank_values=True)
+            if not any(key == "style" for key, _ in query):
+                style = block.get("style") or dict(parse_qsl(urlparse(embed).query)).get("style")
+                if style in MAP_STYLE_NAMES:
+                    query.append(("style", style))
+                    open_url = urlunparse(parsed._replace(query=urlencode(query)))
+    except ValueError:
+        pass
+    # Share the styled map itself (the same page the story shows), falling back to the open link.
+    return {"open": open_url, "share": embed or open_url}
 
 
 def place_embed_url(block, site_origin):

@@ -157,6 +157,8 @@
             {% endif %}
           {% elif block.type == 'map' %}
             {% if map_embed_ok(block.embed_url) %}
+              {# Both links carry the map's style, so the shared and full-size map look like this one (content.map_links). #}
+              {% set mlinks = map_links(block) %}
               <figure class="article__map article__map--{{ block.height if block.height in ('short', 'medium', 'tall') else 'medium' }}">
                 <div class="article__map-frame">
                   <iframe src="{{ block.embed_url }}" title="{{ block.caption or 'Interactive map' }}" loading="lazy"
@@ -164,9 +166,9 @@
                           sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
                   {# Share button, sitting on the map under its zoom and full-screen buttons. Readers with an
                      account get the share sheet; a guest gets a sign-in pop-up (static/js/actions.js). #}
-                  <button type="button" class="map-share" data-map-share="{{ block.open_url or block.embed_url }}" data-title="{{ block.caption or '' }}" aria-label="Share map" title="Share map"><svg class="map-share__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-share"/></svg></button>
+                  <button type="button" class="map-share" data-map-share="{{ mlinks.share }}" data-title="{{ block.caption or '' }}" aria-label="Share map" title="Share map"><svg class="map-share__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-share"/></svg></button>
                 </div>
-                <figcaption>{% if block.caption %}{{ block.caption }} &middot; {% endif %}<a href="{{ block.open_url or block.embed_url }}" target="_blank" rel="noopener noreferrer">Open the full map &nearr;</a></figcaption>
+                <figcaption>{% if block.caption %}{{ block.caption }} &middot; {% endif %}<a href="{{ mlinks.open }}" target="_blank" rel="noopener noreferrer">Open the full map &nearr;</a></figcaption>
               </figure>
             {% endif %}
           {% elif block.type == 'place' or block.type == 'places' %}

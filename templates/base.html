@@ -352,12 +352,21 @@
           if (!(mapUrl.protocol === 'https:' || mapLocal) || mapHosts.indexOf(mapUrl.host.toLowerCase()) < 0 ||
               mapUrl.pathname.indexOf('/embed/') !== 0 || mapUrl.username) return '';
           var mapSize = ['short', 'medium', 'tall'].indexOf(block.height) >= 0 ? block.height : 'medium';
+          // Same as content.map_links: the full-map link and the shared link show the map in the story's style.
+          var mapOpen = block.open_url || block.embed_url, mapShare = block.embed_url;
+          try {
+            var openUrl = new URL(mapOpen);
+            if (openUrl.pathname.indexOf('/embed/') === 0 && !openUrl.searchParams.has('style')) {
+              var mapStyle = block.style || mapUrl.searchParams.get('style');
+              if (['light', 'dark', 'streets'].indexOf(mapStyle) >= 0) { openUrl.searchParams.append('style', mapStyle); mapOpen = openUrl.href; }
+            }
+          } catch (e) {}
           return '<figure class="article__map article__map--' + mapSize + '"><div class="article__map-frame"><iframe src="' + esc(block.embed_url) +
             '" title="' + esc(block.caption || 'Interactive map') + '" loading="lazy" referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen" ' +
             'sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>' +
-            '<button type="button" class="map-share" data-map-share="' + esc(block.open_url || block.embed_url) + '" data-title="' + esc(block.caption || '') +
+            '<button type="button" class="map-share" data-map-share="' + esc(mapShare) + '" data-title="' + esc(block.caption || '') +
             '" aria-label="Share map" title="Share map"><svg class="map-share__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-share"></use></svg></button></div>' +
-            '<figcaption>' + (block.caption ? esc(block.caption) + ' &middot; ' : '') + '<a href="' + esc(block.open_url || block.embed_url) +
+            '<figcaption>' + (block.caption ? esc(block.caption) + ' &middot; ' : '') + '<a href="' + esc(mapOpen) +
             '" target="_blank" rel="noopener noreferrer">Open the full map &nearr;</a></figcaption></figure>';
         }
         if (block.type === 'place' || block.type === 'places') {

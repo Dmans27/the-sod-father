@@ -19,7 +19,7 @@ from flask import Flask, render_template, abort
 import os
 
 from content import (get_articles, get_article, get_featured, get_related, CATEGORIES,
-                     is_map_embed_url, map_embed_hosts, place_embed_url)
+                     is_map_embed_url, map_embed_hosts, map_links, place_embed_url)
 from admin import admin_bp
 from author_auth import author_bp
 from newsletter import newsletter_bp
@@ -41,7 +41,7 @@ register_seo(app)  # canonical addresses + optional analytics for every page
 # that a map's address is on the allowed list before putting it in an iframe.
 app.jinja_env.filters["inline_links"] = inline_links  # [words](https://...) in story text (see textlinks.py)
 app.jinja_env.globals.update(map_embed_ok=is_map_embed_url, map_embed_hosts=map_embed_hosts,
-                             place_embed_url=place_embed_url)
+                             place_embed_url=place_embed_url, map_links=map_links)
 readers.register(app)  # reader accounts: sign up, save, comment (see readers.py)
 safety.register(app)  # privacy/terms/contact pages, report + block, delete account, admin review screens (see safety.py)
 
