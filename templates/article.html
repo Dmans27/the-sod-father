@@ -46,7 +46,7 @@
   {% set story_src = behind.block.embed_url ~ ('&' if '?' in behind.block.embed_url else '?') ~ 'mode=story' %}
   <div class="mapstory" id="mapstory" aria-hidden="true"{% if article.map_route %} data-route="1"{% endif %}>
     <iframe class="mapstory__frame" data-src="{{ story_src }}" title="{{ behind.block.caption or 'Map of the places in this story' }}"
-            referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen" tabindex="-1"
+            referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen; geolocation" tabindex="-1"
             sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
     <div class="mapstory__bar">
       <button type="button" class="mapstory__back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Back to story</button>

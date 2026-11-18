@@ -129,6 +129,7 @@
     if (e.data.type === 'mansfield:focused' && asking) { clearInterval(asking); asking = null; }
     if (e.data.type === 'mansfield:route-ready') onRouteReady(e.data);
     if (e.data.type === 'mansfield:read-about') readAbout(e.data);
+    if (e.data.type === 'mansfield:route-walk') onRouteWalk(e.data);
   });
   function focusPlace(slug, name) {
     if (asking) clearInterval(asking);
@@ -184,10 +185,23 @@
     if (text !== undefined && text !== null) n.textContent = text;
     return n;
   }
-  function legText(m) {
-    if (m <= 2500) return Math.max(1, Math.round(m * 1.3 / 80)) + ' min walk';
+  // Real walking times once the map has the real path (mansfield:route-walk), else an estimate.
+  function legText(m, secs) {
+    if (secs > 0 && secs <= 3 * 3600) return Math.max(1, Math.round(secs / 60)) + ' min walk';
+    if (!(secs > 0) && m <= 2500) return Math.max(1, Math.round(m * 1.3 / 80)) + ' min walk';
     var km = m / 1000;
     return (km >= 10 ? Math.round(km) : km.toFixed(1)) + ' km';
+  }
+  var durations = null;   // seconds per leg, from the real walking path
+  function walkMinutes() {
+    return durations ? durations.reduce(function (a, s) { return a + s / 60; }, 0)
+                     : legs.reduce(function (a, m) { return a + m * 1.3 / 80; }, 0);
+  }
+  function routeSub() {
+    var mins = walkMinutes();
+    var sub = stops.length + ' stops · ' + kmText(total);
+    if (total <= 10000) sub += ' · about ' + (mins >= 60 ? Math.floor(mins / 60) + ' h ' + (Math.round(mins % 60) ? Math.round(mins % 60) + ' min' : '') : Math.max(1, Math.round(mins)) + ' min') + ' of walking';
+    return sub.trim();
   }
   function kmText(m) { var km = m / 1000; return (km >= 10 ? Math.round(km) : km.toFixed(1)) + ' km'; }
 
@@ -363,6 +377,23 @@
     if (idx !== stepNow) setStep(idx);
   }
 
+  // The map has the real walking path: use its distances and times everywhere.
+  function onRouteWalk(d) {
+    if (!routeOn || !Array.isArray(d.legs) || d.legs.length !== stops.length - 1) return;
+    legs = d.legs.map(function (m) { return Math.max(0, Number(m) || 0); });
+    durations = Array.isArray(d.durations) && d.durations.length === legs.length ? d.durations.map(function (s) { return Math.max(0, Number(s) || 0); }) : null;
+    total = legs.reduce(function (a, b) { return a + b; }, 0);
+    if (window.MansfieldRoute) { window.MansfieldRoute.legs = legs.slice(); window.MansfieldRoute.durations = durations ? durations.slice() : null; }
+    if (endCard) {
+      var sub = endCard.querySelector('.route-card__sub');
+      if (sub) sub.textContent = routeSub();
+      Array.prototype.forEach.call(endCard.querySelectorAll('.route-card__leg'), function (n, i) {
+        if (i) n.textContent = legText(legs[i - 1] || 0, durations ? durations[i - 1] : 0);
+      });
+    }
+    if (stepNow >= -1) setStep(stepNow);   // the header's route summary
+  }
+
   function setStep(idx) {
     stepNow = idx;
     postFrame({ type: 'mansfield:route-step', index: idx });
@@ -479,10 +510,7 @@
     card.appendChild(pic);
     var body = el('div', 'route-card__body');
     body.appendChild(el('h2', 'route-card__h', walk ? 'Walk this route' : 'Follow this route'));
-    var mins = legs.reduce(function (a, m) { return a + m * 1.3 / 80; }, 0);
-    var sub = stops.length + ' stops · ' + kmText(total);
-    if (walk) sub += ' · about ' + (mins >= 60 ? Math.floor(mins / 60) + ' h ' + (Math.round(mins % 60) ? Math.round(mins % 60) + ' min' : '') : Math.max(1, Math.round(mins)) + ' min') + ' of walking';
-    body.appendChild(el('p', 'route-card__sub', sub.trim()));
+    body.appendChild(el('p', 'route-card__sub', routeSub()));
     var ol = el('ol', 'route-card__list');
     stops.forEach(function (s, i) {
       var li = el('li');

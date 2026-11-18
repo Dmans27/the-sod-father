@@ -153,8 +153,9 @@
     return place.rating !== null && place.rating !== undefined && r > 0 ? r : null;
   }
 
-  function legText(m) {
+  function legText(m, secs) {
     if (!(m > 0)) return '';
+    if (secs > 0 && secs <= 3 * 3600) return Math.max(1, Math.round(secs / 60)) + ' min walk';
     if (m <= 2500) return Math.max(1, Math.round(m * 1.3 / 80)) + ' min walk';
     var km = m / 1000;
     return (km >= 10 ? Math.round(km) : km.toFixed(1)) + ' km';
@@ -306,7 +307,7 @@
         route.stops.forEach(function (s, i) {
           var p = places.filter(function (x) { return s.listing && x.listing === s.listing; })[0] ||
                   places.filter(function (x) { return (x.name || '').toLowerCase() === String(s.name || '').toLowerCase(); })[0];
-          if (p) stops.push({ place: p, stop: { n: i + 1, of: route.stops.length, leg: i ? legText((route.legs || [])[i - 1]) : 'Start', color: s.color || '#2f9e7e' } });
+          if (p) stops.push({ place: p, stop: { n: i + 1, of: route.stops.length, leg: i ? legText((route.legs || [])[i - 1], (route.durations || [])[i - 1]) : 'Start', color: s.color || '#2f9e7e' } });
         });
         if (stops.length) {
           titleEl.textContent = 'Walking route';

@@ -65,5 +65,7 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>\\Mansfield uses your location only while you follow a walking route, to show where you are and the way to the next stop.</string>
 </dict>
 </plist>
