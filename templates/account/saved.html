@@ -59,7 +59,7 @@
 <div class="route-list" id="routes-list">
   {% for route in routes %}
     <article class="saved-route">
-      <h3 class="saved-route__title">{% if route.exists %}<a href="/article/{{ route.slug }}">{{ route.title }}</a>{% else %}{{ route.title }}{% endif %}</h3>
+      <h3 class="saved-route__title">{% if route.exists %}<a href="{{ route.link }}">{{ route.title }}</a>{% else %}{{ route.title }}{% endif %}</h3>
       <p class="saved-route__sub">{{ route.stops|length }} stops &middot; {{ route.distance }}{% if route.walking %} &middot; walking{% endif %}</p>
       <ol class="saved-route__stops">
         {% for stop in route.stops %}
@@ -67,7 +67,7 @@
         {% endfor %}
       </ol>
       <div class="place-card__actions">
-        {% if route.exists %}<a class="account-btn account-btn--small" href="/article/{{ route.slug }}?map=route">Open the map</a>{% endif %}
+        {% if route.exists %}<a class="account-btn account-btn--small" href="{{ route.open_url }}">Open the map</a>{% endif %}
         {% for link in route.maps %}
           <a class="account-btn account-btn--small{% if route.exists %} account-btn--ghost{% endif %}" href="{{ link.href }}" target="_blank" rel="noopener noreferrer">{{ link.label }}</a>
         {% endfor %}
@@ -77,7 +77,7 @@
   {% endfor %}
 </div>
 
-<p class="empty-state" id="routes-empty"{% if routes %} hidden{% endif %}>No routes yet. Open a walking route story, then tap Save route on its map or at the end of the story.</p>
+<p class="empty-state" id="routes-empty"{% if routes %} hidden{% endif %}>No routes yet. Open a walking route story and tap Save route, or <a href="/walk">plan a walk with AI</a>.</p>
 
 </section>
 

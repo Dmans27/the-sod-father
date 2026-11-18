@@ -21,6 +21,7 @@ Storage is db.py (Postgres on Render, SQLite locally).
 """
 import json
 import math
+from urllib.parse import urlencode
 import os
 import re
 import secrets
@@ -572,6 +573,7 @@ def api_places_delete(place_id):
 # here, and the story must exist and be a route story.
 
 _ROUTE_SLUG = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,200}$")
+_WALK_KEY = re.compile(r"^walk:[0-9a-f]{16}$")   # a walk planned with AI on /walk (walk_planner.py)
 _HEX = re.compile(r"^#[0-9A-Fa-f]{3,8}$")
 
 
@@ -641,11 +643,20 @@ def saved_routes(reader_id):
             continue
         links, total = route_maps_links(stops)
         km = total / 1000
-        article = get_article(r["article_slug"])
+        planned = bool(_WALK_KEY.match(r["article_slug"] or ""))
+        article = None if planned else get_article(r["article_slug"])
+        if planned:
+            slugs = ",".join(s["listing"] for s in stops if s["listing"])
+            open_url = "/walk?" + urlencode({"s": slugs, "t": r["title"]})
+        else:
+            open_url = f"/article/{r['article_slug']}?map=route"
         out.append({
             "id": r["id"], "slug": r["article_slug"],
             "title": (article or {}).get("title") or r["title"],
-            "exists": bool(article),
+            "exists": bool(article) or planned,
+            "planned": planned,
+            "open_url": open_url,
+            "link": open_url if planned else f"/article/{r['article_slug']}",
             "stops": stops,
             "distance": (f"{round(km)} km" if km >= 10 else f"{km:.1f} km"),
             "walking": total <= 10000,
@@ -680,7 +691,12 @@ def api_routes_save():
     reader = current_reader()
     payload = request.get_json(silent=True) or {}
     slug = str(payload.get("article") or "").strip()[:200]
-    article = _route_story(slug)
+    if _WALK_KEY.match(slug):   # an AI-planned walk: no story behind it, its stops must be directory listings
+        article = {"title": _text(payload.get("title"), 120) or "Walk"}
+        if not all(isinstance(s, dict) and _ROUTE_SLUG.match(str(s.get("listing") or "")) for s in (payload.get("stops") or [])):
+            return jsonify(error="bad_route"), 400
+    else:
+        article = _route_story(slug)
     if not article:
         return jsonify(error="not_found"), 404
     exists = db.query_one(

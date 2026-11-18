@@ -18,7 +18,7 @@
     // reader never sees a white flash on load (the menu toggle sets this).
     try { if (localStorage.getItem('sf-theme') === 'dark') document.documentElement.classList.add('is-dark'); } catch (e) {}
   </script>
-  <link rel="stylesheet" href="/static/css/style.css?v=3">
+  <link rel="stylesheet" href="/static/css/style.css?v=4">
   <link rel="alternate" type="application/rss+xml" title="\\Mansfield" href="/feed.xml">
   {# Link previews + search results. Pages override the `seo` block (stories do);
      everything else gets these site-wide defaults. #}
@@ -129,6 +129,7 @@
               <a role="menuitem" class="user-menu__link user-menu__link--primary" href="/account/login{{ nxt }}">Sign in</a>
               <a role="menuitem" class="user-menu__link" href="/account/signup{{ nxt }}">Create account</a>
             {% endif %}
+            <a role="menuitem" class="user-menu__link" href="/walk">Plan a walk</a>
             <button type="button" role="menuitemcheckbox" class="user-menu__theme" id="site-theme-toggle" data-site-theme aria-checked="false">
               <span class="user-menu__theme-label">
                 <svg class="user-menu__theme-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"/></svg>
@@ -242,7 +243,7 @@
   <script src="/static/js/actions.js?v=8"></script>
   <script src="/static/js/native.js?v=1" defer></script>
   <script src="/static/js/map-list.js?v=4" defer></script>
-  <script src="/static/js/map-story.js?v=10" defer></script>
+  <script src="/static/js/map-story.js?v=11" defer></script>
   <script src="/static/js/places.js?v=1" defer></script>
   <script src="/static/js/newsletter.js?v=1" defer></script>
   <script src="/static/js/ask.js?v=3" defer></script>

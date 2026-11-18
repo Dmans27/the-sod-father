@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Plan a walk — \\Mansfield{% endblock %}
+{% block body_class %}walk-page{% endblock %}
+
+{% block content %}
+{# "Plan a walk": ask (typed or spoken) and get a walking route from the directory.
+   static/js/walk-planner.js does the work; walk_planner.py plans the walk. #}
+<div class="walkplan" id="walkplan" data-directory="{{ directory }}">
+  <iframe class="walkplan__map" id="walkplan-map" title="Map of your walk" hidden
+          referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen; geolocation"
+          sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
+
+  <a class="walkplan__home" href="/" aria-label="Back to \\Mansfield"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></a>
+
+  <section class="walkplan__intro" id="walkplan-intro">
+    <span class="walkplan__badge"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4" r="2"/><path d="M10 22l2-7 3 3v6M8 12l3-4 4 1 2 4M11 8l-2 6"/></svg>Plan a walk</span>
+    <h1 class="walkplan__h">Where do you want to walk?</h1>
+    <p class="walkplan__sub">Ask for anything, typed or spoken, and I'll build a walking route from the places in the \\Mansfield directory.</p>
+    <div class="walkplan__ideas" role="list">
+      <button type="button" class="walkplan__idea" role="listitem">3 highly rated coffee shops near me</button>
+      <button type="button" class="walkplan__idea" role="listitem">A food crawl near me, 4 stops</button>
+      <button type="button" class="walkplan__idea" role="listitem">Bars for tonight in Vienna</button>
+      <button type="button" class="walkplan__idea" role="listitem">Museums and a cafe in Vienna's old town</button>
+    </div>
+    <p class="walkplan__fine">"Near me" uses your location for this one search. It's never stored.</p>
+  </section>
+
+  <div class="walkplan__msg" id="walkplan-msg" role="status" aria-live="polite" hidden>
+    <p class="walkplan__msg-text"></p>
+    <div class="walkplan__msg-row">
+      <button type="button" class="walkplan__msg-stops" hidden>See the stops</button>
+      <button type="button" class="walkplan__msg-close" aria-label="Close">&times;</button>
+    </div>
+  </div>
+
+  <form class="walkplan__ask" id="walkplan-ask" autocomplete="off">
+    <button type="button" class="walkplan__list" id="walkplan-list" aria-label="The stops on this walk" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg>
+    </button>
+    <label class="visually-hidden" for="walkplan-input">Describe your walk</label>
+    <input type="text" id="walkplan-input" class="walkplan__input" maxlength="300" enterkeyhint="go"
+           placeholder="e.g. 3 highly rated coffee shops near me">
+    <button type="button" class="walkplan__mic" id="walkplan-mic" aria-label="Speak your walk" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>
+    </button>
+    <button type="submit" class="walkplan__go" id="walkplan-go" aria-label="Plan the walk">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+    </button>
+  </form>
+
+  <div class="wsheet" id="wsheet" aria-hidden="true">
+    <div class="wsheet__scrim" data-wsheet-close></div>
+    <div class="wsheet__panel" role="dialog" aria-modal="true" aria-labelledby="wsheet-title">
+      <div class="wsheet__head">
+        <h2 class="wsheet__title" id="wsheet-title">Your walk</h2>
+        <button type="button" class="wsheet__close" data-wsheet-close aria-label="Close">&times;</button>
+      </div>
+      <p class="wsheet__sub" id="wsheet-sub"></p>
+      <ol class="wsheet__list" id="wsheet-list"></ol>
+      <div class="wsheet__actions">
+        <button type="button" class="wsheet__save" id="wsheet-save" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h11v17l-5.5-4-5.5 4z"/></svg><span>Save route</span></button>
+        <a class="wsheet__maps" id="wsheet-maps" target="_blank" rel="noopener">Google Maps</a>
+        <button type="button" class="wsheet__share" id="wsheet-share">Share</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="/static/js/walk-planner.js?v=1" defer></script>
+{% endblock %}

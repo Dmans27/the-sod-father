@@ -24,6 +24,7 @@ from admin import admin_bp
 from author_auth import author_bp
 from newsletter import newsletter_bp
 from ask import ask_bp
+from walk_planner import walk_bp
 import safety
 from seo import seo_bp, register as register_seo
 import readers
@@ -35,6 +36,7 @@ app.register_blueprint(admin_bp)
 app.register_blueprint(author_bp)
 app.register_blueprint(newsletter_bp)  # newsletter signup (see newsletter.py)
 app.register_blueprint(ask_bp)  # "Ask" chat answering from the articles (see ask.py)
+app.register_blueprint(walk_bp)  # "Plan a walk": AI walking routes from the directory (see walk_planner.py)
 app.register_blueprint(seo_bp)  # robots.txt, sitemap.xml, feed.xml, share images (see seo.py)
 register_seo(app)  # canonical addresses + optional analytics for every page
 # Interactive map blocks (see content.py): templates use these two to check

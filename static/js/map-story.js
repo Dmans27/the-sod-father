@@ -551,6 +551,9 @@
       row.appendChild(sb);
     }
     body.appendChild(row);
+    var plan = el('a', 'route-card__plan', 'Plan your own walk with AI \u2192');
+    plan.href = '/walk';
+    body.appendChild(plan);
     card.appendChild(body);
     content.parentNode.insertBefore(card, content.nextSibling);
     endCard = card;
