@@ -763,9 +763,10 @@ html.in-sheet .nl-popup { display: none !important; }
 html.in-sheet body { padding-bottom: 0; }
 html.in-sheet .article__header { padding-top: 22px; }
 @media (max-width: 640px) {
-  /* Room for the card's close button at the top right. */
-  html.in-sheet .route-head__nums { max-width: calc(100% - 96px); }
-  html.in-sheet .route-head { padding-top: 12px; }
+  /* The card already sits below the phone's status bar, so no notch room at the top
+     (the iPhone still reports it inside the card). Room for the card's close button at the right. */
+  html.in-sheet body.has-route .route-head { padding-top: 8px; }
+  html.in-sheet body.has-route .route-head__nums { max-width: calc(100% - 96px); }
 }
 
 /* On screens 700px and wider the story opens as the right-hand page of a

@@ -54,6 +54,7 @@
   // Load the map once the story itself has loaded (phones only).
   // The map runs under the phone's status bar; tell it how tall that is (an iframe can't see it).
   function safeTop() {
+    if (document.documentElement.classList.contains('in-sheet')) return 0;   // inside the pop-up card: already below the status bar
     var probe = document.createElement('div');
     probe.style.cssText = 'position:fixed;top:0;left:0;width:1px;visibility:hidden;pointer-events:none;height:env(safe-area-inset-top, 0px)';
     document.body.appendChild(probe);
