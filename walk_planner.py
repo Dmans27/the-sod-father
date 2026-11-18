@@ -425,7 +425,7 @@ def plan_walk(query, lat, lng, previous):
             "address": s.get("address") or "", "why": why[i] if i < len(why) else "",
         } for i, s in enumerate(stops)],
         "key": "walk:" + hashlib.sha1(slugs.encode()).hexdigest()[:16],
-        "map": directory_url() + "/embed/route-map?" + urlencode({"s": slugs, "t": title, "style": "streets", "mode": "story"}),
+        "map": directory_url() + "/embed/route-map?" + urlencode({"s": slugs, "t": title, "style": "mansfield", "mode": "story"}),
         "open": "/walk?" + urlencode({"s": slugs, "t": title}),
     }
 

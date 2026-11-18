@@ -174,7 +174,7 @@
     var title = (q.get('t') || 'Your walk').slice(0, 120);
     plan = { query: title, title: title, intro: '', note: '', key: '', open: location.pathname + location.search,
              stops: s.map(function (slug) { return { slug: slug, name: '', category: '', group: 'other', lat: null, lng: null, why: '' }; }),
-             map: directory + '/embed/route-map?' + new URLSearchParams({ s: s.join(','), t: title, style: 'streets', mode: 'story' }).toString() };
+             map: directory + '/embed/route-map?' + new URLSearchParams({ s: s.join(','), t: title, style: 'mansfield', mode: 'story' }).toString() };
     root.classList.add('has-walk');
     intro.hidden = true;
     listBtn.hidden = false;

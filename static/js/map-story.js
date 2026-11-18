@@ -65,7 +65,13 @@
   function load() {
     if (frame.getAttribute('src')) return;
     var url = src;
-    try { var x = new URL(src); x.searchParams.set('safe', String(safeTop())); url = x.toString(); } catch (e) {}
+    try {
+      var x = new URL(src);
+      x.searchParams.set('safe', String(safeTop()));
+      // Walking route stories use Danny's own walking style from Mapbox Studio (see STYLES in the directory app).
+      if (layer.getAttribute('data-route') === '1') x.searchParams.set('style', 'mansfield');
+      url = x.toString();
+    } catch (e) {}
     frame.setAttribute('src', url);
   }
   function loadSoon() {
