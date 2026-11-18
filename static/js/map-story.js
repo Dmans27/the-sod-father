@@ -180,11 +180,43 @@
   }
   function kmText(m) { var km = m / 1000; return (km >= 10 ? Math.round(km) : km.toFixed(1)) + ' km'; }
 
-  // The places the story links to, first mention of each, in reading order.
+  // The places in the story, first mention of each, in reading order: links in
+  // the text to a place's page (…/listing/<name>) and place cards (one place,
+  // or a swipe row of several) from the same directory.
+  var SLUG = /^[A-Za-z0-9][A-Za-z0-9_-]{0,200}$/;
+  function cardSlugs(frameEl) {
+    var url;
+    try { url = new URL(frameEl.getAttribute('src') || '', location.href); } catch (e) { return []; }
+    if (url.origin !== origin) return [];
+    var m = /^\/embed\/card\/([^/?#]+)\/?$/.exec(url.pathname);
+    if (m) return SLUG.test(m[1]) ? [m[1]] : [];
+    if (/^\/embed\/stack\/?$/.test(url.pathname)) {
+      try {
+        var d = (url.searchParams.get('d') || '').replace(/-/g, '+').replace(/_/g, '/');
+        while (d.length % 4) d += '=';
+        var bytes = atob(d), arr = new Uint8Array(bytes.length);
+        for (var i = 0; i < bytes.length; i++) arr[i] = bytes.charCodeAt(i);
+        var items = JSON.parse(new TextDecoder('utf-8').decode(arr));
+        return (Array.isArray(items) ? items : []).map(function (x) { return x && x.s; }).filter(function (x) { return typeof x === 'string' && SLUG.test(x); });
+      } catch (e) { return []; }
+    }
+    return [];
+  }
   function placeLinks() {
     var out = [], seen = {};
-    Array.prototype.forEach.call(document.querySelectorAll('.article__content a[href]'), function (a) {
-      var url;
+    var found = document.querySelectorAll('.article__content a[href], .article__content .article__place iframe');
+    Array.prototype.forEach.call(found, function (node) {
+      if (node.tagName === 'IFRAME') {
+        var fig = node.closest('.article__place');
+        var cap = fig && fig.querySelector('figcaption');
+        cardSlugs(node).forEach(function (slug) {
+          if (seen[slug]) return;
+          seen[slug] = true;
+          out.push({ listing: slug, name: cap && cardSlugs(node).length === 1 ? cap.textContent.trim() : '', link: fig, card: true });
+        });
+        return;
+      }
+      var a = node, url;
       try { url = new URL(a.href); } catch (e) { return; }
       if (url.origin !== origin) return;
       var m = /^\/listing\/([A-Za-z0-9][A-Za-z0-9_-]{0,200})\/?$/.exec(url.pathname);
@@ -220,12 +252,12 @@
     var list = [];
     got.forEach(function (s) {
       var w = wanted.filter(function (x) { return s.listing && x.listing === s.listing; })[0] ||
-              wanted.filter(function (x) { return x.name.toLowerCase() === String(s.name || '').toLowerCase(); })[0];
-      if (!w || list.some(function (x) { return x.link === w.link; })) return;
+              wanted.filter(function (x) { return x.name && x.name.toLowerCase() === String(s.name || '').toLowerCase(); })[0];
+      if (!w || list.some(function (x) { return x.listing === w.listing; })) return;
       list.push({ listing: w.listing, name: String(s.name || w.name), category: String(s.category || ''),
                   color: /^#[0-9a-f]{3,8}$/i.test(s.color || '') ? s.color : '#2f9e7e',
-                  lat: Number(s.lat), lng: Number(s.lng), link: w.link,
-                  section: w.link.closest('p, li, h2, h3, blockquote, figure') || w.link });
+                  lat: Number(s.lat), lng: Number(s.lng), link: w.link, card: !!w.card,
+                  section: w.card ? w.link : (w.link.closest('p, li, h2, h3, blockquote, figure') || w.link) });
     });
     if (list.length < 2) return;
     stops = list;
@@ -236,11 +268,27 @@
     stripPx = Math.round(safeTop() + 176);
     document.documentElement.style.setProperty('--route-strip', stripPx + 'px');
     stops.forEach(function (s, i) {
+      s.section.style.setProperty('--route-c', s.color);
+      if (s.card) return;
       var b = el('span', 'route-num', String(i + 1));
       b.style.setProperty('--c', s.color);
       b.setAttribute('aria-hidden', 'true');
       s.link.insertBefore(b, s.link.firstChild);
-      s.section.style.setProperty('--route-c', s.color);
+    });
+    // Place cards: a number in the corner (a range for a swipe row of several); tap it for the map.
+    var cards = [];
+    stops.forEach(function (s, i) { if (s.card && cards.indexOf(s.link) < 0) cards.push(s.link); });
+    cards.forEach(function (fig) {
+      var nums = [];
+      stops.forEach(function (s, i) { if (s.link === fig) nums.push(i); });
+      var first = stops[nums[0]];
+      var b = el('button', 'route-num route-num--card', nums.length > 1 ? (nums[0] + 1) + '–' + (nums[nums.length - 1] + 1) : String(nums[0] + 1));
+      b.type = 'button';
+      b.style.setProperty('--c', first.color);
+      b.setAttribute('aria-label', 'Stop ' + (nums[0] + 1) + ': ' + first.name + ', show on the map');
+      b.addEventListener('click', function () { openAt(nums[0]); });
+      fig.classList.add('has-route-num');
+      fig.insertBefore(b, fig.firstChild);
     });
     var prog = stripEl && stripEl.querySelector('.mapstory__prog');
     if (prog) stops.forEach(function () { prog.appendChild(el('i')); });

@@ -2696,6 +2696,9 @@ html.mlist-open, html.mlist-open body { overflow: hidden; }
   padding: 0 5px; margin-right: 5px; border-radius: 999px; background: var(--c, #2f9e7e); color: #fff; font: 700 12px/1 var(--font-sans);
   vertical-align: 2px; text-decoration: none; }
 .route-num[hidden] { display: none; }
+.article__place.has-route-num { position: relative; }
+.route-num--card { position: absolute; z-index: 2; top: 10px; left: 10px; min-width: 30px; height: 30px; margin: 0; padding: 0 9px; border: 0;
+  font-size: 14.5px; vertical-align: 0; box-shadow: 0 0 0 2.5px #fff, 0 3px 10px rgba(0, 0, 0, 0.3); cursor: pointer; }
 .mapstory__strip { display: none; }
 .article__content .route-now { position: relative; }
 .article__content .route-now::before { content: ""; position: absolute; left: -12px; top: 0.3em; bottom: 0.3em; width: 3px; border-radius: 2px;
