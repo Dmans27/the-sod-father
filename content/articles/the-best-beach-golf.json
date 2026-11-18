@@ -11,8 +11,8 @@
   "published_at": "2026-10-12",
   "cover_image": null,
   "featured": true,
-  "map_behind": false,
-  "map_route": false,
+  "map_behind": true,
+  "map_route": true,
   "status": "published",
   "blocks": [
     {
