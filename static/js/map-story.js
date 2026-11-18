@@ -417,13 +417,13 @@
 
   // A small drawing of the route (no map tiles needed) for the end card.
   function preview() {
-    var W = 340, H = 150, P = 28;
+    var W = 340, H = 150, P = 26, PB = 44;   // more room at the bottom for the "See it on the map" label
     var lat0 = stops.reduce(function (a, s) { return a + s.lat; }, 0) / stops.length;
     var k = Math.cos(lat0 * Math.PI / 180);
     var xs = stops.map(function (s) { return s.lng * k; }), ys = stops.map(function (s) { return -s.lat; });
     var minX = Math.min.apply(null, xs), maxX = Math.max.apply(null, xs), minY = Math.min.apply(null, ys), maxY = Math.max.apply(null, ys);
-    var sc = Math.min((W - 2 * P) / ((maxX - minX) || 1e-9), (H - 2 * P) / ((maxY - minY) || 1e-9));
-    var ox = (W - (maxX - minX) * sc) / 2, oy = (H - (maxY - minY) * sc) / 2;
+    var sc = Math.min((W - 2 * P) / ((maxX - minX) || 1e-9), (H - P - PB) / ((maxY - minY) || 1e-9));
+    var ox = (W - (maxX - minX) * sc) / 2, oy = P + ((H - P - PB) - (maxY - minY) * sc) / 2;
     var pts = stops.map(function (s, i) { return [ox + (xs[i] - minX) * sc, oy + (ys[i] - minY) * sc]; });
     var NS = 'http://www.w3.org/2000/svg';
     var svg = document.createElementNS(NS, 'svg');

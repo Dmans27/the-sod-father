@@ -761,6 +761,8 @@ body.has-sticky-author-bar .site-header { visibility: hidden; }
 html.in-sheet .site-header, html.in-sheet .popbar, html.in-sheet .site-footer, html.in-sheet .bottom-nav,
 html.in-sheet .nl-popup { display: none !important; }
 html.in-sheet body { padding-bottom: 0; }
+/* No footer inside the card, so leave room for the "Written by" bar fixed along the bottom. */
+html.in-sheet .article { padding-bottom: calc(150px + env(safe-area-inset-bottom, 0px)); }
 html.in-sheet .article__header { padding-top: 22px; }
 @media (max-width: 640px) {
   /* The card already sits below the phone's status bar, so no notch room at the top
