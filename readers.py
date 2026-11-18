@@ -10,6 +10,8 @@ are for people who *read*.
   (reporting, blocking and deleting an account are in safety.py)
   GET/POST /api/places, DELETE /api/places/<id>   (places to try, saved from
       the map pins inside stories -- see static/js/places.js)
+  GET/POST /api/routes, DELETE /api/routes/<id>   (walking routes from "route"
+      travel stories -- see static/js/map-story.js)
 
 Signed-out visitors can still read everything and use Share. Save and
 Comment send them to sign in first, then bring them back to the story --
@@ -17,6 +19,8 @@ and a pending "save" is applied automatically once they're signed in.
 
 Storage is db.py (Postgres on Render, SQLite locally).
 """
+import json
+import math
 import os
 import re
 import secrets
@@ -37,6 +41,8 @@ from content import CATEGORIES, estimate_read_minutes, get_article, map_embed_ho
 readers_bp = Blueprint("readers", __name__)
 
 MAX_SAVED_PLACES = 500   # per reader -- a sanity cap, not a product limit
+MAX_SAVED_ROUTES = 200
+MAX_ROUTE_STOPS = 40
 MIN_PASSWORD_LENGTH = 8
 MAX_COMMENT_LENGTH = 1000
 COMMENT_COOLDOWN_SECONDS = 10
@@ -260,8 +266,14 @@ def account():
         places = saved_places(reader["id"])
     except Exception as exc:
         print("readers: could not load saved places:", exc)
+    routes = []
+    try:
+        routes = saved_routes(reader["id"])
+    except Exception as exc:
+        print("readers: could not load saved routes:", exc)
     return render_template(
-        "account/saved.html", saved=saved, places=places, categories=CATEGORIES, active_category=None)
+        "account/saved.html", saved=saved, places=places, routes=routes,
+        categories=CATEGORIES, active_category=None)
 
 
 @readers_bp.get("/account/profile")
@@ -271,7 +283,7 @@ def profile():
     reader = current_reader()
     if not reader:
         return redirect(url_for("readers.login", next="/account/profile"))
-    saved_count = places_count = 0
+    saved_count = places_count = routes_count = 0
     try:
         row = db.query_one(
             "SELECT COUNT(*) AS n FROM saved_articles WHERE reader_id = :r", r=reader["id"])
@@ -279,10 +291,13 @@ def profile():
         row = db.query_one(
             "SELECT COUNT(*) AS n FROM saved_places WHERE reader_id = :r", r=reader["id"])
         places_count = int((row or {}).get("n", 0))
+        row = db.query_one(
+            "SELECT COUNT(*) AS n FROM saved_routes WHERE reader_id = :r", r=reader["id"])
+        routes_count = int((row or {}).get("n", 0))
     except Exception as exc:
         print("readers: could not count saved stories/places:", exc)
     return render_template(
-        "account/profile.html", saved_count=saved_count, places_count=places_count,
+        "account/profile.html", saved_count=saved_count, places_count=places_count, routes_count=routes_count,
         categories=CATEGORIES, active_category=None)
 
 
@@ -548,6 +563,161 @@ def api_places_save():
 def api_places_delete(place_id):
     reader = current_reader()
     db.execute("DELETE FROM saved_places WHERE id = :id AND reader_id = :r", id=place_id, r=reader["id"])
+    return jsonify(ok=True)
+
+
+# ── Saved walking routes ─────────────────────────────────────────────────
+# A "route" travel story's places, in order, saved to the reader's profile.
+# The page sends the stops (the map worked them out); every field is checked
+# here, and the story must exist and be a route story.
+
+_ROUTE_SLUG = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,200}$")
+_HEX = re.compile(r"^#[0-9A-Fa-f]{3,8}$")
+
+
+def _metres(a, b):
+    r, to_r = 6371000, math.pi / 180
+    d_lat, d_lng = (b["lat"] - a["lat"]) * to_r, (b["lng"] - a["lng"]) * to_r
+    h = math.sin(d_lat / 2) ** 2 + math.cos(a["lat"] * to_r) * math.cos(b["lat"] * to_r) * math.sin(d_lng / 2) ** 2
+    return 2 * r * math.asin(min(1, math.sqrt(h)))
+
+
+def clean_route_stops(raw):
+    """The stops a story page sent, checked and trimmed; None if unusable."""
+    if not isinstance(raw, list) or not (2 <= len(raw) <= MAX_ROUTE_STOPS):
+        return None
+    stops = []
+    for item in raw:
+        if not isinstance(item, dict):
+            return None
+        name = _text(item.get("name"), 120)
+        try:
+            lat, lng = float(item.get("lat")), float(item.get("lng"))
+        except (TypeError, ValueError):
+            return None
+        if not name or not (-90 <= lat <= 90 and -180 <= lng <= 180) or math.isnan(lat) or math.isnan(lng):
+            return None
+        listing = str(item.get("listing") or "").strip()
+        color = str(item.get("color") or "").strip()
+        stops.append({
+            "name": name, "lat": lat, "lng": lng,
+            "listing": listing if _ROUTE_SLUG.match(listing) else "",
+            "color": color if _HEX.match(color) else "#2f9e7e",
+            "category": _text(item.get("category"), 40).replace("_", " "),
+        })
+    return stops
+
+
+def route_maps_links(stops):
+    """Google Maps directions through the stops. Phones take 3 stops between
+    the start and the end, so a longer route is split into parts of 5."""
+    total = sum(_metres(stops[i - 1], stops[i]) for i in range(1, len(stops)))
+    walk = total <= 10000
+    links = []
+    for start in range(0, len(stops) - 1, 4):
+        part = stops[start:start + 5]
+        ll = lambda s: f"{s['lat']},{s['lng']}"
+        url = (f"https://www.google.com/maps/dir/?api=1&origin={ll(part[0])}&destination={ll(part[-1])}")
+        if len(part) > 2:
+            url += "&waypoints=" + "%7C".join(ll(s) for s in part[1:-1])
+        if walk:
+            url += "&travelmode=walking"
+        label = (f"Stops {start + 1}\u2013{start + len(part)}" if len(stops) > 5 else "Google Maps")
+        links.append({"href": url, "label": label})
+    return links, total
+
+
+def saved_routes(reader_id):
+    rows = db.query(
+        "SELECT id, article_slug, title, stops_json, created_at FROM saved_routes "
+        "WHERE reader_id = :r ORDER BY created_at DESC, id", r=reader_id)
+    out = []
+    for r in rows:
+        try:
+            stops = clean_route_stops(json.loads(r["stops_json"])) or []
+        except (TypeError, ValueError):
+            stops = []
+        if len(stops) < 2:
+            continue
+        links, total = route_maps_links(stops)
+        km = total / 1000
+        article = get_article(r["article_slug"])
+        out.append({
+            "id": r["id"], "slug": r["article_slug"],
+            "title": (article or {}).get("title") or r["title"],
+            "exists": bool(article),
+            "stops": stops,
+            "distance": (f"{round(km)} km" if km >= 10 else f"{km:.1f} km"),
+            "walking": total <= 10000,
+            "maps": links,
+        })
+    return out
+
+
+def _route_story(slug):
+    article = get_article(slug) if slug and _ROUTE_SLUG.match(slug) else None
+    return article if article and article.get("map_route") else None
+
+
+@readers_bp.get("/api/routes")
+def api_routes():
+    """Whether this reader has saved the route in story ?article=<slug>."""
+    reader = current_reader()
+    if not reader:
+        return jsonify(signedIn=False, saved=False)
+    slug = str(request.args.get("article") or "").strip()[:200]
+    row = db.query_one(
+        "SELECT 1 AS x FROM saved_routes WHERE reader_id = :r AND article_slug = :s",
+        r=reader["id"], s=slug) if slug else None
+    return jsonify(signedIn=True, saved=bool(row))
+
+
+@readers_bp.post("/api/routes")
+@reader_required_json
+def api_routes_save():
+    """Save or unsave a story's walking route.
+    Body: {article: "<slug>", stops: [...], saved: true|false}. With no `saved` it toggles."""
+    reader = current_reader()
+    payload = request.get_json(silent=True) or {}
+    slug = str(payload.get("article") or "").strip()[:200]
+    article = _route_story(slug)
+    if not article:
+        return jsonify(error="not_found"), 404
+    exists = db.query_one(
+        "SELECT 1 AS x FROM saved_routes WHERE reader_id = :r AND article_slug = :s",
+        r=reader["id"], s=slug)
+    want = payload.get("saved")
+    want = (not exists) if not isinstance(want, bool) else want
+    if want:
+        stops = clean_route_stops(payload.get("stops"))
+        if not stops:
+            return jsonify(error="bad_route"), 400
+        if not exists:
+            count = db.query_one("SELECT COUNT(*) AS n FROM saved_routes WHERE reader_id = :r", r=reader["id"])
+            if int((count or {}).get("n", 0)) >= MAX_SAVED_ROUTES:
+                return jsonify(error="too_many"), 400
+            try:
+                db.execute(
+                    "INSERT INTO saved_routes (id, reader_id, article_slug, title, stops_json, created_at) "
+                    "VALUES (:id, :r, :s, :title, :stops, :t)",
+                    id=db.new_id(), r=reader["id"], s=slug, title=_text(article.get("title"), 200),
+                    stops=json.dumps(stops), t=db.now_iso())
+            except IntegrityError:
+                pass  # saved twice at once
+        else:   # saved before: keep it, with the stops as they are now
+            db.execute(
+                "UPDATE saved_routes SET stops_json = :stops, title = :title WHERE reader_id = :r AND article_slug = :s",
+                stops=json.dumps(stops), title=_text(article.get("title"), 200), r=reader["id"], s=slug)
+    elif exists:
+        db.execute("DELETE FROM saved_routes WHERE reader_id = :r AND article_slug = :s", r=reader["id"], s=slug)
+    return jsonify(saved=want)
+
+
+@readers_bp.delete("/api/routes/<route_id>")
+@reader_required_json
+def api_routes_delete(route_id):
+    reader = current_reader()
+    db.execute("DELETE FROM saved_routes WHERE id = :id AND reader_id = :r", id=route_id, r=reader["id"])
     return jsonify(ok=True)
 
 

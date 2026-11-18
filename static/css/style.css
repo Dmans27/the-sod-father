@@ -2688,10 +2688,10 @@ html.mlist-open, html.mlist-open body { overflow: hidden; }
   body.mapstory-open .mapstory { transition: none; }
 }
 
-/* ── Route stories (phones): the linked places are numbered stops ──
-   "This story is a route" in the editor; static/js/map-story.js adds body.has-route once
-   the map has matched the stops, sets --route-strip (176px + the status bar) and toggles
-   body.route-reading once the story card reaches the strip. */
+/* ── Route stories (phones): the story's places are numbered stops ──
+   "This story is a route" in the editor. templates/article.html adds body.is-route (the
+   story fills the screen, no map strip); static/js/map-story.js adds body.has-route once
+   the map has matched the stops, and body.route-head-on while the numbered header shows. */
 .route-num { display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: 21px; height: 21px;
   padding: 0 5px; margin-right: 5px; border-radius: 999px; background: var(--c, #2f9e7e); color: #fff; font: 700 12px/1 var(--font-sans);
   vertical-align: 2px; text-decoration: none; }
@@ -2699,18 +2699,16 @@ html.mlist-open, html.mlist-open body { overflow: hidden; }
 .article__place.has-route-num { position: relative; }
 .route-num--card { position: absolute; z-index: 2; top: 10px; left: 10px; min-width: 30px; height: 30px; margin: 0; padding: 0 9px; border: 0;
   font-size: 14.5px; vertical-align: 0; box-shadow: 0 0 0 2.5px #fff, 0 3px 10px rgba(0, 0, 0, 0.3); cursor: pointer; }
-.mapstory__strip { display: none; }
-.article__content .route-now { position: relative; }
-.article__content .route-now::before { content: ""; position: absolute; left: -12px; top: 0.3em; bottom: 0.3em; width: 3px; border-radius: 2px;
-  background: var(--route-c, #2f9e7e); }
 .article__content .route-flash { animation: route-flash 1.8s ease; border-radius: 6px; }
 @keyframes route-flash { 0%, 35% { background-color: rgba(45, 106, 79, 0.14); box-shadow: 0 0 0 8px rgba(45, 106, 79, 0.14); }
   100% { background-color: transparent; box-shadow: 0 0 0 8px transparent; } }
 
 .route-card { margin: 34px 0 8px; border: 1px solid var(--line); border-radius: 22px; overflow: hidden; background: #fff;
   box-shadow: 0 8px 28px rgba(27, 42, 31, 0.1); font-family: var(--font-sans); }
-.route-card__map { display: block; width: 100%; height: 160px; padding: 0; border: 0; background: #212326; cursor: pointer; }
+.route-card__map { position: relative; display: block; width: 100%; height: 160px; padding: 0; border: 0; background: #212326; cursor: pointer; }
 .route-card__map svg { display: block; width: 100%; height: 100%; }
+.route-card__map-label { position: absolute; right: 12px; bottom: 12px; padding: 7px 12px; border-radius: 999px; background: rgba(16, 18, 20, 0.74);
+  border: 0.5px solid rgba(255, 255, 255, 0.2); color: #fff; font: 700 13px var(--font-sans); }
 .route-card__body { padding: 16px 18px 18px; }
 .route-card__h { margin: 0; font: 700 22px/1.2 var(--font-serif); color: var(--ink); }
 .route-card__sub { margin: 4px 0 10px; font-size: 13.5px; color: var(--ink-faint); }
@@ -2724,42 +2722,72 @@ html.mlist-open, html.mlist-open body { overflow: hidden; }
   background: #1b4332; color: #fff; font-weight: 700; font-size: 15px; text-decoration: none; text-align: center; }
 .route-card__go + .route-card__go { margin-top: 8px; }
 .route-card__row { display: flex; gap: 10px; margin-top: 10px; }
-.route-card__row > button, .route-card .map-share.route-card__share { position: static; flex: 1; width: auto; height: 46px; display: flex; align-items: center; justify-content: center;
+.route-card__row > button, .route-card .map-share.route-card__share { position: static; flex: 1; width: auto; height: 46px; display: flex; align-items: center; justify-content: center; gap: 7px;
   border: 0; border-radius: 999px; background: #eef1ef; color: #1c1f1d; box-shadow: none; font: 700 15px var(--font-sans); cursor: pointer; }
+.route-card__row > button[hidden] { display: none; }
 .route-card .map-share.route-card__share::after { display: none; }
+.route-card__save svg, .mapstory__save svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+.route-card__save.is-saved { background: #1b4332; color: #fff; }
+.route-card__save.is-saved svg, .mapstory__save.is-saved svg { fill: currentColor; }
 .is-dark .route-card, html.is-dark .route-card { background: #232b26; box-shadow: none; }
 .is-dark .route-card__row > button, html.is-dark .route-card__row > button,
 .is-dark .route-card .map-share.route-card__share, html.is-dark .route-card .map-share.route-card__share { background: #2f3832; color: var(--ink); }
+.is-dark .route-card__save.is-saved, html.is-dark .route-card__save.is-saved { background: #7ccaa0; color: #12201a; }
 
+/* Saved routes on the account page */
+.route-list { display: flex; flex-direction: column; gap: 12px; }
+.saved-route { padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+.is-dark .saved-route { background: rgba(255, 255, 255, 0.06); border-color: rgba(255, 255, 255, 0.14); }
+.saved-route__title { margin: 0; font-family: var(--font-serif); font-size: 18px; line-height: 1.25; }
+.saved-route__title a { color: inherit; text-decoration: none; }
+.saved-route__sub { margin: 3px 0 8px; font-size: 13.5px; color: var(--ink-faint); }
+.saved-route__stops { list-style: none; margin: 0 0 4px; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+.saved-route__stops li { display: flex; align-items: center; gap: 9px; font-size: 14.5px; }
+.saved-route__stops .route-num { margin: 0; width: 22px; height: 22px; vertical-align: 0; flex: 0 0 auto; }
+.saved-route__name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.route-head, .mapstory__save { display: none; }
 @media (max-width: 640px) {
-  /* A taller strip of map above a route story: tall enough to stay put while you read (see below). */
-  body.has-route .mapstory-peek { height: var(--route-strip, 220px); align-items: flex-end; justify-content: flex-start; padding: 0 14px 12px; }
-  body.has-route .article__sticky-bar { display: none; }
-  body.has-route.route-reading .popbar { visibility: hidden; transform: translateY(-110%); }
-  /* While reading, the map comes in front of the story but only its top strip shows (and takes taps). */
-  body.has-route .mapstory { clip-path: inset(0 0 0 0 round 0 0 0 0); }
-  body.has-route.route-reading:not(.mapstory-open) .mapstory { z-index: 14;
-    clip-path: inset(0 0 calc(100% - var(--route-strip, 220px)) 0 round 0 0 20px 20px); }
-  body.has-route.mapstory-open .mapstory { transition: z-index 0s linear 0.42s, clip-path 0.42s cubic-bezier(0.22, 0.8, 0.25, 1); }
-  body.has-route.mapstory-closing .mapstory { transition: clip-path 0.42s cubic-bezier(0.22, 0.8, 0.25, 1); }
+  /* The story fills the screen: no map strip above it, no card edge. The map waits behind. */
+  body.is-route .mapstory-peek { display: none; }
+  body.is-route .site-main { background: #fff; }
+  html.is-dark body.is-route .site-main, body.is-route.is-dark .site-main { background: #1c231f; }
+  body.is-route .article { border-radius: 0; box-shadow: none; }
 
-  body.has-route.route-reading:not(.mapstory-open) .mapstory__strip { display: block; position: absolute; left: 0; right: 0; top: 0; z-index: 2;
-    height: var(--route-strip, 220px); padding: 0; border: 0; background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-  .mapstory__prog { position: absolute; left: 14px; right: 14px; top: calc(env(safe-area-inset-top, 0px) + 6px); display: flex; gap: 4px; }
-  .mapstory__prog i { flex: 1; height: 3px; border-radius: 2px; background: rgba(255, 255, 255, 0.3); transition: background-color 0.3s ease; }
-  .mapstory__prog i.is-on { background: #fff; }
-  .mapstory__now { position: absolute; left: 14px; bottom: 12px; max-width: calc(100% - 84px); box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px;
-    padding: 6px 14px 6px 6px; border-radius: 999px; background: rgba(16, 18, 20, 0.74); border: 0.5px solid rgba(255, 255, 255, 0.2);
-    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #fff; font: 700 14px var(--font-sans); white-space: nowrap; }
-  .mapstory__now .route-num { width: 24px; height: 24px; margin: 0; vertical-align: 0; flex: 0 0 auto; }
-  .mapstory__now .route-num[hidden] + .mapstory__now-name { padding-left: 8px; }
-  .mapstory__now-name { overflow: hidden; text-overflow: ellipsis; }
-  .mapstory__now small { flex: 0 0 auto; font-size: 13px; font-weight: 500; opacity: 0.68; }
-  .mapstory__expand { position: absolute; right: 14px; bottom: 10px; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    background: rgba(16, 18, 20, 0.74); border: 0.5px solid rgba(255, 255, 255, 0.2); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
-  .mapstory__expand svg { width: 18px; height: 18px; fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  /* The numbered header, in place of the author bar at the top. */
+  body.has-route .article__sticky-bar { display: none; }
+  body.route-head-on .popbar { visibility: hidden; transform: translateY(-110%); }
+  body.has-route .route-head { display: block; position: fixed; top: 0; left: 0; right: 0; z-index: 16; box-sizing: border-box;
+    padding: calc(env(safe-area-inset-top, 0px) + 10px) 0 9px; background: rgba(255, 255, 255, 0.97);
+    -webkit-backdrop-filter: blur(14px) saturate(160%); backdrop-filter: blur(14px) saturate(160%);
+    border-bottom: 1px solid var(--line); box-shadow: 0 6px 18px rgba(27, 42, 31, 0.08); font-family: var(--font-sans);
+    transform: translateY(-110%); visibility: hidden; transition: transform 0.25s ease, visibility 0s linear 0.25s; }
+  html.is-dark body.has-route .route-head, body.has-route.is-dark .route-head { background: rgba(28, 35, 31, 0.97); }
+  body.route-head-on .route-head { transform: none; visibility: visible; transition: transform 0.25s ease; }
+  .route-head__nums { display: flex; align-items: center; width: max-content; max-width: 100%; margin: 0 auto; box-sizing: border-box;
+    padding: 4px 16px; overflow-x: auto; scrollbar-width: none; }
+  .route-head__nums::-webkit-scrollbar { display: none; }
+  .route-head__num { flex: 0 0 auto; width: 30px; height: 30px; padding: 0; border-radius: 50%; border: 2px solid var(--c, #2f9e7e); background: transparent;
+    color: var(--c, #2f9e7e); font: 700 13.5px/1 var(--font-sans); display: flex; align-items: center; justify-content: center; cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease, color 0.2s ease, opacity 0.2s ease; -webkit-tap-highlight-color: transparent; }
+  .route-head__num.is-past { background: var(--c, #2f9e7e); color: #fff; opacity: 0.45; }
+  .route-head__num.is-now { background: var(--c, #2f9e7e); color: #fff; transform: scale(1.18); box-shadow: 0 3px 10px rgba(0, 0, 0, 0.18); }
+  .route-head__line { flex: 0 1 22px; min-width: 8px; height: 2px; margin: 0 3px;
+    background: radial-gradient(circle, var(--ink-faint) 1px, transparent 1.4px) 0 50% / 6px 2px repeat-x; }
+  .route-head__name { display: flex; align-items: center; justify-content: center; gap: 7px; max-width: calc(100% - 32px); margin: 5px auto 0; padding: 2px 4px;
+    border: 0; background: none; color: var(--ink); font: 700 15.5px/1.3 var(--font-sans); cursor: pointer; }
+  .route-head__label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .route-head__label small { font-size: 13.5px; font-weight: 500; color: var(--ink-faint); }
+  .route-head__name svg { flex: 0 0 auto; width: 17px; height: 17px; fill: none; stroke: var(--fairway); stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+
+  /* Save route, on the map's bottom bar. */
+  body.is-route .mapstory__save:not([hidden]) { display: flex; align-items: center; justify-content: center; width: 46px; height: 46px; border-radius: 50%;
+    pointer-events: auto; border: 0.5px solid rgba(255, 255, 255, 0.2); color: #fff; background: rgba(22, 23, 26, 0.6);
+    -webkit-backdrop-filter: blur(16px) saturate(160%); backdrop-filter: blur(16px) saturate(160%); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25); cursor: pointer; }
+  body.is-route .mapstory__save svg { width: 19px; height: 19px; }
+  body.is-route .mapstory__save.is-saved { background: #fff; color: #1b4332; }
 }
 @media (max-width: 640px) and (prefers-reduced-motion: reduce) {
-  body.has-route.mapstory-open .mapstory, body.has-route.mapstory-closing .mapstory { transition: none; }
+  .route-head, .route-head__num { transition: none; }
   .article__content .route-flash { animation: none; }
 }

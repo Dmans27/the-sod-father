@@ -103,6 +103,7 @@ def delete_reader(reader_id, email=None, remove_newsletter=False):
     db.execute("DELETE FROM reader_blocks WHERE reader_id = :r OR blocked_id = :r", r=reader_id)
     db.execute("DELETE FROM saved_articles WHERE reader_id = :r", r=reader_id)
     db.execute("DELETE FROM saved_places WHERE reader_id = :r", r=reader_id)
+    db.execute("DELETE FROM saved_routes WHERE reader_id = :r", r=reader_id)
     db.execute("DELETE FROM ask_usage WHERE key = :k", k="r:" + reader_id)
     if remove_newsletter and email:
         db.execute("DELETE FROM newsletter_subscribers WHERE email = :e", e=email)

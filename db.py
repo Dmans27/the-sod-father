@@ -214,6 +214,20 @@ SCHEMA = [
         created_at TEXT NOT NULL
     )
     """,
+    # Walking routes from "route" travel stories, saved to a reader's profile.
+    # stops_json: [{name, listing, lat, lng, color, category}] in route order.
+    """
+    CREATE TABLE IF NOT EXISTS saved_routes (
+        id           TEXT PRIMARY KEY,
+        reader_id    TEXT NOT NULL,
+        article_slug TEXT NOT NULL,
+        title        TEXT NOT NULL,
+        stops_json   TEXT NOT NULL,
+        created_at   TEXT NOT NULL,
+        UNIQUE (reader_id, article_slug)
+    )
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_saved_routes_reader ON saved_routes (reader_id, created_at)",
     "CREATE INDEX IF NOT EXISTS idx_saved_places_reader ON saved_places (reader_id, created_at)",
     "CREATE INDEX IF NOT EXISTS idx_comments_slug ON comments (slug, created_at)",
     "CREATE INDEX IF NOT EXISTS idx_saved_reader ON saved_articles (reader_id, created_at)",

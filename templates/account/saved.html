@@ -5,6 +5,7 @@
 <div class="saved-tabs" role="tablist" aria-label="Saved items">
   <button type="button" class="saved-tab is-active" role="tab" id="tab-stories" aria-controls="panel-stories" aria-selected="true" data-tab="stories">Saved Stories{% if saved %} <span class="saved-tab__n">{{ saved|length }}</span>{% endif %}</button>
   <button type="button" class="saved-tab" role="tab" id="tab-places" aria-controls="panel-places" aria-selected="false" tabindex="-1" data-tab="places">Saved Places{% if places %} <span class="saved-tab__n" id="places-count">{{ places|length }}</span>{% endif %}</button>
+  <button type="button" class="saved-tab" role="tab" id="tab-routes" aria-controls="panel-routes" aria-selected="false" tabindex="-1" data-tab="routes">Routes{% if routes %} <span class="saved-tab__n" id="routes-count">{{ routes|length }}</span>{% endif %}</button>
 </div>
 
 <section class="saved-panel" id="panel-stories" role="tabpanel" aria-labelledby="tab-stories">
@@ -54,6 +55,32 @@
 
 </section>
 
+<section class="saved-panel" id="panel-routes" role="tabpanel" aria-labelledby="tab-routes" hidden>
+<div class="route-list" id="routes-list">
+  {% for route in routes %}
+    <article class="saved-route">
+      <h3 class="saved-route__title">{% if route.exists %}<a href="/article/{{ route.slug }}">{{ route.title }}</a>{% else %}{{ route.title }}{% endif %}</h3>
+      <p class="saved-route__sub">{{ route.stops|length }} stops &middot; {{ route.distance }}{% if route.walking %} &middot; walking{% endif %}</p>
+      <ol class="saved-route__stops">
+        {% for stop in route.stops %}
+          <li><span class="route-num" style="--c: {{ stop.color }}">{{ loop.index }}</span><span class="saved-route__name">{{ stop.name }}</span></li>
+        {% endfor %}
+      </ol>
+      <div class="place-card__actions">
+        {% if route.exists %}<a class="account-btn account-btn--small" href="/article/{{ route.slug }}?map=route">Open the map</a>{% endif %}
+        {% for link in route.maps %}
+          <a class="account-btn account-btn--small{% if route.exists %} account-btn--ghost{% endif %}" href="{{ link.href }}" target="_blank" rel="noopener noreferrer">{{ link.label }}</a>
+        {% endfor %}
+        <button type="button" class="account-btn account-btn--small account-btn--ghost" data-remove-route="{{ route.id }}">Remove</button>
+      </div>
+    </article>
+  {% endfor %}
+</div>
+
+<p class="empty-state" id="routes-empty"{% if routes %} hidden{% endif %}>No routes yet. Open a walking route story, then tap Save route on its map or at the end of the story.</p>
+
+</section>
+
 <form method="post" action="/account/logout" class="account-signout">
   <input type="hidden" name="csrf" value="{{ csrf_token }}">
   <button type="submit" class="account-btn account-btn--ghost">Sign out</button>
@@ -64,7 +91,7 @@
   (function () {
     var tabs = Array.prototype.slice.call(document.querySelectorAll('.saved-tab'));
     function show(name, focus) {
-      if (name !== 'places') name = 'stories';
+      if (name !== 'places' && name !== 'routes') name = 'stories';
       tabs.forEach(function (t) {
         var on = t.getAttribute('data-tab') === name;
         t.classList.toggle('is-active', on);
@@ -83,9 +110,31 @@
         var n = next.getAttribute('data-tab'); show(n, true); setHash(n);
       });
     });
-    function fromHash() { show(location.hash === '#places' ? 'places' : 'stories'); }
+    function fromHash() { show(location.hash === '#places' ? 'places' : location.hash === '#routes' ? 'routes' : 'stories'); }
     window.addEventListener('hashchange', fromHash);
     fromHash();
+  })();
+
+  // Remove a saved route.
+  (function () {
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-remove-route]');
+      if (!btn) return;
+      var csrf = (window.READER || {}).csrf || '';   // set further down the page by base.html
+      btn.disabled = true;
+      fetch('/api/routes/' + encodeURIComponent(btn.getAttribute('data-remove-route')), {
+        method: 'DELETE', credentials: 'same-origin', headers: { 'X-CSRF-Token': csrf, 'Accept': 'application/json' }
+      }).then(function (r) {
+        if (!r.ok) { btn.disabled = false; return; }
+        var card = btn.closest('.saved-route');
+        if (card) card.remove();
+        var list = document.getElementById('routes-list');
+        var n = list ? list.children.length : 0;
+        document.getElementById('routes-empty').hidden = n > 0;
+        var count = document.getElementById('routes-count');
+        if (count) { if (n) count.textContent = n; else count.remove(); }
+      }).catch(function () { btn.disabled = false; });
+    });
   })();
 </script>
 {% endblock %}

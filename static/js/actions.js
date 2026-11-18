@@ -726,8 +726,12 @@
     signIn.setAttribute('aria-hidden', 'true');
   }
 
-  function openSignIn(fromBtn) {
+  function openSignIn(fromBtn, words) {
     if (!signIn) buildSignIn();
+    // Same pop-up for other things that need an account (e.g. saving a walking route).
+    words = words || {};
+    signIn.querySelector('.signin-pop__title').textContent = words.title || 'Sign in to share';
+    signIn.querySelector('.signin-pop__sub').textContent = words.sub || 'Sharing maps is for readers with an account.';
     // Come back to the story itself, also when it was open in the pop-up sheet on the home page.
     var sheet = fromBtn && fromBtn.closest('.article-sheet__inner');
     var row = sheet && sheet.querySelector('[data-slug]');
@@ -742,6 +746,8 @@
     signIn.setAttribute('aria-hidden', 'false');
     setTimeout(function () { try { form.elements.email.focus(); } catch (e) {} }, 320);
   }
+
+  window.MansfieldSignIn = function (fromBtn, words) { openSignIn(fromBtn, words); };
 
   document.addEventListener('click', function (e) {
     var btn = e.target.closest('.map-share');

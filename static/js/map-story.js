@@ -13,9 +13,13 @@
  *       page -> map  { type: 'mansfield:focus-place', listing, name }
  *       map  -> page { type: 'mansfield:focused', found }
  *   - Route stories ("This story is a route" in the editor, data-route="1"):
- *     the linked places become numbered stops in the order the story first
- *     mentions them. A strip of the map stays at the top while you read and
- *     follows along; a "Walk this route" card closes the story.
+ *     the story's places (place cards and links to a place's page) become
+ *     numbered stops in the order they first appear. The story fills the
+ *     screen (no map strip); a header at the top shows the numbers and the
+ *     stop being read about, and tapping it opens the map there. A "Walk this
+ *     route" card closes the story, and readers can save the route to their
+ *     profile (/api/routes) from that card or from the map's bottom bar.
+ *     /article/<slug>?map=route opens straight onto the map.
  *       page -> map  { type: 'mansfield:route', stops: [{listing, name}] }
  *       map  -> page { type: 'mansfield:route-ready', stops, legs, total }
  *       page -> map  { type: 'mansfield:route-step', index }      (-1: whole route)
@@ -97,14 +101,8 @@
     if (!fromHistory && history.state && history.state.mapstory) {
       try { history.back(); } catch (e) {}
     }
-    if (routeOn) {
-      document.body.classList.add('mapstory-closing');   // the strip shrinks back while the story slides up
-      clearTimeout(closingTimer);
-      closingTimer = setTimeout(function () { document.body.classList.remove('mapstory-closing'); }, 460);
-      sync(true);
-    }
+    if (routeOn) sync(true);
   }
-  var closingTimer = null;
 
   window.addEventListener('popstate', function () { if (isOpen) close(true); });
   back.addEventListener('click', function () { close(false); });
@@ -161,10 +159,15 @@
   var legs = [];
   var total = 0;
   var stepNow = -2;
-  var readingNow = false;
-  var stripPx = 0;
-  var stripEl = layer.querySelector('.mapstory__strip');
+  var headOn = false;
+  var head = document.getElementById('route-head');
+  var headNums = [];
   var article = document.querySelector('.article');
+  var titleEl = document.querySelector('.article__header');
+  var endCard = null;
+  var storySlug = (document.getElementById('article-author-pop') || { getAttribute: function () { return ''; } }).getAttribute('data-slug') ||
+                  (/^\/article\/([^/?#]+)/.exec(location.pathname) || [])[1] || '';
+  var READER = window.READER || { signedIn: false, csrf: '' };
 
   function postFrame(msg) { try { frame.contentWindow.postMessage(msg, origin); } catch (e) {} }
   function el(tag, cls, text) {
@@ -265,8 +268,6 @@
     total = legs.reduce(function (a, b) { return a + (b || 0); }, 0);
     routeOn = true;
     document.body.classList.add('has-route');
-    stripPx = Math.round(safeTop() + 176);
-    document.documentElement.style.setProperty('--route-strip', stripPx + 'px');
     stops.forEach(function (s, i) {
       s.section.style.setProperty('--route-c', s.color);
       if (s.card) return;
@@ -290,15 +291,36 @@
       fig.classList.add('has-route-num');
       fig.insertBefore(b, fig.firstChild);
     });
-    var prog = stripEl && stripEl.querySelector('.mapstory__prog');
-    if (prog) stops.forEach(function () { prog.appendChild(el('i')); });
-    var chip = document.querySelector('.mapstory-peek__chip');
-    if (chip && chip.lastChild && chip.lastChild.nodeType === 3) chip.lastChild.nodeValue = 'See the route · ' + stops.length + ' stops';
+    buildHead();
     routeCard();
+    paintSave();
+    checkSaved();
     window.addEventListener('scroll', onScroll, { passive: true });
     window.addEventListener('resize', function () { sync(true); });
     stepNow = -2;
     sync(true);
+    if (openOnLoad) { openOnLoad = false; open(); }
+  }
+
+  // The header: a number for each stop (joined by a dotted line, like the
+  // map), and under it the name of the stop being read about.
+  function buildHead() {
+    if (!head) return;
+    var row = head.querySelector('.route-head__nums');
+    stops.forEach(function (s, i) {
+      if (i) row.appendChild(el('span', 'route-head__line'));
+      var b = el('button', 'route-head__num', String(i + 1));
+      b.type = 'button';
+      b.style.setProperty('--c', s.color);
+      b.setAttribute('aria-label', 'Stop ' + (i + 1) + ': ' + s.name + ', show on the map');
+      b.addEventListener('click', function () { openAt(i); });
+      row.appendChild(b);
+      headNums.push(b);
+    });
+    head.querySelector('.route-head__name').addEventListener('click', function () {
+      if (stepNow >= 0) openAt(stepNow); else open();
+    });
+    document.body.classList.add('has-route-head');
   }
 
   var ticking = false;
@@ -308,64 +330,59 @@
     requestAnimationFrame(function () { ticking = false; sync(false); });
   }
 
-  // Strip or not, and which stop the reader is on: the last stop whose
-  // paragraph has passed a line a bit above the middle of what's left of the screen.
+  // Header or not (it shows once the title has scrolled away, until the
+  // "Walk this route" card comes up), and which stop the reader is on: the
+  // last stop whose paragraph or card has passed a line a third of the way
+  // down the screen below the header.
   function sync(force) {
     if (!routeOn || isOpen) return;
-    var cardTop = article ? article.getBoundingClientRect().top : 0;
-    var reading = cardTop <= stripPx + 0.5;
-    if (reading !== readingNow || force) {
-      readingNow = reading;
-      document.body.classList.toggle('route-reading', reading);
-      sendView();
+    var h = window.innerHeight;
+    var past = titleEl ? titleEl.getBoundingClientRect().bottom < 0 : window.scrollY > 300;
+    var atEnd = endCard ? endCard.getBoundingClientRect().top < h * 0.55 : false;
+    var on = !!head && past && !atEnd;
+    if (on !== headOn || force) {
+      headOn = on;
+      document.body.classList.toggle('route-head-on', on);
+      if (head) head.setAttribute('aria-hidden', on ? 'false' : 'true');
+      if (force) sendView();
     }
+    var top = head ? (head.offsetHeight || 92) : 0;
+    var line = top + (h - top) * 0.34;
     var idx = -1;
-    if (reading) {
-      var line = stripPx + (window.innerHeight - stripPx) * 0.38;
-      stops.forEach(function (s, i) { if (s.section.getBoundingClientRect().top < line) idx = i; });
-    }
+    stops.forEach(function (s, i) { if (s.section.getBoundingClientRect().top < line) idx = i; });
     if (idx !== stepNow) setStep(idx);
   }
 
   function setStep(idx) {
     stepNow = idx;
     postFrame({ type: 'mansfield:route-step', index: idx });
-    stops.forEach(function (s, i) { s.section.classList.toggle('route-now', i === idx); });
-    if (!stripEl) return;
-    Array.prototype.forEach.call(stripEl.querySelectorAll('.mapstory__prog i'), function (b, i) { b.classList.toggle('is-on', i <= idx); });
-    var num = stripEl.querySelector('.mapstory__now .route-num');
-    var name = stripEl.querySelector('.mapstory__now-name');
-    var small = stripEl.querySelector('.mapstory__now small');
+    if (!head) return;
+    headNums.forEach(function (b, i) {
+      b.classList.toggle('is-now', i === idx);
+      b.classList.toggle('is-past', i < idx);
+      if (i === idx) b.setAttribute('aria-current', 'step'); else b.removeAttribute('aria-current');
+    });
+    var label = head.querySelector('.route-head__label');
+    label.textContent = '';
     if (idx >= 0) {
-      num.hidden = false;
-      num.textContent = String(idx + 1);
-      num.style.setProperty('--c', stops[idx].color);
-      name.textContent = stops[idx].name;
-      small.textContent = '· ' + (idx + 1) + ' of ' + stops.length;
-      stripEl.setAttribute('aria-label', 'Open the map at stop ' + (idx + 1) + ', ' + stops[idx].name);
+      label.appendChild(document.createTextNode(stops[idx].name));
+      head.querySelector('.route-head__name').setAttribute('aria-label', 'Show ' + stops[idx].name + ' on the map');
     } else {
-      num.hidden = true;
-      name.textContent = total <= 10000 ? 'Walking route' : 'Route';
-      small.textContent = '· ' + stops.length + ' stops · ' + kmText(total);
-      stripEl.setAttribute('aria-label', 'Open the map');
+      label.appendChild(document.createTextNode(total <= 10000 ? 'Walking route' : 'Route'));
+      label.appendChild(el('small', '', ' · ' + stops.length + ' stops · ' + kmText(total)));
+      head.querySelector('.route-head__name').setAttribute('aria-label', 'Show the route on the map');
     }
+    // Keep the current number in view when there are more than fit.
+    var cur = headNums[Math.max(0, idx)], row = head.querySelector('.route-head__nums');
+    if (cur && row.scrollWidth > row.clientWidth) row.scrollTo({ left: Math.max(0, cur.offsetLeft - row.clientWidth / 2 + cur.offsetWidth / 2), behavior: 'smooth' });
   }
 
-  // Which part of the map the reader can see, so the map keeps the pins in it.
+  // The map is out of sight while reading; it just keeps the current stop ready.
   function sendView() {
     if (!routeOn) return;
     // Full map: the map shows the reader's current stop, unless we just asked it for a particular place.
     if (isOpen) { postFrame({ type: 'mansfield:route-view', view: 'full', focus: !asking }); return; }
-    var h = window.innerHeight, top, bottom;
-    if (readingNow) {
-      top = safeTop() + 12;
-      bottom = h - (stripPx - 40);
-    } else {
-      var hd = document.querySelector('.site-header');
-      top = Math.max(safeTop(), hd ? hd.getBoundingClientRect().bottom : 0);
-      bottom = h - (article ? article.getBoundingClientRect().top : h * 0.4) + 52;   // + the "See the route" chip along the bottom
-    }
-    postFrame({ type: 'mansfield:route-view', view: 'strip', pad: { top: Math.round(top), bottom: Math.round(Math.max(0, bottom)) } });
+    postFrame({ type: 'mansfield:route-view', view: 'strip', pad: { top: Math.round(safeTop() + 60), bottom: 180 } });
   }
 
   function openAt(i) {
@@ -381,7 +398,7 @@
     if (!s) return;
     close(false);
     setTimeout(function () {
-      var y = s.section.getBoundingClientRect().top + (window.scrollY || window.pageYOffset) - stripPx - 18;
+      var y = s.section.getBoundingClientRect().top + (window.scrollY || window.pageYOffset) - (head ? head.offsetHeight || 92 : 0) - 18;
       window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
       s.section.classList.remove('route-flash');
       void s.section.offsetWidth;
@@ -448,6 +465,7 @@
     pic.setAttribute('data-mapstory-open', '');
     pic.setAttribute('aria-label', 'See the route on the map');
     pic.appendChild(preview());
+    pic.appendChild(el('span', 'route-card__map-label', 'See it on the map'));
     card.appendChild(pic);
     var body = el('div', 'route-card__body');
     body.appendChild(el('h2', 'route-card__h', walk ? 'Walk this route' : 'Follow this route'));
@@ -479,10 +497,13 @@
       body.appendChild(a);
     });
     var row = el('div', 'route-card__row');
-    var see = el('button', '', 'See it on the map');
-    see.type = 'button';
-    see.setAttribute('data-mapstory-open', '');
-    row.appendChild(see);
+    var save = el('button', 'route-card__save');
+    save.type = 'button';
+    save.setAttribute('data-route-save', '');
+    save.setAttribute('aria-pressed', 'false');
+    save.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h11v17l-5.5-4-5.5 4z"/></svg>';   // fixed icon only
+    save.appendChild(el('span', 'route-card__save-label', 'Save route'));
+    row.appendChild(save);
     var share = layer.querySelector('.mapstory__share');
     if (share) {
       var sb = el('button', 'map-share route-card__share', 'Share');
@@ -494,5 +515,82 @@
     body.appendChild(row);
     card.appendChild(body);
     content.parentNode.insertBefore(card, content.nextSibling);
+    endCard = card;
   }
+
+  // ── Saving the route to the reader's profile ──────────────────────────
+  var routeSaved = false;
+  var saving = false;
+  function paintSave() {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-route-save]'), function (b) {
+      b.hidden = false;
+      b.classList.toggle('is-saved', routeSaved);
+      b.setAttribute('aria-pressed', routeSaved ? 'true' : 'false');
+      b.setAttribute('aria-label', routeSaved ? 'Route saved. Tap to remove it from your profile' : 'Save route');
+      b.title = routeSaved ? 'Saved' : 'Save route';
+      var label = b.querySelector('.route-card__save-label');
+      if (label) label.textContent = routeSaved ? 'Saved' : 'Save route';
+    });
+  }
+  function checkSaved() {
+    if (!READER.signedIn || !storySlug) return;
+    fetch('/api/routes?article=' + encodeURIComponent(storySlug), { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { if (d && typeof d.saved === 'boolean') { routeSaved = d.saved; paintSave(); } })
+      .catch(function () {});
+  }
+  var toastEl = null, toastTimer = null;
+  function toast(text, link) {
+    if (!toastEl) {
+      toastEl = el('div', 'place-toast');
+      toastEl.setAttribute('role', 'status');
+      document.body.appendChild(toastEl);
+    }
+    toastEl.textContent = text;
+    if (link) {
+      var a = el('a', '', link.label);
+      a.href = link.href;
+      toastEl.appendChild(a);
+    }
+    toastEl.classList.add('is-on');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('is-on'); }, 3200);
+  }
+  function toggleSave(btn) {
+    if (!READER.signedIn) {
+      if (window.MansfieldSignIn) window.MansfieldSignIn(btn, { title: 'Sign in to save', sub: 'Saving walking routes is for readers with an account.' });
+      return;
+    }
+    if (saving || !storySlug) return;
+    saving = true;
+    var want = !routeSaved;
+    fetch('/api/routes', {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'X-CSRF-Token': READER.csrf || '', 'Accept': 'application/json', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ article: storySlug, saved: want, stops: stops.map(function (s) {
+        return { name: s.name, listing: s.listing, lat: s.lat, lng: s.lng, color: s.color, category: s.category };
+      }) })
+    }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; }); })
+      .then(function (res) {
+        saving = false;
+        if (!res.ok) { toast(res.d && res.d.error === 'too_many' ? 'You have saved the most routes you can. Remove one first.' : 'Couldn\u2019t save the route. Try again.'); return; }
+        routeSaved = !!res.d.saved;
+        paintSave();
+        if (routeSaved) toast('Route saved to your profile.', { label: 'View', href: '/account#routes' });
+        else toast('Route removed from your profile.');
+      })
+      .catch(function () { saving = false; toast('Couldn\u2019t reach the server. Check your connection and try again.'); });
+  }
+  document.addEventListener('click', function (e) {
+    var btn = e.target.closest('[data-route-save]');
+    if (!btn) return;
+    e.preventDefault();
+    toggleSave(btn);
+  });
+
+  // /article/<slug>?map=route (the "Open the map" link on a saved route): straight onto the map.
+  var openOnLoad = /(?:^|[?&])map=route(?:&|$)/.test(location.search) && phone.matches;
+  if (openOnLoad && wanted.length < 2) { openOnLoad = false; open(); }
+  if (openOnLoad) setTimeout(function () { if (openOnLoad) { openOnLoad = false; open(); } }, 7000);   // the route never came: open the plain map
+
 })();

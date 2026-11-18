@@ -31,7 +31,7 @@
   }|tojson }}</script>
 {% endblock %}
 
-{% block body_class %}article-page{% if article.map_behind and article.blocks and article.blocks|selectattr('type', 'equalto', 'map')|list %} has-mapstory{% endif %}{% endblock %}
+{% block body_class %}article-page{% if article.map_behind and article.blocks and article.blocks|selectattr('type', 'equalto', 'map')|list %} has-mapstory{% if article.map_route %} is-route{% endif %}{% endif %}{% endblock %}
 
 {% block content %}
 {% set cat = categories[article.category] %}
@@ -48,16 +48,12 @@
     <iframe class="mapstory__frame" data-src="{{ story_src }}" title="{{ behind.block.caption or 'Map of the places in this story' }}"
             referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen" tabindex="-1"
             sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
-    {% if article.map_route %}
-      {# Route stories: the strip of map that stays above the story while you read (static/js/map-story.js fills it in). #}
-      <button type="button" class="mapstory__strip" data-mapstory-open aria-label="Open the map">
-        <span class="mapstory__prog" aria-hidden="true"></span>
-        <span class="mapstory__now"><span class="route-num" aria-hidden="true"></span><span class="mapstory__now-name"></span><small></small></span>
-        <span class="mapstory__expand" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg></span>
-      </button>
-    {% endif %}
     <div class="mapstory__bar">
       <button type="button" class="mapstory__back"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Back to story</button>
+      {% if article.map_route %}
+        {# Save this walking route to the reader's profile (static/js/map-story.js; guests get the sign-in pop-up). #}
+        <button type="button" class="mapstory__save" data-route-save hidden aria-pressed="false" aria-label="Save route" title="Save route"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h11v17l-5.5-4-5.5 4z"/></svg></button>
+      {% endif %}
       {# Sharing works here too: readers with an account get the share sheet, guests the sign-in pop-up (static/js/actions.js). #}
       <button type="button" class="map-share mapstory__share" data-map-share="{{ map_links(behind.block).share }}" data-title="{{ behind.block.caption or '' }}" aria-label="Share map" title="Share map"><svg class="map-share__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-share"/></svg></button>
       <button type="button" class="map-list mapstory__list" aria-label="Show places as a list" title="List"><svg class="map-share__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg></button>
@@ -68,6 +64,14 @@
   </button>
 {% endif %}
 <article class="article">
+  {% if behind.block and article.map_route %}
+    {# Route stories on phones: the numbered stops, with the name of the one you are reading about, in place of the
+       author bar at the top. Tap a number or the name to see it on the map (static/js/map-story.js fills it in). #}
+    <div class="route-head" id="route-head" aria-hidden="true">
+      <div class="route-head__nums" role="group" aria-label="Stops on this route"></div>
+      <button type="button" class="route-head__name"><span class="route-head__label"></span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2z"/><path d="M9 4v14M15 6v14"/></svg></button>
+    </div>
+  {% endif %}
   <div class="article__sticky-bar" id="article-sticky-bar" aria-hidden="true">
     {% if article.author_photo %}<img class="article-sticky-bar__avatar" src="{{ article.author_photo }}" alt="">{% endif %}
     <p class="article__meta">{{ article.author }}{% if article.author_position %} &middot; {{ article.author_position }}{% endif %} &middot; {{ article.published_at }}</p>
