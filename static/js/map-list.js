@@ -153,10 +153,18 @@
     return place.rating !== null && place.rating !== undefined && r > 0 ? r : null;
   }
 
-  function card(place) {
+  function legText(m) {
+    if (!(m > 0)) return '';
+    if (m <= 2500) return Math.max(1, Math.round(m * 1.3 / 80)) + ' min walk';
+    var km = m / 1000;
+    return (km >= 10 ? Math.round(km) : km.toFixed(1)) + ' km';
+  }
+
+  // stop: { n, of, leg, color } for a walking route story's stops, else undefined.
+  function card(place, stop) {
     var btn = document.createElement('button');
     btn.type = 'button';
-    btn.className = 'mlist__card';
+    btn.className = 'mlist__card' + (stop ? ' mlist__card--stop' : '');
     var photo = safeUrl(place.photo, origin, true);
     var ph = document.createElement('span');
     ph.className = 'mlist__ph';
@@ -175,6 +183,15 @@
     }
     var info = document.createElement('span');
     info.className = 'mlist__info';
+    if (stop) {
+      var num = text('span', 'route-num mlist__num', String(stop.n));
+      num.style.setProperty('--c', stop.color);
+      num.setAttribute('aria-hidden', 'true');
+      btn.appendChild(num);
+      var step = text('span', 'mlist__step', 'Stop ' + stop.n + ' of ' + stop.of + (stop.leg ? ' · ' + stop.leg : ''));
+      step.style.setProperty('--c', stop.color);
+      info.appendChild(step);
+    }
     info.appendChild(text('span', 'mlist__name', place.name || 'Place'));
     if (place.address) info.appendChild(text('span', 'mlist__addr', place.address));
     var meta = document.createElement('span');
@@ -282,6 +299,22 @@
       statusEl.hidden = true;
       if (!given && data.title) titleEl.textContent = String(data.title);
       var places = data.places.filter(function (p) { return p && typeof p === 'object' && p.name; });
+      // A walking route story: only the route's stops, in the order of the walk.
+      var route = fig.classList.contains('mapstory') && window.MansfieldRoute;
+      if (route && Array.isArray(route.stops) && route.stops.length) {
+        var stops = [];
+        route.stops.forEach(function (s, i) {
+          var p = places.filter(function (x) { return s.listing && x.listing === s.listing; })[0] ||
+                  places.filter(function (x) { return (x.name || '').toLowerCase() === String(s.name || '').toLowerCase(); })[0];
+          if (p) stops.push({ place: p, stop: { n: i + 1, of: route.stops.length, leg: i ? legText((route.legs || [])[i - 1]) : 'Start', color: s.color || '#2f9e7e' } });
+        });
+        if (stops.length) {
+          titleEl.textContent = 'Walking route';
+          titleEl.appendChild(text('span', 'mlist__count', String(stops.length) + ' stops'));
+          stops.forEach(function (x) { listEl.appendChild(card(x.place, x.stop)); });
+          return;
+        }
+      }
       titleEl.appendChild(text('span', 'mlist__count', String(places.length)));
       if (!places.length) { statusEl.textContent = 'No places on this map yet.'; statusEl.hidden = false; return; }
       places.forEach(function (p) { listEl.appendChild(card(p)); });

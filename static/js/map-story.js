@@ -276,6 +276,8 @@
     total = legs.reduce(function (a, b) { return a + (b || 0); }, 0);
     routeOn = true;
     document.body.classList.add('has-route');
+    // For the List button on the map (static/js/map-list.js): just these stops, in order.
+    window.MansfieldRoute = { stops: list.map(function (s) { return { listing: s.listing, name: s.name, color: s.color }; }), legs: legs.slice() };
     stops.forEach(function (s, i) {
       s.section.style.setProperty('--route-c', s.color);
       if (s.card) return;
