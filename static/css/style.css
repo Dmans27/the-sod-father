@@ -743,6 +743,31 @@ body.has-sticky-author-bar .site-header { visibility: hidden; }
 }
 .article-sheet-overlay.is-open .article-sheet { transform: translateY(0); }
 
+/* Travel map stories on a phone: the pop-up card holds the story's own page
+   (/article/<slug>?in=sheet, see openSheet in base.html), almost full height
+   so the map behind the story has room. */
+.article-sheet__frame { position: absolute; inset: 0; z-index: 1; width: 100%; height: 100%; border: 0; border-radius: inherit;
+  background: #fff; opacity: 0; transition: opacity 0.2s ease; }
+.article-sheet-overlay.frame-ready .article-sheet__frame { opacity: 1; }
+.article-sheet-overlay.is-framed .article-sheet__frame { z-index: 3; }
+.article-sheet-overlay.is-framed .article-sheet__close { z-index: 4; }
+.article-sheet-overlay.frame-ready .article-sheet__scroll { visibility: hidden; }   /* the quick preview underneath */
+.article-sheet-overlay.is-framed .article-sheet { height: calc(100vh - env(safe-area-inset-top, 0px) - 10px);
+  height: calc(100dvh - env(safe-area-inset-top, 0px) - 10px); max-height: none; overflow: hidden; }
+.article-sheet-overlay.is-framed .article-sheet__sticky-bar, .article-sheet-overlay.is-framed .article-sheet__author-pop { display: none; }
+.article-sheet-overlay.frame-map-open .article-sheet__close { opacity: 0; pointer-events: none; }
+.is-dark .article-sheet__frame { background: #1c231f; }
+/* ...and that page, inside the card: just the story. */
+html.in-sheet .site-header, html.in-sheet .popbar, html.in-sheet .site-footer, html.in-sheet .bottom-nav,
+html.in-sheet .nl-popup { display: none !important; }
+html.in-sheet body { padding-bottom: 0; }
+html.in-sheet .article__header { padding-top: 22px; }
+@media (max-width: 640px) {
+  /* Room for the card's close button at the top right. */
+  html.in-sheet .route-head__nums { max-width: calc(100% - 96px); }
+  html.in-sheet .route-head { padding-top: 12px; }
+}
+
 /* On screens 700px and wider the story opens as the right-hand page of a
    book instead (see "Two-page book layout" at the end of this file). */
 

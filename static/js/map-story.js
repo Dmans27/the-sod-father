@@ -89,6 +89,7 @@
     setTimeout(function () { try { back.focus({ preventScroll: true }); } catch (e) {} }, 380);
     // Sent a moment later, so a place link's focus-place (sent right after open()) is already on its way.
     if (routeOn) setTimeout(sendView, 0);
+    tellCard(true);
     return true;
   }
 
@@ -102,6 +103,12 @@
       try { history.back(); } catch (e) {}
     }
     if (routeOn) sync(true);
+    tellCard(false);
+  }
+  // Inside the home page's pop-up card (?in=sheet): tell it when the map is open, so it hides its close button.
+  function tellCard(on) {
+    if (window.parent === window || !document.documentElement.classList.contains('in-sheet')) return;
+    try { window.parent.postMessage({ type: 'mansfield:sheet-map', open: on }, location.origin); } catch (e) {}
   }
 
   window.addEventListener('popstate', function () { if (isOpen) close(true); });

@@ -34,6 +34,23 @@
   <meta name="twitter:card" content="summary_large_image">
   {% endblock %}
   {% block head %}{% endblock %}
+  <script>
+    // ?in=sheet: this story is showing inside the home page's pop-up card
+    // (a travel map story on a phone -- see openSheet below). Hide the site's
+    // own header, footer and tabs, and open links in the whole window. Opened
+    // on its own (a bookmarked or shared link), drop the flag and load normally.
+    (function () {
+      if (!/[?&]in=sheet(&|$)/.test(location.search)) return;
+      if (window.top === window) {
+        location.replace(location.pathname + location.search.replace(/([?&])in=sheet(&|$)/, function (m, a, b) { return b ? a : ''; }).replace(/[?&]$/, '') + location.hash);
+        return;
+      }
+      document.documentElement.classList.add('in-sheet');
+      var base = document.createElement('base');
+      base.target = '_top';
+      document.head.appendChild(base);
+    })();
+  </script>
   {{ analytics_html()|safe }}
 </head>
 <body class="{% block body_class %}{% endblock %}">
@@ -225,7 +242,7 @@
   <script src="/static/js/actions.js?v=8"></script>
   <script src="/static/js/native.js?v=1" defer></script>
   <script src="/static/js/map-list.js?v=2" defer></script>
-  <script src="/static/js/map-story.js?v=5" defer></script>
+  <script src="/static/js/map-story.js?v=6" defer></script>
   <script src="/static/js/places.js?v=1" defer></script>
   <script src="/static/js/newsletter.js?v=1" defer></script>
   <script src="/static/js/ask.js?v=3" defer></script>
@@ -683,11 +700,39 @@
         window.addEventListener('resize', applyBook);
       }
 
+      // Travel map stories on a phone: the pop-up card holds the story's own
+      // page (/article/<slug>?in=sheet) so its map can sit behind it. The
+      // regular sheet content shows first and the page fades in over it.
+      var phoneMq = window.matchMedia ? window.matchMedia('(max-width: 640px)') : { matches: false };
+      var frameEl = null, frameTimer = null;
+      function dropFrame() {
+        clearTimeout(frameTimer);
+        if (frameEl) { frameEl.remove(); frameEl = null; }
+        overlay.classList.remove('is-framed', 'frame-ready', 'frame-map-open');
+      }
+      function framePage(slug) {
+        dropFrame();
+        overlay.classList.add('is-framed');
+        frameEl = document.createElement('iframe');
+        frameEl.className = 'article-sheet__frame';
+        frameEl.title = (articlesBySlug[slug] || {}).title || 'Story';
+        frameEl.setAttribute('allow', 'fullscreen; geolocation');
+        frameEl.addEventListener('load', function () { overlay.classList.add('frame-ready'); });
+        frameEl.src = '/article/' + encodeURIComponent(slug) + '?in=sheet';
+        sheetEl.appendChild(frameEl);
+      }
+      window.addEventListener('message', function (e) {
+        if (!frameEl || e.source !== frameEl.contentWindow || e.origin !== location.origin || !e.data) return;
+        // The story's map is open inside the card: hide the card's close button so the map's own "Back to story" is the way out.
+        if (e.data.type === 'mansfield:sheet-map') overlay.classList.toggle('frame-map-open', !!e.data.open);
+      });
+
       function openSheet(slug, opts) {
         var article = articlesBySlug[slug];
         if (!article) return;
         var alreadyOpen = overlay.classList.contains('is-open');
         renderSheet(article);
+        if (article.map_behind && phoneMq.matches) framePage(slug); else dropFrame();
         overlay.classList.add('is-open');
         overlay.setAttribute('aria-hidden', 'false');
         fitPopSpace();
@@ -712,6 +757,8 @@
       window.__openArticleSheet = openSheet;
 
       function closeSheet(opts) {
+        clearTimeout(frameTimer);
+        if (frameEl) frameTimer = setTimeout(dropFrame, 400);   // once the card has slid away
         overlay.classList.remove('is-open');
         overlay.setAttribute('aria-hidden', 'true');
         document.body.classList.remove('article-sheet-open');
@@ -731,9 +778,7 @@
         var link = e.target.closest('a[data-slug]');
         if (!link) return;
         if (!grid.contains(link) && link.className.indexOf('hero-story') === -1) return;
-        // A travel map story on a phone opens as its own page, where its map sits behind the story.
-        var picked = articlesBySlug[link.getAttribute('data-slug')];
-        if (picked && picked.map_behind && window.matchMedia('(max-width: 640px)').matches) return;
+        // (A travel map story on a phone opens the same pop-up card, holding the story's own page -- see framePage.)
         e.preventDefault();
         openSheet(link.getAttribute('data-slug'));
       });
