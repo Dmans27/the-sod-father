@@ -224,14 +224,17 @@ def find_places(settings, lat, lng, radius, min_rating, keywords):
         params["q"] = " ".join(keywords)
     if min_rating:
         params["min_rating"] = min_rating
-    if settings["near_me"] and lat is not None and lng is not None:
-        params.update(lat=lat, lng=lng)
-    elif settings["place"]:
+    # A named place wins over "near me": someone in Vienna asking for "the
+    # Loop in Chicago" wants Chicago. (The directory also puts a named place or
+    # city ahead of lat/lng, which it only uses to pick the right "Main Street".)
+    if settings["place"]:
         params["near"] = settings["place"]
         if settings["city"]:
             params["city"] = settings["city"]
         if lat is not None and lng is not None:
             params.update(lat=lat, lng=lng)   # helps pick the right "Main Street"
+    elif settings["near_me"] and lat is not None and lng is not None:
+        params.update(lat=lat, lng=lng)
     elif settings["city"]:
         params.update(near=settings["city"], city=settings["city"])
     elif lat is not None and lng is not None:
@@ -396,7 +399,9 @@ def plan_walk(query, lat, lng, previous):
         where = "near you" if settings["near_me"] else ("around " + (settings["place"] or settings["city"]))
         return {"clarify": f"I couldn't find matching places {where} in the directory yet. Try a different kind of place or a bigger area."}
 
-    start = (lng, lat) if settings["near_me"] and lat is not None and lng is not None else None
+    start = (lng, lat) if settings["near_me"] and not settings["place"] and lat is not None and lng is not None else None
+    if start and center and _metres(start, (center[0], center[1])) > 5000:
+        start = None   # the walk is somewhere else (another part of town, another city): don't start it from the reader
     stops = walking_order(stops, start)
     start_label = "you" if start else (settings["place"] or settings["city"] or "")
     if start:
