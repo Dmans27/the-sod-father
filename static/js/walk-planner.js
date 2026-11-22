@@ -279,7 +279,8 @@
     areaChip.hidden = !circle;
     if (circle) {
       var across = 2 * circle.radius;
-      areaText.textContent = 'Searching inside your drawn area (about ' + (across >= 1000 ? (across / 1000).toFixed(1) + ' km' : across + ' m') + ' across)';
+      areaText.textContent = 'Your area · ' + (across >= 1000 ? (across / 1000).toFixed(1) + ' km' : across + ' m');
+      areaChip.title = 'The walk only uses places inside the area you drew';
     }
     setDrawBtn(drawBtn.classList.contains('is-on'));
   }

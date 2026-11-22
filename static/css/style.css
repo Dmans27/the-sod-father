@@ -2839,7 +2839,7 @@ body.walk-page .site-main { padding: 0; max-width: none; }
   display: flex; align-items: center; justify-content: center; color: #fff; background: rgba(16, 18, 20, 0.7); border: 0.5px solid rgba(255, 255, 255, 0.2);
   -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25); }
 .walkplan__home svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
-.walkplan.has-walk .walkplan__home, .walkplan.is-exploring .walkplan__home { top: calc(env(safe-area-inset-top, 0px) + 60px); }   /* below the map's route label or filter chips */
+.walkplan.has-walk .walkplan__home, .walkplan.is-exploring .walkplan__home { top: calc(env(safe-area-inset-top, 0px) + 68px); }   /* below the map's route label or filter chips */
 
 /* The welcome sits as a card over the explore map, just above the ask bar. */
 .walkplan__intro { position: absolute; z-index: 6; left: 12px; right: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 78px); max-width: 560px; margin: 0 auto;
@@ -2932,10 +2932,10 @@ body.walk-page .site-main { padding: 0; max-width: none; }
 
 .walkplan.is-walking .walkplan__home, .walkplan.is-walking .walkplan__msg { display: none; }
 
-/* Area tools: Draw area, New walk and the "inside your circle" note, down the right side under the map's zoom buttons
-   (the left is where the map lists its places on wide screens). */
-.walkplan__tools { position: absolute; z-index: 5; right: 12px; top: calc(env(safe-area-inset-top, 0px) + 96px); max-width: calc(100% - 24px);
-  display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: none; }
+/* Area tools: Draw area / Redraw area, New walk and the drawn-area note, in one row under the
+   map's route pill (left of it is the back button, so the row starts after it and wraps if it must). */
+.walkplan__tools { position: absolute; z-index: 5; left: 62px; right: 12px; top: calc(env(safe-area-inset-top, 0px) + 69px);
+  display: flex; flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px; pointer-events: none; }
 .walkplan__tools > * { pointer-events: auto; }
 .walkplan__tool { display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 14px 0 11px; border: 0.5px solid rgba(255, 255, 255, 0.2); border-radius: 999px;
   background: rgba(16, 18, 20, 0.8); color: #fff; font: 700 13.5px var(--font-sans); cursor: pointer;
@@ -2943,7 +2943,7 @@ body.walk-page .site-main { padding: 0; max-width: none; }
 .walkplan__tool[hidden] { display: none; }
 .walkplan__tool svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
 .walkplan__tool.is-on { background: #2BEA6B; color: #0b2414; border-color: #2BEA6B; }
-.walkplan__area { display: flex; align-items: center; gap: 8px; max-width: 260px; padding: 6px 6px 6px 13px; border-radius: 18px; background: #2BEA6B; color: #0b2414;
+.walkplan__area { display: flex; align-items: center; gap: 6px; height: 40px; box-sizing: border-box; padding: 0 6px 0 13px; border-radius: 999px; background: #2BEA6B; color: #0b2414;
   font: 700 12.5px/1.3 var(--font-sans); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25); }
 .walkplan__area[hidden] { display: none; }
 .walkplan__area-clear { flex: 0 0 auto; width: 26px; height: 26px; border: 0; border-radius: 50%; background: rgba(11, 36, 20, 0.15); color: #0b2414; font-size: 17px; line-height: 1; cursor: pointer; }
