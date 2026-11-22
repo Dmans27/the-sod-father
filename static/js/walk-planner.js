@@ -214,7 +214,7 @@
     input.placeholder = 'e.g. food in this area';
     try { history.replaceState(null, '', '/walk'); } catch (e) {}
     loadMap(exploreUrl(), 'explore');
-    say('Walk cleared. Move the map or draw an area, then ask for a new walk.', false);
+    say(circle ? 'Walk cleared. Your circle is still there: ask for a new walk inside it.' : 'Walk cleared. Ask for a new walk below.', false);
   }
   clearBtn.addEventListener('click', clearWalk);
   intro.querySelector('.walkplan__intro-close').addEventListener('click', function () { intro.hidden = true; });
@@ -279,12 +279,20 @@
     }
     setDrawBtn(drawBtn.classList.contains('is-on'));
   }
+  // The map answers mansfield:draw {on}. If it doesn't, it's an older map that can't draw yet.
+  var drawAck = null;
   drawBtn.addEventListener('click', function () {
     var on = !drawBtn.classList.contains('is-on');
     post({ type: 'mansfield:draw-circle', on: on });
     setDrawBtn(on);
     intro.hidden = true;
-    if (on) say('Press and drag on the map to draw a circle. Tap once for a 500 m circle.', false);
+    clearTimeout(drawAck);
+    if (!on) { msg.hidden = true; return; }
+    say('The map is locked so you can draw. Press and drag to draw a circle, or tap once for a 500 m circle.', false, true);
+    drawAck = setTimeout(function () {
+      setDrawBtn(false);
+      say('Drawing isn’t available on this map yet. Please try again in a few minutes.', false);
+    }, 2500);
   });
   areaChip.querySelector('.walkplan__area-clear').addEventListener('click', function () {
     circle = null;
@@ -308,10 +316,10 @@
       var cc = e.data.center, cr = Number(e.data.radius);
       circle = (Array.isArray(cc) && cc.length === 2 && cr > 0) ? { center: [Number(cc[0]), Number(cc[1])], radius: Math.round(cr) } : null;
       paintArea();
-      if (circle) { say('Got it. Now ask, e.g. “food in my circle”. The walk stays inside it.', false); input.focus(); }
+      if (circle) { say('Area set. Now ask, e.g. “Search this area for food”. The walk stays inside your circle.', false); input.focus(); }
       return;
     }
-    if (t === 'mansfield:draw') { setDrawBtn(!!e.data.on); return; }
+    if (t === 'mansfield:draw') { clearTimeout(drawAck); setDrawBtn(!!e.data.on); return; }
     if (!plan) return;
     if (t === 'mansfield:route-ready') {
       if (asking) { clearInterval(asking); asking = null; }

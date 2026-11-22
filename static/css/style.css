@@ -2851,6 +2851,8 @@ body.walk-page .site-main { padding: 0; max-width: none; }
 .walkplan__badge svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 .walkplan__h { margin: 8px 0 4px; font: 700 21px/1.2 var(--font-serif); color: #fff; }
 .walkplan__sub { margin: 0 auto 10px; max-width: 30em; font-size: 14px; line-height: 1.4; color: rgba(255, 255, 255, 0.75); }
+.walkplan__lead { margin: 2px 34px 10px; font-size: 14.5px; line-height: 1.4; color: rgba(255, 255, 255, 0.85); }
+.walkplan__lead b { color: #2BEA6B; }
 .walkplan__intro-close { position: absolute; top: 8px; right: 8px; width: 30px; height: 30px; border: 0; border-radius: 50%;
   background: rgba(255, 255, 255, 0.14); color: #fff; font-size: 19px; line-height: 1; cursor: pointer; }
 /* Over the map the ideas run in one row you can swipe, so the card stays short. */
