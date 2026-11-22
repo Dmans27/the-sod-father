@@ -12,7 +12,7 @@
   "cover_image": null,
   "featured": true,
   "map_behind": true,
-  "map_route": true,
+  "map_route": false,
   "status": "published",
   "blocks": [
     {
