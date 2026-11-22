@@ -13,17 +13,31 @@
   <a class="walkplan__home" href="/" aria-label="Back to \\Mansfield"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></a>
 
   <section class="walkplan__intro" id="walkplan-intro">
+    <button type="button" class="walkplan__intro-close" aria-label="Close">&times;</button>
     <span class="walkplan__badge"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4" r="2"/><path d="M10 22l2-7 3 3v6M8 12l3-4 4 1 2 4M11 8l-2 6"/></svg>Plan a walk</span>
     <h1 class="walkplan__h">Where do you want to walk?</h1>
-    <p class="walkplan__sub">Ask for anything, typed or spoken, and I'll build a walking route from the places in the \\Mansfield directory.</p>
+    <p class="walkplan__sub">Move the map to the area you like, or draw a circle, then ask, typed or spoken. I'll build a walking route from the places in the \\Mansfield directory.</p>
     <div class="walkplan__ideas" role="list">
+      <button type="button" class="walkplan__idea" role="listitem">Look for food in this area</button>
       <button type="button" class="walkplan__idea" role="listitem">3 highly rated coffee shops near me</button>
-      <button type="button" class="walkplan__idea" role="listitem">A food crawl near me, 4 stops</button>
-      <button type="button" class="walkplan__idea" role="listitem">Bars for tonight in Vienna</button>
+      <button type="button" class="walkplan__idea" role="listitem">Bars for tonight in this area</button>
       <button type="button" class="walkplan__idea" role="listitem">Museums and a cafe in Vienna's old town</button>
     </div>
     <p class="walkplan__fine">"Near me" uses your location for this one search. It's never stored.</p>
   </section>
+
+  <div class="walkplan__tools">
+    <button type="button" class="walkplan__tool" id="walkplan-draw" aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke-dasharray="3 2.5"/><circle cx="12" cy="12" r="1.6"/></svg><span>Draw area</span>
+    </button>
+    <button type="button" class="walkplan__tool" id="walkplan-clear" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg><span>New walk</span>
+    </button>
+    <div class="walkplan__area" id="walkplan-area" hidden>
+      <span class="walkplan__area-text"></span>
+      <button type="button" class="walkplan__area-clear" aria-label="Remove the circle">&times;</button>
+    </div>
+  </div>
 
   <div class="walkplan__msg" id="walkplan-msg" role="status" aria-live="polite" hidden>
     <p class="walkplan__msg-text"></p>
@@ -39,7 +53,7 @@
     </button>
     <label class="visually-hidden" for="walkplan-input">Describe your walk</label>
     <input type="text" id="walkplan-input" class="walkplan__input" maxlength="300" enterkeyhint="go"
-           placeholder="e.g. 3 highly rated coffee shops near me">
+           placeholder="e.g. food in this area">
     <button type="button" class="walkplan__mic" id="walkplan-mic" aria-label="Speak your walk" hidden>
       <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21"/></svg>
     </button>
@@ -65,5 +79,5 @@
     </div>
   </div>
 </div>
-<script src="/static/js/walk-planner.js?v=2" defer></script>
+<script src="/static/js/walk-planner.js?v=3" defer></script>
 {% endblock %}

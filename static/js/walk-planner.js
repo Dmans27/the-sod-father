@@ -16,6 +16,12 @@
  * Talking to the map uses the same messages as travel route stories
  * (static/js/map-story.js): mansfield:route -> mansfield:route-ready,
  * mansfield:route-view, mansfield:route-walk, mansfield:read-about.
+ *
+ * Before there's a walk the reader sees an explore map (/embed/explore) they
+ * can move around. The map tells us what's on screen (mansfield:view), so
+ * "food in this area" searches there; "Draw area" lets them draw a circle
+ * (mansfield:draw-circle -> mansfield:circle) and the next walk stays inside
+ * it. "New walk" clears the route and goes back to the explore map.
  */
 (function () {
   'use strict';
@@ -44,12 +50,19 @@
   var saveBtn = document.getElementById('wsheet-save');
   var mapsLink = document.getElementById('wsheet-maps');
   var shareBtn = document.getElementById('wsheet-share');
+  var drawBtn = document.getElementById('walkplan-draw');
+  var clearBtn = document.getElementById('walkplan-clear');
+  var areaChip = document.getElementById('walkplan-area');
+  var areaText = areaChip.querySelector('.walkplan__area-text');
 
   var plan = null;          // the walk on screen: {query, title, intro, note, stops, key, map, open}
   var legs = null, durations = null;
   var busy = false;
   var here = null;          // {lat, lng} from this visit, or false if refused
   var saved = false;
+  var view = null;          // what the map shows: {center: [lng, lat], radius, zoom}
+  var circle = null;        // the area the reader drew: {center: [lng, lat], radius}
+  var START = { center: [16.3713, 48.2082], zoom: 13.5 };   // Vienna, until the reader moves the map
 
   function el(tag, cls, text) {
     var n = document.createElement(tag);
@@ -120,6 +133,8 @@
     getLocation().then(function (where) {
       var body = { query: query };
       if (where) { body.lat = where.lat; body.lng = where.lng; }
+      if (view) body.view = { lng: view.center[0], lat: view.center[1], radius: view.radius };
+      if (circle) body.circle = { lng: circle.center[0], lat: circle.center[1], radius: circle.radius };
       if (plan) body.previous = { query: plan.query, stops: plan.stops.map(function (s) {
         return { slug: s.slug, name: s.name, category: s.category, group: s.group, lat: s.lat, lng: s.lng, address: s.address };
       }) };
@@ -159,8 +174,9 @@
     root.classList.add('has-walk');
     intro.hidden = true;
     listBtn.hidden = false;
+    clearBtn.hidden = false;
     input.placeholder = 'Change it: "make it 5 stops", "swap stop 2"…';
-    loadMap(plan.map);
+    loadMap(plan.map, 'walk');
     renderSheet();
     checkSaved();
     say((plan.intro || plan.title) + (plan.note ? ' ' + plan.note : ''), true);
@@ -178,10 +194,30 @@
     root.classList.add('has-walk');
     intro.hidden = true;
     listBtn.hidden = false;
+    clearBtn.hidden = false;
     input.placeholder = 'Change it: "make it 5 stops", "swap stop 2"…';
-    loadMap(plan.map);
+    loadMap(plan.map, 'walk');
     return true;
   }
+
+  // ── Clearing the walk ─────────────────────────────────────────────────
+  // Back to the explore map, at the same spot, ready for a new question.
+  function clearWalk() {
+    plan = null;
+    legs = durations = null;
+    saved = false;
+    closeSheet();
+    root.classList.remove('has-walk', 'is-walking');
+    listBtn.hidden = true;
+    clearBtn.hidden = true;
+    input.value = '';
+    input.placeholder = 'e.g. food in this area';
+    try { history.replaceState(null, '', '/walk'); } catch (e) {}
+    loadMap(exploreUrl(), 'explore');
+    say('Walk cleared. Move the map or draw an area, then ask for a new walk.', false);
+  }
+  clearBtn.addEventListener('click', clearWalk);
+  intro.querySelector('.walkplan__intro-close').addEventListener('click', function () { intro.hidden = true; });
 
   // ── The map ───────────────────────────────────────────────────────────
   var asking = null;
@@ -194,7 +230,13 @@
     probe.remove();
     return h;
   }
-  function loadMap(url) {
+  function exploreUrl() {
+    var at = view || START;
+    return directory + '/embed/explore?' + new URLSearchParams({
+      lng: at.center[0].toFixed(5), lat: at.center[1].toFixed(5), z: (at.zoom || START.zoom).toFixed(2),
+      style: 'mansfield', mode: 'story' }).toString();
+  }
+  function loadMap(url, kind) {
     if (!url || !origin) return;
     try {
       var u = new URL(url);
@@ -203,8 +245,14 @@
       url = u.toString();
     } catch (e) { return; }
     frame.hidden = false;
+    root.classList.toggle('is-exploring', kind === 'explore');
+    setDrawBtn(false);
     frame.onload = function () {
       if (asking) clearInterval(asking);
+      asking = null;
+      post({ type: 'mansfield:watch-view' });              // tell us what's on screen as the reader moves
+      if (circle) post({ type: 'mansfield:circle-set', center: circle.center, radius: circle.radius });
+      if (kind !== 'walk' || !plan) return;
       var tries = 0;
       var stops = plan.stops.map(function (s) { return { listing: s.slug, name: s.name }; });
       function send() {
@@ -217,9 +265,54 @@
     frame.src = url;
   }
 
+  // ── The search area (map view or a drawn circle) ──────────────────────
+  function setDrawBtn(on) {
+    drawBtn.classList.toggle('is-on', on);
+    drawBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    drawBtn.querySelector('span').textContent = on ? 'Drag on the map' : (circle ? 'Redraw area' : 'Draw area');
+  }
+  function paintArea() {
+    areaChip.hidden = !circle;
+    if (circle) {
+      var across = 2 * circle.radius;
+      areaText.textContent = 'Searching inside your circle (' + (across >= 1000 ? (across / 1000).toFixed(1) + ' km' : across + ' m') + ' across)';
+    }
+    setDrawBtn(drawBtn.classList.contains('is-on'));
+  }
+  drawBtn.addEventListener('click', function () {
+    var on = !drawBtn.classList.contains('is-on');
+    post({ type: 'mansfield:draw-circle', on: on });
+    setDrawBtn(on);
+    intro.hidden = true;
+    if (on) say('Press and drag on the map to draw a circle. Tap once for a 500 m circle.', false);
+  });
+  areaChip.querySelector('.walkplan__area-clear').addEventListener('click', function () {
+    circle = null;
+    post({ type: 'mansfield:circle-clear' });
+    paintArea();
+    say('Circle removed. Walks will use what’s on the map again.', false);
+  });
+
   window.addEventListener('message', function (e) {
-    if (e.source !== frame.contentWindow || e.origin !== origin || !e.data || !plan) return;
+    if (e.source !== frame.contentWindow || e.origin !== origin || !e.data) return;
     var t = e.data.type;
+    if (t === 'mansfield:view') {
+      var c = e.data.center, r = Number(e.data.radius), z = Number(e.data.zoom);
+      if (Array.isArray(c) && c.length === 2 && isFinite(c[0]) && isFinite(c[1]) && r > 0) {
+        view = { center: [Number(c[0]), Number(c[1])], radius: Math.round(r), zoom: isFinite(z) ? z : START.zoom };
+      }
+      if (e.data.byUser && !plan) intro.hidden = true;   // they're looking around: get the welcome out of the way
+      return;
+    }
+    if (t === 'mansfield:circle') {
+      var cc = e.data.center, cr = Number(e.data.radius);
+      circle = (Array.isArray(cc) && cc.length === 2 && cr > 0) ? { center: [Number(cc[0]), Number(cc[1])], radius: Math.round(cr) } : null;
+      paintArea();
+      if (circle) { say('Got it. Now ask, e.g. “food in my circle”. The walk stays inside it.', false); input.focus(); }
+      return;
+    }
+    if (t === 'mansfield:draw') { setDrawBtn(!!e.data.on); return; }
+    if (!plan) return;
     if (t === 'mansfield:route-ready') {
       if (asking) { clearInterval(asking); asking = null; }
       // Fill in what a linked walk didn't know yet (names, places) from the map.
@@ -438,6 +531,6 @@
       });
   }
 
-  // Opened with a walk in the link (a saved route)?
-  showLinked();
+  // Opened with a walk in the link (a saved route)? If not, start on the explore map.
+  if (!showLinked()) loadMap(exploreUrl(), 'explore');
 })();

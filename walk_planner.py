@@ -4,7 +4,9 @@
 built from the places in the directory app.
 
   GET  /walk                    the page (static/js/walk-planner.js)
-  POST /api/walk-plan           {query, lat?, lng?, previous?} -> a walk
+  POST /api/walk-plan           {query, lat?, lng?, view?, circle?, previous?} -> a walk
+                                view   = what the reader's map shows {lat, lng, radius}
+                                circle = an area they drew {lat, lng, radius}: the walk stays inside it
   POST /api/walk-plan/voice     a short voice recording -> its text
 
 How a walk is made (the AI never picks places from memory):
@@ -138,6 +140,7 @@ Return JSON only, with exactly these keys:
  "reply": "if clarify: one short, friendly question; if plan: one short sentence saying what you're looking for",
  "title": "a short title for the walk, like '3 top-rated coffee shops near you' (max 50 characters)",
  "near_me": true or false,
+ "map_view": true or false,
  "place": "a named area, street or landmark to walk around, or ''",
  "city": "the city, or ''",
  "groups": ["one or more of: GROUPS"],
@@ -151,18 +154,23 @@ Return JSON only, with exactly these keys:
 Rules:
 - "highly rated", "top rated", "best", "great" -> min_rating 4.5; "good", "well rated" -> 4.2; otherwise 0.
 - Use the number of stops they ask for. With none given, use 3 for one kind of place and 4 or 5 for a mixed walk or crawl.
-- "near me", "nearby", "around here" -> near_me true. With no place or city named, near_me is true.
+- "near me", "nearby", "close to me", "where I am" -> near_me true.
+- map_view is about the part of the map the reader is looking at. "this area", "here", "around here", "on the map", "in view", "this part of town", "what I'm looking at" -> map_view true (only when the reader's map view is available; otherwise treat "around here" as near me).
+- With no place, city or "near me" named: map_view true if the reader's map view is available, otherwise near_me true.
+- If the reader drew a circle on the map, the walk always stays inside it: don't ask where, and leave place and city empty unless they name one.
 - radius_m: "near me"/"nearby" 1500; "within N minutes" -> N*80; a named area 1500; a whole city 4000.
-- If near_me is true, no place or city is named, and the reader's location is NOT available, use action "clarify" and ask where the walk should be.
+- If near_me is true, no place or city is named, there's no circle and no map view, and the reader's location is NOT available, use action "clarify" and ask where the walk should be.
 - If the request has nothing to do with places to go (for example a math question), use "clarify" and say you can plan walks to places in the directory.
 - If there is a previous walk and the reader asks to change it ("swap the second one", "make it 5 stops", "add a bar at the end"), keep the earlier settings unless they change them, and fill keep/drop by stop number.
 """
 
 
-def understand(query, has_location, previous):
+def understand(query, has_location, previous, has_view=False, has_circle=False):
     groups = ", ".join(f"{k} ({v})" for k, v in GROUPS.items())
     lines = [f"Reader's request: {query}",
-             f"Reader's location available: {'yes' if has_location else 'no'}"]
+             f"Reader's location available: {'yes' if has_location else 'no'}",
+             f"Reader's map view available: {'yes' if has_view else 'no'}",
+             f"Reader drew a circle on the map: {'yes' if has_circle else 'no'}"]
     if previous:
         lines.append("Previous request: " + _text(previous.get("query"), MAX_QUERY))
         stops = previous.get("stops") or []
@@ -199,6 +207,7 @@ def understand(query, has_location, previous):
         "reply": _text(plan.get("reply"), 300),
         "title": _text(plan.get("title"), 60) or "Your walk",
         "near_me": bool(plan.get("near_me")),
+        "map_view": bool(plan.get("map_view")) and has_view,
         "place": _text(plan.get("place"), 100),
         "city": _text(plan.get("city"), 60),
         "groups": groups_out,
@@ -213,7 +222,7 @@ def understand(query, has_location, previous):
 
 # ── 2. Finding places (the directory app) ────────────────────────────────
 
-def find_places(settings, lat, lng, radius, min_rating, keywords):
+def find_places(settings, lat, lng, radius, min_rating, keywords, area=None):
     base, key = directory_url(), (os.environ.get("WALK_PLAN_KEY") or "").strip()
     if not base or not key:
         raise WalkError("The walk planner isn't set up yet.")
@@ -224,10 +233,14 @@ def find_places(settings, lat, lng, radius, min_rating, keywords):
         params["q"] = " ".join(keywords)
     if min_rating:
         params["min_rating"] = min_rating
-    # A named place wins over "near me": someone in Vienna asking for "the
-    # Loop in Chicago" wants Chicago. (The directory also puts a named place or
-    # city ahead of lat/lng, which it only uses to pick the right "Main Street".)
-    if settings["place"]:
+    # An area (the circle the reader drew, or the map view for "food in this
+    # area") is searched exactly: its middle and its radius, nothing else.
+    # Otherwise a named place wins over "near me": someone in Vienna asking for
+    # "the Loop in Chicago" wants Chicago. (The directory also puts a named place
+    # or city ahead of lat/lng, which it only uses to pick the right "Main Street".)
+    if area:
+        params.update(lat=area["lat"], lng=area["lng"], radius=int(area["radius"]))
+    elif settings["place"]:
         params["near"] = settings["place"]
         if settings["city"]:
             params["city"] = settings["city"]
@@ -356,8 +369,18 @@ def why_lines(query, stops, settings, start_label):
 
 # ── The whole thing ──────────────────────────────────────────────────────
 
-def plan_walk(query, lat, lng, previous):
-    settings = understand(query, lat is not None and lng is not None, previous)
+def plan_walk(query, lat, lng, previous, view=None, circle=None):
+    settings = understand(query, lat is not None and lng is not None, previous,
+                          has_view=bool(view), has_circle=bool(circle))
+    # Which area to search: a drawn circle always; the map view when the reader
+    # means what's on screen ("food in this area") and hasn't named a place.
+    area, area_kind = None, ""
+    if circle:
+        area, area_kind = circle, "circle"
+    elif view and settings["map_view"] and not settings["place"]:
+        area, area_kind = view, "view"
+    if area and settings["action"] == "clarify" and not settings["place"]:
+        settings["action"] = "plan"     # we know where: no need to ask
     if settings["action"] == "clarify":
         return {"clarify": settings["reply"] or "Where should the walk be? Turn on location or name a place."}
 
@@ -379,7 +402,7 @@ def plan_walk(query, lat, lng, previous):
     radius, min_rating, keywords = settings["radius_m"], settings["min_rating"], settings["keywords"]
     center, places, eased = None, [], []
     for attempt in range(4):
-        center, places = find_places(settings, lat, lng, radius, min_rating, keywords)
+        center, places = find_places(settings, lat, lng, radius, min_rating, keywords, area)
         if center is None and not places:
             return {"clarify": "Where should the walk be? Turn on location, or name a city or a place to start from."}
         usable = [p for p in places if p["slug"] not in dropped]
@@ -389,28 +412,33 @@ def plan_walk(query, lat, lng, previous):
             keywords, eased = [], eased + ["words"]
         elif min_rating > 3.9:
             min_rating, eased = round(min_rating - 0.3, 1), eased + ["rating"]
-        elif radius < 8000:
+        elif radius < 8000 and not area:      # an area is a promise: never walk outside it
             radius, eased = min(20000, radius * 2), eased + ["distance"]
         else:
             break
 
     stops = pick(places, count, settings["groups"], kept, dropped)
     if not stops:
-        where = "near you" if settings["near_me"] else ("around " + (settings["place"] or settings["city"]))
+        where = ("inside your circle" if area_kind == "circle" else "in this part of the map" if area_kind == "view"
+                 else "near you" if settings["near_me"] else ("around " + (settings["place"] or settings["city"])))
         return {"clarify": f"I couldn't find matching places {where} in the directory yet. Try a different kind of place or a bigger area."}
 
     start = (lng, lat) if settings["near_me"] and not settings["place"] and lat is not None and lng is not None else None
+    if start and area and _metres(start, (area["lng"], area["lat"])) > area["radius"]:
+        start = None   # the reader isn't inside the area: the walk starts at its first stop
     if start and center and _metres(start, (center[0], center[1])) > 5000:
         start = None   # the walk is somewhere else (another part of town, another city): don't start it from the reader
     stops = walking_order(stops, start)
-    start_label = "you" if start else (settings["place"] or settings["city"] or "")
+    start_label = "you" if start else (settings["place"] or settings["city"]
+                                       or {"circle": "the circle the reader drew", "view": "the area on the reader's map"}.get(area_kind, ""))
     if start:
         stops[0]["distance"] = round(_metres(start, (stops[0]["lng"], stops[0]["lat"])))
     intro, why = why_lines(query, stops, settings, start_label)
 
     note = ""
     if len(stops) < settings["count"]:
-        note = f"I only found {len(stops)} that fit in the directory, so the walk is shorter."
+        inside = {"circle": " inside your circle", "view": " in this part of the map"}.get(area_kind, " in the directory")
+        note = f"I only found {len(stops)} that fit{inside}, so the walk is shorter."
     elif "rating" in eased:
         note = "Not enough places had the top ratings, so I included a few rated a little lower."
     elif "distance" in eased:
@@ -420,6 +448,7 @@ def plan_walk(query, lat, lng, previous):
     title = settings["title"]
     return {
         "title": title,
+        "area": area_kind,
         "intro": intro or settings["reply"],
         "note": note,
         "start": [start[0], start[1]] if start else None,
@@ -499,9 +528,22 @@ def api_walk_plan():
     if lat is None or lng is None:
         lat = lng = None
     previous = body.get("previous") if isinstance(body.get("previous"), dict) else None
+
+    def area(name):
+        """The map view or drawn circle the page sent: {lat, lng, radius in metres}, or None."""
+        a = body.get(name)
+        if not isinstance(a, dict):
+            return None
+        try:
+            la, ln, r = float(a.get("lat")), float(a.get("lng")), float(a.get("radius"))
+        except (TypeError, ValueError):
+            return None
+        if any(math.isnan(v) for v in (la, ln, r)) or not (-90 <= la <= 90 and -180 <= ln <= 180):
+            return None
+        return {"lat": la, "lng": ln, "radius": max(100.0, min(20000.0, r))}
     try:
         _check_and_count()
-        result = plan_walk(query, lat, lng, previous)
+        result = plan_walk(query, lat, lng, previous, view=area("view"), circle=area("circle"))
     except WalkError as exc:
         msg = str(exc)
         return jsonify(ok=False, error=msg), (401 if msg == "sign_in" else 429 if "today" in msg else 502)
