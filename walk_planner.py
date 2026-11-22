@@ -62,6 +62,7 @@ GROUPS = {
 GROUP_COLORS = {"food": "#E2574C", "coffee": "#C6935A", "bars": "#B368F7", "wine": "#B4436C", "rooftops": "#5AC8E8",
                 "shops": "#F5B301", "hotels": "#5B7CFA", "sights": "#E8833A", "other": "#2f9e7e"}
 MAX_STOPS = 8
+CURATOR = (os.environ.get("CURATOR_NAME") or "Danny").strip()[:40] or "Danny"   # whose picks the directory is
 MAX_QUERY = 300
 MAX_AUDIO = 4 * 1024 * 1024
 AUDIO_TYPES = {"audio/webm": "webm", "audio/mp4": "m4a", "audio/x-m4a": "m4a", "audio/m4a": "m4a",
@@ -292,6 +293,13 @@ def _score(p):
     rating = p.get("rating") or 3.6
     count = p.get("ratingCount") or 0
     s = rating * 2 + math.log10(1 + count) * 0.6 + (p.get("matched") or 0) * 1.5
+    # Places the owner rated themselves ("Add my place") come first: being one of their
+    # picks is worth a lot, and their own stars count more than Google's crowd.
+    mine = p.get("myRating")
+    if mine:
+        s += 2.0 + (float(mine) - 3.5) * 1.5
+    elif p.get("myTake"):
+        s += 1.5
     if p.get("distance") is not None:
         s -= p["distance"] / 1000.0 * 0.7
     return s
@@ -351,7 +359,7 @@ def walking_order(stops, start):
 
 WHY_SYSTEM = """You write the short notes for a walking route in a city guide. You get the reader's request and the chosen stops with their facts.
 Return JSON only: {"intro": "one friendly sentence introducing the walk (max 25 words)", "why": ["one line per stop, in order"]}
-Each line: at most 14 words, why this stop fits the request, using ONLY the facts given (rating, kind of place, description, distance). Never invent dishes, prices, opening hours or anything else not given. No emojis."""
+Each line: at most 14 words, why this stop fits the request, using ONLY the facts given (rating, kind of place, description, distance, the curator's take and tags). When a stop has the curator's take, base its line on that, in the same spirit (don't quote it word for word). Never invent dishes, prices, opening hours or anything else not given. No emojis."""
 
 
 def why_lines(query, stops, settings, start_label):
@@ -360,6 +368,12 @@ def why_lines(query, stops, settings, start_label):
         bits = [f"{i + 1}. {s['name']}", s.get("category") or ""]
         if s.get("rating"):
             bits.append(f"rated {s['rating']} from {s.get('ratingCount') or 'some'} reviews")
+        if s.get("myTake"):
+            bits.append(f"{CURATOR}'s take: " + s["myTake"][:240])
+        if s.get("myRating"):
+            bits.append(f"{CURATOR} rates it {s['myRating']}/5")
+        if s.get("myTags"):
+            bits.append("tags: " + s["myTags"][:120])
         if s.get("about"):
             bits.append("about: " + s["about"][:160])
         if i == 0 and s.get("distance") is not None and start_label:
@@ -378,7 +392,8 @@ def why_lines(query, stops, settings, start_label):
             return _text(out.get("intro"), 220), why
     except Exception as exc:  # the walk still works without the notes
         print("walk: notes failed:", exc)
-    return "", [(f"Rated {s['rating']}" if s.get("rating") else (s.get("category") or "").replace("_", " ").capitalize())
+    return "", [(_text(s["myTake"], 120) if s.get("myTake") else
+                 f"Rated {s['rating']}" if s.get("rating") else (s.get("category") or "").replace("_", " ").capitalize())
                 for s in stops]
 
 
