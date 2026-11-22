@@ -2956,3 +2956,4 @@ body.walk-page .site-main { padding: 0; max-width: none; }
 
 /* "Plan your own walk" link under a route story's "Walk this route" card */
 .route-card__plan { display: block; margin-top: 12px; text-align: center; font-size: 14px; font-weight: 700; color: var(--fairway); }
+@media (max-width: 699px) { .walkplan__tools { gap: 5px; } .walkplan__tool { padding: 0 10px 0 8px; gap: 5px; font-size: 13px; } .walkplan__area { padding-left: 10px; font-size: 13px; } }

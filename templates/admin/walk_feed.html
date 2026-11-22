@@ -1,0 +1,88 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Walk feed{% endblock %}
+
+{% macro stops_line(item) -%}
+  {{ item.stops | map(attribute='name') | join(' → ') }}
+{%- endmacro %}
+
+{% block admin_content %}
+<style>
+  .wf-box { border: 1px solid var(--line, #e3e3e3); border-radius: 12px; padding: 14px 16px; margin-bottom: 22px; }
+  .wf-box h2 { font-size: 18px; margin: 0 0 4px; }
+  .wf-sub { margin: 0 0 12px; font-size: 13px; color: var(--ink-faint, #666); }
+  .wf-item { border-top: 1px solid var(--line, #eee); padding: 12px 0; }
+  .wf-item:first-of-type { border-top: 0; }
+  .wf-tag { display: inline-block; padding: 1px 8px; border-radius: 999px; background: rgba(27, 67, 50, 0.1); font-size: 12px; font-weight: 600; }
+  .wf-title { font-weight: 700; margin: 4px 0 2px; }
+  .wf-stops { font-size: 13px; color: var(--ink-faint, #666); margin: 2px 0 6px; }
+  .wf-item input[type=text], .wf-item textarea { width: 100%; box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--line, #ccc);
+    border-radius: 8px; font: inherit; background: transparent; color: inherit; }
+  .wf-item textarea { min-height: 54px; margin-top: 6px; }
+  .wf-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+  .wf-remove { font-size: 13px; display: inline-flex; gap: 6px; align-items: center; margin-top: 6px; }
+  .wf-empty { color: var(--ink-faint, #666); font-size: 14px; margin: 0; }
+</style>
+
+<div class="admin-page-head">
+  <h1>Walk feed</h1>
+</div>
+<p class="admin-hint">
+  The “This week in {{ city }}” cards on the Plan a walk page. The AI writes a draft from this week's
+  <a href="{{ url_for('walk.walk_insights') }}">walk insights</a> (only things at least {{ min_people }} different people did),
+  your own rated places and the time of year. Every stop is checked against your directory. Nothing changes for readers until you publish.
+</p>
+
+<section class="wf-box">
+  <h2>Draft</h2>
+  {% if draft %}
+    <p class="wf-sub">{{ draft.note }} Made {{ draft.created_at[:16] | replace('T', ' ') }} UTC. Edit the wording, remove what you don't like, then publish.</p>
+    <form method="post" action="{{ url_for('walk_feed.feed_action', action='publish') }}">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      {% for it in draft['items'] %}
+        <div class="wf-item">
+          <span class="wf-tag">{{ it.tag }}</span>
+          <p class="wf-stops">{{ stops_line(it) }} · <a href="{{ it.link }}" target="_blank" rel="noopener">try it ↗</a></p>
+          <input type="text" name="title_{{ loop.index0 }}" value="{{ it.title }}" maxlength="60" aria-label="Title">
+          <textarea name="blurb_{{ loop.index0 }}" maxlength="200" aria-label="Blurb">{{ it.blurb }}</textarea>
+          <label class="wf-remove"><input type="checkbox" name="remove_{{ loop.index0 }}" value="1"> Leave this one out</label>
+        </div>
+      {% endfor %}
+      <div class="wf-row">
+        <button type="submit" class="admin-btn admin-btn--primary">Publish</button>
+        <button type="submit" class="admin-btn" formaction="{{ url_for('walk_feed.feed_action', action='save') }}">Save draft</button>
+        <button type="submit" class="admin-btn" formaction="{{ url_for('walk_feed.feed_action', action='discard') }}"
+                onclick="return confirm('Throw this draft away?');">Discard</button>
+      </div>
+    </form>
+  {% else %}
+    <p class="wf-empty">No draft right now.</p>
+  {% endif %}
+  <form method="post" action="{{ url_for('walk_feed.feed_action', action='generate') }}" class="wf-row"
+        onsubmit="this.querySelector('button').disabled = true; this.querySelector('button').textContent = 'Writing… (up to a minute)';">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <button type="submit" class="admin-btn{% if not draft %} admin-btn--primary{% endif %}">{{ 'Write a new draft' if draft else "Write this week's draft" }}</button>
+  </form>
+</section>
+
+<section class="wf-box">
+  <h2>Live now</h2>
+  {% if live %}
+    <p class="wf-sub">Published {{ (live.published_at or '')[:16] | replace('T', ' ') }} UTC.</p>
+    {% for it in live['items'] %}
+      <div class="wf-item">
+        <span class="wf-tag">{{ it.tag }}</span>
+        <p class="wf-title">{{ it.title }}</p>
+        <p class="wf-stops">{{ stops_line(it) }}</p>
+        <p style="margin:0;font-size:14px;">{{ it.blurb }}</p>
+      </div>
+    {% endfor %}
+    <form method="post" action="{{ url_for('walk_feed.feed_action', action='unpublish') }}" class="wf-row"
+          onsubmit="return confirm('Take the feed off the Plan a walk page?');">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <button type="submit" class="admin-btn">Take down</button>
+    </form>
+  {% else %}
+    <p class="wf-empty">Nothing published. The Plan a walk page shows no feed.</p>
+  {% endif %}
+</section>
+{% endblock %}
