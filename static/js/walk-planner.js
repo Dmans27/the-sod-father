@@ -210,7 +210,7 @@
     legs = durations = null;
     saved = false;
     closeSheet();
-    root.classList.remove('has-walk', 'is-walking');
+    root.classList.remove('has-walk', 'is-walking', 'has-panel');
     listBtn.hidden = true;
     clearBtn.hidden = true;
     input.value = '';
@@ -249,6 +249,7 @@
     } catch (e) { return; }
     frame.hidden = false;
     root.classList.toggle('is-exploring', kind === 'explore');
+    root.classList.remove('has-panel');
     setDrawBtn(false);
     frame.onload = function () {
       if (asking) clearInterval(asking);
@@ -341,6 +342,11 @@
       return;
     }
     if (t === 'mansfield:draw') { clearTimeout(drawAck); setDrawBtn(!!e.data.on); return; }
+    if (t === 'mansfield:panel') {   // a full-screen listing is open on the map: get our buttons out of its way
+      root.classList.toggle('has-panel', !!e.data.open);
+      if (e.data.open) msg.hidden = true;
+      return;
+    }
     if (!plan) return;
     if (t === 'mansfield:route-ready') {
       if (asking) { clearInterval(asking); asking = null; }

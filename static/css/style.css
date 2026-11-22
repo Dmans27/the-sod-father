@@ -2948,6 +2948,9 @@ body.walk-page .site-main { padding: 0; max-width: none; }
 .walkplan__area[hidden] { display: none; }
 .walkplan__area-clear { flex: 0 0 auto; width: 26px; height: 26px; border: 0; border-radius: 50%; background: rgba(11, 36, 20, 0.15); color: #0b2414; font-size: 17px; line-height: 1; cursor: pointer; }
 .walkplan.is-walking .walkplan__tools, .walkplan.is-walking .walkplan__area { display: none; }
+/* A full-screen listing is open on the map (its own "Back to map" is at the top): hide our buttons and ask bar. */
+.walkplan.has-panel .walkplan__tools, .walkplan.has-panel .walkplan__home, .walkplan.has-panel .walkplan__ask,
+.walkplan.has-panel .walkplan__msg { display: none; }
 
 /* "Plan your own walk" link under a route story's "Walk this route" card */
 .route-card__plan { display: block; margin-top: 12px; text-align: center; font-size: 14px; font-weight: 700; color: var(--fairway); }
