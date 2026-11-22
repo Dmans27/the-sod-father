@@ -7,6 +7,8 @@ built from the places in the directory app.
   POST /api/walk-plan           {query, lat?, lng?, view?, circle?, previous?} -> a walk
                                 view   = what the reader's map shows {lat, lng, radius}
                                 circle = an area they drew {lat, lng, radius}: the walk stays inside it
+                                polygon = the shape they drew with a finger [[lng, lat], ...]
+                                          (circle is then the circle around it, used for the search)
   POST /api/walk-plan/voice     a short voice recording -> its text
 
 How a walk is made (the AI never picks places from memory):
@@ -222,6 +224,15 @@ def understand(query, has_location, previous, has_view=False, has_circle=False):
 
 # ── 2. Finding places (the directory app) ────────────────────────────────
 
+def _inside(point, polygon):
+    """Is [lng, lat] inside the drawn shape? (Ray casting: count how many edges a line to the east crosses.)"""
+    x, y, inside = point[0], point[1], False
+    for (x1, y1), (x2, y2) in zip(polygon, polygon[1:] + polygon[:1]):
+        if (y1 > y) != (y2 > y) and x < x1 + (y - y1) * (x2 - x1) / (y2 - y1):
+            inside = not inside
+    return inside
+
+
 def find_places(settings, lat, lng, radius, min_rating, keywords, area=None):
     base, key = directory_url(), (os.environ.get("WALK_PLAN_KEY") or "").strip()
     if not base or not key:
@@ -240,6 +251,8 @@ def find_places(settings, lat, lng, radius, min_rating, keywords, area=None):
     # or city ahead of lat/lng, which it only uses to pick the right "Main Street".)
     if area:
         params.update(lat=area["lat"], lng=area["lng"], radius=int(area["radius"]))
+        if area.get("polygon"):
+            params["limit"] = 60          # the circle around a drawn shape holds more than the shape: fetch more, then trim
     elif settings["place"]:
         params["near"] = settings["place"]
         if settings["city"]:
@@ -268,6 +281,8 @@ def find_places(settings, lat, lng, radius, min_rating, keywords, area=None):
         data = {}
     center = data.get("center") if isinstance(data.get("center"), list) else None
     places = [p for p in (data.get("places") or []) if isinstance(p, dict) and SLUG.match(str(p.get("slug") or ""))]
+    if area and area.get("polygon"):   # only what's inside the shape the reader drew
+        places = [p for p in places if _inside((float(p["lng"]), float(p["lat"])), area["polygon"])]
     return center, places
 
 
@@ -419,7 +434,7 @@ def plan_walk(query, lat, lng, previous, view=None, circle=None):
 
     stops = pick(places, count, settings["groups"], kept, dropped)
     if not stops:
-        where = ("inside your circle" if area_kind == "circle" else "in this part of the map" if area_kind == "view"
+        where = ("inside the area you drew" if area_kind == "circle" else "in this part of the map" if area_kind == "view"
                  else "near you" if settings["near_me"] else ("around " + (settings["place"] or settings["city"])))
         return {"clarify": f"I couldn't find matching places {where} in the directory yet. Try a different kind of place or a bigger area."}
 
@@ -430,14 +445,14 @@ def plan_walk(query, lat, lng, previous, view=None, circle=None):
         start = None   # the walk is somewhere else (another part of town, another city): don't start it from the reader
     stops = walking_order(stops, start)
     start_label = "you" if start else (settings["place"] or settings["city"]
-                                       or {"circle": "the circle the reader drew", "view": "the area on the reader's map"}.get(area_kind, ""))
+                                       or {"circle": "the area the reader drew on the map", "view": "the area on the reader's map"}.get(area_kind, ""))
     if start:
         stops[0]["distance"] = round(_metres(start, (stops[0]["lng"], stops[0]["lat"])))
     intro, why = why_lines(query, stops, settings, start_label)
 
     note = ""
     if len(stops) < settings["count"]:
-        inside = {"circle": " inside your circle", "view": " in this part of the map"}.get(area_kind, " in the directory")
+        inside = {"circle": " inside the area you drew", "view": " in this part of the map"}.get(area_kind, " in the directory")
         note = f"I only found {len(stops)} that fit{inside}, so the walk is shorter."
     elif "rating" in eased:
         note = "Not enough places had the top ratings, so I included a few rated a little lower."
@@ -541,9 +556,29 @@ def api_walk_plan():
         if any(math.isnan(v) for v in (la, ln, r)) or not (-90 <= la <= 90 and -180 <= ln <= 180):
             return None
         return {"lat": la, "lng": ln, "radius": max(100.0, min(20000.0, r))}
+
+    def polygon():
+        """The shape the reader drew: 4 to 400 [lng, lat] points, or None."""
+        raw = body.get("polygon")
+        if not isinstance(raw, list) or not 4 <= len(raw) <= 400:
+            return None
+        pts = []
+        for pt in raw:
+            try:
+                x, y = float(pt[0]), float(pt[1])
+            except (TypeError, ValueError, IndexError, KeyError):
+                return None
+            if math.isnan(x) or math.isnan(y) or not (-180 <= x <= 180 and -90 <= y <= 90):
+                return None
+            pts.append((x, y))
+        return pts
+
+    circle = area("circle")
+    if circle:
+        circle["polygon"] = polygon()
     try:
         _check_and_count()
-        result = plan_walk(query, lat, lng, previous, view=area("view"), circle=area("circle"))
+        result = plan_walk(query, lat, lng, previous, view=area("view"), circle=circle)
     except WalkError as exc:
         msg = str(exc)
         return jsonify(ok=False, error=msg), (401 if msg == "sign_in" else 429 if "today" in msg else 502)

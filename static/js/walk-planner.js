@@ -61,7 +61,7 @@
   var here = null;          // {lat, lng} from this visit, or false if refused
   var saved = false;
   var view = null;          // what the map shows: {center: [lng, lat], radius, zoom}
-  var circle = null;        // the area the reader drew: {center: [lng, lat], radius}
+  var circle = null;        // the area the reader drew: {center: [lng, lat], radius, polygon: [[lng, lat], ...]}
   var START = { center: [16.3713, 48.2082], zoom: 13.5 };   // Vienna, until the reader moves the map
 
   function el(tag, cls, text) {
@@ -134,7 +134,10 @@
       var body = { query: query };
       if (where) { body.lat = where.lat; body.lng = where.lng; }
       if (view) body.view = { lng: view.center[0], lat: view.center[1], radius: view.radius };
-      if (circle) body.circle = { lng: circle.center[0], lat: circle.center[1], radius: circle.radius };
+      if (circle) {
+        body.circle = { lng: circle.center[0], lat: circle.center[1], radius: circle.radius };
+        if (circle.polygon) body.polygon = circle.polygon.map(function (p) { return [+p[0].toFixed(6), +p[1].toFixed(6)]; });
+      }
       if (plan) body.previous = { query: plan.query, stops: plan.stops.map(function (s) {
         return { slug: s.slug, name: s.name, category: s.category, group: s.group, lat: s.lat, lng: s.lng, address: s.address };
       }) };
@@ -251,7 +254,8 @@
       if (asking) clearInterval(asking);
       asking = null;
       post({ type: 'mansfield:watch-view' });              // tell us what's on screen as the reader moves
-      if (circle) post({ type: 'mansfield:circle-set', center: circle.center, radius: circle.radius });
+      if (circle && circle.polygon) post({ type: 'mansfield:area-set', polygon: circle.polygon });
+      else if (circle) post({ type: 'mansfield:circle-set', center: circle.center, radius: circle.radius });
       if (kind !== 'walk' || !plan) return;
       var tries = 0;
       var stops = plan.stops.map(function (s) { return { listing: s.slug, name: s.name }; });
@@ -275,12 +279,12 @@
     areaChip.hidden = !circle;
     if (circle) {
       var across = 2 * circle.radius;
-      areaText.textContent = 'Searching inside your circle (' + (across >= 1000 ? (across / 1000).toFixed(1) + ' km' : across + ' m') + ' across)';
+      areaText.textContent = 'Searching inside your drawn area (about ' + (across >= 1000 ? (across / 1000).toFixed(1) + ' km' : across + ' m') + ' across)';
     }
     setDrawBtn(drawBtn.classList.contains('is-on'));
   }
   // The map answers mansfield:draw {on}. If it doesn't, it's an older map that can't draw yet.
-  var drawAck = null;
+  var drawAck = null, areaAt = 0;
   drawBtn.addEventListener('click', function () {
     var on = !drawBtn.classList.contains('is-on');
     post({ type: 'mansfield:draw-circle', on: on });
@@ -288,7 +292,7 @@
     intro.hidden = true;
     clearTimeout(drawAck);
     if (!on) { msg.hidden = true; return; }
-    say('The map is locked so you can draw. Press and drag to draw a circle, or tap once for a 500 m circle.', false, true);
+    say('The map is locked. Draw round the area with your finger, like a pencil, and lift to finish. (A single tap makes a 500 m circle.)', false, true);
     drawAck = setTimeout(function () {
       setDrawBtn(false);
       say('Drawing isn’t available on this map yet. Please try again in a few minutes.', false);
@@ -298,7 +302,7 @@
     circle = null;
     post({ type: 'mansfield:circle-clear' });
     paintArea();
-    say('Circle removed. Walks will use what’s on the map again.', false);
+    say('Area removed. Walks will use what’s on the map again.', false);
   });
 
   window.addEventListener('message', function (e) {
@@ -312,11 +316,15 @@
       if (e.data.byUser && !plan) intro.hidden = true;   // they're looking around: get the welcome out of the way
       return;
     }
-    if (t === 'mansfield:circle') {
-      var cc = e.data.center, cr = Number(e.data.radius);
+    if (t === 'mansfield:area' || t === 'mansfield:circle') {
+      // The map sends "area" (the drawn shape) and, for older pages, "circle" right after it: keep the shape.
+      if (t === 'mansfield:circle' && circle && circle.polygon && Date.now() - areaAt < 2000) return;
+      var cc = e.data.center, cr = Number(e.data.radius), poly = Array.isArray(e.data.polygon) ? e.data.polygon : null;
       circle = (Array.isArray(cc) && cc.length === 2 && cr > 0) ? { center: [Number(cc[0]), Number(cc[1])], radius: Math.round(cr) } : null;
+      if (circle && poly && poly.length >= 4 && poly.length <= 400) circle.polygon = poly.map(function (p) { return [Number(p[0]), Number(p[1])]; });
+      if (t === 'mansfield:area') areaAt = Date.now();
       paintArea();
-      if (circle) { say('Area set. Now ask, e.g. “Search this area for food”. The walk stays inside your circle.', false); input.focus(); }
+      if (circle) { say('Area set. Now ask, e.g. “Search this area for food”. The walk stays inside what you drew.', false); input.focus(); }
       return;
     }
     if (t === 'mansfield:draw') { clearTimeout(drawAck); setDrawBtn(!!e.data.on); return; }
