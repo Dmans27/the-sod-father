@@ -254,6 +254,7 @@
       if (asking) clearInterval(asking);
       asking = null;
       post({ type: 'mansfield:watch-view' });              // tell us what's on screen as the reader moves
+      sendInsets();
       if (circle && circle.polygon) post({ type: 'mansfield:area-set', polygon: circle.polygon });
       else if (circle) post({ type: 'mansfield:circle-set', center: circle.center, radius: circle.radius });
       if (kind !== 'walk' || !plan) return;
@@ -269,6 +270,16 @@
     frame.src = url;
   }
 
+  // Tell the map how much of its top our buttons cover, so a place card it opens isn't hidden behind them.
+  var toolsEl = root.querySelector('.walkplan__tools');
+  function sendInsets() {
+    requestAnimationFrame(function () {
+      var shown = toolsEl && getComputedStyle(toolsEl).display !== 'none';
+      post({ type: 'mansfield:insets', top: shown ? Math.round(toolsEl.getBoundingClientRect().bottom + 6) : 0 });
+    });
+  }
+  window.addEventListener('resize', sendInsets);
+
   // ── The search area (map view or a drawn circle) ──────────────────────
   function setDrawBtn(on) {
     drawBtn.classList.toggle('is-on', on);
@@ -283,6 +294,7 @@
       areaChip.title = 'The walk only uses places inside the area you drew';
     }
     setDrawBtn(drawBtn.classList.contains('is-on'));
+    sendInsets();
   }
   // The map answers mansfield:draw {on}. If it doesn't, it's an older map that can't draw yet.
   var drawAck = null, areaAt = 0;
@@ -352,7 +364,8 @@
     } else if (t === 'mansfield:read-about') {
       openSheet(Math.round(Number(e.data.index)));
     } else if (t === 'mansfield:walk') {
-      root.classList.toggle('is-walking', !!e.data.on);   // Start walk is on: the map's walk banner takes the top
+      root.classList.toggle('is-walking', !!e.data.on);
+      sendInsets();   // Start walk is on: the map's walk banner takes the top
       if (e.data.on) msg.hidden = true;
     }
   });
