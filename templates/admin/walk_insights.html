@@ -1,0 +1,89 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Walk insights{% endblock %}
+
+{% macro badges(counts) -%}
+  {%- set labels = {'plan': 'in walks', 'change': 'in changed walks', 'save': 'saved', 'share': 'shared', 'share_open': 'link opened', 'start': 'walked', 'place': 'read about'} -%}
+  {%- for k, n in counts.items() if k in labels %}<span class="wi-chip">{{ n }} {{ labels[k] }}</span>{% endfor -%}
+{%- endmacro %}
+
+{% block admin_content %}
+<style>
+  .wi-tabs { display: flex; gap: 8px; margin: 0 0 18px; }
+  .wi-tabs a { padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line, #ddd); text-decoration: none; color: inherit; font-weight: 600; font-size: 14px; }
+  .wi-tabs a.is-on { background: #1b4332; border-color: #1b4332; color: #fff; }
+  .wi-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; margin-bottom: 24px; }
+  .wi-stat { padding: 12px 14px; border: 1px solid var(--line, #e3e3e3); border-radius: 12px; }
+  .wi-stat b { display: block; font-size: 26px; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .wi-stat span { font-size: 13px; color: var(--ink-faint, #666); }
+  .wi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+  .wi-box { border: 1px solid var(--line, #e3e3e3); border-radius: 12px; padding: 14px 16px; }
+  .wi-box h2 { font-size: 17px; margin: 0 0 4px; }
+  .wi-box p.wi-sub { margin: 0 0 10px; font-size: 13px; color: var(--ink-faint, #666); }
+  .wi-list { list-style: none; margin: 0; padding: 0; }
+  .wi-list li { display: flex; gap: 10px; align-items: baseline; padding: 7px 0; border-top: 1px solid var(--line, #eee); font-size: 14px; }
+  .wi-list li:first-child { border-top: 0; }
+  .wi-n { min-width: 30px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .wi-main { flex: 1; min-width: 0; }
+  .wi-people { font-size: 12px; color: var(--ink-faint, #666); white-space: nowrap; }
+  .wi-chip { display: inline-block; margin: 3px 4px 0 0; padding: 1px 7px; border-radius: 999px; background: rgba(27, 67, 50, 0.08); font-size: 12px; }
+  .wi-empty { color: var(--ink-faint, #666); font-size: 14px; margin: 0; }
+</style>
+
+<div class="admin-page-head">
+  <h1>Walk insights</h1>
+</div>
+<p class="admin-hint">
+  What people asked for, and which walks and places they saved, shared and actually walked. Counts only:
+  no locations and no names are kept, and anything older than 180 days is deleted automatically.
+  “People” counts different readers, so one busy reader can’t make something look popular.
+</p>
+
+<nav class="wi-tabs">
+  {% for d in (7, 30, 90) %}<a href="?days={{ d }}" class="{{ 'is-on' if data.days == d }}">Last {{ d }} days</a>{% endfor %}
+</nav>
+
+{% set t = data.totals %}
+<div class="wi-stats">
+  <div class="wi-stat"><b>{{ data.people }}</b><span>people</span></div>
+  <div class="wi-stat"><b>{{ (t.plan or 0) + (t.change or 0) }}</b><span>walks planned</span></div>
+  <div class="wi-stat"><b>{{ t.save or 0 }}</b><span>saved</span></div>
+  <div class="wi-stat"><b>{{ t.share or 0 }}</b><span>shared</span></div>
+  <div class="wi-stat"><b>{{ t.share_open or 0 }}</b><span>shared links opened</span></div>
+  <div class="wi-stat"><b>{{ t.start or 0 }}</b><span>walks started</span></div>
+  <div class="wi-stat"><b>{{ t.no_match or 0 }}</b><span>no places found</span></div>
+</div>
+
+<div class="wi-grid">
+  <section class="wi-box">
+    <h2>What people search for</h2>
+    <p class="wi-sub">Requests that became a walk (or needed a follow-up question).</p>
+    {% if data.searches %}<ol class="wi-list">
+      {% for e in data.searches %}<li><span class="wi-n">{{ e.n }}</span><span class="wi-main">{{ e.text }}</span><span class="wi-people">{{ e.people }} {{ 'person' if e.people == 1 else 'people' }}</span></li>{% endfor %}
+    </ol>{% else %}<p class="wi-empty">No searches yet.</p>{% endif %}
+  </section>
+
+  <section class="wi-box">
+    <h2>Asked for, but not in your directory</h2>
+    <p class="wi-sub">The planner found nothing that fit: ideas for places to add.</p>
+    {% if data.missing %}<ol class="wi-list">
+      {% for e in data.missing %}<li><span class="wi-n">{{ e.n }}</span><span class="wi-main">{{ e.text }}</span><span class="wi-people">{{ e.people }} {{ 'person' if e.people == 1 else 'people' }}</span></li>{% endfor %}
+    </ol>{% else %}<p class="wi-empty">Nothing missing so far.</p>{% endif %}
+  </section>
+
+  <section class="wi-box">
+    <h2>Popular places</h2>
+    <p class="wi-sub">Weighted: walked counts most, then saved and shared, then showing up in a walk.</p>
+    {% if data.places %}<ol class="wi-list">
+      {% for e in data.places %}<li><span class="wi-n">{{ loop.index }}</span><span class="wi-main">{{ e.name }}<br>{{ badges(e['in']) }}</span><span class="wi-people">{{ e.people }} {{ 'person' if e.people == 1 else 'people' }}</span></li>{% endfor %}
+    </ol>{% else %}<p class="wi-empty">No places yet.</p>{% endif %}
+  </section>
+
+  <section class="wi-box">
+    <h2>Walks people liked</h2>
+    <p class="wi-sub">Walks that were saved, shared, opened from a link or walked.</p>
+    {% if data.walks %}<ol class="wi-list">
+      {% for e in data.walks %}<li><span class="wi-n">{{ loop.index }}</span><span class="wi-main">{{ e.places|join(' → ') or e.walk }}<br>{{ badges(e['in']) }}</span><span class="wi-people">{{ e.people }} {{ 'person' if e.people == 1 else 'people' }}</span></li>{% endfor %}
+    </ol>{% else %}<p class="wi-empty">No saved or shared walks yet.</p>{% endif %}
+  </section>
+</div>
+{% endblock %}

@@ -408,9 +408,12 @@
       durations = Array.isArray(e.data.durations) ? e.data.durations.map(Number) : null;
       renderSheet();
     } else if (t === 'mansfield:read-about') {
-      openSheet(Math.round(Number(e.data.index)));
+      var at = Math.round(Number(e.data.index));
+      openSheet(at);
+      if (plan.stops[at]) track('place', [plan.stops[at]]);
     } else if (t === 'mansfield:walk') {
       root.classList.toggle('is-walking', !!e.data.on);
+      if (e.data.on) track('start');
       sendInsets();   // Start walk is on: the map's walk banner takes the top
       if (e.data.on) msg.hidden = true;
     }
@@ -485,6 +488,20 @@
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
   listBtn.addEventListener('click', function () { openSheet(-1); });
 
+  // ── What readers do with a walk ───────────────────────────────────────
+  // Save, share, start and "read about" are counted (no location, no name)
+  // so the weekly feed can show what people actually liked.
+  function track(kind, stops) {
+    if (!plan) return;
+    var mine = plan;
+    var list = (stops || mine.stops).filter(function (s) { return s.slug; }).map(function (s) { return { slug: s.slug, name: s.name || '' }; });
+    ensureKey().then(function (key) {
+      var body = JSON.stringify({ kind: kind, walk: key || (mine.share ? mine.share.slice(3) : ''), places: list });
+      fetch('/api/walk-event', { method: 'POST', credentials: 'same-origin', keepalive: true,
+        headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': READER.csrf || '' }, body: body }).catch(function () {});
+    });
+  }
+
   // ── Save and share ────────────────────────────────────────────────────
   function paintSave() {
     saveBtn.classList.toggle('is-saved', saved);
@@ -538,7 +555,8 @@
         if (!res.ok) { say('Couldn’t save the route. Please try again.', false); return; }
         saved = !!res.d.saved;
         paintSave();
-        say(saved ? 'Saved to your profile, under Routes.' : 'Removed from your profile.', false);
+        track(saved ? 'save' : 'unsave');
+        say(saved ? 'Saved to your profile, under Routes.' : 'Removed from your profile.', true);
       })
       .catch(function () { saving = false; say('Couldn’t reach the server. Please try again.', false); });
   });
@@ -573,11 +591,12 @@
     copyUrl(url);
   }
   function copyUrl(url) {
-    var done = function () { say('Link copied. Paste it anywhere to share this walk.', false); };
+    var done = function () { say('Link copied. Paste it anywhere to share this walk.', true); };
     try { navigator.clipboard.writeText(url).then(done, function () { say(url, false, true); }); } catch (e) { say(url, false, true); }
   }
   shareBtn.addEventListener('click', function () {
     if (!plan) return;
+    track('share');
     if (plan.share) { shareUrl(window.location.origin + plan.share); return; }
     makeShare().then(function (u) { shareUrl(window.location.origin + (u || plan.open || '/walk')); });
   });

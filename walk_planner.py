@@ -605,6 +605,12 @@ def api_walk_plan():
         print("walk: unexpected failure:", exc)
         return jsonify(ok=False, error="Something went wrong planning that walk. Please try again."), 500
     # The location is only used for this one request: never stored or logged.
+    if result.get("clarify"):
+        kind = "no_match" if str(result["clarify"]).startswith("I couldn't find") else "unclear"
+        log_event(kind, query=query)
+    else:
+        log_event("change" if previous else "plan", query=query, area=result.get("area"),
+                  walk=result.get("key"), places=result.get("stops"))
     return jsonify(ok=True, query=query, **result)
 
 
@@ -728,6 +734,10 @@ def walk_shared(code):
         row = db.query_one("SELECT code, title, stops_json, area_json FROM walk_shares WHERE code = :c", c=code)
         if row:
             db.execute("UPDATE walk_shares SET opens = opens + 1 WHERE code = :c", c=code)
+            opened = json.loads(row["stops_json"])
+            slugs = ",".join(x["slug"] for x in opened)
+            # Counted under the walk itself (same key as Save uses), not the link.
+            log_event("share_open", walk="walk:" + hashlib.sha1(slugs.encode()).hexdigest()[:16], places=opened)
     except Exception as exc:
         print("walk: could not load share:", exc)
         row = None
@@ -749,3 +759,162 @@ def walk_shared(code):
     }
     return render_template("walk.html", directory=directory_url(), categories=CATEGORIES,
                            active_category=None, shared=shared)
+
+
+# ── What readers do with walks (the signals for the weekly feed) ───────────
+# One row per thing a reader did: planned a walk, asked for something the
+# directory doesn't have, saved / shared / started a walk, opened a shared
+# link, read about a stop. No location and no reader identity is kept: `who`
+# is a one-way hash, only used to count *different* people (so one person
+# can't make something "trending"). Rows older than RETENTION_DAYS are removed.
+
+EVENT_KINDS = {"plan", "change", "unclear", "no_match", "save", "unsave", "share", "share_open", "start", "place"}
+CLIENT_EVENTS = {"save", "unsave", "share", "start", "place"}   # the ones the page reports
+RETENTION_DAYS = 180
+_events_ready = False
+
+
+def _events_table():
+    global _events_ready
+    if _events_ready:
+        return
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS walk_events (
+            id      TEXT PRIMARY KEY,
+            kind    TEXT NOT NULL,
+            day     TEXT NOT NULL,
+            at      TEXT NOT NULL,
+            who     TEXT,
+            walk    TEXT,
+            query   TEXT,
+            area    TEXT,
+            places  TEXT
+        )""")
+    db.execute("CREATE INDEX IF NOT EXISTS idx_walk_events_day ON walk_events (day, kind)")
+    db.execute("DELETE FROM walk_events WHERE day < :d", d=_event_day(-RETENTION_DAYS))
+    _events_ready = True
+
+
+def _event_day(offset=0):
+    from datetime import date, timedelta
+    return (date.today() + timedelta(days=offset)).isoformat()
+
+
+def _event_who():
+    """A stand-in for the reader that can't be turned back into who they are."""
+    reader = current_reader()
+    raw = ("r:" + str(reader["id"])) if reader else ("s:" + str(session.get("_wid") or ""))
+    if not reader and not session.get("_wid"):
+        session["_wid"] = hashlib.sha1(os.urandom(16)).hexdigest()[:16]
+        raw = "s:" + session["_wid"]
+    secret = os.environ.get("SECRET_KEY", "") or "walk-events"
+    return hashlib.sha256((secret + "|" + raw).encode()).hexdigest()[:16]
+
+
+def _event_places(stops):
+    out = []
+    for s in (stops or [])[:25]:
+        if isinstance(s, dict) and _SLUG_RE.match(str(s.get("slug") or "")):
+            out.append({"slug": s["slug"], "name": re.sub(r"\s+", " ", str(s.get("name") or "")).strip()[:80]})
+    return out
+
+
+def log_event(kind, query=None, area=None, walk=None, places=None):
+    """Record one thing a reader did. Never fails the request it's part of."""
+    if kind not in EVENT_KINDS:
+        return
+    try:
+        _events_table()
+        pl = _event_places(places)
+        db.execute(
+            "INSERT INTO walk_events (id, kind, day, at, who, walk, query, area, places) "
+            "VALUES (:id, :k, :d, :at, :w, :walk, :q, :a, :p)",
+            id=db.new_id(), k=kind, d=_event_day(), at=db.now_iso(), w=_event_who(),
+            walk=(str(walk)[:40] if walk else None),
+            q=(re.sub(r"\s+", " ", str(query)).strip()[:200] if query else None),
+            a=(str(area)[:20] if area else None), p=json.dumps(pl) if pl else None)
+    except Exception as exc:
+        print("walk: could not log event:", exc)
+
+
+@walk_bp.post("/api/walk-event")
+def walk_event():
+    """The page reports what the reader did with a walk: {kind, walk?, places?}."""
+    data = request.get_json(silent=True) or {}
+    kind = str(data.get("kind") or "")
+    if kind not in CLIENT_EVENTS or not _csrf_ok():
+        return "", 204
+    # A simple brake: at most 300 reports a day from one browser.
+    today = _event_day()
+    seen = session.get("_wev") or [today, 0]
+    if seen[0] != today:
+        seen = [today, 0]
+    if seen[1] >= 300:
+        return "", 204
+    session["_wev"] = [today, seen[1] + 1]
+    walk = str(data.get("walk") or "")
+    walk = walk if re.match(r"^(walk:[0-9a-f]{16}|[0-9a-f]{10})$", walk) else None
+    log_event(kind, walk=walk, places=data.get("places"))
+    return "", 204
+
+
+# ── Walk insights (owner only): what people plan, save and share ───────────
+
+def _insights(days):
+    _events_table()
+    since = _event_day(-(days - 1))
+    rows = db.query("SELECT kind, who, walk, query, places FROM walk_events WHERE day >= :d", d=since)
+    totals, people = {}, set()
+    searches, missing, places, walks = {}, {}, {}, {}
+    for r in rows:
+        k = r["kind"]
+        totals[k] = totals.get(k, 0) + 1
+        people.add(r["who"])
+        if r["query"] and k in ("plan", "unclear", "no_match"):
+            q = r["query"].lower().strip(" ?.!")
+            bucket = missing if k == "no_match" else searches
+            e = bucket.setdefault(q, {"text": r["query"], "n": 0, "who": set()})
+            e["n"] += 1
+            e["who"].add(r["who"])
+        weight = {"plan": 1, "change": 1, "save": 3, "share": 3, "share_open": 2, "start": 4, "place": 2}.get(k, 0)
+        if weight and r["places"]:
+            for pl in json.loads(r["places"]):
+                e = places.setdefault(pl["slug"], {"slug": pl["slug"], "name": pl.get("name") or pl["slug"],
+                                                    "score": 0, "who": set(), "in": {}})
+                if pl.get("name"):
+                    e["name"] = pl["name"]
+                e["score"] += weight
+                e["who"].add(r["who"])
+                e["in"][k] = e["in"].get(k, 0) + 1
+        if r["walk"] and k in ("save", "share", "share_open", "start"):
+            e = walks.setdefault(r["walk"], {"walk": r["walk"], "places": [], "score": 0, "who": set(), "in": {}})
+            if r["places"] and not e["places"]:
+                e["places"] = [p.get("name") or p["slug"] for p in json.loads(r["places"])]
+            e["score"] += weight
+            e["who"].add(r["who"])
+            e["in"][k] = e["in"].get(k, 0) + 1
+
+    def top(d, key, n=15):
+        out = sorted(d.values(), key=lambda e: (-e[key], -len(e["who"])))[:n]
+        for e in out:
+            e["people"] = len(e.pop("who"))
+        return out
+
+    return {
+        "days": days, "people": len(people), "totals": totals,
+        "searches": top(searches, "n"), "missing": top(missing, "n"),
+        "places": top(places, "score"), "walks": top(walks, "score", 10),
+    }
+
+
+def _insights_view():
+    days = request.args.get("days", type=int) or 7
+    days = days if days in (7, 30, 90) else 7
+    return render_template("admin/walk_insights.html", data=_insights(days))
+
+
+try:   # the admin app's "owner only" check; without it (tests) the page is simply off
+    from admin import owner_required as _owner_required
+    walk_bp.add_url_rule("/admin/walk-insights", "walk_insights", _owner_required(_insights_view))
+except ImportError:
+    pass
