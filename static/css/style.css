@@ -2937,6 +2937,8 @@ body.walk-page .site-main { padding: 0; max-width: none; }
 .walkplan__tools { position: absolute; z-index: 5; left: 62px; right: 12px; top: calc(env(safe-area-inset-top, 0px) + 69px);
   display: flex; flex-direction: row; flex-wrap: wrap; justify-content: flex-start; align-items: center; gap: 8px; pointer-events: none; }
 .walkplan__tools > * { pointer-events: auto; }
+/* iPad and wider: the row sits centred right under the map's "Walking route" pill. */
+@media (min-width: 700px) { .walkplan__tools { left: 12px; right: 12px; justify-content: center; } }
 .walkplan__tool { display: inline-flex; align-items: center; gap: 7px; height: 40px; padding: 0 14px 0 11px; border: 0.5px solid rgba(255, 255, 255, 0.2); border-radius: 999px;
   background: rgba(16, 18, 20, 0.8); color: #fff; font: 700 13.5px var(--font-sans); cursor: pointer;
   -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25); }
