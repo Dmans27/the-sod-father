@@ -43,6 +43,8 @@
   var msg = document.getElementById('walkplan-msg');
   var msgText = msg.querySelector('.walkplan__msg-text');
   var msgStops = msg.querySelector('.walkplan__msg-stops');
+  var msgSave = document.getElementById('walkplan-msg-save');
+  var msgShare = document.getElementById('walkplan-msg-share');
   var sheet = document.getElementById('wsheet');
   var sheetTitle = document.getElementById('wsheet-title');
   var sheetSub = document.getElementById('wsheet-sub');
@@ -76,6 +78,7 @@
   function say(text, withStops, stay) {
     msgText.textContent = text;
     msgStops.hidden = !withStops;
+    if (msgSave) msgSave.hidden = msgShare.hidden = !(withStops && plan);   // a fresh walk: Save and Share right here
     msg.hidden = false;
     msg.classList.toggle('is-busy', false);
     clearTimeout(msgTimer);
@@ -84,12 +87,17 @@
   function thinking(text) {
     msgText.textContent = text;
     msgStops.hidden = true;
+    if (msgSave) msgSave.hidden = msgShare.hidden = true;
     msg.hidden = false;
     msg.classList.add('is-busy');
     clearTimeout(msgTimer);
   }
   msg.querySelector('.walkplan__msg-close').addEventListener('click', function () { msg.hidden = true; });
   msgStops.addEventListener('click', function () { msg.hidden = true; openSheet(); });
+  if (msgSave) {
+    msgSave.addEventListener('click', function () { saveBtn.click(); });
+    msgShare.addEventListener('click', function () { shareBtn.click(); });
+  }
 
   // ── Location (asked once per visit, only when planning) ──────────────
   function getLocation() {
@@ -185,15 +193,44 @@
     say((plan.intro || plan.title) + (plan.note ? ' ' + plan.note : ''), true);
   }
 
+  // A drawn area from a shared link: its middle, and how far its farthest corner is (metres).
+  function areaFrom(poly) {
+    var pts = poly.map(function (p) { return [Number(p[0]), Number(p[1])]; }).filter(function (p) { return isFinite(p[0]) && isFinite(p[1]); });
+    var lng = 0, lat = 0;
+    pts.forEach(function (p) { lng += p[0]; lat += p[1]; });
+    lng /= pts.length; lat /= pts.length;
+    var far = 0;
+    pts.forEach(function (p) {
+      var dx = (p[0] - lng) * 111320 * Math.cos(lat * Math.PI / 180), dy = (p[1] - lat) * 110540;
+      far = Math.max(far, Math.sqrt(dx * dx + dy * dy));
+    });
+    return { center: [lng, lat], radius: Math.max(50, Math.round(far)), polygon: pts };
+  }
+
   // A walk opened from a link (/walk?s=slug,slug&t=Title), e.g. a saved route.
+  // A shared walk (/w/<code>) comes in window.SHARED_WALK, with its names and the area it was drawn in.
   function showLinked() {
     var q = new URLSearchParams(location.search || '');
-    var s = (q.get('s') || '').split(',').filter(function (x) { return /^[A-Za-z0-9][A-Za-z0-9_-]{0,200}$/.test(x); }).slice(0, 25);
+    var shared = window.SHARED_WALK || null;
+    var names = {};
+    var s;
+    if (shared && Array.isArray(shared.stops)) {
+      s = shared.stops.map(function (x) { names[x.slug] = x.name || ''; return String(x.slug || ''); });
+    } else {
+      s = (q.get('s') || '').split(',');
+    }
+    s = s.filter(function (x) { return /^[A-Za-z0-9][A-Za-z0-9_-]{0,200}$/.test(x); }).slice(0, 25);
     if (s.length < 2 || !origin) return false;
-    var title = (q.get('t') || 'Your walk').slice(0, 120);
+    var title = String((shared ? shared.title : q.get('t')) || 'Your walk').slice(0, 120);
+    if (shared && Array.isArray(shared.area) && shared.area.length >= 4) {
+      circle = areaFrom(shared.area);
+      paintArea();
+    }
     plan = { query: title, title: title, intro: '', note: '', key: '', open: location.pathname + location.search,
-             stops: s.map(function (slug) { return { slug: slug, name: '', category: '', group: 'other', lat: null, lng: null, why: '' }; }),
+             share: shared ? '/w/' + shared.code : '',
+             stops: s.map(function (slug) { return { slug: slug, name: names[slug] || '', category: '', group: 'other', lat: null, lng: null, why: '' }; }),
              map: directory + '/embed/route-map?' + new URLSearchParams({ s: s.join(','), t: title, style: 'mansfield', mode: 'story' }).toString() };
+    if (shared) say(title + ' · ' + s.length + ' stops. Ask to change it, or plan your own.', true);
     root.classList.add('has-walk');
     intro.hidden = true;
     listBtn.hidden = false;
@@ -279,19 +316,21 @@
       post({ type: 'mansfield:insets', top: shown ? Math.round(toolsEl.getBoundingClientRect().bottom + 6) : 0 });
     });
   }
-  window.addEventListener('resize', sendInsets);
+  window.addEventListener('resize', function () { if (typeof paintArea === 'function') paintArea(); else sendInsets(); });
 
   // ── The search area (map view or a drawn circle) ──────────────────────
   function setDrawBtn(on) {
     drawBtn.classList.toggle('is-on', on);
     drawBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    drawBtn.querySelector('span').textContent = on ? 'Drag on the map' : (circle ? 'Redraw area' : 'Draw area');
+    drawBtn.querySelector('span').textContent = on ? 'Drag on the map' : (circle ? (narrow() ? 'Redraw' : 'Redraw area') : 'Draw area');
   }
+  // Phones: shorter labels so the buttons and the area chip fit on one row.
+  function narrow() { return window.innerWidth < 700; }
   function paintArea() {
     areaChip.hidden = !circle;
     if (circle) {
       var across = 2 * circle.radius;
-      areaText.textContent = 'Your area · ' + (across >= 1000 ? (across / 1000).toFixed(1) + ' km' : across + ' m');
+      areaText.textContent = (narrow() ? '' : 'Your area · ') + (across >= 1000 ? (across / 1000).toFixed(1) + ' km' : across + ' m');
       areaChip.title = 'The walk only uses places inside the area you drew';
     }
     setDrawBtn(drawBtn.classList.contains('is-on'));
@@ -363,6 +402,7 @@
       post({ type: 'mansfield:route-view', view: 'full' });
       renderSheet();
       if (!plan.key) checkSaved();
+      makeShare();
     } else if (t === 'mansfield:route-walk') {
       legs = Array.isArray(e.data.legs) ? e.data.legs.map(Number) : legs;
       durations = Array.isArray(e.data.durations) ? e.data.durations.map(Number) : null;
@@ -450,6 +490,11 @@
     saveBtn.classList.toggle('is-saved', saved);
     saveBtn.setAttribute('aria-pressed', saved ? 'true' : 'false');
     saveBtn.querySelector('span').textContent = saved ? 'Saved' : 'Save route';
+    if (msgSave) {
+      msgSave.classList.toggle('is-saved', saved);
+      msgSave.setAttribute('aria-pressed', saved ? 'true' : 'false');
+      msgSave.querySelector('span').textContent = saved ? 'Saved' : 'Save';
+    }
   }
   function keyFor(slugs) {
     // Same key the server makes (walk: + the first 16 hex of SHA-1 of "a,b,c"), so a linked walk can be saved too.
@@ -497,12 +542,44 @@
       })
       .catch(function () { saving = false; say('Couldn’t reach the server. Please try again.', false); });
   });
+  // A short link (/w/<code>) that keeps the stops, the title and the drawn
+  // area. It's made as soon as a walk is ready, so tapping Share can open the
+  // share sheet straight away (phones only allow that right after a tap).
+  function makeShare() {
+    if (!plan) return Promise.resolve('');
+    if (plan.share) return Promise.resolve(plan.share);
+    if (!READER.signedIn) return Promise.resolve('');
+    var mine = plan;
+    if (mine.sharing) return mine.sharing;
+    var ready = mine.stops.filter(function (s) { return s.slug; });
+    mine.sharing = fetch('/api/walk-share', {
+      method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': READER.csrf || '' },
+      body: JSON.stringify({ title: mine.title, stops: ready.map(function (s) { return { slug: s.slug, name: s.name || '' }; }),
+                             polygon: circle && circle.polygon ? circle.polygon : null })
+    }).then(function (r) { return r.json().catch(function () { return {}; }); })
+      .then(function (d) { mine.sharing = null; if (d && d.ok && d.url) mine.share = d.url; return mine.share || ''; })
+      .catch(function () { mine.sharing = null; return ''; });
+    return mine.sharing;
+  }
+  function shareUrl(url) {
+    if (window.MansfieldNative && window.MansfieldNative.share && window.MansfieldNative.share(url, plan.title)) return;
+    if (navigator.share) {
+      navigator.share({ title: plan.title, url: url }).catch(function (err) {
+        if (err && err.name === 'NotAllowedError') copyUrl(url);   // the tap "expired" while the link was made
+      });
+      return;
+    }
+    copyUrl(url);
+  }
+  function copyUrl(url) {
+    var done = function () { say('Link copied. Paste it anywhere to share this walk.', false); };
+    try { navigator.clipboard.writeText(url).then(done, function () { say(url, false, true); }); } catch (e) { say(url, false, true); }
+  }
   shareBtn.addEventListener('click', function () {
     if (!plan) return;
-    var url = window.location.origin + (plan.open || '/walk');
-    if (window.MansfieldNative && window.MansfieldNative.share && window.MansfieldNative.share(url, plan.title)) return;
-    if (navigator.share) { navigator.share({ title: plan.title, url: url }).catch(function () {}); return; }
-    try { navigator.clipboard.writeText(url); say('Link copied.', false); } catch (e) { say(url, false, true); }
+    if (plan.share) { shareUrl(window.location.origin + plan.share); return; }
+    makeShare().then(function (u) { shareUrl(window.location.origin + (u || plan.open || '/walk')); });
   });
 
   // ── Speaking ──────────────────────────────────────────────────────────

@@ -1,6 +1,31 @@
 {% extends "base.html" %}
-{% block title %}Plan a walk — \\Mansfield{% endblock %}
+{% block title %}{% if shared %}{{ shared.title }} — \\Mansfield{% else %}Plan a walk — \\Mansfield{% endif %}{% endblock %}
 {% block body_class %}walk-page{% endblock %}
+{# A shared walk (/w/<code>): the link preview says what the walk is. #}
+{% block seo %}{% if shared %}
+  <meta name="description" content="{{ shared.description }}">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="\\Mansfield">
+  <meta property="og:title" content="{{ shared.title }} · a walk on \\Mansfield">
+  <meta property="og:description" content="{{ shared.description }}">
+  <meta property="og:url" content="{{ site_base() }}/w/{{ shared.code }}">
+  <meta property="og:image" content="{{ site_base() }}/og/default.png">
+  <meta name="twitter:card" content="summary_large_image">
+{% else %}{{ super() }}{% endif %}{% endblock %}
+{% block head %}
+<style>
+  /* Save and Share right in the "here's your walk" message */
+  .walkplan__msg-stops { margin-right: 0; }
+  .walkplan__msg-act { display: inline-flex; align-items: center; gap: 6px; padding: 8px 12px; border: 0.5px solid rgba(255, 255, 255, 0.28); border-radius: 999px;
+    background: rgba(255, 255, 255, 0.08); color: #fff; font: 700 13.5px var(--font-sans); cursor: pointer; }
+  .walkplan__msg-act[hidden] { display: none; }
+  .walkplan__msg-act svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .walkplan__msg-act.is-saved { background: #2BEA6B; border-color: #2BEA6B; color: #0b2414; }
+  .walkplan__msg-act.is-saved svg { fill: currentColor; }
+  .walkplan__msg-row > .walkplan__msg-close { margin-left: auto; }
+  @media (max-width: 400px) { .walkplan__msg-act { padding: 8px 10px; } .walkplan__msg-stops { padding: 8px 12px; } }
+</style>
+{% endblock %}
 
 {% block content %}
 {# "Plan a walk": ask (typed or spoken) and get a walking route from the directory.
@@ -41,6 +66,8 @@
     <p class="walkplan__msg-text"></p>
     <div class="walkplan__msg-row">
       <button type="button" class="walkplan__msg-stops" hidden>See the stops</button>
+      <button type="button" class="walkplan__msg-act" id="walkplan-msg-save" aria-pressed="false" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h11v17l-5.5-4-5.5 4z"/></svg><span>Save</span></button>
+      <button type="button" class="walkplan__msg-act" id="walkplan-msg-share" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3.5M7.5 8 12 3.5 16.5 8M5 12.5v7h14v-7"/></svg><span>Share</span></button>
       <button type="button" class="walkplan__msg-close" aria-label="Close">&times;</button>
     </div>
   </div>
@@ -77,5 +104,6 @@
     </div>
   </div>
 </div>
-<script src="/static/js/walk-planner.js?v=8" defer></script>
+{% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
+<script src="/static/js/walk-planner.js?v=10" defer></script>
 {% endblock %}

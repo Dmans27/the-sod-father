@@ -39,7 +39,9 @@ import re
 from urllib.parse import quote, urlencode
 
 import requests
-from flask import Blueprint, jsonify, render_template, request, session
+from flask import Blueprint, abort, jsonify, render_template, request, session
+
+import db
 
 import ask as ask_limits
 import ask_engine
@@ -628,3 +630,122 @@ def api_walk_voice():
     if not text:
         return jsonify(ok=False, error="I didn't catch that. Please try again."), 400
     return jsonify(ok=True, text=text)
+
+
+# ── Shared walks ───────────────────────────────────────────────────────────
+# "Share" on a walk makes a short link (/w/<code>) that remembers the stops,
+# the title and the area the reader drew, so a friend opening it sees the same
+# walk inside the same shape, and the link preview says what it is. Each code
+# also counts how often it was opened: one of the signals for the weekly feed.
+
+_SLUG_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,200}$")
+_shares_ready = False
+
+
+def _shares_table():
+    global _shares_ready
+    if _shares_ready:
+        return
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS walk_shares (
+            code        TEXT PRIMARY KEY,
+            title       TEXT NOT NULL,
+            stops_json  TEXT NOT NULL,
+            area_json   TEXT,
+            reader_id   TEXT,
+            created_at  TEXT NOT NULL,
+            opens       INTEGER NOT NULL DEFAULT 0
+        )""")
+    _shares_ready = True
+
+
+def _clean_share(data):
+    """The walk a reader wants to share, checked and trimmed, or None."""
+    title = re.sub(r"\s+", " ", str(data.get("title") or "")).strip()[:120] or "A walk"
+    stops = []
+    for s in (data.get("stops") or [])[:25]:
+        if not isinstance(s, dict):
+            continue
+        slug = str(s.get("slug") or "")
+        if not _SLUG_RE.match(slug):
+            continue
+        name = re.sub(r"\s+", " ", str(s.get("name") or "")).strip()[:80]
+        stops.append({"slug": slug, "name": name})
+    if len(stops) < 2:
+        return None
+    area = None
+    poly = data.get("polygon")
+    if isinstance(poly, list) and 4 <= len(poly) <= 400:
+        try:
+            pts = [[round(float(p[0]), 5), round(float(p[1]), 5)] for p in poly]
+        except (TypeError, ValueError, IndexError):
+            pts = []
+        if pts and all(-180 <= x <= 180 and -90 <= y <= 90 for x, y in pts):
+            step = max(1, len(pts) // 80)          # keep the stored shape small
+            area = pts[::step]
+            if area[-1] != pts[-1]:
+                area.append(pts[-1])
+    return {"title": title, "stops": stops, "area": area}
+
+
+def _share_code(walk):
+    raw = json.dumps([walk["title"], [s["slug"] for s in walk["stops"]], walk["area"]], separators=(",", ":"))
+    return hashlib.sha1(raw.encode()).hexdigest()[:10]
+
+
+@walk_bp.post("/api/walk-share")
+def walk_share():
+    if not current_reader() and not session.get("is_admin"):
+        return jsonify(ok=False, error="sign_in"), 401
+    if not _csrf_ok():
+        return jsonify(ok=False, error="Your session expired. Reload the page and try again."), 403
+    walk = _clean_share(request.get_json(silent=True) or {})
+    if not walk:
+        return jsonify(ok=False, error="This walk can't be shared yet."), 400
+    code = _share_code(walk)
+    try:
+        _shares_table()
+        if not db.query_one("SELECT code FROM walk_shares WHERE code = :c", c=code):
+            reader = current_reader()
+            db.execute(
+                "INSERT INTO walk_shares (code, title, stops_json, area_json, reader_id, created_at, opens) "
+                "VALUES (:c, :t, :s, :a, :r, :at, 0)",
+                c=code, t=walk["title"], s=json.dumps(walk["stops"]),
+                a=json.dumps(walk["area"]) if walk["area"] else None,
+                r=reader["id"] if reader else None, at=db.now_iso())
+    except Exception as exc:
+        print("walk: could not save share:", exc)
+        return jsonify(ok=False, error="Couldn't make a link right now. Please try again."), 500
+    return jsonify(ok=True, url="/w/" + code)
+
+
+@walk_bp.get("/w/<code>")
+def walk_shared(code):
+    if not re.match(r"^[0-9a-f]{10}$", code):
+        abort(404)
+    try:
+        _shares_table()
+        row = db.query_one("SELECT code, title, stops_json, area_json FROM walk_shares WHERE code = :c", c=code)
+        if row:
+            db.execute("UPDATE walk_shares SET opens = opens + 1 WHERE code = :c", c=code)
+    except Exception as exc:
+        print("walk: could not load share:", exc)
+        row = None
+    if not row:
+        abort(404)
+    stops = json.loads(row["stops_json"])
+    names = [s["name"] for s in stops if s.get("name")]
+    if len(names) > 3:
+        summary = ", ".join(names[:3]) + f" and {len(names) - 3} more"
+    else:
+        summary = ", ".join(names)
+    shared = {
+        "code": row["code"],
+        "title": row["title"],
+        "stops": stops,
+        "area": json.loads(row["area_json"]) if row["area_json"] else None,
+        "description": f"A {len(stops)}-stop walk" + (f": {summary}." if summary else ".")
+                       + " Open it on the map, then plan your own.",
+    }
+    return render_template("walk.html", directory=directory_url(), categories=CATEGORIES,
+                           active_category=None, shared=shared)
