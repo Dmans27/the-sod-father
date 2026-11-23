@@ -527,9 +527,10 @@ def transcribe(audio_bytes, mimetype):
 
 @walk_bp.get("/walk")
 def walk_page():
-    from walk_feed import published_feed   # "This week" (walk_feed.py): the owner's published weekly walks
+    # "This week" drawer (walk_feed.py): the owner's published weekly walks and related stories
+    from walk_feed import _city, published_feed, related_reads
     return render_template("walk.html", directory=directory_url(), categories=CATEGORIES, active_category=None,
-                           feed=published_feed())
+                           feed=published_feed(), reads=related_reads(), feed_city=_city())
 
 
 def _guard():

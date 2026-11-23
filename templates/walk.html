@@ -24,19 +24,41 @@
   .walkplan__msg-act.is-saved svg { fill: currentColor; }
   .walkplan__msg-row > .walkplan__msg-close { margin-left: auto; }
   @media (max-width: 400px) { .walkplan__msg-act { padding: 8px 10px; } .walkplan__msg-stops { padding: 8px 12px; } }
-  /* "This week" cards on the start card */
-  .walkplan__week-head { margin: 12px 0 6px; font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #2BEA6B; }
-  .walkplan__week { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding: 0 16px; scrollbar-width: none; margin: 0 -16px 12px; padding: 0 16px 2px; }
-  .walkplan__week::-webkit-scrollbar { display: none; }
-  .walkplan__week-card { flex: 0 0 min(260px, 80%); min-width: 0; box-sizing: border-box; scroll-snap-align: start; text-align: left; display: flex; flex-direction: column; gap: 4px; padding: 12px 13px;
-    border-radius: 14px; background: rgba(255, 255, 255, 0.08); border: 0.5px solid rgba(255, 255, 255, 0.18); color: #fff; text-decoration: none; }
-  .walkplan__week-card:only-child { flex-basis: 100%; }
-  .walkplan__week-card:active { background: rgba(255, 255, 255, 0.14); }
+  /* "This week" pull tab and drawer (left edge). Gone once the map is in use. */
+  .walkplan__pull { position: absolute; z-index: 7; left: 0; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px;
+    width: 30px; padding: 12px 0; border: 0.5px solid rgba(255, 255, 255, 0.2); border-left: 0; border-radius: 0 14px 14px 0;
+    background: rgba(16, 18, 20, 0.88); color: #fff; cursor: pointer; touch-action: none;
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3); transition: opacity 0.2s, transform 0.2s; }
+  .walkplan__pull-label { writing-mode: vertical-rl; transform: rotate(180deg); font: 800 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: #2BEA6B; }
+  .walkplan__pull svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
+  .walkplan.map-used .walkplan__pull, .walkplan.has-walk .walkplan__pull, .walkplan.is-walking .walkplan__pull,
+  .walkplan.has-panel .walkplan__pull { opacity: 0; transform: translate(-100%, -50%); pointer-events: none; }
+  .walkplan__drawer-back { position: absolute; z-index: 9; inset: 0; background: rgba(0, 0, 0, 0.35); opacity: 0; pointer-events: none; transition: opacity 0.25s; }
+  .walkplan__drawer { position: absolute; z-index: 10; left: 0; top: 0; bottom: 0; width: min(360px, 88%); box-sizing: border-box; overflow-y: auto; overscroll-behavior: contain;
+    padding: calc(env(safe-area-inset-top, 0px) + 18px) 16px calc(env(safe-area-inset-bottom, 0px) + 24px);
+    background: #141618; color: #fff; transform: translateX(-100%); visibility: hidden; transition: transform 0.28s ease, visibility 0s 0.28s; }
+  .walkplan.drawer-open .walkplan__drawer { transform: none; visibility: visible; box-shadow: 8px 0 30px rgba(0, 0, 0, 0.35); transition: transform 0.28s ease; }
+  .walkplan.drawer-open .walkplan__drawer-back { opacity: 1; pointer-events: auto; }
+  .walkplan__drawer-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
+  .walkplan__drawer-head h2 { margin: 0; font: 800 19px/1.2 var(--font-sans); }
+  .walkplan__drawer-close { flex: 0 0 auto; width: 32px; height: 32px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.12); color: #fff; font-size: 18px; cursor: pointer; }
+  .walkplan__drawer-sub { margin: 18px 0 8px; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #2BEA6B; }
+  .walkplan__drawer-sub:first-of-type { margin-top: 0; }
+  .walkplan__week-card { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; padding: 13px 14px; border-radius: 14px; text-align: left;
+    background: rgba(255, 255, 255, 0.07); border: 0.5px solid rgba(255, 255, 255, 0.16); color: #fff; text-decoration: none; }
+  .walkplan__week-card:active { background: rgba(255, 255, 255, 0.13); }
   .walkplan__week-tag { align-self: flex-start; padding: 1px 8px; border-radius: 999px; background: #2BEA6B; color: #0b2414; font-size: 11px; font-weight: 800; }
-  .walkplan__week-title { font-weight: 800; font-size: 15px; line-height: 1.25; }
-  .walkplan__week-blurb { font-size: 13px; line-height: 1.4; color: rgba(255, 255, 255, 0.82);
-    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .walkplan__week-stops { margin-top: auto; padding-top: 2px; max-width: 100%; font-size: 12px; color: rgba(255, 255, 255, 0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .walkplan__week-title { font-weight: 800; font-size: 15.5px; line-height: 1.25; }
+  .walkplan__week-blurb { font-size: 13.5px; line-height: 1.4; color: rgba(255, 255, 255, 0.82); }
+  .walkplan__week-stops { font-size: 12px; line-height: 1.4; color: rgba(255, 255, 255, 0.6); }
+  .walkplan__read { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-top: 0.5px solid rgba(255, 255, 255, 0.12); color: #fff; text-decoration: none; }
+  .walkplan__read:first-of-type { border-top: 0; }
+  .walkplan__read-thumb { flex: 0 0 64px; height: 64px; border-radius: 10px; background: rgba(255, 255, 255, 0.08) center / cover no-repeat; }
+  .walkplan__read-body { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .walkplan__read-pill { font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #9fe0bd; }
+  .walkplan__read-title { font-weight: 700; font-size: 14.5px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .walkplan__read-min { font-size: 12px; color: rgba(255, 255, 255, 0.6); }
+  .walkplan__drawer-plan { display: block; margin-top: 18px; padding: 12px; border-radius: 999px; background: #fff; color: #15171a; font-weight: 800; text-align: center; text-decoration: none; border: 0; width: 100%; font-size: 14.5px; cursor: pointer; }
 </style>
 {% endblock %}
 
@@ -53,20 +75,6 @@
   <section class="walkplan__intro" id="walkplan-intro">
     <button type="button" class="walkplan__intro-close" aria-label="Close">&times;</button>
     <p class="walkplan__lead">Ask for a walk below, typed or spoken. Move the map, or tap <b>Draw area</b> to search one spot.</p>
-    {% if feed %}
-    {# "This week": walks the owner published from the weekly AI feed (walk_feed.py). #}
-    <p class="walkplan__week-head">This week</p>
-    <div class="walkplan__week" role="list">
-      {% for it in feed %}
-      <a class="walkplan__week-card" role="listitem" href="{{ it.link }}">
-        <span class="walkplan__week-tag">{{ it.tag }}</span>
-        <span class="walkplan__week-title">{{ it.title }}</span>
-        <span class="walkplan__week-blurb">{{ it.blurb }}</span>
-        <span class="walkplan__week-stops">{{ it.stops | length }} stops · {{ it.stops | map(attribute='name') | join(', ') }}</span>
-      </a>
-      {% endfor %}
-    </div>
-    {% endif %}
     <div class="walkplan__ideas" role="list">
       <button type="button" class="walkplan__idea" role="listitem">Search this area for food</button>
       <button type="button" class="walkplan__idea" role="listitem">3 highly rated coffee shops near me</button>
@@ -75,6 +83,47 @@
     </div>
     <p class="walkplan__fine">"Near me" uses your location for this one search. It's never stored.</p>
   </section>
+
+  {% if feed or reads %}
+  {# "This week" pull tab on the left edge: the owner's weekly walks (walk_feed.py) and related stories.
+     static/js/walk-planner.js opens it and hides the tab once the map is in use. #}
+  <button type="button" class="walkplan__pull" id="walkplan-pull" aria-controls="walkplan-drawer" aria-expanded="false">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+    <span class="walkplan__pull-label">This week</span>
+  </button>
+  <div class="walkplan__drawer-back" id="walkplan-drawer-back"></div>
+  <aside class="walkplan__drawer" id="walkplan-drawer" aria-label="This week" aria-hidden="true">
+    <div class="walkplan__drawer-head">
+      <h2>This week in {{ feed_city or 'Vienna' }}</h2>
+      <button type="button" class="walkplan__drawer-close" aria-label="Close">&times;</button>
+    </div>
+    {% if feed %}
+    <p class="walkplan__drawer-sub">Walks to try</p>
+    {% for it in feed %}
+    <a class="walkplan__week-card" href="{{ it.link }}">
+      <span class="walkplan__week-tag">{{ it.tag }}</span>
+      <span class="walkplan__week-title">{{ it.title }}</span>
+      {% if it.blurb %}<span class="walkplan__week-blurb">{{ it.blurb }}</span>{% endif %}
+      <span class="walkplan__week-stops">{{ it.stops | length }} stops · {{ it.stops | map(attribute='name') | join(', ') }}</span>
+    </a>
+    {% endfor %}
+    {% endif %}
+    {% if reads %}
+    <p class="walkplan__drawer-sub">Good reads</p>
+    {% for r in reads %}
+    <a class="walkplan__read" href="/article/{{ r.slug }}">
+      <span class="walkplan__read-thumb"{% if r.image %} style="background-image: url('{{ r.image }}')"{% endif %}></span>
+      <span class="walkplan__read-body">
+        {% if r.pill %}<span class="walkplan__read-pill">{{ r.pill }}</span>{% endif %}
+        <span class="walkplan__read-title">{{ r.title }}</span>
+        {% if r.minutes %}<span class="walkplan__read-min">{{ r.minutes }} min read</span>{% endif %}
+      </span>
+    </a>
+    {% endfor %}
+    {% endif %}
+    <button type="button" class="walkplan__drawer-plan" data-drawer-close>Plan my own walk</button>
+  </aside>
+  {% endif %}
 
   <div class="walkplan__tools">
     <button type="button" class="walkplan__tool" id="walkplan-draw" aria-pressed="false">
@@ -132,5 +181,5 @@
   </div>
 </div>
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
-<script src="/static/js/walk-planner.js?v=11" defer></script>
+<script src="/static/js/walk-planner.js?v=12" defer></script>
 {% endblock %}

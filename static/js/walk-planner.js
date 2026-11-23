@@ -135,6 +135,7 @@
     if (busy || query.length < 3) return;
     if (needsSignIn(goBtn)) return;
     busy = true;
+    mapUsed();
     form.classList.add('is-busy');
     input.blur();
     thinking('Planning your walk…');
@@ -243,6 +244,7 @@
   // ── Clearing the walk ─────────────────────────────────────────────────
   // Back to the explore map, at the same spot, ready for a new question.
   function clearWalk() {
+    root.classList.remove('map-used');   // a fresh start: the "This week" tab is back
     plan = null;
     legs = durations = null;
     saved = false;
@@ -258,6 +260,41 @@
   }
   clearBtn.addEventListener('click', clearWalk);
   intro.querySelector('.walkplan__intro-close').addEventListener('click', function () { intro.hidden = true; });
+
+  // ── "This week" drawer: a tab on the left edge with the week's walks and stories ──
+  // Tap the tab (or pull it to the right) to open; tap outside, swipe left or × to close.
+  // The tab leaves as soon as the map is in use (moved, drawn on, asked, a walk on it)
+  // and comes back with "New walk".
+  var pull = document.getElementById('walkplan-pull');
+  var drawer = document.getElementById('walkplan-drawer');
+  function setDrawer(open) {
+    if (!drawer) return;
+    root.classList.toggle('drawer-open', open);
+    drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
+    pull.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  function mapUsed() {
+    root.classList.add('map-used');
+    setDrawer(false);
+  }
+  if (drawer) {
+    var pullX = null, swipeX = null, swipeY = 0;
+    pull.addEventListener('click', function () { setDrawer(true); });
+    pull.addEventListener('touchstart', function (e) { pullX = e.touches[0].clientX; }, { passive: true });
+    pull.addEventListener('touchmove', function (e) {
+      if (pullX !== null && e.touches[0].clientX - pullX > 24) { pullX = null; setDrawer(true); }
+    }, { passive: true });
+    document.getElementById('walkplan-drawer-back').addEventListener('click', function () { setDrawer(false); });
+    drawer.querySelector('.walkplan__drawer-close').addEventListener('click', function () { setDrawer(false); });
+    drawer.querySelector('[data-drawer-close]').addEventListener('click', function () { setDrawer(false); input.focus(); });
+    drawer.addEventListener('touchstart', function (e) { swipeX = e.touches[0].clientX; swipeY = e.touches[0].clientY; }, { passive: true });
+    drawer.addEventListener('touchend', function (e) {
+      var t = e.changedTouches[0];
+      if (swipeX !== null && swipeX - t.clientX > 60 && Math.abs(t.clientY - swipeY) < 60) setDrawer(false);
+      swipeX = null;
+    }, { passive: true });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setDrawer(false); });
+  }
 
   // ── The map ───────────────────────────────────────────────────────────
   var asking = null;
@@ -367,6 +404,7 @@
         view = { center: [Number(c[0]), Number(c[1])], radius: Math.round(r), zoom: isFinite(z) ? z : START.zoom };
       }
       if (e.data.byUser && !plan) intro.hidden = true;   // they're looking around: get the welcome out of the way
+      if (e.data.byUser) mapUsed();
       return;
     }
     if (t === 'mansfield:area' || t === 'mansfield:circle') {
@@ -380,7 +418,7 @@
       if (circle) { say('Area set. Now ask, e.g. “Search this area for food”. The walk stays inside what you drew.', false); input.focus(); }
       return;
     }
-    if (t === 'mansfield:draw') { clearTimeout(drawAck); setDrawBtn(!!e.data.on); return; }
+    if (t === 'mansfield:draw') { clearTimeout(drawAck); setDrawBtn(!!e.data.on); if (e.data.on) mapUsed(); return; }
     if (t === 'mansfield:panel') {   // a full-screen listing is open on the map: get our buttons out of its way
       root.classList.toggle('has-panel', !!e.data.open);
       if (e.data.open) msg.hidden = true;

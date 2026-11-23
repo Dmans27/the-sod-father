@@ -92,6 +92,27 @@ def published_feed():
     return row["items"] if row else []
 
 
+def related_reads(limit=5):
+    """Stories for the walk page's "This week" drawer: travel stories, the ones about
+    FEED_CITY first, newest first among equals. Never breaks the page."""
+    try:
+        from content import get_articles
+        city = _city().lower()
+        scored = []
+        for i, a in enumerate(get_articles()):
+            text = " ".join(str(a.get(k) or "") for k in ("title", "dek", "subcategory")).lower()
+            score = (2 if a.get("category") == "travel" else 0) + (3 if city in text else 0)
+            if score:
+                scored.append((-score, i, a))
+        scored.sort(key=lambda x: (x[0], x[1]))
+        return [{"slug": a["slug"], "title": a.get("title") or "", "pill": a.get("pill") or "",
+                 "image": a.get("cover_image") or "", "minutes": a.get("read_minutes") or 0}
+                for _, _, a in scored[:limit]]
+    except Exception as exc:
+        print("feed: could not pick related reads:", exc)
+        return []
+
+
 # ── 1 + 2: what goes into the prompt ──────────────────────────────────────
 
 def _signals():
