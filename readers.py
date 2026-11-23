@@ -670,6 +670,94 @@ def api_my_places_order():
     return jsonify(ok=True)
 
 
+# ── "My routes": routes a reader builds from their saved places ──────────
+# ("Date night", "Show my friends around"). Each is a title and 2-15 directory
+# listings in the reader's order; the walk map opens one like any walk, and it
+# can be shared with the same short links as a walk.
+
+MAX_MY_ROUTES = 50
+MAX_ROUTE_STOPS = 15
+_ROUTE_SLUG_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,200}$")
+_my_routes_ready = False
+
+
+def _my_routes_table():
+    global _my_routes_ready
+    if _my_routes_ready:
+        return
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS my_routes (
+            id          TEXT PRIMARY KEY,
+            reader_id   TEXT NOT NULL,
+            title       TEXT NOT NULL,
+            stops_json  TEXT NOT NULL,
+            created_at  TEXT NOT NULL,
+            updated_at  TEXT NOT NULL
+        )""")
+    _my_routes_ready = True
+
+
+def _route_row(r):
+    return {"id": r["id"], "title": r["title"], "stops": json.loads(r["stops_json"]), "updated_at": r["updated_at"]}
+
+
+@readers_bp.get("/api/my-routes")
+def api_my_routes():
+    reader = current_reader()
+    if not reader:
+        return jsonify(signedIn=False, routes=[])
+    _my_routes_table()
+    rows = db.query("SELECT id, title, stops_json, updated_at FROM my_routes WHERE reader_id = :r "
+                    "ORDER BY updated_at DESC", r=reader["id"])
+    return jsonify(signedIn=True, routes=[_route_row(r) for r in rows])
+
+
+@readers_bp.post("/api/my-routes")
+@reader_required_json
+def api_my_routes_save():
+    """Create or update a route: {id?, title, stops: [{slug, name}, ...]} in walking order."""
+    reader = current_reader()
+    data = request.get_json(silent=True) or {}
+    title = _text(data.get("title"), 60)
+    if not title:
+        return jsonify(error="Give your route a name."), 400
+    stops, seen = [], set()
+    for st in (data.get("stops") or [])[:MAX_ROUTE_STOPS]:
+        if not isinstance(st, dict):
+            continue
+        slug = str(st.get("slug") or "")
+        if _ROUTE_SLUG_RE.match(slug) and slug not in seen:
+            seen.add(slug)
+            stops.append({"slug": slug, "name": _text(st.get("name"), 80)})
+    if len(stops) < 2:
+        return jsonify(error="Pick at least 2 places for a route."), 400
+    _my_routes_table()
+    now = db.now_iso()
+    route_id = str(data.get("id") or "")
+    if route_id:
+        done = db.execute("UPDATE my_routes SET title = :t, stops_json = :s, updated_at = :u WHERE id = :id AND reader_id = :r",
+                          t=title, s=json.dumps(stops), u=now, id=route_id, r=reader["id"])
+        if not done:
+            return jsonify(error="That route no longer exists."), 404
+    else:
+        count = db.query_one("SELECT COUNT(*) AS n FROM my_routes WHERE reader_id = :r", r=reader["id"])
+        if int((count or {}).get("n", 0)) >= MAX_MY_ROUTES:
+            return jsonify(error=f"You can keep up to {MAX_MY_ROUTES} routes. Delete one first."), 400
+        route_id = db.new_id()
+        db.execute("INSERT INTO my_routes (id, reader_id, title, stops_json, created_at, updated_at) "
+                   "VALUES (:id, :r, :t, :s, :c, :u)", id=route_id, r=reader["id"], t=title, s=json.dumps(stops), c=now, u=now)
+    return jsonify(ok=True, route={"id": route_id, "title": title, "stops": stops, "updated_at": now})
+
+
+@readers_bp.delete("/api/my-routes/<route_id>")
+@reader_required_json
+def api_my_routes_delete(route_id):
+    reader = current_reader()
+    _my_routes_table()
+    db.execute("DELETE FROM my_routes WHERE id = :id AND reader_id = :r", id=route_id, r=reader["id"])
+    return jsonify(ok=True)
+
+
 @readers_bp.delete("/api/places/<place_id>")
 @reader_required_json
 def api_places_delete(place_id):

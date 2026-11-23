@@ -104,6 +104,28 @@
   .walkplan__mine-move button:disabled { opacity: 0.25; cursor: default; }
   .walkplan__mine-foot { margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 10px; }
   .walkplan__mine-foot .walkplan__acct-btn svg { width: 18px; height: 18px; vertical-align: -3px; margin-right: 6px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .walkplan__mine-tabs { display: flex; gap: 4px; margin: 0 0 14px; padding: 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.08); }
+  .walkplan__mine-tabs[hidden] { display: none; }
+  .walkplan__mine-tabs button { flex: 1; padding: 9px 10px; border: 0; border-radius: 999px; background: none; color: rgba(255, 255, 255, 0.75);
+    font: 800 14px var(--font-sans); cursor: pointer; }
+  .walkplan__mine-tabs button[aria-selected="true"] { background: #fff; color: #15171a; }
+  .walkplan__mine-foot .walkplan__acct-btn[disabled] { opacity: 0.4; cursor: default; }
+  /* My routes */
+  .walkplan__route { padding: 14px 0; border-top: 0.5px solid rgba(255, 255, 255, 0.1); }
+  .walkplan__route:first-child { border-top: 0; }
+  .walkplan__route-title { margin: 0; font: 800 16.5px/1.3 var(--font-sans); }
+  .walkplan__route-stops { margin: 3px 0 10px; font-size: 13px; line-height: 1.4; color: rgba(255, 255, 255, 0.62); }
+  .walkplan__route-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .walkplan__route-actions button { padding: 8px 13px; border: 0.5px solid rgba(255, 255, 255, 0.25); border-radius: 999px; background: none; color: #fff;
+    font: 700 13.5px var(--font-sans); cursor: pointer; }
+  .walkplan__route-actions button.is-primary { background: #2BEA6B; border-color: #2BEA6B; color: #0b2414; }
+  .walkplan__route-actions button.is-danger { color: #ff8a80; border-color: rgba(255, 138, 128, 0.4); }
+  /* Route builder */
+  .walkplan__build-name { width: 100%; box-sizing: border-box; margin: 0 0 12px; padding: 12px 14px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06); color: #fff; font: 700 16px var(--font-sans); }
+  .walkplan__build-name::placeholder { color: rgba(255, 255, 255, 0.4); }
+  .walkplan__mine-item.is-pick { cursor: pointer; }
+  .walkplan__mine-item.is-picked .walkplan__mine-name { color: #2BEA6B; }
   .walkplan__mine-empty { margin: 30px 0; text-align: center; font-size: 15px; line-height: 1.5; color: rgba(255, 255, 255, 0.75); }
 
   /* Welcome card (first visit only) */
@@ -213,6 +235,10 @@
     <div class="walkplan__drawer-head">
       <h2 id="walkplan-mine-title">My places</h2>
       <button type="button" class="walkplan__drawer-close" aria-label="Close">&times;</button>
+    </div>
+    <div class="walkplan__mine-tabs" id="walkplan-mine-tabs" role="tablist">
+      <button type="button" role="tab" data-mine-view="places" aria-selected="true">Places</button>
+      <button type="button" role="tab" data-mine-view="routes" aria-selected="false">My routes</button>
     </div>
     <p class="walkplan__mine-note" id="walkplan-mine-note"></p>
     <ol class="walkplan__mine-list" id="walkplan-mine-list"></ol>
@@ -389,5 +415,5 @@
 </script>
 {% endif %}
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
-<script src="/static/js/walk-planner.js?v=21" defer></script>
+<script src="/static/js/walk-planner.js?v=22" defer></script>
 {% endblock %}

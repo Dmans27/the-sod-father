@@ -297,6 +297,10 @@
   var mineFoot = document.getElementById('walkplan-mine-foot');
   var mineTitle = document.getElementById('walkplan-mine-title');
   var mineData = null, mineSaveTimer = null;
+  var mineView = 'places';   // 'places' (the ranking) or 'routes' (routes they built)
+  var myRoutes = null;       // [{id, title, stops: [{slug, name}]}] once loaded
+  var building = null;       // the route being built or edited: {id, title, picks: [{slug, name}]}
+  var mineTabs = document.getElementById('walkplan-mine-tabs');
   function setMine(open) {
     if (!mine) return;
     if (open) setDrawer(false);
@@ -310,8 +314,27 @@
     mineNote.textContent = 'Loading your places…';
     fetch('/api/my-places?lat=' + c[1].toFixed(5) + '&lng=' + c[0].toFixed(5), { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
       .then(function (r) { return r.json(); })
-      .then(function (d) { mineData = d; paintMine(); })
+      .then(function (d) { mineData = d; paintMineView(); })
       .catch(function () { mineNote.textContent = 'Couldn’t load your places. Check your connection and try again.'; });
+  }
+  // Which view the panel shows: the ranking, the reader's routes, or the route builder.
+  function paintMineView() {
+    if (mineTabs) {
+      mineTabs.hidden = !!building;
+      Array.prototype.forEach.call(mineTabs.querySelectorAll('[data-mine-view]'), function (b) {
+        b.setAttribute('aria-selected', b.getAttribute('data-mine-view') === mineView ? 'true' : 'false');
+      });
+    }
+    if (building) paintBuilder();
+    else if (mineView === 'routes') paintRoutes();
+    else paintMine();
+  }
+  function routablePlaces() { return ((mineData && mineData.places) || []).filter(function (p) { return p.slug; }); }
+  function buildButton(label) {
+    var b = el('button', 'walkplan__acct-btn walkplan__acct-btn--ghost', label || '+ Build a route');
+    b.type = 'button';
+    b.addEventListener('click', function () { building = { id: '', title: '', picks: [] }; paintMineView(); });
+    return b;
   }
   function paintMine() {
     var d = mineData || {}, places = d.places || [], from = d.rankFrom || 3;
@@ -380,6 +403,143 @@
         mineFoot.appendChild(b);
       }
     }
+    if (routablePlaces().length >= 2) mineFoot.appendChild(buildButton());
+  }
+
+  // ── My routes: the ones they built ("Date night") ─────────────────────
+  function routeApi(method, url, body) {
+    return fetch(url, { method: method, credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': READER.csrf || '' },
+      body: body ? JSON.stringify(body) : undefined })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; }); });
+  }
+  function paintRoutes() {
+    var d = mineData || {};
+    mineTitle.textContent = 'My routes';
+    mineList.innerHTML = '';
+    mineFoot.innerHTML = '';
+    if (!d.signedIn) {
+      mineNote.innerHTML = 'Build your own routes from places you save: a <b>date night</b>, your favourite coffee loop, a tour for friends.';
+      var a = el('a', 'walkplan__acct-btn', 'Sign in to start');
+      a.href = '/account/login?next=/walk';
+      mineFoot.appendChild(a);
+      return;
+    }
+    if (myRoutes === null) {
+      mineNote.textContent = 'Loading your routes…';
+      fetch('/api/my-routes', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+        .then(function (r) { return r.json(); })
+        .then(function (res) { myRoutes = res.routes || []; if (mineView === 'routes' && !building) paintRoutes(); })
+        .catch(function () { mineNote.textContent = 'Couldn’t load your routes. Check your connection and try again.'; });
+      return;
+    }
+    var canBuild = routablePlaces().length >= 2;
+    if (!myRoutes.length) {
+      mineNote.innerHTML = canBuild ? 'Make your own: a <b>date night</b>, your favourite coffee loop, a tour for friends.'
+                                    : 'Save at least <b>2 places</b> from the map, then build your own routes here.';
+    } else {
+      mineNote.textContent = '';
+    }
+    myRoutes.forEach(function (rt) {
+      var li = el('li', 'walkplan__route');
+      li.appendChild(el('p', 'walkplan__route-title', rt.title));
+      li.appendChild(el('p', 'walkplan__route-stops', rt.stops.length + ' stops · ' + rt.stops.map(function (x) { return x.name; }).join(' → ')));
+      var acts = el('div', 'walkplan__route-actions');
+      function act(label, cls, fn) {
+        var b = el('button', cls || '', label);
+        b.type = 'button';
+        b.addEventListener('click', function () { fn(b); });
+        acts.appendChild(b);
+      }
+      act('Open on map', 'is-primary', function () { openRoute(rt); });
+      act('Share', '', function (b) { shareList(rt.title, rt.stops, b); });
+      act('Edit', '', function () { building = { id: rt.id, title: rt.title, picks: rt.stops.slice() }; paintMineView(); });
+      act('Delete', 'is-danger', function () {
+        if (!window.confirm('Delete “' + rt.title + '”?')) return;
+        routeApi('DELETE', '/api/my-routes/' + encodeURIComponent(rt.id)).then(function () {
+          myRoutes = myRoutes.filter(function (x) { return x.id !== rt.id; });
+          paintRoutes();
+        });
+      });
+      li.appendChild(acts);
+      mineList.appendChild(li);
+    });
+    if (canBuild) mineFoot.appendChild(buildButton());
+  }
+  function openRoute(rt) {
+    setMine(false);
+    msg.hidden = true;
+    var q = new URLSearchParams({ s: rt.stops.map(function (x) { return x.slug; }).join(','), t: rt.title });
+    if (showLinked(q)) {
+      try { history.replaceState(null, '', '/walk?' + q.toString()); } catch (e) {}
+      say(rt.title + ' · ' + rt.stops.length + ' stops. Tap Start to walk it.', true);
+    }
+  }
+
+  // ── The route builder: name it, tap places in the order to visit them ──
+  function paintBuilder() {
+    var places = routablePlaces();
+    // Editing a route with stops that aren't in this city's list: keep them in.
+    building.picks.forEach(function (pk) {
+      if (!places.some(function (p) { return p.slug === pk.slug; })) places.push({ slug: pk.slug, name: pk.name, category: '', photo: '' });
+    });
+    mineTitle.textContent = building.id ? 'Edit route' : 'Build a route';
+    mineNote.innerHTML = 'Tap places <b>in the order you want to visit them</b>. Tap again to take one out.';
+    mineList.innerHTML = '';
+    mineFoot.innerHTML = '';
+    var name = el('input', 'walkplan__build-name');
+    name.type = 'text';
+    name.maxLength = 60;
+    name.placeholder = 'Name it, e.g. Date night';
+    name.value = building.title;
+    name.setAttribute('aria-label', 'Route name');
+    var save = el('button', 'walkplan__acct-btn', building.id ? 'Save changes' : 'Save route');
+    save.type = 'button';
+    function ready() { save.disabled = !(name.value.trim() && building.picks.length >= 2); }
+    name.addEventListener('input', function () { building.title = name.value; ready(); });
+    var nameLi = el('li', '');
+    nameLi.appendChild(name);
+    mineList.appendChild(nameLi);
+    places.forEach(function (p) {
+      var at = building.picks.map(function (x) { return x.slug; }).indexOf(p.slug);
+      var li = el('li', 'walkplan__mine-item is-pick' + (at >= 0 ? ' is-picked' : ''));
+      li.setAttribute('role', 'button');
+      li.tabIndex = 0;
+      li.appendChild(el('span', 'walkplan__mine-rank' + (at >= 0 ? '' : ' is-dot'), at >= 0 ? String(at + 1) : '+'));
+      var th = el('span', 'walkplan__mine-thumb');
+      if (p.photo) th.style.backgroundImage = 'url("' + String(p.photo).replace(/["\\]/g, '') + '")';
+      li.appendChild(th);
+      var body = el('span', 'walkplan__mine-body');
+      body.appendChild(el('span', 'walkplan__mine-name', p.name));
+      if (p.category) body.appendChild(el('span', 'walkplan__mine-meta', p.category));
+      li.appendChild(body);
+      function toggle() {
+        var i = building.picks.map(function (x) { return x.slug; }).indexOf(p.slug);
+        if (i >= 0) building.picks.splice(i, 1);
+        else if (building.picks.length < 15) building.picks.push({ slug: p.slug, name: p.name });
+        paintBuilder();
+      }
+      li.addEventListener('click', toggle);
+      li.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
+      mineList.appendChild(li);
+    });
+    if (places.length < 2) mineNote.innerHTML = 'Save at least <b>2 places</b> from the map to build a route.';
+    save.addEventListener('click', function () {
+      save.disabled = true;
+      routeApi('POST', '/api/my-routes', { id: building.id || undefined, title: name.value, stops: building.picks }).then(function (res) {
+        if (!res.ok) { mineNote.textContent = (res.d && res.d.error) || 'Couldn’t save the route. Please try again.'; ready(); return; }
+        building = null;
+        myRoutes = null;
+        mineView = 'routes';
+        paintMineView();
+      }, function () { mineNote.textContent = 'Couldn’t reach the server. Please try again.'; ready(); });
+    });
+    var cancel = el('button', 'walkplan__acct-btn walkplan__acct-btn--ghost', 'Cancel');
+    cancel.type = 'button';
+    cancel.addEventListener('click', function () { building = null; paintMineView(); });
+    mineFoot.appendChild(save);
+    mineFoot.appendChild(cancel);
+    ready();
   }
   function walkTo(p) {
     setMine(false);
@@ -401,7 +561,10 @@
   }
   function shareMine(list, btn) {
     var who = (mineData.name || 'My').split(' ')[0];
-    var title = (who === 'My' ? 'My' : who + '’s') + ' top ' + list.length + (mineData.city ? ' in ' + mineData.city : '');
+    shareList((who === 'My' ? 'My' : who + '’s') + ' top ' + list.length + (mineData.city ? ' in ' + mineData.city : ''), list, btn);
+  }
+  // A short link (/w/...) that opens these places on the map in this order, then the share sheet.
+  function shareList(title, list, btn) {
     btn.disabled = true;
     fetch('/api/walk-share', { method: 'POST', credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': READER.csrf || '' },
@@ -428,6 +591,9 @@
       if (minePullX !== null && minePullX - e.touches[0].clientX > 24) { minePullX = null; setMine(true); }
     }, { passive: true });
     mine.querySelector('.walkplan__drawer-close').addEventListener('click', function () { setMine(false); });
+    if (mineTabs) Array.prototype.forEach.call(mineTabs.querySelectorAll('[data-mine-view]'), function (b) {
+      b.addEventListener('click', function () { mineView = b.getAttribute('data-mine-view'); paintMineView(); });
+    });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMine(false); });
   }
 
