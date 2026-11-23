@@ -301,7 +301,7 @@
       var scrollEl = document.querySelector('.article-sheet__scroll');
       var stickyBar = document.getElementById('article-sheet-sticky-bar');
       var authorPop = document.getElementById('article-sheet-author-pop');
-      if (!overlay || !inner || !grid || !window.ARTICLES_DATA) return;
+      if (!overlay || !inner || !window.ARTICLES_DATA) return;   // (#card-grid is optional: the walk page has none)
 
       var articlesBySlug = {};
       window.ARTICLES_DATA.forEach(function (a) { articlesBySlug[a.slug] = a; });
@@ -797,7 +797,8 @@
       document.addEventListener('click', function (e) {
         var link = e.target.closest('a[data-slug]');
         if (!link) return;
-        if (!grid.contains(link) && link.className.indexOf('hero-story') === -1) return;
+        // Links elsewhere opt in with data-sheet (the walk page's "Good reads" cards).
+        if (!(grid && grid.contains(link)) && link.className.indexOf('hero-story') === -1 && !link.hasAttribute('data-sheet')) return;
         // (A travel map story on a phone opens the same pop-up card, holding the story's own page -- see framePage.)
         e.preventDefault();
         openSheet(link.getAttribute('data-slug'));

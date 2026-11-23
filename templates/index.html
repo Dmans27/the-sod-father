@@ -80,33 +80,7 @@
   <p class="empty-state">No articles in this category yet.</p>
 {% endif %}
 
-<!--
-  Article sheet: clicking a card above opens the full article right here,
-  as a card that pops up over the page, instead of navigating to a separate
-  page. It shows ~150 words with a "Read more" button, which expands the
-  same card the rest of the way -- nobody has to leave this screen just to
-  read. The <a href="/article/..."> above still points to a real page
-  (templates/article.html), so this is pure progressive enhancement: with
-  JS disabled, or when a link is shared directly, the real article page is
-  still there as a fallback.
--->
-<div class="article-sheet-overlay" id="article-sheet-overlay" aria-hidden="true">
-  <div class="article-sheet-overlay__scrim" data-sheet-close></div>
-  <div class="article-sheet" role="dialog" aria-modal="true">
-    <div class="article-sheet__sticky-bar" id="article-sheet-sticky-bar" aria-hidden="true"></div>
-    <button type="button" class="article-sheet__close" data-sheet-close aria-label="Close article">&times;</button>
-    <div class="article-sheet__scroll">
-      <div class="article-sheet__inner" id="article-sheet-inner"></div>
-    </div>
-    <div class="article-sheet__author-pop" id="article-sheet-author-pop" aria-hidden="true"></div>
-  </div>
-  <!-- Drag handle on the spine between the two pages (700px and wider only):
-       drag left for a full-width article, back to the middle for split. -->
-  <div class="book-handle" id="book-handle" role="separator" aria-orientation="vertical"
-       aria-label="Resize the reading page. Drag, or press the arrow keys." aria-valuemin="0" aria-valuemax="100" aria-valuenow="42" tabindex="0">
-    <span class="book-handle__grip" aria-hidden="true"></span>
-  </div>
-</div>
+{% include "_article_sheet.html" %}
 
 <script>
   // Article data for every card on this page, embedded once so opening a

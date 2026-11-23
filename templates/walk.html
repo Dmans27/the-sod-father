@@ -260,7 +260,7 @@
     <p class="walkplan__drawer-sub">Good reads</p>
     <div class="walkplan__reads">
     {% for r in reads %}
-    <a class="walkplan__read" href="/article/{{ r.slug }}">
+    <a class="walkplan__read" href="/article/{{ r.slug }}" data-slug="{{ r.slug }}" data-sheet>
       <span class="walkplan__read-thumb"{% if r.image %} style="background-image: url('{{ r.image }}')"{% endif %}></span>
       <span class="walkplan__read-body">
         {% if r.pill %}<span class="walkplan__read-pill">{{ r.pill }}</span>{% endif %}
@@ -332,6 +332,15 @@
     </div>
   </div>
 </div>
+{% if reads_data %}
+{# "Good reads" open in the same article pop-up as the stories feed (the script is in base.html). #}
+{% include "_article_sheet.html" %}
+<script>
+  window.ARTICLES_DATA = {{ reads_data|tojson }};
+  window.CATEGORIES_DATA = {{ categories|tojson }};
+  window.COMMENT_COUNTS = {{ (comment_counts or {})|tojson }};
+</script>
+{% endif %}
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
 <script src="/static/js/walk-planner.js?v=19" defer></script>
 {% endblock %}

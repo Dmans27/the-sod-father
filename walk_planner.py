@@ -528,9 +528,16 @@ def transcribe(audio_bytes, mimetype):
 @walk_bp.get("/walk")
 def walk_page():
     # "This week" drawer (walk_feed.py): the owner's published weekly walks and related stories
-    from walk_feed import _city, published_feed, related_reads
+    from walk_feed import _city, published_feed, related_articles, related_reads
+    import readers
+    articles = related_articles()
+    try:
+        counts = readers.comment_counts()
+    except Exception:
+        counts = {}
     return render_template("walk.html", directory=directory_url(), categories=CATEGORIES, active_category=None,
-                           feed=published_feed(), reads=related_reads(), feed_city=_city())
+                           feed=published_feed(), reads=related_reads(articles=articles), reads_data=articles,
+                           comment_counts=counts, feed_city=_city())
 
 
 def _guard():
