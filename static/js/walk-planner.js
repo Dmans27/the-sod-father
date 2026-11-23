@@ -304,8 +304,9 @@
   function hideTab() {
     root.classList.add('map-used');
     setDrawer(false);
+    sendInsets();
   }
-  function showTab() { root.classList.remove('map-used'); }
+  function showTab() { root.classList.remove('map-used'); sendInsets(); }
   if (drawer) {
     var pullX = null;
     pull.addEventListener('click', function () { setDrawer(true); });
@@ -374,8 +375,12 @@
       var shown = toolsEl && getComputedStyle(toolsEl).display !== 'none';
       // side: on phones the account button sits in the map's top-right corner, so the
       // map keeps its route label that far in from both edges.
+      // left: on iPad the This week tab sits in the middle of the left edge; while it's
+      // showing, the map moves its stop list over so the tab doesn't cover it.
+      var tab = document.getElementById('walkplan-pull');
+      var tabOn = !!tab && window.innerWidth > 640 && !root.classList.contains('map-used') && !root.classList.contains('is-walking');
       post({ type: 'mansfield:insets', top: shown ? Math.round(toolsEl.getBoundingClientRect().bottom + 6) : 0,
-             side: window.innerWidth <= 640 ? 52 : 0 });
+             side: window.innerWidth <= 640 ? 52 : 0, left: tabOn ? 34 : 0 });
     });
   }
   window.addEventListener('resize', function () { if (typeof paintArea === 'function') paintArea(); else sendInsets(); });
