@@ -173,7 +173,7 @@
 
   form.addEventListener('submit', function (e) { e.preventDefault(); ask(input.value); });
   Array.prototype.forEach.call(root.querySelectorAll('.walkplan__idea'), function (b) {
-    b.addEventListener('click', function () { input.value = b.textContent; ask(b.textContent); });
+    b.addEventListener('click', function () { setDrawer(false); input.value = b.textContent; ask(b.textContent); });
   });
 
   // ── Showing a walk ────────────────────────────────────────────────────
