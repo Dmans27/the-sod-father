@@ -125,6 +125,17 @@
     background: rgba(255, 255, 255, 0.06); color: #fff; font: 700 16px var(--font-sans); }
   .walkplan__build-name::placeholder { color: rgba(255, 255, 255, 0.4); }
   .walkplan__mine-item.is-pick { cursor: pointer; }
+  .walkplan__build-find { margin: 0 0 8px; }
+  .walkplan__build-search { width: 100%; box-sizing: border-box; padding: 11px 14px 11px 40px; border: 1px solid rgba(255, 255, 255, 0.16); border-radius: 999px;
+    background: rgba(255, 255, 255, 0.06) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff99' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='6.5'/%3E%3Cpath d='M16 16l4.5 4.5'/%3E%3C/svg%3E") 14px 50% / 18px no-repeat;
+    color: #fff; font: 600 15px var(--font-sans); -webkit-appearance: none; appearance: none; }
+  .walkplan__build-search::placeholder { color: rgba(255, 255, 255, 0.45); }
+  .walkplan__build-results { list-style: none; margin: 6px 0 0; padding: 0; }
+  .walkplan__build-results:empty { display: none; }
+  .walkplan__build-hit { display: flex; align-items: center; gap: 10px; padding: 9px 12px; margin-top: 6px; border-radius: 12px; background: rgba(255, 255, 255, 0.06); }
+  .walkplan__build-hit button { flex: 0 0 auto; padding: 7px 12px; border: 0; border-radius: 999px; background: #2BEA6B; color: #0b2414; font: 800 13px var(--font-sans); cursor: pointer; }
+  .walkplan__build-hit button:disabled { background: rgba(255, 255, 255, 0.12); color: rgba(255, 255, 255, 0.6); cursor: default; }
+  .walkplan__build-hint { padding: 8px 4px; font-size: 13.5px; color: rgba(255, 255, 255, 0.6); }
   .walkplan__mine-item.is-picked .walkplan__mine-name { color: #2BEA6B; }
   .walkplan__mine-empty { margin: 30px 0; text-align: center; font-size: 15px; line-height: 1.5; color: rgba(255, 255, 255, 0.75); }
 
@@ -415,5 +426,5 @@
 </script>
 {% endif %}
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
-<script src="/static/js/walk-planner.js?v=22" defer></script>
+<script src="/static/js/walk-planner.js?v=23" defer></script>
 {% endblock %}

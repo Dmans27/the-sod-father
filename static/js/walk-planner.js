@@ -352,6 +352,7 @@
       mineNote.textContent = '';
       mineList.appendChild(el('li', 'walkplan__mine-empty',
         'Tap a pin on the map and press “+ Save”. Once you’ve saved ' + from + ' places here, your ranking starts and you can share it.'));
+      mineFoot.appendChild(buildButton());
       return;
     }
     var ranked = !!d.ranked;
@@ -403,7 +404,7 @@
         mineFoot.appendChild(b);
       }
     }
-    if (routablePlaces().length >= 2) mineFoot.appendChild(buildButton());
+    mineFoot.appendChild(buildButton());   // saved places or any place from the directory search
   }
 
   // ── My routes: the ones they built ("Date night") ─────────────────────
@@ -433,10 +434,9 @@
         .catch(function () { mineNote.textContent = 'Couldn’t load your routes. Check your connection and try again.'; });
       return;
     }
-    var canBuild = routablePlaces().length >= 2;
+    var canBuild = true;   // saved places or any place from the directory search
     if (!myRoutes.length) {
-      mineNote.innerHTML = canBuild ? 'Make your own: a <b>date night</b>, your favourite coffee loop, a tour for friends.'
-                                    : 'Save at least <b>2 places</b> from the map, then build your own routes here.';
+      mineNote.innerHTML = 'Make your own: a <b>date night</b>, your favourite coffee loop, a tour for friends.';
     } else {
       mineNote.textContent = '';
     }
@@ -453,7 +453,7 @@
       }
       act('Open on map', 'is-primary', function () { openRoute(rt); });
       act('Share', '', function (b) { shareList(rt.title, rt.stops, b); });
-      act('Edit', '', function () { building = { id: rt.id, title: rt.title, picks: rt.stops.slice() }; paintMineView(); });
+      act('Edit', '', function () { building = { id: rt.id, title: rt.title, picks: rt.stops.map(function (x) { return { slug: x.slug, name: x.name }; }) }; paintMineView(); });
       act('Delete', 'is-danger', function () {
         if (!window.confirm('Delete “' + rt.title + '”?')) return;
         routeApi('DELETE', '/api/my-routes/' + encodeURIComponent(rt.id)).then(function () {
@@ -480,11 +480,12 @@
   function paintBuilder() {
     var places = routablePlaces();
     // Editing a route with stops that aren't in this city's list: keep them in.
+    // Places added from the search (or kept from an edited route) that aren't saved favourites.
     building.picks.forEach(function (pk) {
-      if (!places.some(function (p) { return p.slug === pk.slug; })) places.push({ slug: pk.slug, name: pk.name, category: '', photo: '' });
+      if (!places.some(function (p) { return p.slug === pk.slug; })) places.push({ slug: pk.slug, name: pk.name, category: pk.category || '', photo: '' });
     });
     mineTitle.textContent = building.id ? 'Edit route' : 'Build a route';
-    mineNote.innerHTML = 'Tap places <b>in the order you want to visit them</b>. Tap again to take one out.';
+    mineNote.innerHTML = 'Tap places <b>in the order you want to visit them</b>, or search for any place in the directory. Tap again to take one out.';
     mineList.innerHTML = '';
     mineFoot.innerHTML = '';
     var name = el('input', 'walkplan__build-name');
@@ -500,6 +501,55 @@
     var nameLi = el('li', '');
     nameLi.appendChild(name);
     mineList.appendChild(nameLi);
+    // Search the whole directory to add a place that isn't saved yet.
+    var findLi = el('li', 'walkplan__build-find');
+    var find = el('input', 'walkplan__build-search');
+    find.type = 'search';
+    find.placeholder = 'Search the directory to add a place';
+    find.setAttribute('aria-label', 'Search the directory');
+    find.autocomplete = 'off';
+    var found = el('ul', 'walkplan__build-results');
+    findLi.appendChild(find);
+    findLi.appendChild(found);
+    mineList.appendChild(findLi);
+    var findTimer = null, findSeq = 0;
+    find.addEventListener('input', function () {
+      clearTimeout(findTimer);
+      var q = find.value.trim();
+      if (q.length < 2) { found.innerHTML = ''; return; }
+      findTimer = setTimeout(function () {
+        var seq = ++findSeq, c = (view && view.center) || START.center;
+        found.innerHTML = '';
+        found.appendChild(el('li', 'walkplan__build-hint', 'Searching…'));
+        fetch('/api/place-search?' + new URLSearchParams({ q: q, lat: c[1].toFixed(5), lng: c[0].toFixed(5) }).toString(),
+              { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (seq !== findSeq) return;   // a newer search is on its way
+            found.innerHTML = '';
+            var list = (d && d.places) || [];
+            if (!list.length) { found.appendChild(el('li', 'walkplan__build-hint', 'No places found for “' + q + '”.')); return; }
+            list.forEach(function (p) {
+              var picked = building.picks.some(function (x) { return x.slug === p.slug; });
+              var li = el('li', 'walkplan__build-hit');
+              var txt = el('span', 'walkplan__mine-body');
+              txt.appendChild(el('span', 'walkplan__mine-name', p.name));
+              txt.appendChild(el('span', 'walkplan__mine-meta', [p.category, p.address].filter(Boolean).join(' · ')));
+              li.appendChild(txt);
+              var add = el('button', '', picked ? 'Added' : '+ Add');
+              add.type = 'button';
+              add.disabled = picked || building.picks.length >= 15;
+              add.addEventListener('click', function () {
+                building.picks.push({ slug: p.slug, name: p.name, category: p.category });
+                paintBuilder();
+              });
+              li.appendChild(add);
+              found.appendChild(li);
+            });
+          })
+          .catch(function () { if (seq === findSeq) { found.innerHTML = ''; found.appendChild(el('li', 'walkplan__build-hint', 'Couldn’t search right now.')); } });
+      }, 300);
+    });
     places.forEach(function (p) {
       var at = building.picks.map(function (x) { return x.slug; }).indexOf(p.slug);
       var li = el('li', 'walkplan__mine-item is-pick' + (at >= 0 ? ' is-picked' : ''));
@@ -523,7 +573,7 @@
       li.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
       mineList.appendChild(li);
     });
-    if (places.length < 2) mineNote.innerHTML = 'Save at least <b>2 places</b> from the map to build a route.';
+
     save.addEventListener('click', function () {
       save.disabled = true;
       routeApi('POST', '/api/my-routes', { id: building.id || undefined, title: name.value, stops: building.picks }).then(function (res) {

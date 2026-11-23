@@ -624,6 +624,46 @@ def api_walk_plan():
     return jsonify(ok=True, query=query, **result)
 
 
+@walk_bp.get("/api/place-search")
+def place_search():
+    """Directory places whose name (or kind) has these words, near the map:
+    ?q=words&lat&lng. For the route builder ("add a place that isn't saved yet").
+    Signed-in readers only."""
+    if not current_reader() and not session.get("is_admin"):
+        return jsonify(ok=False, error="sign_in"), 401
+    q = _text(request.args.get("q"), 60)
+    words = [w for w in re.split(r"[^\w']+", q.lower()) if len(w) >= 2][:6]
+    if not words:
+        return jsonify(ok=True, places=[])
+    base, key = directory_url(), (os.environ.get("WALK_PLAN_KEY") or "").strip()
+    if not base or not key:
+        return jsonify(ok=False, error="The directory isn't set up yet."), 503
+    try:
+        lat, lng = float(request.args.get("lat")), float(request.args.get("lng"))
+        if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+            raise ValueError
+    except (TypeError, ValueError):
+        lat, lng = 48.2082, 16.3738
+    params = {"lat": lat, "lng": lng, "radius": 20000, "limit": 60, "q": " ".join(words)}
+    try:
+        r = requests.get(base + "/embed/places-near?" + urlencode(params), headers={"X-Walk-Key": key}, timeout=12)
+        data = r.json() if r.status_code < 300 else {}
+    except (requests.RequestException, ValueError):
+        return jsonify(ok=False, error="The directory couldn't be searched right now."), 502
+    out = []
+    for p in data.get("places") or []:
+        if not isinstance(p, dict) or not SLUG.match(str(p.get("slug") or "")):
+            continue
+        name = str(p.get("name") or "")
+        hay = (name + " " + str(p.get("category") or "")).lower()
+        if all(w in hay for w in words):   # every word, in the name or the kind of place
+            out.append({"slug": p["slug"], "name": _text(name, 80),
+                        "category": _text(str(p.get("category") or "").replace("_", " "), 40),
+                        "address": _text(p.get("address"), 120), "name_hit": all(w in name.lower() for w in words)})
+    out.sort(key=lambda p: not p["name_hit"])   # name matches first, then nearest (the directory's order)
+    return jsonify(ok=True, places=[{k: v for k, v in p.items() if k != "name_hit"} for p in out[:8]])
+
+
 @walk_bp.post("/api/walk-plan/voice")
 def api_walk_voice():
     bad = _guard()
