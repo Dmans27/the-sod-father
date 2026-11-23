@@ -71,6 +71,7 @@
   .walkplan__drawer { position: absolute; z-index: 10; left: 0; top: 0; bottom: 0; width: min(360px, 88%); box-sizing: border-box; overflow-y: auto; overscroll-behavior: contain;
     padding: calc(env(safe-area-inset-top, 0px) + 18px) 16px calc(env(safe-area-inset-bottom, 0px) + 24px);
     background: #141618; color: #fff; transform: translateX(-100%); visibility: hidden; transition: transform 0.28s ease, visibility 0s 0.28s; }
+  @media (max-width: 640px) { .walkplan__drawer { width: 100%; } }   /* phones: the drawer fills the screen */
   .walkplan.drawer-open .walkplan__drawer { transform: none; visibility: visible; box-shadow: 8px 0 30px rgba(0, 0, 0, 0.35); transition: transform 0.28s ease; }
   .walkplan.drawer-open .walkplan__drawer-back { opacity: 1; pointer-events: auto; }
   .walkplan__drawer-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
