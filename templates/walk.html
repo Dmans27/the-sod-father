@@ -156,7 +156,11 @@
   .walkplan.has-panel .walkplan__pull { opacity: 0; transform: translate(-100%, -50%); pointer-events: none; }
   /* Phones: a bit above the middle, clear of the welcome card and the stop cards along the bottom.
      iPad: the middle of the left edge (the map moves its stop list over to make room, see sendInsets). */
-  @media (max-width: 640px) { .walkplan__pull { top: 36%; } }
+  /* Phones: both tabs start just below the phone's side buttons, and stay out of the way while the welcome card shows. */
+  @media (max-width: 640px) {
+    .walkplan__pull { top: 47%; }
+    .walkplan:has(#walkplan-intro:not([hidden])) .walkplan__pull { opacity: 0; pointer-events: none; }
+  }
   .walkplan__drawer-back { position: absolute; z-index: 9; inset: 0; background: rgba(0, 0, 0, 0.35); opacity: 0; pointer-events: none; transition: opacity 0.25s; }
   .walkplan__drawer { position: absolute; z-index: 10; left: 0; top: 0; bottom: 0; width: min(360px, 88%); box-sizing: border-box; overflow-y: auto; overscroll-behavior: contain;
     padding: calc(env(safe-area-inset-top, 0px) + 18px) 16px calc(env(safe-area-inset-bottom, 0px) + 24px);
@@ -301,7 +305,7 @@
       <li><b>Ask</b> for a walk below, typed or spoken: “3 cozy cafés near me”.</li>
       <li><b>Draw area</b> to circle the exact part of town you want.</li>
       <li>Open <b>This week</b> on the left for ideas, walks to try and good reads.</li>
-      <li>The newspaper button opens <b>Stories</b>; top right is <b>your account</b>.</li>
+      <li>Tap your account button (top right) for <b>Stories</b>, saved walks and settings.</li>
     </ol>
     <button type="button" class="walkplan__got-it">Got it</button>
     <p class="walkplan__fine">"Near me" uses your location for this one search. It's never stored.</p>
@@ -361,7 +365,6 @@
   </aside>
 
   <div class="walkplan__tools">
-  <a class="walkplan__home" href="/" aria-label="Stories"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-stories"/></svg></a>
     <button type="button" class="walkplan__tool" id="walkplan-draw" aria-pressed="false">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke-dasharray="3 2.5"/><circle cx="12" cy="12" r="1.6"/></svg><span>Draw area</span>
     </button>
