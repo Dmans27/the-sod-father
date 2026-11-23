@@ -192,6 +192,17 @@
   .walkplan__read-pill { font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #9fe0bd; }
   .walkplan__read-title { font-weight: 700; font-size: 14.5px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .walkplan__read-min { font-size: 12px; color: rgba(255, 255, 255, 0.6); }
+  /* Walks to try / Good reads: two slides you swipe between, with dots beside the heading */
+  .walkplan__slides { position: relative; margin-top: 18px; }
+  .walkplan__slides-track { display: flex; align-items: flex-start; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none;
+    overscroll-behavior-x: contain; margin: 0 -16px; transition: height 0.25s ease; }
+  .walkplan__slides-track::-webkit-scrollbar { display: none; }
+  .walkplan__slide { flex: 0 0 100%; min-width: 0; box-sizing: border-box; padding: 0 16px; scroll-snap-align: start; scroll-snap-stop: always; }
+  .walkplan__dots { position: absolute; z-index: 1; top: -7px; right: -6px; display: flex; }
+  .walkplan__dot { width: 22px; height: 28px; padding: 0; border: 0; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .walkplan__dot::before { content: ""; width: 8px; height: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.3); transition: width 0.2s, background 0.2s; }
+  .walkplan__dot.is-on { width: 34px; }
+  .walkplan__dot.is-on::before { width: 22px; background: #2BEA6B; }
   .walkplan__drawer-plan { display: block; margin-top: 18px; padding: 12px; border-radius: 999px; background: #fff; color: #15171a; font-weight: 800; text-align: center; text-decoration: none; border: 0; width: 100%; font-size: 14.5px; cursor: pointer; }
   /* iPad and wider: the drawer comes across the whole page as a feed, with bigger cards in two columns */
   .walkplan__drawer-inner { max-width: 880px; margin: 0 auto; }
@@ -203,6 +214,10 @@
     .walkplan__drawer-sub { margin: 28px 0 12px; font-size: 13px; }
     .walkplan__drawer .walkplan__ideas { margin: 0 -32px; padding: 0 32px 2px; scroll-padding: 0 32px; }
     .walkplan__drawer .walkplan__idea { font-size: 15px; padding: 11px 16px; }
+    .walkplan__slides { margin-top: 28px; }
+    .walkplan__slides-track { margin: 0 -32px; }
+    .walkplan__slide { padding: 0 32px; }
+    .walkplan__dots { top: -6px; }
     .walkplan__walks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
     .walkplan__walks .walkplan__week-card { margin: 0; padding: 20px 22px; gap: 8px; border-radius: 18px; }
     .walkplan__week-tag { font-size: 12.5px; padding: 3px 10px; }
@@ -331,7 +346,19 @@
       <button type="button" class="walkplan__idea" role="listitem">Bars for tonight in this area</button>
       <button type="button" class="walkplan__idea" role="listitem">Museums and a cafe in Vienna's old town</button>
     </div>
+    {# Walks to try and Good reads sit side by side: swipe left and right (or tap the dots) to switch. #}
+    {% set slide_count = (1 if feed else 0) + (1 if reads else 0) %}
+    {% if slide_count %}
+    <div class="walkplan__slides{% if slide_count > 1 %} is-multi{% endif %}" id="walkplan-slides">
+    {% if slide_count > 1 %}
+    <div class="walkplan__dots" role="tablist" aria-label="Sections">
+      <button type="button" class="walkplan__dot is-on" role="tab" aria-selected="true" aria-label="Walks to try"></button>
+      <button type="button" class="walkplan__dot" role="tab" aria-selected="false" aria-label="Good reads"></button>
+    </div>
+    {% endif %}
+    <div class="walkplan__slides-track">
     {% if feed %}
+    <section class="walkplan__slide" aria-label="Walks to try">
     <p class="walkplan__drawer-sub">Walks to try</p>
     <div class="walkplan__walks">
     {% for it in feed %}
@@ -343,8 +370,10 @@
     </a>
     {% endfor %}
     </div>
+    </section>
     {% endif %}
     {% if reads %}
+    <section class="walkplan__slide" aria-label="Good reads">
     <p class="walkplan__drawer-sub">Good reads</p>
     <div class="walkplan__reads">
     {% for r in reads %}
@@ -357,6 +386,10 @@
       </span>
     </a>
     {% endfor %}
+    </div>
+    </section>
+    {% endif %}
+    </div>
     </div>
     {% endif %}
     <a class="walkplan__drawer-all" href="/">All stories &rarr;</a>
@@ -429,5 +462,5 @@
 </script>
 {% endif %}
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
-<script src="/static/js/walk-planner.js?v=23" defer></script>
+<script src="/static/js/walk-planner.js?v=24" defer></script>
 {% endblock %}

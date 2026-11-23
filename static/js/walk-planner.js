@@ -708,6 +708,43 @@
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setDrawer(false); });
   }
 
+  // Walks to try / Good reads: swipe sideways (or tap a dot) to switch. The row takes the height of the section showing.
+  var slideBox = document.getElementById('walkplan-slides');
+  if (slideBox && slideBox.classList.contains('is-multi')) {
+    var slideTrack = slideBox.querySelector('.walkplan__slides-track');
+    var slidePages = slideTrack.children;
+    var slideDots = slideBox.querySelectorAll('.walkplan__dot');
+    var slideAt = 0, slideWait = null;
+    var fitSlide = function () { if (slidePages[slideAt]) slideTrack.style.height = slidePages[slideAt].offsetHeight + 'px'; };
+    var markSlide = function (i) {
+      slideAt = Math.max(0, Math.min(slidePages.length - 1, i));
+      for (var k = 0; k < slideDots.length; k++) {
+        slideDots[k].classList.toggle('is-on', k === slideAt);
+        slideDots[k].setAttribute('aria-selected', k === slideAt ? 'true' : 'false');
+      }
+      fitSlide();
+    };
+    slideTrack.addEventListener('scroll', function () {
+      clearTimeout(slideWait);
+      slideWait = setTimeout(function () {
+        var i = Math.round(slideTrack.scrollLeft / Math.max(1, slideTrack.clientWidth));
+        if (i !== slideAt) markSlide(i);
+      }, 80);
+    }, { passive: true });
+    Array.prototype.forEach.call(slideDots, function (d, k) {
+      d.addEventListener('click', function () {
+        markSlide(k);
+        slideTrack.scrollTo({ left: k * slideTrack.clientWidth, behavior: 'smooth' });
+      });
+    });
+    window.addEventListener('resize', function () { slideTrack.scrollLeft = slideAt * slideTrack.clientWidth; fitSlide(); });
+    if (window.ResizeObserver) {
+      var slideWatch = new ResizeObserver(fitSlide);
+      Array.prototype.forEach.call(slidePages, function (pg) { slideWatch.observe(pg); });
+    }
+    fitSlide();
+  }
+
   // ── The map ───────────────────────────────────────────────────────────
   var asking = null;
   function post(m) { try { frame.contentWindow.postMessage(m, origin); } catch (e) {} }
