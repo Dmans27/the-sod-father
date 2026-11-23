@@ -185,6 +185,7 @@
     try { history.replaceState(null, '', plan.open || '/walk'); } catch (e) {}
     root.classList.add('has-walk');
     showTab();   // a new walk: the This week tab comes back
+    syncIdle();
     intro.hidden = true;
     listBtn.hidden = false;
     clearBtn.hidden = false;
@@ -235,6 +236,7 @@
     if (shared) say(title + ' · ' + s.length + ' stops. Ask to change it, or plan your own.', true);
     root.classList.add('has-walk');
     showTab();   // a new walk: the This week tab comes back
+    syncIdle();
     intro.hidden = true;
     listBtn.hidden = false;
     clearBtn.hidden = false;
@@ -248,6 +250,8 @@
   function clearWalk() {
     showTab();   // a fresh start: the "This week" tab is back
     plan = null;
+    syncIdle();
+    sendInsets();
     legs = durations = null;
     saved = false;
     closeSheet();
@@ -392,8 +396,11 @@
       areaChip.title = 'The walk only uses places inside the area you drew';
     }
     setDrawBtn(drawBtn.classList.contains('is-on'));
+    syncIdle();
     sendInsets();
   }
+  // A fresh map (no walk, nothing drawn): Stories and Draw area sit centred at the very top.
+  function syncIdle() { root.classList.toggle('is-idle', !plan && !circle); }
   // The map answers mansfield:draw {on}. If it doesn't, it's an older map that can't draw yet.
   var drawAck = null, areaAt = 0;
   drawBtn.addEventListener('click', function () {

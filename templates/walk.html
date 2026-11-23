@@ -44,6 +44,13 @@
   .walkplan.is-walking .walkplan__me, .walkplan.has-panel .walkplan__me { display: none; }
   .walkplan__drawer-all { display: block; margin-top: 12px; font-weight: 800; font-size: 14.5px; color: #2BEA6B; text-decoration: none; }
 
+  /* The Stories button rides in the pill row. On a fresh map (no walk, nothing drawn: .is-idle)
+     the row sits centred at the very top; once an area is drawn or a walk is on, it moves to its
+     usual place under the map's route label, in line with Redraw / New walk / the area chip. */
+  .walkplan__tools { left: 12px; }
+  .walkplan__tools .walkplan__home { position: static; flex: 0 0 auto; }
+  .walkplan.is-idle .walkplan__tools { top: calc(env(safe-area-inset-top, 0px) + 12px); justify-content: center; }
+
   /* Welcome card (first visit only) */
   .walkplan__welcome { margin: 4px 34px 10px; font: 800 17px/1.3 var(--font-sans); color: #fff; }
   .walkplan__steps { margin: 0 0 12px; padding: 0 4px 0 22px; text-align: left; font-size: 14.5px; line-height: 1.45; color: rgba(255, 255, 255, 0.85); }
@@ -105,12 +112,11 @@
 {% block content %}
 {# "Plan a walk": ask (typed or spoken) and get a walking route from the directory.
    static/js/walk-planner.js does the work; walk_planner.py plans the walk. #}
-<div class="walkplan" id="walkplan" data-directory="{{ directory }}">
+<div class="walkplan is-idle" id="walkplan" data-directory="{{ directory }}">
   <iframe class="walkplan__map" id="walkplan-map" title="Map of your walk" hidden
           referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen; geolocation"
           sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
 
-  <a class="walkplan__home" href="/" aria-label="Stories"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-stories"/></svg></a>
 
   {# Account, top right: the reader's initial (or a person icon when signed out) opens a small menu. #}
   <div class="walkplan__me" id="walkplan-me">
@@ -146,7 +152,7 @@
       <li><b>Ask</b> for a walk below, typed or spoken: “3 cozy cafés near me”.</li>
       <li><b>Draw area</b> to circle the exact part of town you want.</li>
       <li>Open <b>This week</b> on the left for ideas, walks to try and good reads.</li>
-      <li><b>Stories</b> are top left, <b>your account</b> top right.</li>
+      <li>The newspaper button opens <b>Stories</b>; top right is <b>your account</b>.</li>
     </ol>
     <button type="button" class="walkplan__got-it">Got it</button>
     <p class="walkplan__fine">"Near me" uses your location for this one search. It's never stored.</p>
@@ -200,6 +206,7 @@
   </aside>
 
   <div class="walkplan__tools">
+  <a class="walkplan__home" href="/" aria-label="Stories"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-stories"/></svg></a>
     <button type="button" class="walkplan__tool" id="walkplan-draw" aria-pressed="false">
       <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke-dasharray="3 2.5"/><circle cx="12" cy="12" r="1.6"/></svg><span>Draw area</span>
     </button>
@@ -255,5 +262,5 @@
   </div>
 </div>
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
-<script src="/static/js/walk-planner.js?v=16" defer></script>
+<script src="/static/js/walk-planner.js?v=17" defer></script>
 {% endblock %}
