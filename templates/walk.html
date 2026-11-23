@@ -26,16 +26,17 @@
   @media (max-width: 400px) { .walkplan__msg-act { padding: 8px 10px; } .walkplan__msg-stops { padding: 8px 12px; } }
   /* "This week" cards on the start card */
   .walkplan__week-head { margin: 12px 0 6px; font-size: 12px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: #2BEA6B; }
-  .walkplan__week { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 0 -16px 12px; padding: 0 16px 2px; }
+  .walkplan__week { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-padding: 0 16px; scrollbar-width: none; margin: 0 -16px 12px; padding: 0 16px 2px; }
   .walkplan__week::-webkit-scrollbar { display: none; }
   .walkplan__week-card { flex: 0 0 min(240px, 78%); scroll-snap-align: start; text-align: left; display: flex; flex-direction: column; gap: 4px; padding: 12px 13px;
     border-radius: 14px; background: rgba(255, 255, 255, 0.08); border: 0.5px solid rgba(255, 255, 255, 0.18); color: #fff; text-decoration: none; }
+  .walkplan__week-card:only-child { flex-basis: 100%; }
   .walkplan__week-card:active { background: rgba(255, 255, 255, 0.14); }
   .walkplan__week-tag { align-self: flex-start; padding: 1px 8px; border-radius: 999px; background: #2BEA6B; color: #0b2414; font-size: 11px; font-weight: 800; }
   .walkplan__week-title { font-weight: 800; font-size: 15px; line-height: 1.25; }
   .walkplan__week-blurb { font-size: 13px; line-height: 1.4; color: rgba(255, 255, 255, 0.82);
     display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
-  .walkplan__week-stops { margin-top: auto; font-size: 12px; color: rgba(255, 255, 255, 0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .walkplan__week-stops { margin-top: auto; padding-top: 2px; max-width: 100%; font-size: 12px; color: rgba(255, 255, 255, 0.6); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 </style>
 {% endblock %}
 
