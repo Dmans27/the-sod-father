@@ -25,7 +25,7 @@ from author_auth import author_bp
 from newsletter import newsletter_bp
 from ask import ask_bp
 from walk_planner import walk_bp
-from walk_feed import feed_bp
+from walk_feed import feed_bp, published_feed
 import safety
 from seo import seo_bp, register as register_seo
 import readers
@@ -70,6 +70,7 @@ def home():
         categories=CATEGORIES,
         active_category=None,
         comment_counts=readers.comment_counts(),
+        walk_feed=published_feed(),   # "Walks this week" cards between the stories (walk_feed.py)
     )
 
 
@@ -97,6 +98,7 @@ def category_page(slug, sub=None):
         active_category=slug,
         active_sub=sub,
         comment_counts=readers.comment_counts(),
+        walk_feed=published_feed() if slug == "travel" else [],   # walks fit the Travel section too
     )
 
 

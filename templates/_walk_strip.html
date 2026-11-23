@@ -1,0 +1,20 @@
+{# "Walks this week": the owner's published weekly walk feed (walk_feed.py) as a row of cards
+   between the stories. Each card opens that walk on the map. Shown only when a feed is published. #}
+{% if walk_feed %}
+<section class="walk-strip" aria-label="Walks this week">
+  <div class="walk-strip__head">
+    <span class="walk-strip__kicker">Walks this week</span>
+    <a href="/walk" class="walk-strip__more">Plan your own &rarr;</a>
+  </div>
+  <div class="walk-strip__row" role="list">
+    {% for it in walk_feed %}
+    <a class="walk-strip__card" role="listitem" href="{{ it.link }}">
+      <span class="walk-strip__tag">{{ it.tag }}</span>
+      <span class="walk-strip__title">{{ it.title }}</span>
+      {% if it.blurb %}<span class="walk-strip__blurb">{{ it.blurb }}</span>{% endif %}
+      <span class="walk-strip__stops">{{ it.stops | length }} stops &middot; {{ it.stops | map(attribute='name') | join(', ') }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}
