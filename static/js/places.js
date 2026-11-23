@@ -36,7 +36,8 @@
   }
 
   function frames() {
-    return Array.prototype.slice.call(document.querySelectorAll('.article__map-frame iframe, .article__place iframe'));
+    // Story maps and place cards, and the walk map (Plan a walk): their pins get a "+ Save" button.
+    return Array.prototype.slice.call(document.querySelectorAll('.article__map-frame iframe, .article__place iframe, #walkplan-map'));
   }
 
   function fromMapFrame(e) {

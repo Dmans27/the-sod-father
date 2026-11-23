@@ -75,6 +75,37 @@
   .walkplan__tools .walkplan__home { position: static; flex: 0 0 auto; }
   .walkplan.is-idle .walkplan__tools { top: calc(env(safe-area-inset-top, 0px) + 12px); justify-content: center; }
 
+  /* "My places" (right edge): same tab as This week, mirrored; the panel slides in from the right */
+  .walkplan .walkplan__pull.walkplan__pull--right { left: auto; right: 0; border-left: 0.5px solid rgba(255, 255, 255, 0.2); border-right: 0; border-radius: 14px 0 0 14px; }
+  .walkplan .walkplan__pull--right .walkplan__pull-label { transform: none; }
+  .walkplan.map-used .walkplan__pull.walkplan__pull--right, .walkplan.is-walking .walkplan__pull.walkplan__pull--right,
+  .walkplan.has-panel .walkplan__pull.walkplan__pull--right { transform: translate(100%, -50%); }
+  .walkplan__mine { position: absolute; z-index: 10; right: 0; top: 0; bottom: 0; width: 100%; box-sizing: border-box; overflow-y: auto; overscroll-behavior: contain;
+    padding: calc(env(safe-area-inset-top, 0px) + 18px) 16px calc(env(safe-area-inset-bottom, 0px) + 24px); background: #141618; color: #fff;
+    display: flex; flex-direction: column;
+    transform: translateX(100%); visibility: hidden; transition: transform 0.3s ease, visibility 0s 0.3s; }
+  @media (min-width: 641px) { .walkplan__mine { width: 50%; padding-left: 26px; padding-right: 26px; } }
+  .walkplan.mine-open .walkplan__mine { transform: none; visibility: visible; box-shadow: -8px 0 30px rgba(0, 0, 0, 0.35); transition: transform 0.3s ease; }
+  .walkplan__mine-note { margin: 0 0 12px; font-size: 14px; line-height: 1.45; color: rgba(255, 255, 255, 0.72); }
+  .walkplan__mine-note b { color: #2BEA6B; }
+  .walkplan__mine-list { list-style: none; margin: 0; padding: 0; }
+  .walkplan__mine-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 0.5px solid rgba(255, 255, 255, 0.1); }
+  .walkplan__mine-item:first-child { border-top: 0; }
+  .walkplan__mine-rank { flex: 0 0 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    background: #2BEA6B; color: #0b2414; font: 800 15px var(--font-sans); }
+  .walkplan__mine-rank.is-dot { background: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.7); }
+  .walkplan__mine-thumb { flex: 0 0 52px; height: 52px; border-radius: 10px; background: rgba(255, 255, 255, 0.08) center / cover no-repeat; }
+  .walkplan__mine-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .walkplan__mine-name { font-weight: 800; font-size: 15.5px; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .walkplan__mine-meta { font-size: 12.5px; color: rgba(255, 255, 255, 0.6); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .walkplan__mine-meta a { color: #9fe0bd; text-decoration: none; font-weight: 700; }
+  .walkplan__mine-move { flex: 0 0 auto; display: flex; flex-direction: column; gap: 4px; }
+  .walkplan__mine-move button { width: 32px; height: 26px; border: 0; border-radius: 8px; background: rgba(255, 255, 255, 0.1); color: #fff; font-size: 13px; cursor: pointer; }
+  .walkplan__mine-move button:disabled { opacity: 0.25; cursor: default; }
+  .walkplan__mine-foot { margin-top: auto; padding-top: 16px; display: flex; flex-direction: column; gap: 10px; }
+  .walkplan__mine-foot .walkplan__acct-btn svg { width: 18px; height: 18px; vertical-align: -3px; margin-right: 6px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .walkplan__mine-empty { margin: 30px 0; text-align: center; font-size: 15px; line-height: 1.5; color: rgba(255, 255, 255, 0.75); }
+
   /* Welcome card (first visit only) */
   .walkplan__welcome { margin: 4px 34px 10px; font: 800 17px/1.3 var(--font-sans); color: #fff; }
   .walkplan__steps { margin: 0 0 12px; padding: 0 4px 0 22px; text-align: left; font-size: 14.5px; line-height: 1.45; color: rgba(255, 255, 255, 0.85); }
@@ -171,6 +202,22 @@
       {% if reader %}{{ (reader.display_name or '?')[:1] | upper }}{% else %}<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"/></svg>{% endif %}
     </button>
   </div>
+
+  {# "My places" tab on the right edge: the reader's saved places in this city, ranked once there are 3.
+     static/js/walk-planner.js fills it from /api/my-places each time it opens. #}
+  <button type="button" class="walkplan__pull walkplan__pull--right" id="walkplan-mine-pull" aria-controls="walkplan-mine" aria-expanded="false">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+    <span class="walkplan__pull-label">My places</span>
+  </button>
+  <aside class="walkplan__mine" id="walkplan-mine" aria-label="My places" aria-hidden="true">
+    <div class="walkplan__drawer-head">
+      <h2 id="walkplan-mine-title">My places</h2>
+      <button type="button" class="walkplan__drawer-close" aria-label="Close">&times;</button>
+    </div>
+    <p class="walkplan__mine-note" id="walkplan-mine-note"></p>
+    <ol class="walkplan__mine-list" id="walkplan-mine-list"></ol>
+    <div class="walkplan__mine-foot" id="walkplan-mine-foot"></div>
+  </aside>
 
   {# Account panel: slides in from the right. Phones: the whole screen; iPad: half of it. #}
   <div class="walkplan__acct-back" id="walkplan-acct-back"></div>
@@ -342,5 +389,5 @@
 </script>
 {% endif %}
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
-<script src="/static/js/walk-planner.js?v=19" defer></script>
+<script src="/static/js/walk-planner.js?v=20" defer></script>
 {% endblock %}

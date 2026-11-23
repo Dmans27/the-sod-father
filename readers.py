@@ -560,6 +560,116 @@ def api_places_save():
     return jsonify(saved=want, keys=saved_place_keys(reader["id"]))
 
 
+# ── "My places": the reader's saved places in one city, ranked ──────────
+# The walk map's right-hand drawer. Places count as "in this city" when they're
+# within MY_PLACES_RADIUS_M of the map's middle. A ranking starts once there are
+# RANK_FROM places: the reader orders them with the arrows (kept in place_ranks);
+# new saves join at the bottom. Before that the list is just "saved so far".
+
+MY_PLACES_RADIUS_M = 30000
+RANK_FROM = 3
+_ranks_ready = False
+
+
+def _ranks_table():
+    global _ranks_ready
+    if _ranks_ready:
+        return
+    db.execute("""
+        CREATE TABLE IF NOT EXISTS place_ranks (
+            reader_id  TEXT NOT NULL,
+            place_key  TEXT NOT NULL,
+            pos        INTEGER NOT NULL,
+            PRIMARY KEY (reader_id, place_key)
+        )""")
+    _ranks_ready = True
+
+
+def _dist_m(lat1, lng1, lat2, lng2):
+    p1, p2 = math.radians(lat1), math.radians(lat2)
+    dp, dl = p2 - p1, math.radians(lng2 - lng1)
+    h = math.sin(dp / 2) ** 2 + math.cos(p1) * math.cos(p2) * math.sin(dl / 2) ** 2
+    return 6371000 * 2 * math.asin(min(1, math.sqrt(h)))
+
+
+def _city_near(lat, lng):
+    """The feed city's name when the map is over it, else None."""
+    city = (os.environ.get("FEED_CITY") or "Vienna").strip()[:60] or "Vienna"
+    try:
+        clat, clng = [float(x) for x in (os.environ.get("FEED_CITY_CENTER") or "48.2082,16.3738").split(",")]
+    except ValueError:
+        clat, clng = 48.2082, 16.3738
+    return city if _dist_m(lat, lng, clat, clng) <= MY_PLACES_RADIUS_M else None
+
+
+def _listing_slug(url):
+    m = re.search(r"/listing/([A-Za-z0-9][A-Za-z0-9_-]{0,200})/?$", url or "")
+    return m.group(1) if m else ""
+
+
+def my_places(reader_id, lat, lng):
+    """The reader's saved places near (lat, lng): ranked order first, then newest saves."""
+    _ranks_table()
+    rows = db.query(
+        "SELECT p.place_key, p.name, p.category, p.address, p.lat, p.lng, p.photo_url, p.listing_url, p.created_at, "
+        "r.pos FROM saved_places p LEFT JOIN place_ranks r ON r.reader_id = p.reader_id AND r.place_key = p.place_key "
+        "WHERE p.reader_id = :r", r=reader_id)
+    near = [r for r in rows if _dist_m(lat, lng, r["lat"], r["lng"]) <= MY_PLACES_RADIUS_M]
+    near.sort(key=lambda r: (r["pos"] is None, r["pos"] if r["pos"] is not None else 0, r["created_at"]))
+    return [{
+        "key": r["place_key"], "name": r["name"], "category": r["category"], "address": r["address"],
+        "photo": r["photo_url"], "slug": _listing_slug(r["listing_url"]),
+        "directions": f"https://www.google.com/maps/dir/?api=1&destination={r['lat']},{r['lng']}&travelmode=walking",
+    } for r in near]
+
+
+def _map_point():
+    try:
+        lat, lng = float(request.args.get("lat")), float(request.args.get("lng"))
+        if -90 <= lat <= 90 and -180 <= lng <= 180:
+            return lat, lng
+    except (TypeError, ValueError):
+        pass
+    return 48.2082, 16.3738
+
+
+@readers_bp.get("/api/my-places")
+def api_my_places():
+    """{signedIn, city, ranked, rankFrom, places: [...]} for the map's middle (?lat&lng)."""
+    reader = current_reader()
+    lat, lng = _map_point()
+    city = _city_near(lat, lng)
+    if not reader:
+        return jsonify(signedIn=False, city=city, ranked=False, rankFrom=RANK_FROM, places=[])
+    try:
+        places = my_places(reader["id"], lat, lng)
+    except Exception as exc:
+        print("readers: could not load my places:", exc)
+        return jsonify(error="unavailable"), 503
+    return jsonify(signedIn=True, city=city, ranked=len(places) >= RANK_FROM, rankFrom=RANK_FROM,
+                   name=reader["display_name"], places=places)
+
+
+@readers_bp.post("/api/my-places/order")
+@reader_required_json
+def api_my_places_order():
+    """Save the reader's ranking: {keys: [place_key, ...]} best first."""
+    reader = current_reader()
+    keys = (request.get_json(silent=True) or {}).get("keys")
+    if not isinstance(keys, list) or not keys or len(keys) > MAX_SAVED_PLACES:
+        return jsonify(error="bad_order"), 400
+    mine = set(saved_place_keys(reader["id"]))
+    keys = [k for k in dict.fromkeys(str(k) for k in keys) if k in mine]
+    _ranks_table()
+    with db.get_engine().begin() as conn:
+        from sqlalchemy import text as _sql
+        for i, k in enumerate(keys):
+            conn.execute(_sql("DELETE FROM place_ranks WHERE reader_id = :r AND place_key = :k"), {"r": reader["id"], "k": k})
+            conn.execute(_sql("INSERT INTO place_ranks (reader_id, place_key, pos) VALUES (:r, :k, :p)"),
+                         {"r": reader["id"], "k": k, "p": i})
+    return jsonify(ok=True)
+
+
 @readers_bp.delete("/api/places/<place_id>")
 @reader_required_json
 def api_places_delete(place_id):

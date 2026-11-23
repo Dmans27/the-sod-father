@@ -277,6 +277,143 @@
     intro.hidden = false;
   }
 
+  // ── "My places" (right edge): the reader's saved places in this city ──
+  // Opens with the tab (tap it, or pull it to the left); only the × closes it.
+  // Fresh from /api/my-places every time it opens (they may have just saved one
+  // from the map). From 3 places it's a ranking: arrows reorder it, and the top
+  // ones can be shared as a link that opens them on the map in that order.
+  var minePull = document.getElementById('walkplan-mine-pull');
+  var mine = document.getElementById('walkplan-mine');
+  var mineList = document.getElementById('walkplan-mine-list');
+  var mineNote = document.getElementById('walkplan-mine-note');
+  var mineFoot = document.getElementById('walkplan-mine-foot');
+  var mineTitle = document.getElementById('walkplan-mine-title');
+  var mineData = null, mineSaveTimer = null;
+  function setMine(open) {
+    if (!mine) return;
+    if (open) setDrawer(false);
+    root.classList.toggle('mine-open', open);
+    mine.setAttribute('aria-hidden', open ? 'false' : 'true');
+    minePull.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (open) loadMine();
+  }
+  function loadMine() {
+    var c = (view && view.center) || START.center;
+    mineNote.textContent = 'Loading your places…';
+    fetch('/api/my-places?lat=' + c[1].toFixed(5) + '&lng=' + c[0].toFixed(5), { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { mineData = d; paintMine(); })
+      .catch(function () { mineNote.textContent = 'Couldn’t load your places. Check your connection and try again.'; });
+  }
+  function paintMine() {
+    var d = mineData || {}, places = d.places || [], from = d.rankFrom || 3;
+    mineTitle.textContent = d.city ? 'My ' + d.city : 'My places here';
+    mineList.innerHTML = '';
+    mineFoot.innerHTML = '';
+    if (!d.signedIn) {
+      mineNote.innerHTML = 'Save places from the map and build <b>your own ranking</b> to share with friends.';
+      var a = el('a', 'walkplan__acct-btn', 'Sign in to start');
+      a.href = '/account/login?next=/walk';
+      mineFoot.appendChild(a);
+      return;
+    }
+    if (!places.length) {
+      mineNote.textContent = '';
+      mineList.appendChild(el('li', 'walkplan__mine-empty',
+        'Tap a pin on the map and press “+ Save”. Once you’ve saved ' + from + ' places here, your ranking starts and you can share it.'));
+      return;
+    }
+    var ranked = !!d.ranked;
+    if (ranked) mineNote.innerHTML = 'Your ranking. Use the arrows to put <b>your favourite</b> first.';
+    else {
+      var left = from - places.length;
+      mineNote.innerHTML = 'Save <b>' + left + ' more place' + (left === 1 ? '' : 's') + '</b> here to start your ranking.';
+    }
+    places.forEach(function (p, i) {
+      var li = el('li', 'walkplan__mine-item');
+      li.appendChild(el('span', 'walkplan__mine-rank' + (ranked ? '' : ' is-dot'), ranked ? String(i + 1) : '•'));
+      var th = el('span', 'walkplan__mine-thumb');
+      if (p.photo) th.style.backgroundImage = 'url("' + String(p.photo).replace(/["\\]/g, '') + '")';
+      li.appendChild(th);
+      var body = el('span', 'walkplan__mine-body');
+      body.appendChild(el('span', 'walkplan__mine-name', p.name));
+      var meta = el('span', 'walkplan__mine-meta', (p.category ? p.category + ' · ' : ''));
+      var dir = el('a', '', 'Directions');
+      dir.href = p.directions; dir.target = '_blank'; dir.rel = 'noopener';
+      meta.appendChild(dir);
+      body.appendChild(meta);
+      li.appendChild(body);
+      if (ranked) {
+        var mv = el('span', 'walkplan__mine-move');
+        var up = el('button', '', '▲'), down = el('button', '', '▼');
+        up.type = down.type = 'button';
+        up.setAttribute('aria-label', 'Move ' + p.name + ' up');
+        down.setAttribute('aria-label', 'Move ' + p.name + ' down');
+        up.disabled = i === 0;
+        down.disabled = i === places.length - 1;
+        up.addEventListener('click', function () { moveMine(i, -1); });
+        down.addEventListener('click', function () { moveMine(i, 1); });
+        mv.appendChild(up); mv.appendChild(down);
+        li.appendChild(mv);
+      }
+      mineList.appendChild(li);
+    });
+    if (ranked) {
+      var shareable = places.filter(function (p) { return p.slug; }).slice(0, 10);
+      if (shareable.length >= 2) {
+        var b = el('button', 'walkplan__acct-btn');
+        b.type = 'button';
+        b.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-share"/></svg>';
+        b.appendChild(document.createTextNode('Share my top ' + shareable.length));
+        b.addEventListener('click', function () { shareMine(shareable, b); });
+        mineFoot.appendChild(b);
+      }
+    }
+  }
+  function moveMine(i, step) {
+    var places = mineData.places, j = i + step;
+    if (j < 0 || j >= places.length) return;
+    var t = places[i]; places[i] = places[j]; places[j] = t;
+    paintMine();
+    clearTimeout(mineSaveTimer);
+    mineSaveTimer = setTimeout(function () {
+      fetch('/api/my-places/order', { method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': READER.csrf || '' },
+        body: JSON.stringify({ keys: places.map(function (p) { return p.key; }) }) }).catch(function () {});
+    }, 400);
+  }
+  function shareMine(list, btn) {
+    var who = (mineData.name || 'My').split(' ')[0];
+    var title = (who === 'My' ? 'My' : who + '’s') + ' top ' + list.length + (mineData.city ? ' in ' + mineData.city : '');
+    btn.disabled = true;
+    fetch('/api/walk-share', { method: 'POST', credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': READER.csrf || '' },
+      body: JSON.stringify({ title: title, stops: list.map(function (p) { return { slug: p.slug, name: p.name }; }) }) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        btn.disabled = false;
+        if (!d || !d.ok || !d.url) { mineNote.textContent = 'Couldn’t make a link right now. Please try again.'; return; }
+        var url = window.location.origin + d.url;
+        if (window.MansfieldNative && window.MansfieldNative.share && window.MansfieldNative.share(url, title)) return;
+        if (navigator.share) { navigator.share({ title: title, url: url }).catch(function () {}); return; }
+        try {
+          navigator.clipboard.writeText(url).then(function () { mineNote.innerHTML = '<b>Link copied.</b> Paste it anywhere to share your list.'; },
+                                                  function () { mineNote.textContent = url; });
+        } catch (e) { mineNote.textContent = url; }
+      })
+      .catch(function () { btn.disabled = false; mineNote.textContent = 'Couldn’t make a link right now. Please try again.'; });
+  }
+  if (mine) {
+    var minePullX = null;
+    minePull.addEventListener('click', function () { setMine(true); });
+    minePull.addEventListener('touchstart', function (e) { minePullX = e.touches[0].clientX; }, { passive: true });
+    minePull.addEventListener('touchmove', function (e) {
+      if (minePullX !== null && minePullX - e.touches[0].clientX > 24) { minePullX = null; setMine(true); }
+    }, { passive: true });
+    mine.querySelector('.walkplan__drawer-close').addEventListener('click', function () { setMine(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMine(false); });
+  }
+
   // ── Account panel (top-right button) ─────────────────────────────────
   // Slides in from the right: the whole screen on phones, half of it on iPad.
   var acct = document.getElementById('walkplan-acct');
@@ -286,7 +423,7 @@
       root.classList.toggle('acct-open', open);
       acct.setAttribute('aria-hidden', open ? 'false' : 'true');
       meBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      if (open) setDrawer(false);
+      if (open) { setDrawer(false); setMine(false); }
     };
     meBtn.addEventListener('click', function () { setAcct(true); });
     acct.querySelector('.walkplan__acct-close').addEventListener('click', function () { setAcct(false); });
@@ -314,6 +451,7 @@
   var drawer = document.getElementById('walkplan-drawer');
   function setDrawer(open) {
     if (!drawer) return;
+    if (open && typeof setMine === 'function') setMine(false);
     root.classList.toggle('drawer-open', open);
     drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
     pull.setAttribute('aria-expanded', open ? 'true' : 'false');
@@ -321,6 +459,7 @@
   function hideTab() {
     root.classList.add('map-used');
     setDrawer(false);
+    setMine(false);
     sendInsets();
   }
   function showTab() { root.classList.remove('map-used'); sendInsets(); }
