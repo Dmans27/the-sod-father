@@ -24,15 +24,29 @@
   .walkplan__msg-act.is-saved svg { fill: currentColor; }
   .walkplan__msg-row > .walkplan__msg-close { margin-left: auto; }
   @media (max-width: 400px) { .walkplan__msg-act { padding: 8px 10px; } .walkplan__msg-stops { padding: 8px 12px; } }
-  /* "This week" pull tab and drawer (left edge). Gone once the map is in use. */
+  /* Welcome card (first visit only) */
+  .walkplan__welcome { margin: 4px 34px 10px; font: 800 17px/1.3 var(--font-sans); color: #fff; }
+  .walkplan__steps { margin: 0 0 12px; padding: 0 4px 0 22px; text-align: left; font-size: 14.5px; line-height: 1.45; color: rgba(255, 255, 255, 0.85); }
+  .walkplan__steps li { margin-bottom: 6px; }
+  .walkplan__steps b { color: #2BEA6B; }
+  .walkplan__got-it { display: block; width: 100%; padding: 11px; border: 0; border-radius: 999px; background: #fff; color: #15171a; font: 800 14.5px var(--font-sans); cursor: pointer; }
+  /* "This week" pull tab and drawer (left edge). Hidden from "Draw area" until the next walk or New walk. */
   .walkplan__pull { position: absolute; z-index: 7; left: 0; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px;
     width: 30px; padding: 12px 0; border: 0.5px solid rgba(255, 255, 255, 0.2); border-left: 0; border-radius: 0 14px 14px 0;
     background: rgba(16, 18, 20, 0.88); color: #fff; cursor: pointer; touch-action: none;
     -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3); transition: opacity 0.2s, transform 0.2s; }
   .walkplan__pull-label { writing-mode: vertical-rl; transform: rotate(180deg); font: 800 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: #2BEA6B; }
   .walkplan__pull svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-  .walkplan.map-used .walkplan__pull, .walkplan.has-walk .walkplan__pull, .walkplan.is-walking .walkplan__pull,
+  .walkplan.map-used .walkplan__pull, .walkplan.is-walking .walkplan__pull,
   .walkplan.has-panel .walkplan__pull { opacity: 0; transform: translate(-100%, -50%); pointer-events: none; }
+  /* Phones: above the welcome card and the stop cards along the bottom.
+     iPad: bottom-left corner, clear of the stop list down the left and the Mapbox logo. */
+  .walkplan__pull { top: 36%; }
+  @media (min-width: 641px) {
+    .walkplan__pull { top: auto; bottom: calc(env(safe-area-inset-bottom, 0px) + 44px); transform: none; }
+    .walkplan.map-used .walkplan__pull, .walkplan.is-walking .walkplan__pull,
+    .walkplan.has-panel .walkplan__pull { transform: translateX(-100%); }
+  }
   .walkplan__drawer-back { position: absolute; z-index: 9; inset: 0; background: rgba(0, 0, 0, 0.35); opacity: 0; pointer-events: none; transition: opacity 0.25s; }
   .walkplan__drawer { position: absolute; z-index: 10; left: 0; top: 0; bottom: 0; width: min(360px, 88%); box-sizing: border-box; overflow-y: auto; overscroll-behavior: contain;
     padding: calc(env(safe-area-inset-top, 0px) + 18px) 16px calc(env(safe-area-inset-bottom, 0px) + 24px);
@@ -77,9 +91,16 @@
 
   <a class="walkplan__home" href="/" aria-label="Back to \\Mansfield"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></a>
 
-  <section class="walkplan__intro" id="walkplan-intro">
+  {# Welcome card: only on someone's very first visit (static/js/walk-planner.js remembers it on this device). #}
+  <section class="walkplan__intro" id="walkplan-intro" aria-labelledby="walkplan-welcome" hidden>
     <button type="button" class="walkplan__intro-close" aria-label="Close">&times;</button>
-    <p class="walkplan__lead">Ask for a walk below, typed or spoken. Move the map, or tap <b>Draw area</b> to search one spot. Ideas are under <b>This week</b> on the left.</p>
+    <h2 class="walkplan__welcome" id="walkplan-welcome">Welcome! Here's how it works</h2>
+    <ol class="walkplan__steps">
+      <li><b>Ask</b> for a walk below, typed or spoken: “3 cozy cafés near me”.</li>
+      <li><b>Draw area</b> to circle the exact part of town you want.</li>
+      <li>Open <b>This week</b> on the left for ideas, walks to try and good reads.</li>
+    </ol>
+    <button type="button" class="walkplan__got-it">Got it</button>
     <p class="walkplan__fine">"Near me" uses your location for this one search. It's never stored.</p>
   </section>
 
@@ -185,5 +206,5 @@
   </div>
 </div>
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
-<script src="/static/js/walk-planner.js?v=13" defer></script>
+<script src="/static/js/walk-planner.js?v=14" defer></script>
 {% endblock %}

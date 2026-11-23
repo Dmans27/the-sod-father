@@ -135,7 +135,7 @@
     if (busy || query.length < 3) return;
     if (needsSignIn(goBtn)) return;
     busy = true;
-    mapUsed();
+    setDrawer(false);
     form.classList.add('is-busy');
     input.blur();
     thinking('Planning your walk…');
@@ -184,6 +184,7 @@
     saved = false;
     try { history.replaceState(null, '', plan.open || '/walk'); } catch (e) {}
     root.classList.add('has-walk');
+    showTab();   // a new walk: the This week tab comes back
     intro.hidden = true;
     listBtn.hidden = false;
     clearBtn.hidden = false;
@@ -233,6 +234,7 @@
              map: directory + '/embed/route-map?' + new URLSearchParams({ s: s.join(','), t: title, style: 'mansfield', mode: 'story' }).toString() };
     if (shared) say(title + ' · ' + s.length + ' stops. Ask to change it, or plan your own.', true);
     root.classList.add('has-walk');
+    showTab();   // a new walk: the This week tab comes back
     intro.hidden = true;
     listBtn.hidden = false;
     clearBtn.hidden = false;
@@ -244,7 +246,7 @@
   // ── Clearing the walk ─────────────────────────────────────────────────
   // Back to the explore map, at the same spot, ready for a new question.
   function clearWalk() {
-    root.classList.remove('map-used');   // a fresh start: the "This week" tab is back
+    showTab();   // a fresh start: the "This week" tab is back
     plan = null;
     legs = durations = null;
     saved = false;
@@ -260,11 +262,21 @@
   }
   clearBtn.addEventListener('click', clearWalk);
   intro.querySelector('.walkplan__intro-close').addEventListener('click', function () { intro.hidden = true; });
+  intro.querySelector('.walkplan__got-it').addEventListener('click', function () { intro.hidden = true; input.focus(); });
+  // The welcome card shows once, on someone's very first visit (remembered on this device).
+  function welcome() {
+    var KEY = 'mf-walk-welcomed';
+    try {
+      if (localStorage.getItem(KEY)) return;
+      localStorage.setItem(KEY, '1');
+    } catch (e) { return; }   // no storage (private mode): skip it rather than show it every time
+    intro.hidden = false;
+  }
 
   // ── "This week" drawer: a tab on the left edge with the week's walks and stories ──
   // Tap the tab (or pull it to the right) to open; tap outside, swipe left or × to close.
-  // The tab leaves as soon as the map is in use (moved, drawn on, asked, a walk on it)
-  // and comes back with "New walk".
+  // The tab stays on the map until "Draw area" is tapped, and comes back with the
+  // next walk, "New walk", or when the drawn area is removed.
   var pull = document.getElementById('walkplan-pull');
   var drawer = document.getElementById('walkplan-drawer');
   function setDrawer(open) {
@@ -273,10 +285,11 @@
     drawer.setAttribute('aria-hidden', open ? 'false' : 'true');
     pull.setAttribute('aria-expanded', open ? 'true' : 'false');
   }
-  function mapUsed() {
+  function hideTab() {
     root.classList.add('map-used');
     setDrawer(false);
   }
+  function showTab() { root.classList.remove('map-used'); }
   if (drawer) {
     var pullX = null, swipeX = null, swipeY = 0;
     pull.addEventListener('click', function () { setDrawer(true); });
@@ -381,6 +394,7 @@
     setDrawBtn(on);
     intro.hidden = true;
     clearTimeout(drawAck);
+    if (on) hideTab();
     if (!on) { msg.hidden = true; return; }
     say('The map is locked. Draw round the area with your finger, like a pencil, and lift to finish. (A single tap makes a 500 m circle.)', false, true);
     drawAck = setTimeout(function () {
@@ -392,6 +406,7 @@
     circle = null;
     post({ type: 'mansfield:circle-clear' });
     paintArea();
+    showTab();
     say('Area removed. Walks will use what’s on the map again.', false);
   });
 
@@ -404,7 +419,6 @@
         view = { center: [Number(c[0]), Number(c[1])], radius: Math.round(r), zoom: isFinite(z) ? z : START.zoom };
       }
       if (e.data.byUser && !plan) intro.hidden = true;   // they're looking around: get the welcome out of the way
-      if (e.data.byUser) mapUsed();
       return;
     }
     if (t === 'mansfield:area' || t === 'mansfield:circle') {
@@ -418,7 +432,7 @@
       if (circle) { say('Area set. Now ask, e.g. “Search this area for food”. The walk stays inside what you drew.', false); input.focus(); }
       return;
     }
-    if (t === 'mansfield:draw') { clearTimeout(drawAck); setDrawBtn(!!e.data.on); if (e.data.on) mapUsed(); return; }
+    if (t === 'mansfield:draw') { clearTimeout(drawAck); setDrawBtn(!!e.data.on); if (e.data.on) hideTab(); return; }
     if (t === 'mansfield:panel') {   // a full-screen listing is open on the map: get our buttons out of its way
       root.classList.toggle('has-panel', !!e.data.open);
       if (e.data.open) msg.hidden = true;
@@ -702,5 +716,5 @@
   }
 
   // Opened with a walk in the link (a saved route)? If not, start on the explore map.
-  if (!showLinked()) loadMap(exploreUrl(), 'explore');
+  if (!showLinked()) { loadMap(exploreUrl(), 'explore'); welcome(); }
 })();
