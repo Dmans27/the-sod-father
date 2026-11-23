@@ -277,15 +277,32 @@
     intro.hidden = false;
   }
 
-  // ── Account menu (top right) ─────────────────────────────────────────
-  var me = document.getElementById('walkplan-me');
-  if (me) {
-    var meBtn = me.querySelector('.walkplan__me-btn'), meMenu = me.querySelector('.walkplan__me-menu');
-    var setMenu = function (open) { meMenu.hidden = !open; meBtn.setAttribute('aria-expanded', open ? 'true' : 'false'); };
-    meBtn.addEventListener('click', function (e) { e.stopPropagation(); setMenu(meMenu.hidden); });
-    document.addEventListener('click', function (e) { if (!me.contains(e.target)) setMenu(false); });
-    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
-    window.addEventListener('blur', function () { setMenu(false); });   // a tap on the map (inside its frame)
+  // ── Account panel (top-right button) ─────────────────────────────────
+  // Slides in from the right: the whole screen on phones, half of it on iPad.
+  var acct = document.getElementById('walkplan-acct');
+  if (acct) {
+    var meBtn = document.querySelector('.walkplan__me-btn');
+    var setAcct = function (open) {
+      root.classList.toggle('acct-open', open);
+      acct.setAttribute('aria-hidden', open ? 'false' : 'true');
+      meBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (open) setDrawer(false);
+    };
+    meBtn.addEventListener('click', function () { setAcct(true); });
+    acct.querySelector('.walkplan__acct-close').addEventListener('click', function () { setAcct(false); });
+    document.getElementById('walkplan-acct-back').addEventListener('click', function () { setAcct(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setAcct(false); });
+    // Invite friends: the phone's share sheet with a link to the walk map.
+    acct.querySelector('[data-invite]').addEventListener('click', function () {
+      var url = window.location.origin + '/walk';
+      var text = 'Plan walks around Vienna with me on \\\\Mansfield';
+      if (window.MansfieldNative && window.MansfieldNative.share && window.MansfieldNative.share(url, text)) return;
+      if (navigator.share) { navigator.share({ title: text, text: text, url: url }).catch(function () {}); return; }
+      try {
+        navigator.clipboard.writeText(text + ' ' + url).then(function () { setAcct(false); say('Invite link copied. Paste it to a friend.', false); },
+                                                            function () { setAcct(false); say(url, false, true); });
+      } catch (e) { setAcct(false); say(url, false, true); }
+    });
   }
 
   // ── "This week" drawer: a tab on the left edge with the week's walks and stories ──
