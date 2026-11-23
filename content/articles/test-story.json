@@ -9,8 +9,10 @@
   "author_photo": "/static/uploads/authors/daniel-mansfield/photo.jpg",
   "author_position": "Staff Writer",
   "published_at": "2026-11-15",
-  "cover_image": null,
+  "cover_image": "/static/uploads/test-story/cover_image.jpg",
   "featured": false,
+  "map_behind": false,
+  "map_route": false,
   "status": "published",
   "blocks": [
     {
