@@ -285,7 +285,8 @@
   }
 
   // ── "This week" drawer: a tab on the left edge with the week's walks and stories ──
-  // Tap the tab (or pull it to the right) to open; tap outside, swipe left or × to close.
+  // Tap the tab (or pull it to the right) to open; only the × closes it (swiping the
+  // idea pills or tapping beside it doesn't).
   // The tab stays on the map until "Draw area" is tapped, and comes back with the
   // next walk, "New walk", or when the drawn area is removed.
   var pull = document.getElementById('walkplan-pull');
@@ -302,21 +303,14 @@
   }
   function showTab() { root.classList.remove('map-used'); }
   if (drawer) {
-    var pullX = null, swipeX = null, swipeY = 0;
+    var pullX = null;
     pull.addEventListener('click', function () { setDrawer(true); });
     pull.addEventListener('touchstart', function (e) { pullX = e.touches[0].clientX; }, { passive: true });
     pull.addEventListener('touchmove', function (e) {
       if (pullX !== null && e.touches[0].clientX - pullX > 24) { pullX = null; setDrawer(true); }
     }, { passive: true });
-    document.getElementById('walkplan-drawer-back').addEventListener('click', function () { setDrawer(false); });
     drawer.querySelector('.walkplan__drawer-close').addEventListener('click', function () { setDrawer(false); });
     drawer.querySelector('[data-drawer-close]').addEventListener('click', function () { setDrawer(false); input.focus(); });
-    drawer.addEventListener('touchstart', function (e) { swipeX = e.touches[0].clientX; swipeY = e.touches[0].clientY; }, { passive: true });
-    drawer.addEventListener('touchend', function (e) {
-      var t = e.changedTouches[0];
-      if (swipeX !== null && swipeX - t.clientX > 60 && Math.abs(t.clientY - swipeY) < 60) setDrawer(false);
-      swipeX = null;
-    }, { passive: true });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setDrawer(false); });
   }
 
