@@ -250,7 +250,8 @@ def login_submit():
 def logout():
     if _csrf_ok():
         session.pop("reader_id", None)
-    return redirect("/")
+    nxt = request.form.get("next") or "/"   # e.g. the walk map's account menu sends /walk
+    return redirect(nxt if nxt.startswith("/") and not nxt.startswith("//") else "/")
 
 
 @readers_bp.get("/account")

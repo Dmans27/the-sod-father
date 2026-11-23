@@ -273,6 +273,17 @@
     intro.hidden = false;
   }
 
+  // ── Account menu (top right) ─────────────────────────────────────────
+  var me = document.getElementById('walkplan-me');
+  if (me) {
+    var meBtn = me.querySelector('.walkplan__me-btn'), meMenu = me.querySelector('.walkplan__me-menu');
+    var setMenu = function (open) { meMenu.hidden = !open; meBtn.setAttribute('aria-expanded', open ? 'true' : 'false'); };
+    meBtn.addEventListener('click', function (e) { e.stopPropagation(); setMenu(meMenu.hidden); });
+    document.addEventListener('click', function (e) { if (!me.contains(e.target)) setMenu(false); });
+    document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMenu(false); });
+    window.addEventListener('blur', function () { setMenu(false); });   // a tap on the map (inside its frame)
+  }
+
   // ── "This week" drawer: a tab on the left edge with the week's walks and stories ──
   // Tap the tab (or pull it to the right) to open; tap outside, swipe left or × to close.
   // The tab stays on the map until "Draw area" is tapped, and comes back with the
@@ -363,7 +374,10 @@
   function sendInsets() {
     requestAnimationFrame(function () {
       var shown = toolsEl && getComputedStyle(toolsEl).display !== 'none';
-      post({ type: 'mansfield:insets', top: shown ? Math.round(toolsEl.getBoundingClientRect().bottom + 6) : 0 });
+      // side: on phones the account button sits in the map's top-right corner, so the
+      // map keeps its route label that far in from both edges.
+      post({ type: 'mansfield:insets', top: shown ? Math.round(toolsEl.getBoundingClientRect().bottom + 6) : 0,
+             side: window.innerWidth <= 640 ? 52 : 0 });
     });
   }
   window.addEventListener('resize', function () { if (typeof paintArea === 'function') paintArea(); else sendInsets(); });
