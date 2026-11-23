@@ -212,24 +212,32 @@
 
   // A walk opened from a link (/walk?s=slug,slug&t=Title), e.g. a saved route.
   // A shared walk (/w/<code>) comes in window.SHARED_WALK, with its names and the area it was drawn in.
-  function showLinked() {
-    var q = new URLSearchParams(location.search || '');
-    var shared = window.SHARED_WALK || null;
+  // /walk?go=<listing>&t=<name> is "walk me there": one stop, and the map starts
+  // its own navigation from the walker right away (My places' Directions uses it).
+  function showLinked(qOverride) {
+    var q = qOverride || new URLSearchParams(location.search || '');
+    var shared = qOverride ? null : (window.SHARED_WALK || null);
+    var go = q.get('go') || '';
     var names = {};
     var s;
-    if (shared && Array.isArray(shared.stops)) {
+    if (go) {
+      s = [go];
+      names[go] = String(q.get('t') || '');
+    } else if (shared && Array.isArray(shared.stops)) {
       s = shared.stops.map(function (x) { names[x.slug] = x.name || ''; return String(x.slug || ''); });
     } else {
       s = (q.get('s') || '').split(',');
     }
     s = s.filter(function (x) { return /^[A-Za-z0-9][A-Za-z0-9_-]{0,200}$/.test(x); }).slice(0, 25);
-    if (s.length < 2 || !origin) return false;
-    var title = String((shared ? shared.title : q.get('t')) || 'Your walk').slice(0, 120);
+    if (s.length < (go ? 1 : 2) || !origin) return false;
+    var title = go ? 'Walk to ' + (names[go] || 'this place') : String((shared ? shared.title : q.get('t')) || 'Your walk');
+    title = title.slice(0, 120);
     if (shared && Array.isArray(shared.area) && shared.area.length >= 4) {
       circle = areaFrom(shared.area);
       paintArea();
     }
-    plan = { query: title, title: title, intro: '', note: '', key: '', open: location.pathname + location.search,
+    plan = { query: title, title: title, intro: '', note: '', key: '', navigate: !!go,
+             open: qOverride ? '/walk?' + q.toString() : location.pathname + location.search,
              share: shared ? '/w/' + shared.code : '',
              stops: s.map(function (slug) { return { slug: slug, name: names[slug] || '', category: '', group: 'other', lat: null, lng: null, why: '' }; }),
              map: directory + '/embed/route-map?' + new URLSearchParams({ s: s.join(','), t: title, style: 'mansfield', mode: 'story' }).toString() };
@@ -338,9 +346,12 @@
       var body = el('span', 'walkplan__mine-body');
       body.appendChild(el('span', 'walkplan__mine-name', p.name));
       var meta = el('span', 'walkplan__mine-meta', (p.category ? p.category + ' · ' : ''));
-      var dir = el('a', '', 'Directions');
-      dir.href = p.directions; dir.target = '_blank'; dir.rel = 'noopener';
-      meta.appendChild(dir);
+      if (p.slug) {   // our own walking navigation, from where you are to this place
+        var dir = el('a', '', 'Directions');
+        dir.href = '/walk?' + new URLSearchParams({ go: p.slug, t: p.name }).toString();
+        dir.addEventListener('click', function (e) { e.preventDefault(); walkTo(p); });
+        meta.appendChild(dir);
+      }
       body.appendChild(meta);
       li.appendChild(body);
       if (ranked) {
@@ -369,6 +380,12 @@
         mineFoot.appendChild(b);
       }
     }
+  }
+  function walkTo(p) {
+    setMine(false);
+    msg.hidden = true;
+    var q = new URLSearchParams({ go: p.slug, t: p.name });
+    if (showLinked(q)) { try { history.replaceState(null, '', '/walk?' + q.toString()); } catch (e) {} }
   }
   function moveMine(i, step) {
     var places = mineData.places, j = i + step;
@@ -515,7 +532,7 @@
       var tries = 0;
       var stops = plan.stops.map(function (s) { return { listing: s.slug, name: s.name }; });
       function send() {
-        post({ type: 'mansfield:route', stops: stops });
+        post({ type: 'mansfield:route', stops: stops, navigate: !!plan.navigate });
         if (++tries > 20 && asking) { clearInterval(asking); asking = null; }
       }
       asking = setInterval(send, 700);
