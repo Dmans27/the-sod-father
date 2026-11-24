@@ -887,6 +887,23 @@ def log_event(kind, query=None, area=None, walk=None, places=None):
         print("walk: could not log event:", exc)
 
 
+def walked_counts(keys):
+    """How many different people started each walk (by its walk: key) in the last RETENTION_DAYS. Never fails."""
+    keys = [k for k in dict.fromkeys(keys or []) if k and re.match(r"^walk:[0-9a-f]{16}$", k)][:40]
+    if not keys:
+        return {}
+    try:
+        _events_table()
+        params = {f"k{i}": k for i, k in enumerate(keys)}
+        rows = db.query(
+            "SELECT walk, COUNT(DISTINCT who) AS n FROM walk_events WHERE kind = 'start' AND walk IN ("
+            + ", ".join(":" + name for name in params) + ") GROUP BY walk", **params)
+        return {r["walk"]: int(r["n"] or 0) for r in rows}
+    except Exception as exc:
+        print("walk: could not count walks:", exc)
+        return {}
+
+
 @walk_bp.post("/api/walk-event")
 def walk_event():
     """The page reports what the reader did with a walk: {kind, walk?, places?}."""

@@ -23,6 +23,7 @@ Environment:
   FEED_MIN_PEOPLE   how many different people make something a trend (default: 3)
 """
 
+import hashlib
 import json
 import os
 import re
@@ -90,6 +91,22 @@ def published_feed():
         print("feed: could not load:", exc)
         return []
     return row["items"] if row else []
+
+
+def feed_cards():
+    """published_feed() plus what the walk pop-up on the stories feed shows: the walk's
+    key, its route map (the directory's /embed/route-map) and how many people walked it."""
+    items = [dict(it) for it in published_feed() if isinstance(it, dict) and it.get("stops")]
+    base = wp.directory_url()
+    for it in items:
+        slugs = ",".join(s["slug"] for s in it["stops"])
+        it["key"] = "walk:" + hashlib.sha1(slugs.encode()).hexdigest()[:16]
+        it["map"] = (base + "/embed/route-map?" + urlencode(
+            {"s": slugs, "t": it.get("title") or "", "style": "mansfield", "mode": "story", "safe": 0})) if base else ""
+    counts = wp.walked_counts([it["key"] for it in items])
+    for it in items:
+        it["walked"] = counts.get(it["key"], 0)
+    return items
 
 
 def related_articles(limit=5):

@@ -1,5 +1,7 @@
 {# "Walks this week": the owner's published weekly walk feed (walk_feed.py) as a row of cards
-   between the stories. Each card opens that walk on the map. Shown only when a feed is published. #}
+   between the stories. Tapping a card opens the walk's pop-up (templates/_walk_sheet.html): a map
+   preview, the district, how long it takes and how many people walked it, and "Map this walk".
+   Without JavaScript the card just opens the walk on the map. Shown only when a feed is published. #}
 {% if walk_feed %}
 <section class="walk-strip" aria-label="Walks this week">
   <div class="walk-strip__head">
@@ -8,7 +10,8 @@
   </div>
   <div class="walk-strip__row" role="list">
     {% for it in walk_feed %}
-    <a class="walk-strip__card" role="listitem" href="{{ it.link }}">
+    <a class="walk-strip__card" role="listitem" href="{{ it.link }}"
+       data-walk='{{ {"title": it.title, "tag": it.tag, "blurb": it.blurb, "link": it.link, "map": it.map, "walked": it.walked, "stops": it.stops} | tojson }}'>
       <span class="walk-strip__tag">{{ it.tag }}</span>
       <span class="walk-strip__title">{{ it.title }}</span>
       {% if it.blurb %}<span class="walk-strip__blurb">{{ it.blurb }}</span>{% endif %}

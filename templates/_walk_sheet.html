@@ -1,0 +1,122 @@
+{# The walk pop-up for the "Walks this week" cards (static/js/walk-sheet.js fills it):
+   a map preview of the route, the walk's name, its district, the time it takes, how many
+   people walked it, the stops, and "Map this walk" (opens it on the walk map, without
+   starting the walk). #}
+<style>
+  .wpop { position: fixed; inset: 0; z-index: 1200; visibility: hidden; pointer-events: none; }
+  .wpop.is-open { visibility: visible; pointer-events: auto; }
+  .wpop__back { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.45); opacity: 0; transition: opacity 0.25s; }
+  .wpop.is-open .wpop__back { opacity: 1; }
+  .wpop__panel { position: absolute; left: 0; right: 0; bottom: 0; margin: 0 auto; max-width: 560px;
+    max-height: calc(100% - env(safe-area-inset-top, 0px) - 14px); display: flex; flex-direction: column;
+    border-radius: 22px 22px 0 0; background: var(--cream, #faf6ec); color: var(--ink); overflow: hidden;
+    box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.3); transform: translateY(100%); transition: transform 0.32s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .wpop.is-open .wpop__panel { transform: translateY(var(--drag, 0px)); }
+  .wpop.is-dragging .wpop__panel { transition: none; }
+  .wpop__scroll { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+  .wpop__map { position: relative; height: clamp(220px, 38vh, 340px); background: #1b211e; overflow: hidden; }
+  .wpop__map::before { content: ""; position: absolute; inset: 0;
+    background: linear-gradient(100deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.07) 50%, rgba(255, 255, 255, 0) 70%) #1f2622;
+    background-size: 200% 100%; animation: wpop-shine 1.2s linear infinite; }
+  @keyframes wpop-shine { to { background-position: -200% 0; } }
+  /* The map's own route bar (with its Start button) sits in the top 64px: keep it out of sight, this is only a preview */
+  .wpop__map iframe { position: absolute; left: 0; top: -64px; width: 100%; height: calc(100% + 64px); border: 0; pointer-events: none; opacity: 0; transition: opacity 0.3s; }
+  .wpop__map.is-ready iframe { opacity: 1; }
+  .wpop__grab { position: absolute; z-index: 2; top: 0; left: 0; right: 0; height: 30px; display: flex; justify-content: center; padding-top: 8px; box-sizing: border-box; touch-action: none; }
+  .wpop__grab::before { content: ""; width: 40px; height: 5px; border-radius: 3px; background: rgba(255, 255, 255, 0.75); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3); }
+  .wpop__close { position: absolute; z-index: 3; top: 12px; right: 12px; width: 34px; height: 34px; border: 0; border-radius: 50%;
+    background: rgba(20, 22, 24, 0.72); color: #fff; font-size: 20px; line-height: 1; cursor: pointer; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  .wpop__body { padding: 18px 20px 8px; }
+  .wpop__tag { display: inline-block; padding: 2px 8px; border-radius: 6px; background: rgba(45, 106, 79, 0.12); color: var(--fairway-deep);
+    font-size: 11px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase; }
+  .wpop__title { margin: 8px 0 6px; font: 700 26px/1.2 var(--font-serif); color: var(--fairway-deep); }
+  .wpop__where { display: flex; align-items: center; gap: 6px; margin: 0 0 14px; font-size: 14.5px; font-weight: 600; color: var(--ink-soft); }
+  .wpop__where[hidden] { display: none; }
+  .wpop__where svg, .wpop__stat svg { flex: none; width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .wpop__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 16px; }
+  .wpop__stat { display: flex; flex-direction: column; gap: 3px; padding: 11px 12px; border-radius: 12px; background: rgba(27, 67, 50, 0.07); }
+  .wpop__stat b { display: flex; align-items: center; gap: 6px; font-size: 17px; font-weight: 800; color: var(--ink); white-space: nowrap; }
+  .wpop__stat b svg { color: var(--fairway); }
+  .wpop__stat span { font-size: 12px; color: var(--ink-faint); }
+  .wpop__blurb { margin: 0 0 16px; font-size: 15.5px; line-height: 1.55; color: var(--ink-soft); }
+  .wpop__kicker { margin: 0 0 8px; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fairway); }
+  .wpop__stops { list-style: none; margin: 0 0 6px; padding: 0; }
+  .wpop__stops li { display: flex; align-items: center; gap: 12px; padding: 9px 0; border-top: 1px solid var(--line); }
+  .wpop__stops li:first-child { border-top: 0; }
+  .wpop__num { flex: none; width: 26px; height: 26px; border-radius: 50%; background: #e5534b; color: #fff; font-size: 13px; font-weight: 800;
+    display: flex; align-items: center; justify-content: center; border: 2px solid #fff; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); }
+  .wpop__stop { min-width: 0; display: flex; flex-direction: column; }
+  .wpop__stop b { font-size: 15px; font-weight: 700; color: var(--ink); }
+  .wpop__stop span { font-size: 12.5px; color: var(--ink-faint); text-transform: capitalize; }
+  .wpop__foot { flex: none; padding: 12px 20px calc(env(safe-area-inset-bottom, 0px) + 14px); border-top: 1px solid var(--line); background: inherit; }
+  .wpop__cta { display: flex; align-items: center; justify-content: center; gap: 9px; padding: 15px; border-radius: 14px; background: var(--fairway-deep);
+    color: #fff; font: 700 16.5px var(--font-sans); text-decoration: none; }
+  .wpop__cta svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+  .wpop__cta:active { filter: brightness(1.15); }
+  .wpop__cta-note { margin: 8px 0 0; text-align: center; font-size: 12.5px; color: var(--ink-faint); }
+  html.wpop-open, html.wpop-open body { overflow: hidden; }
+  @media (min-width: 700px) {
+    .wpop__panel { bottom: auto; top: 50%; border-radius: 22px; max-height: min(88vh, 860px); transform: translateY(calc(-50% + 40px)); opacity: 0;
+      transition: transform 0.28s ease, opacity 0.2s; }
+    .wpop.is-open .wpop__panel { transform: translateY(-50%); opacity: 1; }
+    .wpop__grab { display: none; }
+    .wpop__map { height: 320px; }
+    .wpop__foot { padding-bottom: 16px; }
+  }
+  html.is-dark .wpop__panel { background: #1c231f; color: #e4e9e5; }
+  html.is-dark .wpop__tag { background: rgba(127, 209, 166, 0.16); color: #9fe0bd; }
+  html.is-dark .wpop__title { color: #e4e9e5; }
+  html.is-dark .wpop__where, html.is-dark .wpop__blurb { color: rgba(228, 233, 229, 0.8); }
+  html.is-dark .wpop__stat { background: rgba(255, 255, 255, 0.06); }
+  html.is-dark .wpop__stat b, html.is-dark .wpop__stop b { color: #e4e9e5; }
+  html.is-dark .wpop__stat b svg, html.is-dark .wpop__kicker { color: #7fd1a6; }
+  html.is-dark .wpop__stat span, html.is-dark .wpop__stop span, html.is-dark .wpop__cta-note { color: rgba(228, 233, 229, 0.6); }
+  html.is-dark .wpop__stops li, html.is-dark .wpop__foot { border-color: rgba(255, 255, 255, 0.1); }
+  html.is-dark .wpop__num { border-color: #1c231f; }
+  html.is-dark .wpop__cta { background: #2BEA6B; color: #0b2414; }
+</style>
+
+<div class="wpop" id="wpop" aria-hidden="true">
+  <div class="wpop__back" data-wpop-close></div>
+  <div class="wpop__panel" role="dialog" aria-modal="true" aria-labelledby="wpop-title">
+    <div class="wpop__scroll">
+      <div class="wpop__map" id="wpop-map">
+        <div class="wpop__grab" aria-hidden="true"></div>
+        <button type="button" class="wpop__close" data-wpop-close aria-label="Close">&times;</button>
+      </div>
+      <div class="wpop__body">
+        <span class="wpop__tag" id="wpop-tag"></span>
+        <h2 class="wpop__title" id="wpop-title"></h2>
+        <p class="wpop__where" id="wpop-where" hidden>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+          <span></span>
+        </p>
+        <div class="wpop__stats">
+          <div class="wpop__stat">
+            <b><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><em id="wpop-time" style="font-style:normal">–</em></b>
+            <span>walking</span>
+          </div>
+          <div class="wpop__stat">
+            <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19c3-1 3.5-5 7-7s4-6 7-7"/><circle cx="5" cy="19" r="1.6"/><circle cx="19" cy="5" r="1.6"/></svg><em id="wpop-dist" style="font-style:normal">–</em></b>
+            <span id="wpop-stopcount">stops</span>
+          </div>
+          <div class="wpop__stat">
+            <b><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3.5c1.7 0 2.5 1.8 2.5 4S9.6 12 8 12s-2.5-2.2-2.5-4.5S6.3 3.5 8 3.5zM6 14.5h4V17a2 2 0 0 1-4 0zM16 7.5c1.7 0 2.5 1.8 2.5 4S17.6 16 16 16s-2.5-2.2-2.5-4.5S14.3 7.5 16 7.5zM14 18.5h4V21a2 2 0 0 1-4 0z"/></svg><em id="wpop-walked" style="font-style:normal">–</em></b>
+            <span id="wpop-walked-label">walkers</span>
+          </div>
+        </div>
+        <p class="wpop__blurb" id="wpop-blurb"></p>
+        <p class="wpop__kicker">The stops</p>
+        <ol class="wpop__stops" id="wpop-stops"></ol>
+      </div>
+    </div>
+    <div class="wpop__foot">
+      <a class="wpop__cta" id="wpop-cta" href="/walk">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4L3.5 6v14L9 18l6 2 5.5-2V4L15 6z"/><path d="M9 4v14M15 6v14"/></svg>
+        Map this walk
+      </a>
+      <p class="wpop__cta-note">Opens it on your map. You start walking when you're ready.</p>
+    </div>
+  </div>
+</div>
+<script src="/static/js/walk-sheet.js?v=1" defer></script>
