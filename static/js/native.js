@@ -52,7 +52,7 @@
   };
 
   document.addEventListener('click', function (e) {
-    if (e.target.closest && e.target.closest('.story-action, .bottom-nav__item, .comment__tool, .comment__reason, .saved-tab, .account-btn')) {
+    if (e.target.closest && e.target.closest('.story-action, .bottom-nav__item, .bottom-nav__ask, .comment__tool, .comment__reason, .saved-tab, .account-btn')) {
       NATIVE.haptic('light');
     }
   }, true);

@@ -1667,38 +1667,55 @@ body.article-page.is-dark,
   html.book-full .site-footer { height: 0; padding-top: 0; padding-bottom: 0; margin-top: 0; margin-bottom: 0; }
 }
 
-/* ── Bottom navigation bar (phones and the Duo's outer display) ──
-   Home / Saved / Account / Dark-Light. Hidden at 700px and wider, where the
-   two-page layout takes over, and on the full article page so it never
-   competes with the "Written by" tag. The story pop-up sheet, the share
-   sheet and the hamburger menu all sit above it. */
+/* ── Bottom navigation pill (phones and the Duo's outer display) ──
+   Stories / Ask (the round button in the middle) / Walk, floating at the
+   bottom of the screen as a wide pill that stays put while you scroll. Saved
+   stories, your account and dark mode are in the avatar menu at the top.
+   Hidden at 700px and wider, where the two-page layout takes over, and on the
+   full article page so it never competes with the "Written by" tag. The story
+   pop-up sheet, the share sheet and the menu all sit above it. */
 .bottom-nav { display: none; }
 @media (max-width: 699.98px) {
   .bottom-nav {
-    display: flex; position: fixed; left: 0; right: 0; bottom: 0; z-index: 90;
-    background: #fff; border-top: 1px solid var(--line);
-    padding-bottom: env(safe-area-inset-bottom, 0px);
+    display: flex; align-items: center; gap: 6px; position: fixed; z-index: 90;
+    left: 14px; right: 14px; max-width: 420px; margin: 0 auto;
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+    padding: 7px; border-radius: 999px; box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.94); border: 1px solid rgba(27, 42, 31, 0.08);
+    -webkit-backdrop-filter: saturate(1.6) blur(16px); backdrop-filter: saturate(1.6) blur(16px);
+    box-shadow: 0 10px 30px rgba(27, 42, 31, 0.2);
   }
   .bottom-nav__item {
-    flex: 1 1 0; min-width: 0; min-height: 56px;
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;
-    padding: 8px 4px 7px; margin: 0;
-    background: none; border: 0; border-radius: 0; cursor: pointer;
-    color: var(--ink-faint); text-decoration: none;
-    font-family: var(--font-sans); font-size: 11px; font-weight: 700; line-height: 1;
-    -webkit-tap-highlight-color: transparent;
+    flex: 1 1 0; min-width: 0; min-height: 58px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    padding: 6px 4px; margin: 0; border-radius: 999px;
+    color: #1d2a22; text-decoration: none;
+    font-family: var(--font-sans); font-size: 13px; font-weight: 700; line-height: 1;
+    -webkit-tap-highlight-color: transparent; transition: background 0.15s;
   }
   .bottom-nav__icon {
-    width: 24px; height: 24px; fill: none; stroke: currentColor;
-    stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round;
+    width: 26px; height: 26px; fill: none; stroke: currentColor;
+    stroke-width: 2.1; stroke-linecap: round; stroke-linejoin: round;
   }
-  .bottom-nav__item.is-active { color: var(--fairway-deep); box-shadow: inset 0 3px 0 var(--gold); }
-  .bottom-nav__item:active { background: rgba(27, 42, 31, 0.06); }
-  .bottom-nav__item:focus-visible { outline: 2px solid var(--gold); outline-offset: -2px; }
-  .is-dark .bottom-nav { background: #1c231f; border-top-color: rgba(255, 255, 255, 0.12); }
+  .bottom-nav__item.is-active { color: var(--fairway-deep); background: #eceeec; }
+  .bottom-nav__item:active { background: rgba(27, 42, 31, 0.08); }
+  .bottom-nav__item:focus-visible, .bottom-nav__ask:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  /* Ask: the round button in the middle */
+  .bottom-nav__ask {
+    flex: none; width: 62px; height: 62px; margin: 0 4px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--fairway-deep); color: #fff; box-shadow: 0 6px 16px rgba(27, 67, 50, 0.35);
+    -webkit-tap-highlight-color: transparent; transition: transform 0.15s;
+  }
+  .bottom-nav__ask svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+  .bottom-nav__ask:active { transform: scale(0.94); }
+  .is-dark .bottom-nav { background: rgba(28, 35, 31, 0.92); border-color: rgba(255, 255, 255, 0.12); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55); }
+  .is-dark .bottom-nav__item { color: #e4e9e5; }
+  .is-dark .bottom-nav__item.is-active { color: #9fe0bd; background: rgba(255, 255, 255, 0.09); }
   .is-dark .bottom-nav__item:active { background: rgba(255, 255, 255, 0.08); }
-  /* Keep the last of the page clear of the bar. */
-  body { padding-bottom: calc(56px + env(safe-area-inset-bottom, 0px)); }
+  .is-dark .bottom-nav__ask { background: #7fd1a6; color: #10241a; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4); }
+  /* Keep the last of the page clear of the pill. */
+  body { padding-bottom: calc(92px + env(safe-area-inset-bottom, 0px)); }
   body.article-page { padding-bottom: 0; }
   body.article-page .bottom-nav { display: none; }
 }
@@ -2081,8 +2098,6 @@ html.ask-open { overflow: hidden; }
 .header-ask:hover { border-color: rgba(27, 42, 31, 0.5); }
 .header-ask svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
 @media (min-width: 700px) { .header-ask { display: inline-flex; } }
-/* ... and the middle button of the bottom bar on phones. */
-.bottom-nav__item--ask { color: var(--fairway-deep); }
 
 .is-dark .ask__sheet { background: #1c231f; }
 .is-dark .ask__close, .is-dark .ask__expand { background: rgba(255, 255, 255, 0.12); }

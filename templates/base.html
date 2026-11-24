@@ -37,7 +37,7 @@
     // reader never sees a white flash on load (the menu toggle sets this).
     try { if (localStorage.getItem('sf-theme') === 'dark') document.documentElement.classList.add('is-dark'); } catch (e) {}
   </script>
-  <link rel="stylesheet" href="/static/css/style.css?v=11">
+  <link rel="stylesheet" href="/static/css/style.css?v=12">
   <link rel="alternate" type="application/rss+xml" title="\\Mansfield" href="/feed.xml">
   {# Link previews + search results. Pages override the `seo` block (stories do);
      everything else gets these site-wide defaults. #}
@@ -203,30 +203,17 @@
        over, and on the full article page). Dark/light is the same switch as
        the one in the hamburger menu. -->
   <nav class="bottom-nav" aria-label="Main">
-    <a href="/walk" class="bottom-nav__item {% if request.path == '/walk' %}is-active{% endif %}">
-      <svg class="bottom-nav__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-map"/></svg>
-      <span>Walk</span>
-    </a>
     <a href="/" class="bottom-nav__item {% if request.path == '/' or request.path.startswith('/category/') %}is-active{% endif %}">
       <svg class="bottom-nav__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-stories"/></svg>
       <span>Stories</span>
     </a>
-    <a href="{{ '/account' if reader else '/account/login?next=/account' }}" class="bottom-nav__item {% if request.path == '/account' %}is-active{% endif %}">
-      <svg class="bottom-nav__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-save"/></svg>
-      <span>Saved</span>
-    </a>
-    <button type="button" class="bottom-nav__item bottom-nav__item--ask" data-ask-open aria-label="Ask a question about the articles">
-      <svg class="bottom-nav__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-search"/></svg>
-      <span>Ask</span>
+    <button type="button" class="bottom-nav__ask" data-ask-open aria-label="Ask">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-search"/></svg>
     </button>
-    <a href="{{ '/account/profile' if reader else '/account/login?next=/account/profile' }}" class="bottom-nav__item {% if request.path.startswith('/account/') %}is-active{% endif %}">
-      <svg class="bottom-nav__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"/></svg>
-      <span>Account</span>
+    <a href="/walk" class="bottom-nav__item {% if request.path == '/walk' %}is-active{% endif %}">
+      <svg class="bottom-nav__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-map"/></svg>
+      <span>Walk</span>
     </a>
-    <button type="button" class="bottom-nav__item" id="bar-theme-toggle" data-site-theme aria-pressed="false" aria-label="Switch to dark mode">
-      <svg class="bottom-nav__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"/></svg>
-      <span class="bottom-nav__label">Dark</span>
-    </button>
   </nav>
 
   <script>
@@ -236,7 +223,7 @@
     window.MAP_HOSTS = {{ map_embed_hosts()|tojson }};
   </script>
   <script src="/static/js/actions.js?v=8"></script>
-  <script src="/static/js/native.js?v=2" defer></script>
+  <script src="/static/js/native.js?v=3" defer></script>
   <script src="/static/js/map-list.js?v=4" defer></script>
   <script src="/static/js/map-story.js?v=12" defer></script>
   <script src="/static/js/places.js?v=2" defer></script>
