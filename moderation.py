@@ -100,6 +100,11 @@ def delete_reader(reader_id, email=None, remove_newsletter=False):
         community.delete_reader_posts(reader_id)
     except Exception as exc:  # noqa: BLE001
         print("delete_reader: community cleanup failed:", exc)
+    try:   # their email code and welcome answers (onboarding.py)
+        import onboarding
+        onboarding.delete_reader_data(reader_id)
+    except Exception as exc:  # noqa: BLE001
+        print("delete_reader: onboarding cleanup failed:", exc)
     try:   # their footprint ratings of places (footprints.py)
         import footprints
         footprints.delete_reader_ratings(reader_id)

@@ -1,0 +1,456 @@
+{% extends "base.html" %}
+{% block title %}Welcome — \\Mansfield{% endblock %}
+{% block body_class %}welcome-page{% endblock %}
+
+{# Onboarding (onboarding.py): the email code first, then one question per screen. #}
+{% block head %}
+<style>
+  body.welcome-page .site-header, body.welcome-page .popbar, body.welcome-page .site-footer, body.welcome-page .bottom-nav,
+  body.welcome-page .nl-popup { display: none !important; }
+  body.welcome-page { padding-bottom: 0; }
+  body.welcome-page .site-main { padding: 0; margin: 0; max-width: none; width: 100%; }
+  .wel { min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; box-sizing: border-box;
+    padding: calc(env(safe-area-inset-top, 0px) + 14px) 22px calc(env(safe-area-inset-bottom, 0px) + 22px); max-width: 560px; margin: 0 auto; }
+  .wel__top { display: flex; align-items: center; justify-content: space-between; min-height: 40px; }
+  .wel__back, .wel__skip { border: 0; background: none; color: var(--ink-faint); font: 700 15px var(--font-sans); cursor: pointer; padding: 8px 4px; }
+  .wel__back[hidden], .wel__skip[hidden], .wel__dots[hidden] { visibility: hidden; display: inline-block; }
+  .wel__dots { display: flex; gap: 6px; }
+  .wel__dot { width: 8px; height: 8px; border-radius: 999px; background: rgba(27, 42, 31, 0.15); transition: width 0.2s, background 0.2s; }
+  .wel__dot.is-on { width: 22px; background: var(--fairway); }
+  .wel__step { flex: 1; display: none; flex-direction: column; padding-top: 18px; animation: wel-in 0.25s ease; }
+  .wel__step.is-on { display: flex; }
+  @keyframes wel-in { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+  .wel__kicker { margin: 0 0 6px; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fairway); }
+  .wel__h { margin: 0 0 8px; font: 800 30px/1.15 var(--font-serif); color: var(--fairway-deep); }
+  .wel__sub { margin: 0 0 22px; font-size: 16px; line-height: 1.5; color: var(--ink-soft); }
+  .wel__code { width: 100%; box-sizing: border-box; padding: 16px; border: 1px solid rgba(27, 42, 31, 0.16); border-radius: 16px; background: #f3f4f3;
+    font: 800 32px var(--font-sans); letter-spacing: 0.5em; text-align: center; color: var(--ink); }
+  .wel__code:focus { outline: none; border-color: var(--fairway-deep); background: #fff; box-shadow: 0 0 0 3px rgba(27, 67, 50, 0.14); }
+  .wel__msg { min-height: 20px; margin: 10px 2px 0; font-size: 14.5px; color: var(--ink-soft); }
+  .wel__msg.is-error { color: #a4303f; }
+  .wel__links { display: flex; justify-content: space-between; gap: 10px; margin-top: 14px; }
+  .wel__link { border: 0; background: none; padding: 6px 0; color: var(--fairway-deep); font: 700 14.5px var(--font-sans); cursor: pointer; }
+  .wel__link:disabled { color: var(--ink-faint); cursor: default; }
+  .wel__cards { display: grid; gap: 10px; }
+  .wel__card { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 16px 18px; border: 1.5px solid rgba(27, 42, 31, 0.12);
+    border-radius: 16px; background: #fff; text-align: left; cursor: pointer; font-family: var(--font-sans); color: var(--ink); }
+  .wel__card b { font-size: 17px; }
+  .wel__card span { font-size: 14px; color: var(--ink-faint); }
+  .wel__card[aria-pressed="true"] { border-color: var(--fairway-deep); background: rgba(45, 106, 79, 0.08); box-shadow: inset 0 0 0 1px var(--fairway-deep); }
+  .wel__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .wel__chip { padding: 11px 16px; border: 1.5px solid rgba(27, 42, 31, 0.14); border-radius: 999px; background: #fff; color: var(--ink);
+    font: 700 15px var(--font-sans); cursor: pointer; }
+  .wel__chip[aria-pressed="true"] { border-color: var(--fairway-deep); background: var(--fairway-deep); color: #fff; }
+  .wel__label { margin: 22px 0 10px; font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); }
+  .wel__find { position: relative; }
+  .wel__input { width: 100%; box-sizing: border-box; padding: 15px 16px; border: 1px solid rgba(27, 42, 31, 0.16); border-radius: 14px; background: #f3f4f3;
+    font: 500 17px var(--font-sans); color: var(--ink); -webkit-appearance: none; }
+  .wel__input:focus { outline: none; border-color: var(--fairway-deep); background: #fff; }
+  .wel__list { list-style: none; margin: 6px 0 0; padding: 4px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
+  .wel__list[hidden] { display: none; }
+  .wel__list button { display: flex; flex-direction: column; align-items: flex-start; width: 100%; padding: 11px 12px; border: 0; border-radius: 10px;
+    background: none; text-align: left; font: inherit; color: var(--ink); cursor: pointer; }
+  .wel__list button span { font-size: 13px; color: var(--ink-faint); }
+  .wel__list button:hover { background: #f0f2f0; }
+  .wel__picked { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; padding: 8px 14px; border-radius: 999px;
+    background: rgba(45, 106, 79, 0.12); color: var(--fairway-deep); font-weight: 700; }
+  .wel__picked[hidden] { display: none; }
+  .wel__picked svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.2; }
+  .wel__here { margin-top: 12px; }
+  .wel__go { margin-top: auto; padding-top: 22px; }
+  .wel__btn { width: 100%; padding: 16px; border: 0; border-radius: 14px; background: var(--fairway-deep); color: #fff; font: 800 17px var(--font-sans); cursor: pointer; }
+  .wel__btn:disabled { opacity: 0.45; cursor: default; }
+  /* The quick tour: swipe between cards */
+  .wel__tour { display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; margin: 0 -22px; gap: 0; }
+  .wel__tour::-webkit-scrollbar { display: none; }
+  .wel__tcard { flex: 0 0 100%; box-sizing: border-box; padding: 0 22px; scroll-snap-align: start; scroll-snap-stop: always; }
+  .wel__art { height: 190px; border-radius: 22px; margin-bottom: 18px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
+    background: linear-gradient(160deg, #1d2a22, #26392e); color: #fff; }
+  .wel__art svg { width: 100%; height: 100%; }
+  .wel__th { margin: 0 0 6px; font: 800 23px/1.2 var(--font-serif); color: var(--fairway-deep); }
+  .wel__tp { margin: 0; font-size: 15.5px; line-height: 1.55; color: var(--ink-soft); }
+  .wel__tp b { color: var(--ink); }
+  .wel__tdots { display: flex; justify-content: center; gap: 6px; margin-top: 18px; }
+  .wel__tdot { width: 8px; height: 8px; border-radius: 999px; background: rgba(27, 42, 31, 0.15); border: 0; padding: 0; cursor: pointer; transition: width 0.2s; }
+  .wel__tdot.is-on { width: 22px; background: var(--fairway); }
+  html.is-dark .wel__th { color: #e4e9e5; }
+  html.is-dark .wel__tp { color: rgba(228, 233, 229, 0.72); }
+  html.is-dark .wel__tp b { color: #fff; }
+  html.is-dark .wel__tdot { background: rgba(255, 255, 255, 0.18); }
+  html.is-dark .wel__tdot.is-on { background: #7fd1a6; }
+  .wel__done { margin: 0 0 6px; font-size: 15.5px; color: var(--ink-soft); }
+  .wel__done b { color: var(--ink); }
+  html.is-dark body.welcome-page { background: #141618; }
+  html.is-dark .wel__h { color: #e4e9e5; }
+  html.is-dark .wel__kicker { color: #7fd1a6; }
+  html.is-dark .wel__sub, html.is-dark .wel__msg, html.is-dark .wel__done { color: rgba(228, 233, 229, 0.7); }
+  html.is-dark .wel__done b { color: #fff; }
+  html.is-dark .wel__code, html.is-dark .wel__input { background: #22272a; border-color: rgba(255, 255, 255, 0.12); color: #fff; }
+  html.is-dark .wel__card, html.is-dark .wel__chip, html.is-dark .wel__list { background: #1c2023; border-color: rgba(255, 255, 255, 0.14); color: #e4e9e5; }
+  html.is-dark .wel__card span, html.is-dark .wel__list button span { color: rgba(228, 233, 229, 0.55); }
+  html.is-dark .wel__list button { color: #e4e9e5; }
+  html.is-dark .wel__card[aria-pressed="true"] { border-color: #7fd1a6; background: rgba(127, 209, 166, 0.1); box-shadow: inset 0 0 0 1px #7fd1a6; }
+  html.is-dark .wel__chip[aria-pressed="true"] { border-color: #7fd1a6; background: #7fd1a6; color: #10241a; }
+  html.is-dark .wel__btn { background: #2BEA6B; color: #0b2414; }
+  html.is-dark .wel__link { color: #7fd1a6; }
+  html.is-dark .wel__dot { background: rgba(255, 255, 255, 0.18); }
+  html.is-dark .wel__dot.is-on { background: #7fd1a6; }
+  html.is-dark .wel__picked { background: rgba(127, 209, 166, 0.16); color: #9fe0bd; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wel" id="wel">
+  <div class="wel__top">
+    <button type="button" class="wel__back" data-back hidden>&larr; Back</button>
+    <div class="wel__dots" aria-hidden="true">{% for i in range(4) %}<span class="wel__dot"></span>{% endfor %}</div>
+    <button type="button" class="wel__skip" data-skip hidden>Skip</button>
+  </div>
+
+  {# 1. Email code #}
+  <section class="wel__step" data-step="verify">
+    <p class="wel__kicker">Welcome, {{ name }}</p>
+    <h1 class="wel__h">Check your email</h1>
+    <p class="wel__sub">We sent a 6-digit code to <b>{{ email }}</b>. Enter it here to confirm it's you.</p>
+    <input class="wel__code" id="wel-code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="6" placeholder="······" aria-label="6-digit code">
+    <p class="wel__msg" id="wel-code-msg" role="status" aria-live="polite">{% if sent and 'sent' not in sent %}{{ sent }}{% endif %}</p>
+    <div class="wel__links">
+      <button type="button" class="wel__link" id="wel-resend">Send a new code</button>
+      <button type="button" class="wel__link" data-later>I'll do this later</button>
+    </div>
+    <div class="wel__go"><button type="button" class="wel__btn" id="wel-verify">Confirm</button></div>
+  </section>
+
+  {# 2. Why they're here #}
+  <section class="wel__step" data-step="purpose">
+    <p class="wel__kicker">A few quick questions</p>
+    <h1 class="wel__h">What brings you here?</h1>
+    <p class="wel__sub">So we can suggest the right walks and stories.</p>
+    <div class="wel__cards" data-one="purpose">
+      {% set notes = {'local': 'I want to find new favourites', 'new': 'I just moved and want to get to know it', 'visiting': "I'm here for a few days", 'planning': "I'm getting ready for a trip"} %}
+      {% for key, label in purposes.items() %}
+      <button type="button" class="wel__card" data-value="{{ key }}" aria-pressed="{{ 'true' if profile.get('purpose') == key else 'false' }}"><b>{{ label }}</b><span>{{ notes[key] }}</span></button>
+      {% endfor %}
+    </div>
+    <div class="wel__go"><button type="button" class="wel__btn" data-next>Continue</button></div>
+  </section>
+
+  {# 3. City #}
+  <section class="wel__step" data-step="city">
+    <p class="wel__kicker">Your city</p>
+    <h1 class="wel__h" id="wel-city-h">Which city?</h1>
+    <p class="wel__sub">Your feed opens here. You can search any other city any time.</p>
+    <div class="wel__find">
+      <input class="wel__input" id="wel-city" type="search" placeholder="Search a city" autocomplete="off" autocapitalize="words" spellcheck="false" maxlength="80">
+      <ul class="wel__list" id="wel-city-list" hidden></ul>
+    </div>
+    <div>
+      <span class="wel__picked" id="wel-city-picked" {% if not profile.get('city_name') %}hidden{% endif %}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+        <span>{{ profile.get('city_label') or '' }}</span>
+      </span>
+    </div>
+    <button type="button" class="wel__link wel__here" id="wel-here">Use my location</button>
+    <div class="wel__go"><button type="button" class="wel__btn" data-next>Continue</button></div>
+  </section>
+
+  {# 4. Interests #}
+  <section class="wel__step" data-step="interests">
+    <p class="wel__kicker">What you love</p>
+    <h1 class="wel__h">Pick a few things you'd walk for</h1>
+    <p class="wel__sub">The AI plans your walks around them.</p>
+    <div class="wel__chips" data-many="interests">
+      {% for key, label in interests.items() %}
+      <button type="button" class="wel__chip" data-value="{{ key }}" aria-pressed="{{ 'true' if key in (profile.get('interests') or []) else 'false' }}">{{ label }}</button>
+      {% endfor %}
+    </div>
+    <div class="wel__go"><button type="button" class="wel__btn" data-next>Continue</button></div>
+  </section>
+
+  {# 5. Walking style #}
+  <section class="wel__step" data-step="walk">
+    <p class="wel__kicker">Your walking style</p>
+    <h1 class="wel__h">How far do you like to walk?</h1>
+    <div class="wel__cards" data-one="walk_length">
+      {% for key, pair in walk_lengths.items() %}
+      <button type="button" class="wel__card" data-value="{{ key }}" aria-pressed="{{ 'true' if profile.get('walk_length') == key else 'false' }}"><b>{{ pair[0] }}</b><span>{{ pair[1] | capitalize }}</span></button>
+      {% endfor %}
+    </div>
+    <p class="wel__label">Anything to avoid?</p>
+    <div class="wel__chips" data-many="avoid">
+      {% for key, label in avoid.items() %}
+      <button type="button" class="wel__chip" data-value="{{ key }}" aria-pressed="{{ 'true' if key in (profile.get('avoid') or []) else 'false' }}">{{ label }}</button>
+      {% endfor %}
+    </div>
+    <div class="wel__go"><button type="button" class="wel__btn" data-next>Continue</button></div>
+  </section>
+
+  {# 6. A quick tour: how to use the app (swipe) #}
+  <section class="wel__step" data-step="tour">
+    <p class="wel__kicker">How it works</p>
+    <div class="wel__tour" id="wel-tour">
+      <div class="wel__tcard">
+        <div class="wel__art" aria-hidden="true">
+          <svg viewBox="0 0 320 190"><g stroke="#2e3a33" stroke-width="3"><path d="M0 40h320M0 95h320M0 150h320M60 0v190M150 0v190M245 0v190"/></g>
+            <ellipse cx="160" cy="95" rx="105" ry="62" fill="rgba(43,234,107,.08)" stroke="#2BEA6B" stroke-width="3" stroke-dasharray="3 9" stroke-linecap="round"/>
+            <path d="M88 118h62v-45h95" fill="none" stroke="#2BEA6B" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+            <circle cx="88" cy="118" r="9" fill="#4aa3ff" stroke="#fff" stroke-width="3"/>
+            <g font-family="-apple-system,Helvetica,Arial" font-weight="800" font-size="13" text-anchor="middle" fill="#fff">
+              <circle cx="150" cy="118" r="12" fill="#e5534b" stroke="#fff" stroke-width="3"/><text x="150" y="123">1</text>
+              <circle cx="150" cy="73" r="12" fill="#e5534b" stroke="#fff" stroke-width="3"/><text x="150" y="78">2</text>
+              <circle cx="245" cy="73" r="12" fill="#e5534b" stroke="#fff" stroke-width="3"/><text x="245" y="78">3</text></g>
+            <rect x="40" y="152" width="240" height="28" rx="14" fill="#fff"/><text x="58" y="171" font-family="-apple-system,Helvetica,Arial" font-size="12.5" fill="#55605a">“3 coffee shops near me”</text></svg>
+        </div>
+        <h2 class="wel__th">Plan a walk in seconds</h2>
+        <p class="wel__tp">On <b>Walk</b>, ask for what you're in the mood for, or tap <b>Draw area</b> and circle a part of the map. The AI picks the stops, and <b>Start</b> gives you turn-by-turn directions.</p>
+      </div>
+      <div class="wel__tcard">
+        <div class="wel__art" aria-hidden="true">
+          <svg viewBox="0 0 320 190"><rect x="24" y="18" width="272" height="30" rx="15" fill="#fff"/><circle cx="44" cy="33" r="6" fill="none" stroke="#55605a" stroke-width="2.2"/><text x="58" y="38" font-family="-apple-system,Helvetica,Arial" font-size="12.5" fill="#55605a">Search any city</text>
+            <rect x="24" y="58" width="96" height="22" rx="11" fill="rgba(127,209,166,.22)"/><text x="38" y="73" font-family="-apple-system,Helvetica,Arial" font-weight="700" font-size="11.5" fill="#9fe0bd">Vienna, Austria</text>
+            <rect x="24" y="92" width="130" height="80" rx="12" fill="#33473b"/><rect x="34" y="102" width="56" height="12" rx="6" fill="#2BEA6B"/><rect x="34" y="122" width="100" height="9" rx="4" fill="#cfd8d2"/><rect x="34" y="138" width="80" height="9" rx="4" fill="#8c9a91"/>
+            <rect x="166" y="92" width="130" height="80" rx="12" fill="#33473b"/><rect x="176" y="102" width="70" height="12" rx="6" fill="#7fd1a6"/><rect x="176" y="122" width="100" height="9" rx="4" fill="#cfd8d2"/><rect x="176" y="138" width="60" height="9" rx="4" fill="#8c9a91"/></svg>
+        </div>
+        <h2 class="wel__th">Your city's feed</h2>
+        <p class="wel__tp"><b>Stories</b> shows what's good in your city: stories, <b>Walks this week</b> and walks other walkers shared. Tap a walk to preview it, or search any city at the top to see its feed.</p>
+      </div>
+      <div class="wel__tcard">
+        <div class="wel__art" aria-hidden="true">
+          <svg viewBox="0 0 320 190"><rect x="40" y="26" width="240" height="138" rx="16" fill="#33473b"/>
+            <g font-family="-apple-system,Helvetica,Arial" font-weight="700" font-size="13" fill="#fff"><text x="60" y="58">Date night in the 1st</text></g>
+            <rect x="60" y="72" width="150" height="9" rx="4" fill="#8c9a91"/>
+            <g font-family="-apple-system,Helvetica,Arial" font-weight="800" font-size="12">
+              <rect x="60" y="104" width="62" height="30" rx="15" fill="#fff"/><text x="74" y="123" fill="#15171a">Save</text>
+              <rect x="130" y="104" width="68" height="30" rx="15" fill="none" stroke="#cfd8d2" stroke-width="1.5"/><text x="144" y="123" fill="#fff">Share</text>
+              <rect x="206" y="104" width="58" height="30" rx="15" fill="#2BEA6B"/><text x="218" y="123" fill="#0b2414">Post</text></g></svg>
+        </div>
+        <h2 class="wel__th">Save, build and share</h2>
+        <p class="wel__tp">Save places you love to <b>My places</b> (the tab on the right of the map) and build your own routes: a date night, a coffee loop, a tour for friends. <b>Share</b> sends a link; <b>Post to feed</b> shows it to walkers in your city.</p>
+      </div>
+      <div class="wel__tcard">
+        <div class="wel__art" aria-hidden="true">
+          <svg viewBox="0 0 320 190"><rect x="40" y="40" width="240" height="110" rx="16" fill="#fff"/>
+            <text x="60" y="68" font-family="-apple-system,Helvetica,Arial" font-weight="800" font-size="10" letter-spacing="1" fill="#1aa356">YOU'RE AT STOP 2 OF 3</text>
+            <text x="60" y="90" font-family="-apple-system,Helvetica,Arial" font-weight="800" font-size="15" fill="#15171a">Café Sperl</text>
+            <text x="60" y="122" font-family="-apple-system,Helvetica,Arial" font-weight="700" font-size="11.5" fill="#4a524e">Worth the walk?</text>
+            <g fill="#1aa356" transform="translate(150 104)">
+              <g id="fp"><ellipse cx="5" cy="7" rx="3" ry="4.3"/><ellipse cx="5.6" cy="15" rx="2.2" ry="2.6"/><ellipse cx="14" cy="3" rx="3" ry="4.3"/><ellipse cx="13.4" cy="11" rx="2.2" ry="2.6"/></g>
+              <use href="#fp" x="24"/><use href="#fp" x="48"/><use href="#fp" x="72"/><use href="#fp" x="96" fill="#d3d8d5"/></g></svg>
+        </div>
+        <h2 class="wel__th">Rate with footprints</h2>
+        <p class="wel__tp">When you reach a stop, give it 1 to 5 <b>footprints</b>: how worth the walk it was. Your ratings help everyone, and the AI plans better walks from them.</p>
+      </div>
+    </div>
+    <div class="wel__tdots" id="wel-tdots">{% for i in range(4) %}<button type="button" class="wel__tdot{% if loop.first %} is-on{% endif %}" aria-label="Card {{ loop.index }}"></button>{% endfor %}</div>
+    <div class="wel__go"><button type="button" class="wel__btn" id="wel-tour-next">Next</button></div>
+  </section>
+
+  {# 7. Done #}
+  <section class="wel__step" data-step="done">
+    <p class="wel__kicker">All set</p>
+    <h1 class="wel__h">You're ready to explore, {{ name }}</h1>
+    <p class="wel__done" id="wel-summary"></p>
+    <p class="wel__msg" id="wel-done-msg" role="status" aria-live="polite"></p>
+    <div class="wel__go"><button type="button" class="wel__btn" id="wel-finish">Start exploring</button></div>
+  </section>
+</div>
+
+<script>
+  (function () {
+    var root = document.getElementById('wel');
+    var NEXT = {{ next | tojson }}, VERIFIED = {{ 'true' if verified else 'false' }}, START = {{ step | tojson }};
+    var ONBOARDED = {{ 'true' if profile.get('onboarded_at') else 'false' }};
+    var QUESTIONS = ['purpose', 'city', 'interests', 'walk'];
+    var answers = {
+      purpose: {{ (profile.get('purpose') or '') | tojson }},
+      city: {{ ({'name': profile.city_name, 'label': profile.city_label, 'lat': profile.city_lat, 'lng': profile.city_lng} if profile.get('city_name') else none) | tojson }},
+      interests: {{ (profile.get('interests') or []) | tojson }},
+      walk_length: {{ (profile.get('walk_length') or '') | tojson }},
+      avoid: {{ (profile.get('avoid') or []) | tojson }}
+    };
+    var steps = Array.prototype.slice.call(root.querySelectorAll('.wel__step'));
+    var order = START === 'tour' ? ['tour'] :
+      (VERIFIED ? [] : ['verify']).concat(START === 'verify' && ONBOARDED ? [] : QUESTIONS.concat(['tour', 'done']));
+    var at = 0;
+    function csrf() { return (window.READER && window.READER.csrf) || ''; }
+    function post(url, body) {
+      return fetch(url, { method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': csrf() }, body: JSON.stringify(body || {}) })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { d.httpOk = r.ok; return d; }); })
+        .catch(function () { return { error: 'Couldn’t reach the server. Check your connection.' }; });
+    }
+    function show(i) {
+      at = Math.max(0, Math.min(order.length - 1, i));
+      var name = order[at];
+      steps.forEach(function (s) { s.classList.toggle('is-on', s.getAttribute('data-step') === name); });
+      var q = QUESTIONS.indexOf(name);
+      root.querySelector('.wel__dots').hidden = q < 0;
+      Array.prototype.forEach.call(root.querySelectorAll('.wel__dot'), function (d, k) { d.classList.toggle('is-on', k === q); });
+      root.querySelector('[data-back]').hidden = at === 0 || order[at - 1] === 'verify';
+      root.querySelector('[data-skip]').hidden = q < 0 && name !== 'tour';
+      if (name === 'city') document.getElementById('wel-city-h').textContent =
+        answers.purpose === 'visiting' || answers.purpose === 'planning' ? 'Where are you headed?' : 'Where are you based?';
+      if (name === 'done') summary();
+      if (name === 'verify') setTimeout(function () { document.getElementById('wel-code').focus(); }, 150);
+      window.scrollTo(0, 0);
+    }
+    function nextStep() { if (at < order.length - 1) show(at + 1); else finish(); }
+    root.querySelector('[data-back]').addEventListener('click', function () { show(at - 1); });
+    root.querySelector('[data-skip]').addEventListener('click', nextStep);
+    Array.prototype.forEach.call(root.querySelectorAll('[data-next]'), function (b) { b.addEventListener('click', nextStep); });
+
+    // ---- 1. Email code ----
+    var code = document.getElementById('wel-code'), codeMsg = document.getElementById('wel-code-msg');
+    var verifyBtn = document.getElementById('wel-verify'), resend = document.getElementById('wel-resend');
+    function say(text, bad) { codeMsg.textContent = text || ''; codeMsg.classList.toggle('is-error', !!bad); }
+    function check() {
+      var v = code.value.replace(/\D/g, '');
+      if (v.length !== 6) { say('Enter the 6 digits from the email.', true); return; }
+      verifyBtn.disabled = true; say('Checking…');
+      post('/api/verify/check', { code: v }).then(function (d) {
+        verifyBtn.disabled = false;
+        if (d.ok) {
+          if (window.READER) window.READER.verified = true;
+          say('Email confirmed.');
+          if (order.length === 1) { location.href = NEXT; return; }
+          setTimeout(nextStep, 350);
+        } else { say(d.error || 'That didn’t work. Try again.', true); code.select(); }
+      });
+    }
+    code.addEventListener('input', function () {
+      code.value = code.value.replace(/\D/g, '').slice(0, 6);
+      if (code.value.length === 6) check();
+    });
+    verifyBtn.addEventListener('click', check);
+    var wait = null;
+    function cooldown(sec) {
+      resend.disabled = true;
+      clearInterval(wait);
+      wait = setInterval(function () {
+        sec -= 1;
+        resend.textContent = sec > 0 ? 'Send a new code (' + sec + ')' : 'Send a new code';
+        if (sec <= 0) { clearInterval(wait); resend.disabled = false; }
+      }, 1000);
+    }
+    resend.addEventListener('click', function () {
+      say('Sending…');
+      post('/api/verify/send').then(function (d) {
+        say(d.message || d.error || '', !d.ok);
+        if (d.ok) { code.value = ''; cooldown(45); }
+      });
+    });
+    if (!VERIFIED) cooldown(45);
+    root.querySelector('[data-later]').addEventListener('click', function () {
+      if (order.length === 1) { location.href = NEXT; return; }
+      nextStep();
+    });
+
+    // ---- Choices ----
+    Array.prototype.forEach.call(root.querySelectorAll('[data-one]'), function (group) {
+      var key = group.getAttribute('data-one');
+      group.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-value]');
+        if (!b) return;
+        answers[key] = b.getAttribute('data-value');
+        Array.prototype.forEach.call(group.querySelectorAll('[data-value]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
+        if (key === 'purpose') setTimeout(nextStep, 250);   // one tap is enough here
+      });
+    });
+    Array.prototype.forEach.call(root.querySelectorAll('[data-many]'), function (group) {
+      var key = group.getAttribute('data-many');
+      group.addEventListener('click', function (e) {
+        var b = e.target.closest('[data-value]');
+        if (!b) return;
+        var v = b.getAttribute('data-value'), on = b.getAttribute('aria-pressed') !== 'true';
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        answers[key] = answers[key].filter(function (x) { return x !== v; });
+        if (on) answers[key].push(v);
+      });
+    });
+
+    // ---- City ----
+    var cityIn = document.getElementById('wel-city'), cityList = document.getElementById('wel-city-list');
+    var picked = document.getElementById('wel-city-picked'), timer = null, seq = 0;
+    function pickCity(c) {
+      answers.city = c;
+      picked.querySelector('span').textContent = c.label || c.name;
+      picked.hidden = false;
+      cityList.hidden = true; cityIn.value = '';
+    }
+    cityIn.addEventListener('input', function () {
+      clearTimeout(timer);
+      var q = cityIn.value.trim();
+      if (q.length < 2) { cityList.hidden = true; return; }
+      timer = setTimeout(function () {
+        var mine = ++seq;
+        fetch('/api/cities?q=' + encodeURIComponent(q), { headers: { 'Accept': 'application/json' } })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (mine !== seq) return;
+            cityList.innerHTML = '';
+            ((d && d.cities) || []).forEach(function (c) {
+              var li = document.createElement('li'), b = document.createElement('button');
+              b.type = 'button';
+              b.appendChild(document.createTextNode(c.name));
+              var where = (c.label || '').split(', ').slice(1).join(', ');
+              if (where) { var s = document.createElement('span'); s.textContent = where; b.appendChild(s); }
+              b.addEventListener('click', function () { pickCity(c); });
+              li.appendChild(b); cityList.appendChild(li);
+            });
+            cityList.hidden = !cityList.children.length;
+          }).catch(function () {});
+      }, 250);
+    });
+    document.getElementById('wel-here').addEventListener('click', function () {
+      var b = this;
+      if (!navigator.geolocation) return;
+      b.textContent = 'Finding you…';
+      navigator.geolocation.getCurrentPosition(function (pos) {
+        fetch('/api/city-at?lat=' + pos.coords.latitude.toFixed(4) + '&lng=' + pos.coords.longitude.toFixed(4))
+          .then(function (r) { return r.json(); })
+          .then(function (d) { b.textContent = 'Use my location'; if (d && d.city) pickCity(d.city); });
+      }, function () { b.textContent = 'Use my location'; }, { timeout: 12000, maximumAge: 600000 });
+    });
+
+    // ---- Done ----
+    var LABELS = { interests: {{ interests | tojson }} };
+    function summary() {
+      var bits = [];
+      if (answers.city) bits.push('Your feed opens on <b>' + esc(answers.city.label || answers.city.name) + '</b>.');
+      if (answers.interests.length) bits.push('Walks will lean towards <b>' + esc(answers.interests.map(function (k) { return (LABELS.interests[k] || k).toLowerCase(); }).join(', ')) + '</b>.');
+      if (!bits.length) bits.push('You can tell us more any time from your account page.');
+      document.getElementById('wel-summary').innerHTML = bits.join(' ');
+    }
+    function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+    function finish() {
+      var btn = document.getElementById('wel-finish');
+      btn.disabled = true;
+      post('/api/profile', answers).then(function (d) {
+        if (d.ok) { location.href = NEXT; return; }
+        btn.disabled = false;
+        document.getElementById('wel-done-msg').textContent = d.error || 'Couldn’t save that. Try again.';
+      });
+    }
+    document.getElementById('wel-finish').addEventListener('click', finish);
+
+    // ---- The tour: swipe or Next ----
+    var tour = document.getElementById('wel-tour'), tdots = document.querySelectorAll('#wel-tdots .wel__tdot');
+    var tnext = document.getElementById('wel-tour-next'), tat = 0;
+    function tmark() {
+      tat = Math.round(tour.scrollLeft / Math.max(1, tour.clientWidth));
+      Array.prototype.forEach.call(tdots, function (d, k) { d.classList.toggle('is-on', k === tat); });
+      tnext.textContent = tat >= tdots.length - 1 ? 'Got it' : 'Next';
+    }
+    tour.addEventListener('scroll', function () { clearTimeout(tour._t); tour._t = setTimeout(tmark, 60); }, { passive: true });
+    Array.prototype.forEach.call(tdots, function (d, k) { d.addEventListener('click', function () { tour.scrollTo({ left: k * tour.clientWidth, behavior: 'smooth' }); }); });
+    tnext.addEventListener('click', function () {
+      if (tat < tdots.length - 1) { tour.scrollTo({ left: (tat + 1) * tour.clientWidth, behavior: 'smooth' }); return; }
+      if (order.length === 1) { location.href = NEXT; return; }   // ?step=tour on its own
+      nextStep();
+    });
+
+    var first = START === 'profile' ? order.indexOf('purpose') : 0;
+    show(first < 0 ? 0 : first);
+  })();
+</script>
+{% endblock %}

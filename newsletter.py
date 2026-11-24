@@ -126,6 +126,11 @@ def newsletter_me():
     reader = current_reader()
     email = (reader.get("email") or "").strip().lower()
     data = request.get_json(silent=True) or {}
+    if data.get("on"):
+        from onboarding import verify_block   # the newsletter only goes to verified emails (onboarding.py)
+        blocked = verify_block(reader, "get the newsletter")
+        if blocked:
+            return blocked
     try:
         if not data.get("on"):
             try:

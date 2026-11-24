@@ -150,6 +150,10 @@ def api_get():
 @reader_required_json
 def api_rate():
     reader = current_reader()
+    from onboarding import verify_block   # rating needs a verified email (onboarding.py)
+    blocked = verify_block(reader, "rate places")
+    if blocked:
+        return blocked
     data = request.get_json(silent=True) or {}
     slug = str(data.get("slug") or "")
     if not _SLUG_RE.match(slug):

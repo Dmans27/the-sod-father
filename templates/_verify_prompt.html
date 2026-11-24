@@ -1,0 +1,49 @@
+{# "Verify your email" card (onboarding.py): shown when an action answers 403 {verify: true} --
+   posting walks, rating places, commenting, the newsletter. Only for signed-in readers who haven't verified. #}
+<div class="vprompt" id="vprompt" hidden>
+  <div class="vprompt__card" role="dialog" aria-modal="true" aria-labelledby="vprompt-title">
+    <h2 class="vprompt__title" id="vprompt-title">Verify your email</h2>
+    <p class="vprompt__text" id="vprompt-text">Confirm your email with a quick 6-digit code to post, rate and comment.</p>
+    <a class="vprompt__go" id="vprompt-go" href="/welcome?step=verify">Verify now</a>
+    <button type="button" class="vprompt__later" id="vprompt-later">Later</button>
+  </div>
+</div>
+<style>
+  .vprompt { position: fixed; inset: 0; z-index: 2000; display: flex; align-items: flex-end; justify-content: center; background: rgba(0, 0, 0, 0.45); padding: 12px; box-sizing: border-box; }
+  .vprompt[hidden] { display: none; }
+  .vprompt__card { width: min(100%, 420px); padding: 22px 20px calc(env(safe-area-inset-bottom, 0px) + 16px); border-radius: 22px; background: #fff; color: #15171a;
+    font-family: var(--font-sans, -apple-system, Helvetica, Arial, sans-serif); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3); }
+  .vprompt__title { margin: 0 0 6px; font: 800 21px/1.2 var(--font-serif, Georgia, serif); }
+  .vprompt__text { margin: 0 0 18px; font-size: 15px; line-height: 1.5; color: #4a524e; }
+  .vprompt__go { display: block; padding: 15px; border-radius: 14px; background: #1b4332; color: #fff; font-weight: 800; font-size: 16px; text-align: center; text-decoration: none; }
+  .vprompt__later { display: block; width: 100%; margin-top: 8px; padding: 12px; border: 0; background: none; color: #6b746f; font: 700 15px inherit; cursor: pointer; }
+  @media (min-width: 700px) { .vprompt { align-items: center; } }
+  html.is-dark .vprompt__card { background: #1c231f; color: #e4e9e5; }
+  html.is-dark .vprompt__text { color: rgba(228, 233, 229, 0.72); }
+  html.is-dark .vprompt__go { background: #2BEA6B; color: #0b2414; }
+</style>
+<script>
+  // Any request that answers 403 {verify: true} brings up the card (the walk page, the stories feed, comments...).
+  (function () {
+    var box = document.getElementById('vprompt');
+    if (!box || !window.fetch) return;
+    var go = document.getElementById('vprompt-go'), text = document.getElementById('vprompt-text');
+    function open(message) {
+      text.textContent = (message ? message + ' ' : '') + 'We’ll email you a 6-digit code.';
+      go.href = '/welcome?step=verify&next=' + encodeURIComponent(location.pathname + location.search);
+      box.hidden = false;
+    }
+    document.getElementById('vprompt-later').addEventListener('click', function () { box.hidden = true; });
+    box.addEventListener('click', function (e) { if (e.target === box) box.hidden = true; });
+    var plain = window.fetch;
+    window.fetch = function () {
+      return plain.apply(this, arguments).then(function (r) {
+        if (r.status === 403) {
+          r.clone().json().then(function (d) { if (d && d.verify) open(d.error); }).catch(function () {});
+        }
+        return r;
+      });
+    };
+    window.MansfieldVerify = { open: open };
+  })();
+</script>

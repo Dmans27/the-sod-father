@@ -14,7 +14,15 @@
   </div>
   <div class="account-details__row">
     <dt>Email</dt>
-    <dd>{{ reader.email }}</dd>
+    <dd>{{ reader.email }}{% if not reader_state.verified %} &middot; <a href="/welcome?step=verify&next=/account/profile">Verify</a>{% endif %}</dd>
+  </div>
+  <div class="account-details__row">
+    <dt>Your preferences</dt>
+    <dd><a href="/welcome?step=profile&next=/account/profile">Edit</a></dd>
+  </div>
+  <div class="account-details__row">
+    <dt>How it works</dt>
+    <dd><a href="/welcome?step=tour&next=/account/profile">Quick tour</a></dd>
   </div>
   <div class="account-details__row">
     <dt>Saved stories</dt>

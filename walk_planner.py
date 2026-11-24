@@ -170,12 +170,14 @@ Rules:
 """
 
 
-def understand(query, has_location, previous, has_view=False, has_circle=False):
+def understand(query, has_location, previous, has_view=False, has_circle=False, about=""):
     groups = ", ".join(f"{k} ({v})" for k, v in GROUPS.items())
     lines = [f"Reader's request: {query}",
              f"Reader's location available: {'yes' if has_location else 'no'}",
              f"Reader's map view available: {'yes' if has_view else 'no'}",
              f"Reader drew a circle on the map: {'yes' if has_circle else 'no'}"]
+    if about:   # what they told us when they signed up (onboarding.planner_note)
+        lines.append(about)
     if previous:
         lines.append("Previous request: " + _text(previous.get("query"), MAX_QUERY))
         stops = previous.get("stops") or []
@@ -504,9 +506,9 @@ def why_lines(query, stops, settings, start_label):
 
 # ── The whole thing ──────────────────────────────────────────────────────
 
-def plan_walk(query, lat, lng, previous, view=None, circle=None):
+def plan_walk(query, lat, lng, previous, view=None, circle=None, about=""):
     settings = understand(query, lat is not None and lng is not None, previous,
-                          has_view=bool(view), has_circle=bool(circle))
+                          has_view=bool(view), has_circle=bool(circle), about=about)
     # Which area to search: a drawn circle always; the map view when the reader
     # means what's on screen ("food in this area") and hasn't named a place.
     area, area_kind = None, ""
@@ -738,7 +740,8 @@ def api_walk_plan():
         circle["polygon"] = polygon()
     try:
         _check_and_count()
-        result = plan_walk(query, lat, lng, previous, view=area("view"), circle=circle)
+        from onboarding import planner_note
+        result = plan_walk(query, lat, lng, previous, view=area("view"), circle=circle, about=planner_note(current_reader()))
     except WalkError as exc:
         msg = str(exc)
         return jsonify(ok=False, error=msg), (401 if msg == "sign_in" else 429 if "today" in msg else 502)

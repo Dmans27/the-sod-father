@@ -310,6 +310,10 @@ def community_feed(viewer=None, city=None, limit=FEED_LIMIT, center=None):
 @reader_required_json
 def post_walk():
     reader = current_reader()
+    from onboarding import verify_block   # posting needs a verified email (onboarding.py)
+    blocked = verify_block(reader, "post walks")
+    if blocked:
+        return blocked
     _tables()
     form = request.form
     title = _text(form.get("title"), MAX_TITLE)

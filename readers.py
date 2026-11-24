@@ -21,7 +21,7 @@ Storage is db.py (Postgres on Render, SQLite locally).
 """
 import json
 import math
-from urllib.parse import urlencode
+from urllib.parse import quote, urlencode
 import os
 import re
 import secrets
@@ -143,8 +143,19 @@ def _set_saved(reader_id, slug, saved):
                    r=reader_id, s=slug)
 
 
-def _finish_auth(reader_id):
-    """Sign the reader in, apply any pending action, and go back where they were."""
+def _verified(reader):
+    if not reader:
+        return False
+    try:
+        from onboarding import is_verified, required
+        return is_verified(reader) or not required()
+    except Exception:  # noqa: BLE001
+        return False
+
+
+def _finish_auth(reader_id, welcome=False):
+    """Sign the reader in, apply any pending action, and go back where they were
+    (new accounts first go through the welcome screens: email code + a few questions)."""
     session.pop("reader_id", None)
     session["reader_id"] = reader_id
     session.permanent = True  # stay signed in (see PERMANENT_SESSION_LIFETIME below)
@@ -154,6 +165,8 @@ def _finish_auth(reader_id):
         slug = then[len("save:"):]
         if get_article(slug):
             _set_saved(reader_id, slug, True)
+    if welcome:
+        return redirect("/welcome?next=" + quote(safe_next(request.form.get("next")), safe=""))
     return redirect(safe_next(request.form.get("next")))
 
 
@@ -209,7 +222,7 @@ def signup_submit():
         return render_template(
             "account/signup.html", form=form, **ctx,
             error="There's already an account with that email. Try signing in instead."), 400
-    return _finish_auth(reader_id)
+    return _finish_auth(reader_id, welcome=True)
 
 
 @readers_bp.get("/account/login")
@@ -379,6 +392,10 @@ def api_comments(slug):
 def api_comment_create(slug):
     if not get_article(slug):
         return jsonify(error="not_found"), 404
+    from onboarding import verify_block   # comments need a verified email (onboarding.py)
+    blocked = verify_block(current_reader(), "comment")
+    if blocked:
+        return blocked
     reader = current_reader()
     payload = request.get_json(silent=True) or {}
     body = (payload.get("body") or "").strip()
@@ -984,6 +1001,7 @@ def register(app):
             "reader_state": {
                 "signedIn": bool(reader),
                 "name": reader["display_name"] if reader else None,
+                "verified": _verified(reader),
                 "saved": saved,
                 "csrf": csrf_token(),
             },

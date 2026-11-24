@@ -198,6 +198,7 @@
   {% endif %}
 
   {% include "_ask_sheet.html" %}
+  {% if reader and not reader_state.verified %}{% include "_verify_prompt.html" %}{% endif %}
 
   <!-- Bottom navigation bar: phones and the Duo's outer display only
        (the CSS hides it at 700px and wider, where the two-page layout takes

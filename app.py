@@ -30,6 +30,7 @@ from community import community_bp, community_feed, feed_city
 from footprints import footprints_bp
 import city_feed
 from city_feed import city_bp
+from onboarding import onboarding_bp
 import safety
 from seo import seo_bp, register as register_seo
 import readers
@@ -44,6 +45,7 @@ app.register_blueprint(ask_bp)  # "Ask" chat answering from the articles (see as
 app.register_blueprint(walk_bp)  # "Plan a walk": AI walking routes from the directory (see walk_planner.py)
 app.register_blueprint(feed_bp)  # "This week": the weekly AI walk feed, approved by the owner (see walk_feed.py)
 app.register_blueprint(community_bp)  # walks readers post for other walkers in their city (see community.py)
+app.register_blueprint(onboarding_bp)  # email code + the welcome questions after sign-up (see onboarding.py)
 app.register_blueprint(city_bp)  # the city search bar on the stories page (see city_feed.py)
 app.register_blueprint(footprints_bp)  # walkers rate places 1-5 footprints: worth the walk? (see footprints.py)
 app.register_blueprint(seo_bp)  # robots.txt, sitemap.xml, feed.xml, share images (see seo.py)
