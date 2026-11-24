@@ -4,6 +4,10 @@
   "dek": "Learn about the diverse range of AWS services and their categories.",
   "category": "it",
   "subcategory": "careers",
+  "city": "",
+  "city_label": "",
+  "city_lat": null,
+  "city_lng": null,
   "author": "Daniel Mansfield",
   "author_slug": "daniel-mansfield",
   "author_photo": "/static/uploads/authors/daniel-mansfield/photo.jpg",
@@ -11,6 +15,8 @@
   "published_at": "2026-11-16",
   "cover_image": null,
   "featured": false,
+  "map_behind": false,
+  "map_route": false,
   "status": "published",
   "blocks": [
     {
