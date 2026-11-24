@@ -1,0 +1,58 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Community walks{% endblock %}
+
+{% macro walk_card(c, show_reports) %}
+  <div class="admin-card admin-report">
+    <div class="admin-report__head">
+      <strong>{{ c.title }}</strong>
+      <span class="admin-report__meta">by {{ c.by }} ({{ c.email }}) &middot; {{ c.city or 'no city' }} &middot; {{ c.created }} UTC &middot; &hearts; {{ c.likes }}</span>
+    </div>
+    <div style="display:flex;gap:14px;align-items:flex-start;">
+      {% if c.photo %}<a href="{{ c.photo }}" target="_blank" rel="noopener"><img src="{{ c.photo }}" alt="" style="width:120px;height:90px;object-fit:cover;border-radius:8px;"></a>{% endif %}
+      <div style="min-width:0;">
+        {% if c.note %}<p class="admin-report__body" style="white-space:pre-line;">{{ c.note }}</p>{% endif %}
+        <p style="margin:4px 0;font-size:13px;color:var(--ink-faint);">{{ c.stops | map(attribute='name') | join(' → ') }} &middot; <a href="{{ c.link }}" target="_blank" rel="noopener">open ↗</a></p>
+      </div>
+    </div>
+    {% if show_reports %}
+    <p class="admin-report__why">
+      <span class="admin-row__badge" style="margin-left:0;{% if c.hidden %}color:#7d2432;background:rgba(164,48,63,0.12);{% endif %}">{{ c.reports }} report{{ '' if c.reports == 1 else 's' }} &middot; {{ 'hidden from walkers' if c.hidden else 'still visible' }}</span>
+      {{ c.reasons|join(', ') }}
+    </p>
+    {% endif %}
+    <div class="admin-report__actions">
+      {% for action, label, cls in ([('keep', 'Keep', '')] if show_reports else []) + [('remove', 'Remove', ''), ('ban', 'Remove & ban walker', 'admin-btn--danger')] %}
+      <form method="post" action="{{ url_for('community.community_admin_action', walk_id=c.id, action=action) }}"{% if action != 'keep' %} data-confirm="{{ 'Take this walk off the feed?' if action == 'remove' else 'Delete this walker\'s account and posts, and ban their email address?' }}" onsubmit="return confirm(this.dataset.confirm);"{% endif %}>
+        <input type="hidden" name="csrf" value="{{ csrf }}">
+        <button type="submit" class="admin-btn {{ cls }}">{{ label }}</button>
+      </form>
+      {% endfor %}
+    </div>
+  </div>
+{% endmacro %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <h1>Community walks</h1>
+</div>
+<p class="admin-hint">
+  Walks readers post for other walkers in their city. They go live straight away. A walk is hidden from everyone once
+  {{ hide_after }} different people report it, until you decide: <strong>Keep</strong> puts it back for good,
+  <strong>Remove</strong> takes it off the feed, and <strong>Remove &amp; ban</strong> also deletes the walker&rsquo;s account
+  and stops that email signing up again.
+</p>
+
+<h2 style="font-size:18px;margin:22px 0 10px;">Reported{% if reported %} ({{ reported|length }}){% endif %}</h2>
+{% if reported %}
+  <div class="admin-table">{% for c in reported %}{{ walk_card(c, true) }}{% endfor %}</div>
+{% else %}
+  <p class="admin-empty">Nothing reported. 🎉</p>
+{% endif %}
+
+<h2 style="font-size:18px;margin:28px 0 10px;">Latest posts</h2>
+{% if recent %}
+  <div class="admin-table">{% for c in recent %}{{ walk_card(c, false) }}{% endfor %}</div>
+{% else %}
+  <p class="admin-empty">No one has posted a walk yet.</p>
+{% endif %}
+{% endblock %}

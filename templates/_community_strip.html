@@ -1,0 +1,22 @@
+{# "From walkers": walks readers posted for this city (community.py), as a row of cards between the
+   stories. Tapping one opens the same walk pop-up as "Walks this week" (templates/_walk_sheet.html),
+   with the photo, likes and the Report / Hide / Delete menu. Shown only when someone has posted. #}
+{% if community_walks %}
+<section class="walk-strip walk-strip--community" aria-label="From walkers">
+  <div class="walk-strip__head">
+    <span class="walk-strip__kicker">From walkers in {{ feed_city or 'Vienna' }}</span>
+    <a href="/walk" class="walk-strip__more">Share yours &rarr;</a>
+  </div>
+  <div class="walk-strip__row" role="list">
+    {% for c in community_walks %}
+    <a class="walk-strip__card walk-strip__card--c" role="listitem" href="{{ c.link }}" data-walk='{{ c | tojson }}'>
+      {% if c.photo %}<span class="walk-strip__photo" style="background-image: url('{{ c.photo }}')"></span>{% endif %}
+      <span class="walk-strip__by">{{ c.by }} &middot; {{ c.ago }}</span>
+      <span class="walk-strip__title">{{ c.title }}</span>
+      {% if c.note %}<span class="walk-strip__blurb">{{ c.note }}</span>{% endif %}
+      <span class="walk-strip__stops"><span class="walk-strip__heart" aria-label="likes">&hearts; <span data-likes>{{ c.likes }}</span></span> &middot; {{ c.stops | length }} stops &middot; {{ c.stops | map(attribute='name') | join(', ') }}</span>
+    </a>
+    {% endfor %}
+  </div>
+</section>
+{% endif %}

@@ -45,6 +45,7 @@
   var msgStops = msg.querySelector('.walkplan__msg-stops');
   var msgSave = document.getElementById('walkplan-msg-save');
   var msgShare = document.getElementById('walkplan-msg-share');
+  var msgPost = document.getElementById('walkplan-msg-post');   // "Post to feed" after a finished walk (community.js)
   var sheet = document.getElementById('wsheet');
   var sheetTitle = document.getElementById('wsheet-title');
   var sheetSub = document.getElementById('wsheet-sub');
@@ -77,6 +78,7 @@
   var msgTimer = null;
   function say(text, withStops, stay) {
     msgText.textContent = text;
+    if (msgPost) msgPost.hidden = true;
     msgStops.hidden = !withStops;
     if (msgSave) msgSave.hidden = msgShare.hidden = !(withStops && plan);   // a fresh walk: Save and Share right here
     msg.hidden = false;
@@ -97,6 +99,22 @@
   if (msgSave) {
     msgSave.addEventListener('click', function () { saveBtn.click(); });
     msgShare.addEventListener('click', function () { shareBtn.click(); });
+  }
+  if (msgPost) msgPost.addEventListener('click', function () { postToFeed(plan, 'walk'); });
+
+  // ── Community feed: post a walk for other walkers in the city (static/js/community.js) ──
+  function postToFeed(walk, source) {
+    if (!walk || !window.MansfieldCommunity) return;
+    var stops = (walk.stops || []).filter(function (x) { return x && x.slug; })
+      .map(function (x, i) { return { slug: x.slug, name: x.name || ('Stop ' + (i + 1)) }; });
+    if (stops.length < 2) return;
+    window.MansfieldCommunity.compose({ title: walk.title || '', stops: stops, source: source,
+      onPosted: function () { msg.hidden = true; } });
+  }
+  function offerPost() {
+    if (!plan || !plan.stops || plan.stops.length < 2 || !window.MansfieldCommunity) return;
+    say('You made it: all ' + plan.stops.length + ' stops! Share this walk with walkers in ' + (window.FEED_CITY || 'your city') + '?', false, true);
+    if (msgPost) msgPost.hidden = false;
   }
 
   // ── Location (asked once per visit, only when planning) ──────────────
@@ -453,6 +471,7 @@
       }
       act('Open on map', 'is-primary', function () { openRoute(rt); });
       act('Share', '', function (b) { shareList(rt.title, rt.stops, b); });
+      act('Post to feed', 'is-post', function () { postToFeed(rt, 'route'); });
       act('Edit', '', function () { building = { id: rt.id, title: rt.title, picks: rt.stops.map(function (x) { return { slug: x.slug, name: x.name }; }) }; paintMineView(); });
       act('Delete', 'is-danger', function () {
         if (!window.confirm('Delete “' + rt.title + '”?')) return;
@@ -641,6 +660,10 @@
       if (minePullX !== null && minePullX - e.touches[0].clientX > 24) { minePullX = null; setMine(true); }
     }, { passive: true });
     mine.querySelector('.walkplan__drawer-close').addEventListener('click', function () { setMine(false); });
+    // "Build a route" in the drawer's From walkers slide: open My places on My routes.
+    Array.prototype.forEach.call(document.querySelectorAll('[data-open-routes]'), function (b) {
+      b.addEventListener('click', function () { setDrawer(false); mineView = 'routes'; setMine(true); });
+    });
     if (mineTabs) Array.prototype.forEach.call(mineTabs.querySelectorAll('[data-mine-view]'), function (b) {
       b.addEventListener('click', function () { mineView = b.getAttribute('data-mine-view'); paintMineView(); });
     });
@@ -901,6 +924,14 @@
       renderSheet();
       if (!plan.key) checkSaved();
       makeShare();
+      loadFootprints();
+    } else if (t === 'mansfield:rate') {   // a footprint rating from the map's "You're at stop 2" card
+      var rslug = String(e.data.listing || ''), rsteps = Math.round(Number(e.data.steps));
+      if (!window.MansfieldFootprints || !READER.signedIn || !(rsteps >= 0 && rsteps <= 5)) return;
+      var rstop = plan && plan.stops.filter(function (x) { return x.slug === rslug; })[0];
+      if (!rstop) return;
+      window.MansfieldFootprints.rate(rslug, rsteps, { visited: true, walk: plan.key, name: rstop.name })
+        .then(sendFootprints, sendFootprints);
     } else if (t === 'mansfield:route-walk') {
       legs = Array.isArray(e.data.legs) ? e.data.legs.map(Number) : legs;
       durations = Array.isArray(e.data.durations) ? e.data.durations.map(Number) : null;
@@ -914,8 +945,27 @@
       if (e.data.on) track('start');
       sendInsets();   // Start walk is on: the map's walk banner takes the top
       if (e.data.on) msg.hidden = true;
+      if (!e.data.on && e.data.finished) offerPost();   // reached the last stop: offer to post it to the feed
     }
   });
+
+  // ── Footprints: "worth the walk?" ratings of the stops (static/js/footprints.js) ──
+  // The map gets them too, for its stop cards and the "You're at stop 2" card (mansfield:footprints).
+  function sendFootprints(repaint) {
+    var d = window.MansfieldFootprints && window.MansfieldFootprints.data;
+    if (!d || !plan) return;
+    var mine = {}, stats = {};
+    plan.stops.forEach(function (x) {
+      if (d.mine[x.slug]) mine[x.slug] = d.mine[x.slug];
+      if (d.stats[x.slug]) stats[x.slug] = d.stats[x.slug];
+    });
+    post({ type: 'mansfield:footprints', signedIn: !!READER.signedIn, mine: mine, stats: stats });
+    if (repaint !== false && sheet.classList.contains('is-open')) renderSheet();
+  }
+  function loadFootprints() {
+    if (!plan || !window.MansfieldFootprints) return;
+    window.MansfieldFootprints.load(plan.stops.map(function (x) { return x.slug; })).then(sendFootprints);
+  }
 
   // ── The list of stops ─────────────────────────────────────────────────
   function legText(i) {
@@ -952,8 +1002,15 @@
       var meta = [];
       if (s.rating) meta.push('★ ' + Number(s.rating).toFixed(1));
       if (s.category) meta.push(s.category);
-      if (meta.length) body.appendChild(el('div', 'wsheet__meta', meta.join(' · ')));
+      var fp = window.MansfieldFootprints;
+      var walkers = fp && s.slug ? fp.badgeEl(s.slug) : null;   // "4.6 · 3 walkers" found it worth the walk
+      if (meta.length || walkers) {
+        var metaEl = el('div', 'wsheet__meta', meta.join(' · '));
+        if (walkers) { if (meta.length) metaEl.appendChild(document.createTextNode(' · ')); metaEl.appendChild(walkers); }
+        body.appendChild(metaEl);
+      }
       if (s.why) body.appendChild(el('p', 'wsheet__why', s.why));
+      if (fp && s.slug) body.appendChild(fp.row(s.slug, s.name, { walk: plan.key, onRated: function () { sendFootprints(false); } }));
       var show = el('button', 'wsheet__show', 'Show on map');
       show.type = 'button';
       show.addEventListener('click', function () {

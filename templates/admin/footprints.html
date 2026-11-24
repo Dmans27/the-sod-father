@@ -1,0 +1,67 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Footprints{% endblock %}
+
+{% block admin_content %}
+<style>
+  .fp-summary { border: 1px solid var(--line, #e3e3e3); border-radius: 12px; padding: 14px 16px; margin: 0 0 22px; }
+  .fp-summary h2 { font-size: 18px; margin: 0 0 4px; }
+  .fp-summary__body { white-space: pre-line; font-size: 15px; line-height: 1.55; margin: 10px 0 0; }
+  .fp-sub { margin: 0; font-size: 13px; color: var(--ink-faint, #666); }
+  .fp-table { width: 100%; border-collapse: collapse; font-size: 14.5px; }
+  .fp-table th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-faint, #666); padding: 8px 8px; border-bottom: 1px solid var(--line, #ddd); }
+  .fp-table td { padding: 9px 8px; border-bottom: 1px solid var(--line, #eee); vertical-align: middle; }
+  .fp-table td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .fp-bar { display: inline-block; height: 8px; border-radius: 4px; background: #2BEA6B; vertical-align: middle; margin-right: 8px; }
+  .fp-rank { color: var(--ink-faint, #666); width: 28px; }
+  .fp-slug { display: block; font-size: 12px; color: var(--ink-faint, #888); }
+  @media (max-width: 640px) { .fp-hide-sm { display: none; } }
+</style>
+
+<div class="admin-page-head">
+  <h1>Footprints</h1>
+</div>
+<p class="admin-hint">
+  Walkers rate places from 1 to 5 footprints: how worth the walk it is. They rate from the walk's list of stops, or on
+  the card that pops up when they reach a stop. A rating from someone who actually reached the stop counts {{ visited_weight }}&times;.
+  <strong>Score</strong> ranks the places: it's the average, pulled towards 3.5 until enough people have rated, so one
+  5-footprint rating can't top the list. The walk planner and the weekly feed draft both use it. {{ total }} rating{{ '' if total == 1 else 's' }} so far.
+</p>
+
+<section class="fp-summary">
+  <h2>AI summary</h2>
+  {% if latest %}
+    <p class="fp-sub">Written {{ latest.created_at[:16] | replace('T', ' ') }} UTC</p>
+    <p class="fp-summary__body">{{ latest.body }}</p>
+  {% else %}
+    <p class="fp-sub">No summary yet.</p>
+  {% endif %}
+  {% if ai and board %}
+  <form method="post" action="{{ url_for('footprints.admin_summary') }}" class="wf-row" style="margin-top:12px;"
+        onsubmit="this.querySelector('button').disabled = true; this.querySelector('button').textContent = 'Writing… (up to a minute)';">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <button type="submit" class="admin-btn admin-btn--primary">{{ 'Write a new summary' if latest else 'Write a summary' }}</button>
+  </form>
+  {% endif %}
+</section>
+
+{% if board %}
+<table class="fp-table">
+  <thead><tr><th class="fp-rank">#</th><th>Place</th><th>Score</th><th>Average</th><th>Walkers</th><th class="fp-hide-sm">Visited</th><th class="fp-hide-sm">Last rated</th></tr></thead>
+  <tbody>
+  {% for p in board %}
+    <tr>
+      <td class="fp-rank">{{ loop.index }}</td>
+      <td>{{ p.name }}<span class="fp-slug">{{ p.slug }}</span></td>
+      <td class="num"><span class="fp-bar" style="width: {{ (p.score / 5 * 60) | round(0, 'floor') | int }}px"></span>{{ '%.2f' | format(p.score) }}</td>
+      <td class="num">{{ '%.1f' | format(p.avg) }}</td>
+      <td class="num">{{ p.n }}</td>
+      <td class="num fp-hide-sm">{{ p.visited }}</td>
+      <td class="num fp-hide-sm">{{ p.last }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+</table>
+{% else %}
+  <p class="admin-empty">No one has rated a place yet. Ratings appear here as soon as walkers start leaving footprints.</p>
+{% endif %}
+{% endblock %}

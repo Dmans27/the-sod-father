@@ -29,6 +29,13 @@
   html.is-dark .walk-strip__tag { background: rgba(127, 209, 166, 0.16); color: #9fe0bd; }
   html.is-dark .walk-strip__blurb { color: rgba(228, 233, 229, 0.8); }
   html.is-dark .walk-strip__stops { color: rgba(228, 233, 229, 0.6); }
+  /* "From walkers" (templates/_community_strip.html) */
+  .walk-strip__photo { display: block; height: 130px; margin: -14px -15px 4px; border-radius: 14px 14px 0 0; background: var(--cream-deep) center / cover no-repeat; }
+  .walk-strip__by { font-size: 12px; font-weight: 700; color: var(--ink-faint); }
+  .walk-strip__heart { color: #e5344f; font-weight: 700; }
+  .walk-strip--community .walk-strip__card { overflow: hidden; }
+  html.is-dark .walk-strip__by { color: rgba(228, 233, 229, 0.6); }
+  html.is-dark .walk-strip__heart { color: #ff5a6e; }
 </style>
 {% endblock %}
 
@@ -55,9 +62,9 @@
     </div>
     {{ story_actions(story.slug, story.title, story.slug in saved_slugs, comment_counts.get(story.slug, 0)) }}
   </a>
-  {% if loop.first %}{% include "_walk_strip.html" %}{% endif %}
+  {% if loop.first %}{% include "_walk_strip.html" %}{% include "_community_strip.html" %}{% endif %}
 {% endfor %}
-{% if not featured %}{% include "_walk_strip.html" %}{% endif %}
+{% if not featured %}{% include "_walk_strip.html" %}{% include "_community_strip.html" %}{% endif %}
 
 <div class="story-list" id="card-grid">
   {% for article in articles %}
@@ -81,7 +88,9 @@
 {% endif %}
 
 {% include "_article_sheet.html" %}
-{% if walk_feed %}{% include "_walk_sheet.html" %}{% endif %}
+{% if walk_feed or community_walks %}{% include "_walk_sheet.html" %}{% endif %}
+{% if community_walks %}{% include "_community_ui.html" %}{% endif %}
+{% if walk_feed or community_walks %}{% include "_footprints_ui.html" %}{% endif %}
 
 <script>
   // Article data for every card on this page, embedded once so opening a

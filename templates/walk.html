@@ -119,6 +119,7 @@
   .walkplan__route-actions button { padding: 8px 13px; border: 0.5px solid rgba(255, 255, 255, 0.25); border-radius: 999px; background: none; color: #fff;
     font: 700 13.5px var(--font-sans); cursor: pointer; }
   .walkplan__route-actions button.is-primary { background: #2BEA6B; border-color: #2BEA6B; color: #0b2414; }
+  .walkplan__route-actions button.is-post { border-color: #2BEA6B; color: #2BEA6B; }
   .walkplan__route-actions button.is-danger { color: #ff8a80; border-color: rgba(255, 138, 128, 0.4); }
   /* Route builder */
   .walkplan__build-name { width: 100%; box-sizing: border-box; margin: 0 0 12px; padding: 12px 14px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px;
@@ -203,6 +204,26 @@
   .walkplan__dot::before { content: ""; width: 8px; height: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.3); transition: width 0.2s, background 0.2s; }
   .walkplan__dot.is-on { width: 34px; }
   .walkplan__dot.is-on::before { width: 22px; background: #2BEA6B; }
+  /* From walkers: walks readers posted (community.py) */
+  .walkplan__cwalks { display: flex; flex-direction: column; gap: 10px; }
+  .walkplan__cwalk { position: relative; border-radius: 14px; overflow: hidden; background: rgba(255, 255, 255, 0.07); border: 0.5px solid rgba(255, 255, 255, 0.16); }
+  .walkplan__cwalk-link { display: block; color: #fff; text-decoration: none; }
+  .walkplan__cwalk-link:active { background: rgba(255, 255, 255, 0.06); }
+  .walkplan__cwalk-photo { display: block; height: 150px; background: rgba(255, 255, 255, 0.06) center / cover no-repeat; }
+  .walkplan__cwalk-body { display: flex; flex-direction: column; gap: 5px; padding: 12px 14px 46px; }
+  .walkplan__cwalk-by { font-size: 12px; font-weight: 600; color: rgba(255, 255, 255, 0.6); }
+  .walkplan__cwalk-note { white-space: pre-line; }
+  .walkplan__cwalk-acts { position: absolute; left: 6px; right: 6px; bottom: 4px; display: flex; align-items: center; justify-content: space-between; }
+  .walkplan__cwalk-like, .walkplan__cwalk-more { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 6px 10px; border: 0; border-radius: 999px;
+    background: none; color: rgba(255, 255, 255, 0.8); font: 700 14px var(--font-sans); cursor: pointer; }
+  .walkplan__cwalk-like svg { width: 19px; height: 19px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+  .walkplan__cwalk-like.is-on { color: #ff5a6e; }
+  .walkplan__cwalk-like.is-on svg { fill: currentColor; }
+  .walkplan__cwalk-more { font-size: 18px; letter-spacing: 1px; line-height: 1; }
+  .walkplan__cwalk-invite { display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 14px; border: 1px dashed rgba(43, 234, 107, 0.45); font-size: 13.5px; line-height: 1.45; color: rgba(255, 255, 255, 0.78); }
+  .walkplan__cwalk-invite > b { color: #fff; font-size: 15px; }
+  .walkplan__cwalk-cta { align-self: flex-start; margin-top: 4px; padding: 9px 14px; border: 0; border-radius: 999px; background: #2BEA6B; color: #0b2414; font: 800 14px var(--font-sans); cursor: pointer; }
+  .walkplan__msg-act--post { background: #2BEA6B; border-color: #2BEA6B; color: #0b2414; }
   .walkplan__drawer-plan { display: block; margin-top: 18px; padding: 12px; border-radius: 999px; background: #fff; color: #15171a; font-weight: 800; text-align: center; text-decoration: none; border: 0; width: 100%; font-size: 14.5px; cursor: pointer; }
   /* iPad and wider: the drawer comes across the whole page as a feed, with bigger cards in two columns */
   .walkplan__drawer-inner { max-width: 880px; margin: 0 auto; }
@@ -225,6 +246,9 @@
     .walkplan__week-blurb { font-size: 16px; line-height: 1.5; }
     .walkplan__week-stops { font-size: 14px; margin-top: auto; padding-top: 4px; }
     .walkplan__reads { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .walkplan__cwalks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .walkplan__cwalk { border-radius: 18px; }
+    .walkplan__cwalk-photo { height: 200px; }
     .walkplan__reads .walkplan__read { flex-direction: column; align-items: stretch; gap: 0; padding: 0; border: 0.5px solid rgba(255, 255, 255, 0.16);
       border-radius: 18px; overflow: hidden; background: rgba(255, 255, 255, 0.05); }
     .walkplan__reads .walkplan__read-thumb { flex: none; width: 100%; height: auto; aspect-ratio: 16 / 9; border-radius: 0; }
@@ -346,14 +370,17 @@
       <button type="button" class="walkplan__idea" role="listitem">Bars for tonight in this area</button>
       <button type="button" class="walkplan__idea" role="listitem">Museums and a cafe in Vienna's old town</button>
     </div>
-    {# Walks to try and Good reads sit side by side: swipe left and right (or tap the dots) to switch. #}
-    {% set slide_count = (1 if feed else 0) + (1 if reads else 0) %}
-    {% if slide_count %}
-    <div class="walkplan__slides{% if slide_count > 1 %} is-multi{% endif %}" id="walkplan-slides">
-    {% if slide_count > 1 %}
+    {# Walks to try, Good reads and From walkers sit side by side: swipe left and right (or tap the dots) to switch. #}
+    {% set slides = [] %}
+    {% if feed %}{% set _ = slides.append('Walks to try') %}{% endif %}
+    {% if reads %}{% set _ = slides.append('Good reads') %}{% endif %}
+    {% set _ = slides.append('From walkers') %}
+    <div class="walkplan__slides{% if slides|length > 1 %} is-multi{% endif %}" id="walkplan-slides">
+    {% if slides|length > 1 %}
     <div class="walkplan__dots" role="tablist" aria-label="Sections">
-      <button type="button" class="walkplan__dot is-on" role="tab" aria-selected="true" aria-label="Walks to try"></button>
-      <button type="button" class="walkplan__dot" role="tab" aria-selected="false" aria-label="Good reads"></button>
+      {% for label in slides %}
+      <button type="button" class="walkplan__dot{% if loop.first %} is-on{% endif %}" role="tab" aria-selected="{{ 'true' if loop.first else 'false' }}" aria-label="{{ label }}"></button>
+      {% endfor %}
     </div>
     {% endif %}
     <div class="walkplan__slides-track">
@@ -389,9 +416,38 @@
     </div>
     </section>
     {% endif %}
+    {# Walks other readers posted for this city (community.py). Like, or Report / Hide / Delete with the ⋯ button. #}
+    <section class="walkplan__slide" aria-label="From walkers">
+    <p class="walkplan__drawer-sub">From walkers</p>
+    <div class="walkplan__cwalks">
+    {% for c in community or [] %}
+    <div class="walkplan__cwalk" data-cwalk='{{ {"id": c.id, "title": c.title, "by": c.by, "mine": c.mine, "liked": c.liked, "likes": c.likes} | tojson }}'>
+      <a class="walkplan__cwalk-link" href="{{ c.link }}">
+        {% if c.photo %}<span class="walkplan__cwalk-photo" style="background-image: url('{{ c.photo }}')"></span>{% endif %}
+        <span class="walkplan__cwalk-body">
+          <span class="walkplan__cwalk-by">{{ c.by }} · {{ c.ago }}{% if c.district %} · {{ c.district.split(' · ')[0] }}{% endif %}</span>
+          <span class="walkplan__week-title">{{ c.title }}</span>
+          {% if c.note %}<span class="walkplan__week-blurb walkplan__cwalk-note">{{ c.note }}</span>{% endif %}
+          <span class="walkplan__week-stops">{{ c.stops | length }} stops · {{ c.stops | map(attribute='name') | join(', ') }}</span>
+        </span>
+      </a>
+      <div class="walkplan__cwalk-acts">
+        <button type="button" class="walkplan__cwalk-like{% if c.liked %} is-on{% endif %}" data-cwalk-like aria-pressed="{{ 'true' if c.liked else 'false' }}" aria-label="Like">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z"/></svg><span data-cwalk-likes>{{ c.likes }}</span>
+        </button>
+        <button type="button" class="walkplan__cwalk-more" data-cwalk-more aria-label="More options for this walk">&middot;&middot;&middot;</button>
+      </div>
+    </div>
+    {% endfor %}
+    <div class="walkplan__cwalk-invite">
+      <b>{% if community %}Share yours{% else %}Be the first to share a walk in {{ feed_city or 'Vienna' }}{% endif %}</b>
+      <span>Build a route from your saved places, or finish a walk, then tap <b>Post to feed</b>.</span>
+      <button type="button" class="walkplan__cwalk-cta" data-open-routes>Build a route</button>
     </div>
     </div>
-    {% endif %}
+    </section>
+    </div>
+    </div>
     <a class="walkplan__drawer-all" href="/">All stories &rarr;</a>
     <button type="button" class="walkplan__drawer-plan" data-drawer-close>Plan my own walk</button>
    </div>
@@ -416,6 +472,7 @@
       <button type="button" class="walkplan__msg-stops" hidden>See the stops</button>
       <button type="button" class="walkplan__msg-act" id="walkplan-msg-save" aria-pressed="false" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h11v17l-5.5-4-5.5 4z"/></svg><span>Save</span></button>
       <button type="button" class="walkplan__msg-act" id="walkplan-msg-share" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 15V3.5M7.5 8 12 3.5 16.5 8M5 12.5v7h14v-7"/></svg><span>Share</span></button>
+      <button type="button" class="walkplan__msg-act walkplan__msg-act--post" id="walkplan-msg-post" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 19V6M6.5 11.5 12 6l5.5 5.5"/><path d="M4.5 4h15"/></svg><span>Post to feed</span></button>
       <button type="button" class="walkplan__msg-close" aria-label="Close">&times;</button>
     </div>
   </div>
@@ -462,5 +519,7 @@
 </script>
 {% endif %}
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
-<script src="/static/js/walk-planner.js?v=24" defer></script>
+{% include "_community_ui.html" %}
+{% include "_footprints_ui.html" %}
+<script src="/static/js/walk-planner.js?v=26" defer></script>
 {% endblock %}

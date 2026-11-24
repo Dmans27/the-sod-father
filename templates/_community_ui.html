@@ -1,0 +1,65 @@
+{# Community walks: the "Post to the feed" sheet, the Report / Hide / Delete menu and the little
+   notes at the bottom of the screen (static/js/community.js). Included on the walk page and the stories feed. #}
+<style>
+  .cwalk-toast { position: fixed; z-index: 1600; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 84px); max-width: min(92vw, 420px);
+    transform: translate(-50%, 20px); opacity: 0; pointer-events: none; padding: 11px 16px; border-radius: 14px; background: #15171a; color: #fff;
+    font: 600 14px/1.35 var(--font-sans); text-align: center; box-shadow: 0 8px 28px rgba(0, 0, 0, 0.35); transition: opacity 0.2s, transform 0.2s; }
+  .cwalk-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
+
+  .cwalk-menu { position: fixed; inset: 0; z-index: 1500; display: flex; align-items: flex-end; justify-content: center; background: rgba(0, 0, 0, 0); transition: background 0.2s; }
+  .cwalk-menu.is-open { background: rgba(0, 0, 0, 0.45); }
+  .cwalk-menu__box { width: min(100%, 440px); box-sizing: border-box; padding: 10px 12px calc(env(safe-area-inset-bottom, 0px) + 12px);
+    transform: translateY(100%); transition: transform 0.22s ease; display: flex; flex-direction: column; gap: 8px; }
+  .cwalk-menu.is-open .cwalk-menu__box { transform: none; }
+  .cwalk-menu__title { margin: 0; padding: 12px 14px 4px; border-radius: 14px 14px 0 0; background: #222629; color: rgba(255, 255, 255, 0.65);
+    font: 600 13px var(--font-sans); text-align: center; }
+  .cwalk-menu__title + .cwalk-menu__btn { border-radius: 0 0 14px 14px; margin-top: -8px; }
+  .cwalk-menu__btn { padding: 16px; border: 0; border-radius: 14px; background: #222629; color: #fff; font: 600 16.5px var(--font-sans); cursor: pointer; }
+  .cwalk-menu__btn.is-danger { color: #ff7a72; }
+  .cwalk-menu__btn.is-cancel { margin-top: 4px; font-weight: 800; }
+
+  .cpost { position: fixed; inset: 0; z-index: 1400; display: flex; align-items: flex-end; justify-content: center; background: rgba(0, 0, 0, 0); transition: background 0.25s; }
+  .cpost.is-open { background: rgba(0, 0, 0, 0.5); }
+  .cpost__box { width: min(100%, 520px); max-height: calc(100% - env(safe-area-inset-top, 0px) - 12px); overflow-y: auto; overscroll-behavior: contain; box-sizing: border-box;
+    margin: 0; padding: 18px 20px calc(env(safe-area-inset-bottom, 0px) + 18px); border-radius: 22px 22px 0 0; background: #141618; color: #fff;
+    transform: translateY(100%); transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); font-family: var(--font-sans); }
+  .cpost.is-open .cpost__box { transform: none; }
+  .cpost__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .cpost__h { margin: 0; font: 800 20px/1.2 var(--font-sans); }
+  .cpost__x { width: 34px; height: 34px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.12); color: #fff; font-size: 20px; cursor: pointer; }
+  .cpost__sub { margin: 4px 0 14px; font-size: 14px; color: rgba(255, 255, 255, 0.65); }
+  .cpost__route { display: flex; flex-direction: column; gap: 2px; padding: 11px 13px; margin-bottom: 14px; border-radius: 12px; background: rgba(43, 234, 107, 0.1);
+    border: 0.5px solid rgba(43, 234, 107, 0.3); font-size: 13.5px; }
+  .cpost__route b { color: #2BEA6B; font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; }
+  .cpost__route span { color: rgba(255, 255, 255, 0.85); line-height: 1.4; }
+  .cpost__field { display: block; margin-bottom: 12px; }
+  .cpost__field > span { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; font-weight: 700; color: rgba(255, 255, 255, 0.8); }
+  .cpost__count { font-style: normal; font-weight: 500; color: rgba(255, 255, 255, 0.45); }
+  .cpost__field input, .cpost__field textarea { width: 100%; box-sizing: border-box; padding: 13px 14px; border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 12px;
+    background: #22272a; color: #fff; font: 400 16px/1.4 var(--font-sans); resize: vertical; -webkit-appearance: none; }
+  .cpost__field input:focus, .cpost__field textarea:focus { outline: none; border-color: #2BEA6B; box-shadow: 0 0 0 3px rgba(43, 234, 107, 0.16); }
+  .cpost__field input::placeholder, .cpost__field textarea::placeholder { color: rgba(255, 255, 255, 0.35); }
+  .cpost__photo { margin-bottom: 14px; }
+  .cpost__pick { display: flex; align-items: center; justify-content: center; gap: 8px; padding: 14px; border: 1.5px dashed rgba(255, 255, 255, 0.25); border-radius: 12px;
+    color: rgba(255, 255, 255, 0.85); font-weight: 700; font-size: 15px; cursor: pointer; }
+  .cpost__pick[hidden] { display: none; }
+  .cpost__pick svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linejoin: round; }
+  .cpost__pick input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+  .cpost__preview { position: relative; border-radius: 12px; overflow: hidden; }
+  .cpost__preview[hidden] { display: none; }
+  .cpost__preview img { display: block; width: 100%; max-height: 240px; object-fit: cover; }
+  .cpost__drop { position: absolute; top: 8px; right: 8px; width: 32px; height: 32px; border: 0; border-radius: 50%; background: rgba(0, 0, 0, 0.6); color: #fff; font-size: 18px; cursor: pointer; }
+  .cpost__err { margin: 0 0 10px; padding: 10px 12px; border-radius: 10px; background: rgba(255, 122, 114, 0.14); color: #ffb4ab; font-size: 14px; }
+  .cpost__err[hidden] { display: none; }
+  .cpost__go { width: 100%; padding: 15px; border: 0; border-radius: 14px; background: #2BEA6B; color: #0b2414; font: 800 16.5px var(--font-sans); cursor: pointer; }
+  .cpost__go:disabled { opacity: 0.6; }
+  .cpost__fine { margin: 10px 0 0; font-size: 12.5px; line-height: 1.45; color: rgba(255, 255, 255, 0.5); text-align: center; }
+  html.cpost-open, html.cpost-open body { overflow: hidden; }
+  @media (min-width: 700px) {
+    .cpost { align-items: center; }
+    .cpost__box { border-radius: 22px; transform: translateY(30px); opacity: 0; transition: transform 0.25s ease, opacity 0.2s; }
+    .cpost.is-open .cpost__box { transform: none; opacity: 1; }
+  }
+</style>
+<script>window.FEED_CITY = {{ (feed_city or 'Vienna') | tojson }};</script>
+<script src="/static/js/community.js?v=1" defer></script>

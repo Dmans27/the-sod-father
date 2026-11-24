@@ -302,6 +302,9 @@ def _score(p):
         s += 2.0 + (float(mine) - 3.5) * 1.5
     elif p.get("myTake"):
         s += 1.5
+    # Walkers' footprints (footprints.py): already pulled towards 3.5 until enough people rated.
+    if p.get("walkerScore"):
+        s += (float(p["walkerScore"]) - 3.5) * 1.2
     if p.get("distance") is not None:
         s -= p["distance"] / 1000.0 * 0.7
     return s
@@ -361,7 +364,7 @@ def walking_order(stops, start):
 
 WHY_SYSTEM = """You write the short notes for a walking route in a city guide. You get the reader's request and the chosen stops with their facts.
 Return JSON only: {"intro": "one friendly sentence introducing the walk (max 25 words)", "why": ["one line per stop, in order"]}
-Each line: at most 14 words, why this stop fits the request, using ONLY the facts given (rating, kind of place, description, distance, the curator's take and tags). When a stop has the curator's take, base its line on that, in the same spirit (don't quote it word for word). Never invent dishes, prices, opening hours or anything else not given. No emojis."""
+Each line: at most 14 words, why this stop fits the request, using ONLY the facts given (rating, kind of place, description, distance, the curator's take and tags, what walkers rated it). When a stop has the curator's take, base its line on that, in the same spirit (don't quote it word for word). Never invent dishes, prices, opening hours or anything else not given. No emojis."""
 
 
 def why_lines(query, stops, settings, start_label):
@@ -376,6 +379,8 @@ def why_lines(query, stops, settings, start_label):
             bits.append(f"{CURATOR} rates it {s['myRating']}/5")
         if s.get("myTags"):
             bits.append("tags: " + s["myTags"][:120])
+        if s.get("walkerN"):
+            bits.append(f"walkers rate it {s['walkerAvg']}/5 footprints for being worth the walk ({s['walkerN']} ratings)")
         if s.get("about"):
             bits.append("about: " + s["about"][:160])
         if i == 0 and s.get("distance") is not None and start_label:
@@ -449,6 +454,11 @@ def plan_walk(query, lat, lng, previous, view=None, circle=None):
         else:
             break
 
+    try:   # how worth the walk walkers found each place (footprints.py) counts in the pick
+        import footprints
+        footprints.attach(places + kept)
+    except Exception as exc:  # noqa: BLE001
+        print("walk: footprints unavailable:", exc)
     stops = pick(places, count, settings["groups"], kept, dropped)
     if not stops:
         where = ("inside the area you drew" if area_kind == "circle" else "in this part of the map" if area_kind == "view"
@@ -535,9 +545,10 @@ def walk_page():
         counts = readers.comment_counts()
     except Exception:
         counts = {}
+    from community import community_feed   # "From walkers": walks readers posted for this city (community.py)
     return render_template("walk.html", directory=directory_url(), categories=CATEGORIES, active_category=None,
                            feed=published_feed(), reads=related_reads(articles=articles), reads_data=articles,
-                           comment_counts=counts, feed_city=_city())
+                           comment_counts=counts, feed_city=_city(), community=community_feed(current_reader(), _city()))
 
 
 def _guard():

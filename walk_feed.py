@@ -196,7 +196,8 @@ Rules:
 - Use "This season" for a walk that fits the time of year.
 - title: at most 45 characters, specific and inviting (e.g. "Warm-up coffee crawl in the 7th").
 - blurb: one or two sentences, at most 150 characters, friendly, no hype, no emojis. You can quote a few words of CURATOR's take.
-- Don't repeat the same place in more than two walks."""
+- Don't repeat the same place in more than two walks.
+- Favour places walkers rated worth the walk (4 or more footprints out of 5). Avoid places walkers rated under 3 when 3 or more rated them."""
 
 
 def _prompt(city, today, places, signals):
@@ -211,7 +212,7 @@ def _prompt(city, today, places, signals):
             lines.append(f"- searched for \"{s['text'][:80]}\": {s['people']} people")
     else:
         lines.append("What readers did in the last 7 days: not enough activity yet (don't use Trending or People asked for).")
-    lines += ["", "Candidates (slug | name | category | rating | lng,lat | curator):"]
+    lines += ["", "Candidates (slug | name | category | rating | lng,lat | curator | walkers: footprints out of 5 for being worth the walk):"]
     for p in places:
         bits = [p["slug"], wp._text(p.get("name"), 60), wp._text(p.get("category"), 30).replace("_", " "),
                 str(p.get("rating") or "-"), f"{float(p['lng']):.4f},{float(p['lat']):.4f}"]
@@ -221,6 +222,7 @@ def _prompt(city, today, places, signals):
         if p.get("myTake"):
             mine.append("take: " + wp._text(p["myTake"], 160))
         bits.append("; ".join(mine) or "-")
+        bits.append(f"{p['walkerAvg']}/5 from {p['walkerN']} walkers" if p.get("walkerN") else "-")
         lines.append(" | ".join(bits))
     return "\n".join(lines)
 
@@ -271,13 +273,19 @@ def make_draft():
         raise wp.WalkError("The AI isn't set up (no API key), so a feed can't be written.")
     city, today = _city(), date.today()
     places = _directory_places(city)
+    try:   # what walkers rated each place (footprints.py); rated places go first so they're among the candidates
+        import footprints
+        footprints.attach(places.values())
+    except Exception as exc:  # noqa: BLE001
+        print("feed: footprints unavailable:", exc)
+    candidates = sorted(places.values(), key=lambda p: (0, -p["walkerScore"]) if p.get("walkerN") else (1, 0))[:80]
     signals = _signals()
     system = FEED_SYSTEM.replace("CURATOR", wp.CURATOR).replace("TAGS", ", ".join(
         '"' + t.replace("Danny", wp.CURATOR) + '"' for t in TAGS))
     data = ask_engine._post("/chat/completions", {
         "model": os.environ.get("WALK_MODEL", "").strip() or ask_engine.chat_model(),
         "messages": [{"role": "system", "content": system},
-                     {"role": "user", "content": _prompt(city, today, list(places.values())[:80], signals)}],
+                     {"role": "user", "content": _prompt(city, today, candidates, signals)}],
         "temperature": 0.5, "max_tokens": 1200, "response_format": {"type": "json_object"},
     }, timeout=60)
     try:

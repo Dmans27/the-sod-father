@@ -28,7 +28,7 @@
 
   var $ = function (id) { return document.getElementById(id); };
   var mapBox = $('wpop-map'), panel = sheet.querySelector('.wpop__panel');
-  var frame = null, origin = '', asking = null, current = null, realTime = false, lastFocus = null;
+  var frame = null, origin = '', asking = null, current = null, currentCard = null, realTime = false, lastFocus = null, lastExtra = null;
 
   function ordinal(n) {
     var s = (n % 100 >= 11 && n % 100 <= 13) ? 'th' : ({ 1: 'st', 2: 'nd', 3: 'rd' }[n % 10] || 'th');
@@ -71,8 +71,11 @@
       var b = document.createElement('b'); b.textContent = s.name || '';
       box.appendChild(b);
       var info = extra && extra[i];
-      if (info && info.category) {
-        var c = document.createElement('span'); c.textContent = String(info.category).replace(/_/g, ' ');
+      var fp = window.MansfieldFootprints, walkers = fp && s.slug ? fp.badgeEl(s.slug) : null;   // "4.6 · 3 walkers"
+      if ((info && info.category) || walkers) {
+        var c = document.createElement('span');
+        if (info && info.category) c.textContent = String(info.category).replace(/_/g, ' ');
+        if (walkers) { if (info && info.category) c.appendChild(document.createTextNode(' · ')); c.appendChild(walkers); }
         box.appendChild(c);
       }
       li.appendChild(num); li.appendChild(box);
@@ -120,6 +123,7 @@
       $('wpop-where').hidden = !where;
       $('wpop-where').querySelector('span').textContent = where;
       fillStops(current.stops, got);
+      lastExtra = got;
       if (!realTime && Number(e.data.total) > 0) {   // a first guess from straight lines, until the real path comes
         var m = Number(e.data.total) * 1.3;
         $('wpop-time').textContent = '≈' + minutes(m / 1.33);
@@ -147,6 +151,12 @@
     $('wpop-stopcount').textContent = data.stops.length + ' stops';
     setWalked(data.walked);
     fillStops(data.stops, null);
+    lastExtra = null;
+    if (window.MansfieldFootprints) {   // what walkers rated the stops
+      window.MansfieldFootprints.load(data.stops.map(function (x) { return x.slug; })).then(function () {
+        if (current === data) fillStops(data.stops, lastExtra);
+      });
+    }
     var link = String(data.link || '');
     $('wpop-cta').href = /^\/walk(\?|$)/.test(link) ? link : '/walk';
     mapBox.classList.remove('is-ready');
@@ -157,8 +167,50 @@
     document.documentElement.classList.add('wpop-open');
     lastFocus = document.activeElement;
     setTimeout(function () { var c = sheet.querySelector('.wpop__close'); if (c) c.focus({ preventScroll: true }); }, 60);
+    paintCommunity(data);
     if (data.map) loadMap(data.map);
   }
+
+  // ---- Community walks (community.py): who shared it, their photo, likes, the ⋯ menu ----
+  var likeBtn = $('wpop-like'), moreBtn = $('wpop-more'), photoEl = $('wpop-photo');
+  function paintCommunity(data) {
+    var shared = !!data.id;   // a walk a reader posted
+    if (shared && data.ago) $('wpop-tag').textContent = (data.tag || '') + ' · ' + data.ago;
+    $('wpop-blurb').classList.toggle('is-note', shared);
+    if (photoEl) {
+      if (shared && data.photo) { photoEl.src = data.photo; photoEl.hidden = false; }
+      else { photoEl.hidden = true; photoEl.removeAttribute('src'); }
+    }
+    if (moreBtn) moreBtn.hidden = !shared || !window.MansfieldCommunity;
+    if (likeBtn) {
+      likeBtn.hidden = !shared || !window.MansfieldCommunity;
+      likeBtn.classList.toggle('is-on', !!data.liked);
+      likeBtn.setAttribute('aria-pressed', data.liked ? 'true' : 'false');
+      likeBtn.querySelector('span').textContent = String(data.likes || 0);
+    }
+  }
+  function remember() {   // the card keeps what changed, for the next time it's opened
+    if (currentCard && current) currentCard.setAttribute('data-walk', JSON.stringify(current));
+    var n = currentCard && currentCard.querySelector('[data-likes]');
+    if (n && current) n.textContent = String(current.likes || 0);
+  }
+  if (likeBtn) likeBtn.addEventListener('click', function () {
+    if (!current || !current.id || !window.MansfieldCommunity) return;
+    if (current.mine) { window.MansfieldCommunity.toast('That’s your own walk.'); return; }
+    var walk = current;
+    window.MansfieldCommunity.like(walk.id).then(function (d) {
+      walk.liked = d.liked; walk.likes = d.likes;
+      if (current === walk) { paintCommunity(walk); remember(); }
+    }).catch(function (err) { if (err.message !== 'sign_in') window.MansfieldCommunity.toast(err.message); });
+  });
+  if (moreBtn) moreBtn.addEventListener('click', function () {
+    if (!current || !current.id || !window.MansfieldCommunity) return;
+    var card = currentCard;
+    window.MansfieldCommunity.menu(current, function () {
+      close();
+      if (card) card.style.display = 'none';
+    });
+  });
   function close() {
     if (!sheet.classList.contains('is-open')) return;
     stopAsking();
@@ -179,6 +231,7 @@
       try { data = JSON.parse(card.getAttribute('data-walk')); } catch (err) { return; }
       if (!data || !Array.isArray(data.stops) || data.stops.length < 2) return;
       e.preventDefault();
+      currentCard = card;
       open(data);
     });
   });

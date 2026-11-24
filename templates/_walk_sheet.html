@@ -55,6 +55,24 @@
   .wpop__cta:active { filter: brightness(1.15); }
   .wpop__cta-note { margin: 8px 0 0; text-align: center; font-size: 12.5px; color: var(--ink-faint); }
   html.wpop-open, html.wpop-open body { overflow: hidden; }
+  .wpop { --fp-on: #1a8f4c; }
+  html.is-dark .wpop { --fp-on: #2BEA6B; }
+  .wpop__stop .fpbadge { text-transform: none; }
+  /* Community walks (community.py): their photo, a like button next to "Map this walk", and the ⋯ menu */
+  .wpop__more { position: absolute; z-index: 3; top: 12px; left: 12px; height: 34px; padding: 0 12px; border: 0; border-radius: 999px;
+    background: rgba(20, 22, 24, 0.72); color: #fff; font-size: 17px; letter-spacing: 1px; cursor: pointer; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+  .wpop__more[hidden], .wpop__like[hidden], .wpop__photo[hidden] { display: none; }
+  .wpop__photo { display: block; width: 100%; max-height: 320px; object-fit: cover; margin: 0 0 16px; border-radius: 14px; background: rgba(0, 0, 0, 0.06); }
+  .wpop__foot-row { display: flex; gap: 10px; }
+  .wpop__foot-row .wpop__cta { flex: 1; }
+  .wpop__like { display: inline-flex; align-items: center; gap: 7px; padding: 0 18px; border: 1px solid var(--line); border-radius: 14px; background: transparent;
+    color: var(--ink); font: 800 16px var(--font-sans); cursor: pointer; }
+  .wpop__like svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+  .wpop__like.is-on { color: #e5344f; border-color: rgba(229, 52, 79, 0.35); }
+  .wpop__like.is-on svg { fill: currentColor; }
+  .wpop__blurb.is-note { white-space: pre-line; }
+  html.is-dark .wpop__like { color: #e4e9e5; border-color: rgba(255, 255, 255, 0.18); }
+  html.is-dark .wpop__like.is-on { color: #ff5a6e; }
   @media (min-width: 700px) {
     .wpop__panel { bottom: auto; top: 50%; border-radius: 22px; max-height: min(88vh, 860px); transform: translateY(calc(-50% + 40px)); opacity: 0;
       transition: transform 0.28s ease, opacity 0.2s; }
@@ -83,6 +101,7 @@
       <div class="wpop__map" id="wpop-map">
         <div class="wpop__grab" aria-hidden="true"></div>
         <button type="button" class="wpop__close" data-wpop-close aria-label="Close">&times;</button>
+        <button type="button" class="wpop__more" id="wpop-more" aria-label="More options for this walk" hidden>&middot;&middot;&middot;</button>
       </div>
       <div class="wpop__body">
         <span class="wpop__tag" id="wpop-tag"></span>
@@ -91,6 +110,7 @@
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
           <span></span>
         </p>
+        <img class="wpop__photo" id="wpop-photo" alt="" hidden>
         <div class="wpop__stats">
           <div class="wpop__stat">
             <b><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg><em id="wpop-time" style="font-style:normal">–</em></b>
@@ -111,12 +131,17 @@
       </div>
     </div>
     <div class="wpop__foot">
+      <div class="wpop__foot-row">
+      <button type="button" class="wpop__like" id="wpop-like" aria-pressed="false" aria-label="Like" hidden>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10.2A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.7c0 5.6-7.5 10.2-7.5 10.2z"/></svg><span>0</span>
+      </button>
       <a class="wpop__cta" id="wpop-cta" href="/walk">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4L3.5 6v14L9 18l6 2 5.5-2V4L15 6z"/><path d="M9 4v14M15 6v14"/></svg>
         Map this walk
       </a>
+      </div>
       <p class="wpop__cta-note">Opens it on your map. You start walking when you're ready.</p>
     </div>
   </div>
 </div>
-<script src="/static/js/walk-sheet.js?v=1" defer></script>
+<script src="/static/js/walk-sheet.js?v=3" defer></script>
