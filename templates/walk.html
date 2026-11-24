@@ -120,6 +120,7 @@
     font: 700 13.5px var(--font-sans); cursor: pointer; }
   .walkplan__route-actions button.is-primary { background: #2BEA6B; border-color: #2BEA6B; color: #0b2414; }
   .walkplan__route-actions button.is-post { border-color: #2BEA6B; color: #2BEA6B; }
+  .walkplan__build-new { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 5px; background: rgba(43, 234, 107, 0.16); color: #2BEA6B; font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; vertical-align: 2px; }
   .walkplan__route-actions button.is-danger { color: #ff8a80; border-color: rgba(255, 138, 128, 0.4); }
   /* Route builder */
   .walkplan__build-name { width: 100%; box-sizing: border-box; margin: 0 0 12px; padding: 12px 14px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px;
@@ -521,5 +522,5 @@
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
 {% include "_community_ui.html" %}
 {% include "_footprints_ui.html" %}
-<script src="/static/js/walk-planner.js?v=26" defer></script>
+<script src="/static/js/walk-planner.js?v=27" defer></script>
 {% endblock %}

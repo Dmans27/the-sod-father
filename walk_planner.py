@@ -289,6 +289,102 @@ def find_places(settings, lat, lng, radius, min_rating, keywords, area=None):
     return center, places
 
 
+# ── Google fallback (the directory's /embed/google-places and /embed/places-import) ─────
+# Where the directory has too few places (a city we haven't covered yet), the walk
+# planner and the route builder search Google live. A Google place only becomes a
+# directory listing when a walker actually picks it (import_google).
+
+GOOGLE_WORDS = {"food": "restaurants", "coffee": "coffee shops", "bars": "bars", "wine": "wine bars",
+                "rooftops": "rooftop bars", "shops": "shops", "hotels": "hotels", "sights": "sights and museums",
+                "other": "things to do"}
+
+
+def google_places(q, lat=None, lng=None, radius=20000, limit=20, rich=False, groups=None, min_rating=0, within=False):
+    """Google's places from the directory app: (places, available). Each place has placeId, and slug if
+    it's already a listing. Never raises."""
+    base, key = directory_url(), (os.environ.get("WALK_PLAN_KEY") or "").strip()
+    if not base or not key or not q:
+        return [], False
+    params = {"q": q[:200], "radius": int(radius), "limit": int(limit)}
+    if lat is not None and lng is not None:
+        params.update(lat=round(lat, 6), lng=round(lng, 6))
+    if rich:
+        params["rich"] = 1
+    if groups:
+        params["groups"] = ",".join(groups)
+    if min_rating:
+        params["min_rating"] = min_rating
+    if within:
+        params["within"] = 1
+    try:
+        r = requests.get(base + "/embed/google-places?" + urlencode(params), headers={"X-Walk-Key": key}, timeout=15)
+        data = r.json() if r.status_code < 300 else {}
+    except (requests.RequestException, ValueError):
+        return [], False
+    places = [p for p in (data.get("places") or []) if isinstance(p, dict) and p.get("placeId")]
+    return places, bool(data.get("available"))
+
+
+def import_google(place_ids):
+    """{placeId: {slug, name, category, address, lat, lng}} for the Google places a walker picked. Never raises."""
+    base, key = directory_url(), (os.environ.get("WALK_PLAN_KEY") or "").strip()
+    ids = [p for p in dict.fromkeys(place_ids or []) if p][:15]
+    if not base or not key or not ids:
+        return {}
+    try:
+        r = requests.post(base + "/embed/places-import", json={"placeIds": ids}, headers={"X-Walk-Key": key}, timeout=25)
+        data = r.json() if r.status_code < 300 else {}
+    except (requests.RequestException, ValueError):
+        return {}
+    out = data.get("places") if isinstance(data.get("places"), dict) else {}
+    return {k: v for k, v in out.items() if isinstance(v, dict) and SLUG.match(str(v.get("slug") or ""))}
+
+
+def google_fill(settings, lat, lng, radius, min_rating, keywords, area, center):
+    """Google places for a walk the directory can't fill: (places shaped like the directory's, center)."""
+    if area:
+        clat, clng, rad = area["lat"], area["lng"], area["radius"]
+    elif center:
+        clat, clng, rad = center[1], center[0], radius
+    elif settings["near_me"] and not settings["place"] and lat is not None and lng is not None:
+        clat, clng, rad = lat, lng, radius
+    else:
+        clat = clng = None
+        rad = radius
+    where = ""
+    if not area:
+        if settings["place"]:
+            where = " near " + settings["place"] + (", " + settings["city"] if settings["city"] else "")
+        elif settings["city"] and clat is None:
+            where = " in " + settings["city"]
+    if keywords:
+        searches = [(" ".join(keywords), list(settings["groups"]))]
+    else:
+        searches = [(GOOGLE_WORDS.get(g, "places"), [g]) for g in (settings["groups"] or ["other"])[:3]]
+    found, seen = [], set()
+    for words, groups in searches:
+        places, ok = google_places(words + where, clat, clng, rad, 20, rich=True, groups=groups,
+                                   min_rating=min_rating, within=bool(area))
+        if not ok:
+            break
+        for p in places:
+            if p["placeId"] in seen:
+                continue
+            seen.add(p["placeId"])
+            p["listed"] = bool(p.get("slug"))
+            p["slug"] = p.get("slug") or ("google-" + p["placeId"])[:200]
+            if area and area.get("polygon") and not _inside((float(p["lng"]), float(p["lat"])), area["polygon"]):
+                continue
+            found.append(p)
+    new_center = center
+    if not new_center and found:
+        new_center = [found[0]["lng"], found[0]["lat"]]
+    if new_center:
+        for p in found:
+            p["distance"] = round(_metres((new_center[0], new_center[1]), (p["lng"], p["lat"])))
+    return found, new_center
+
+
 # ── 3. Picking and ordering the stops ────────────────────────────────────
 
 def _score(p):
@@ -441,7 +537,7 @@ def plan_walk(query, lat, lng, previous, view=None, circle=None):
     for attempt in range(4):
         center, places = find_places(settings, lat, lng, radius, min_rating, keywords, area)
         if center is None and not places:
-            return {"clarify": "Where should the walk be? Turn on location, or name a city or a place to start from."}
+            break          # the directory doesn't know this place: Google may (below)
         usable = [p for p in places if p["slug"] not in dropped]
         if len(usable) + len(kept) >= count:
             break
@@ -454,12 +550,36 @@ def plan_walk(query, lat, lng, previous, view=None, circle=None):
         else:
             break
 
+    # Too few places in the directory here (a city it doesn't cover yet): fill up from Google.
+    google_used = False
+    if len([p for p in places if p["slug"] not in dropped]) + len(kept) < count:
+        have = {p["slug"] for p in places}
+        # Google gets the walker's own request (not the eased one): the pick prefers the best-rated anyway.
+        extra, center = google_fill(settings, lat, lng, settings["radius_m"], 0, settings["keywords"], area, center)
+        extra = [p for p in extra if p["slug"] not in have]
+        places = places + extra
+        if extra:
+            google_used, eased = True, []
+    if center is None and not places:
+        return {"clarify": "Where should the walk be? Turn on location, or name a city or a place to start from."}
+
     try:   # how worth the walk walkers found each place (footprints.py) counts in the pick
         import footprints
         footprints.attach(places + kept)
     except Exception as exc:  # noqa: BLE001
         print("walk: footprints unavailable:", exc)
     stops = pick(places, count, settings["groups"], kept, dropped)
+    pending = [p["placeId"] for p in stops if p.get("placeId") and not p.get("listed")]
+    if pending:   # Google places the walk uses become directory listings, so the map can show them
+        made = import_google(pending)
+        for p in stops:
+            if p.get("placeId") and not p.get("listed"):
+                got = made.get(p["placeId"])
+                if got:
+                    p["slug"], p["listed"] = got["slug"], True
+        stops = [p for p in stops if not p.get("placeId") or p.get("listed")]
+    if google_used and settings["min_rating"] and any((p.get("rating") or 0) < settings["min_rating"] for p in stops):
+        eased.append("rating")
     if not stops:
         where = ("inside the area you drew" if area_kind == "circle" else "in this part of the map" if area_kind == "view"
                  else "near you" if settings["near_me"] else ("around " + (settings["place"] or settings["city"])))
@@ -479,7 +599,7 @@ def plan_walk(query, lat, lng, previous, view=None, circle=None):
 
     note = ""
     if len(stops) < settings["count"]:
-        inside = {"circle": " inside the area you drew", "view": " in this part of the map"}.get(area_kind, " in the directory")
+        inside = {"circle": " inside the area you drew", "view": " in this part of the map"}.get(area_kind, "" if google_used else " in the directory")
         note = f"I only found {len(stops)} that fit{inside}, so the walk is shorter."
     elif "rating" in eased:
         note = "Not enough places had the top ratings, so I included a few rated a little lower."
@@ -672,7 +792,53 @@ def place_search():
                         "category": _text(str(p.get("category") or "").replace("_", " "), 40),
                         "address": _text(p.get("address"), 120), "name_hit": all(w in name.lower() for w in words)})
     out.sort(key=lambda p: not p["name_hit"])   # name matches first, then nearest (the directory's order)
-    return jsonify(ok=True, places=[{k: v for k, v in p.items() if k != "name_hit"} for p in out[:8]])
+    out = [{k: v for k, v in p.items() if k != "name_hit"} for p in out[:8]]
+    # Few matches (a city the directory doesn't cover yet, or a place nobody added): ask Google too.
+    reader = current_reader()
+    if len(out) < 3 and reader and len(q) >= 3:
+        gkey = "gsearch:r:" + reader["id"]
+        try:
+            over = ask_limits._used(gkey) >= _int_env("GOOGLE_SEARCH_LIMIT_READER", 60)
+            if not over:
+                ask_limits._count(gkey)
+        except Exception as exc:  # noqa: BLE001
+            print("walk: usage counter unavailable:", exc)
+            over = False
+        if not over:
+            listed = {p["slug"] for p in out}
+            places, _ok = google_places(q, lat, lng, 20000, 8)
+            for g in places:
+                if g.get("slug") and g["slug"] in listed:
+                    continue
+                out.append({"slug": g.get("slug") or "", "placeId": g["placeId"], "google": not g.get("slug"),
+                            "name": _text(g.get("name"), 80), "category": _text(g.get("category"), 40),
+                            "address": _text(g.get("address"), 120)})
+    return jsonify(ok=True, places=out[:12])
+
+
+@walk_bp.post("/api/place-import")
+def place_import():
+    """The route builder picked a Google place: make it a directory listing. {placeId} -> {slug, name, ...}."""
+    reader = current_reader()
+    if not reader:
+        return jsonify(ok=False, error="sign_in"), 401
+    if not _csrf_ok():
+        return jsonify(ok=False, error="This page expired. Reload it and try again."), 403
+    pid = str((request.get_json(silent=True) or {}).get("placeId") or "")
+    if not re.match(r"^[A-Za-z0-9_-]{10,200}$", pid):
+        return jsonify(ok=False, error="That place can't be added."), 400
+    ikey = "gimport:r:" + reader["id"]
+    try:
+        if ask_limits._used(ikey) >= _int_env("GOOGLE_IMPORT_LIMIT_READER", 40):
+            return jsonify(ok=False, error="You've added a lot of new places today. Try again tomorrow."), 429
+        ask_limits._count(ikey)
+    except Exception as exc:  # noqa: BLE001
+        print("walk: usage counter unavailable:", exc)
+    got = import_google([pid]).get(pid)
+    if not got:
+        return jsonify(ok=False, error="Couldn't add that place right now. Try again in a minute."), 502
+    return jsonify(ok=True, place={"slug": got["slug"], "name": _text(got.get("name"), 80),
+                                   "category": _text(got.get("category"), 40), "address": _text(got.get("address"), 120)})
 
 
 @walk_bp.post("/api/walk-plan/voice")

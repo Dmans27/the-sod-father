@@ -504,7 +504,7 @@
       if (!places.some(function (p) { return p.slug === pk.slug; })) places.push({ slug: pk.slug, name: pk.name, category: pk.category || '', photo: '' });
     });
     mineTitle.textContent = building.id ? 'Edit route' : 'Build a route';
-    mineNote.innerHTML = 'Tap places <b>in the order you want to visit them</b>, or search for any place in the directory. Tap again to take one out.';
+    mineNote.innerHTML = 'Tap places <b>in the order you want to visit them</b>, or search for any place, anywhere. Tap again to take one out.';
     mineList.innerHTML = '';
     mineFoot.innerHTML = '';
     var name = el('input', 'walkplan__build-name');
@@ -524,7 +524,7 @@
     var findLi = el('li', 'walkplan__build-find');
     var find = el('input', 'walkplan__build-search');
     find.type = 'search';
-    find.placeholder = 'Search the directory to add a place';
+    find.placeholder = 'Search any place to add it';
     find.setAttribute('aria-label', 'Search the directory');
     find.autocomplete = 'off';
     var found = el('ul', 'walkplan__build-results');
@@ -549,18 +549,38 @@
             var list = (d && d.places) || [];
             if (!list.length) { found.appendChild(el('li', 'walkplan__build-hint', 'No places found for “' + q + '”.')); return; }
             list.forEach(function (p) {
-              var picked = building.picks.some(function (x) { return x.slug === p.slug; });
+              var picked = building.picks.some(function (x) { return (p.slug && x.slug === p.slug) || (p.placeId && x.placeId === p.placeId); });
               var li = el('li', 'walkplan__build-hit');
               var txt = el('span', 'walkplan__mine-body');
-              txt.appendChild(el('span', 'walkplan__mine-name', p.name));
+              var nm = el('span', 'walkplan__mine-name', p.name);
+              if (p.google) nm.appendChild(el('span', 'walkplan__build-new', 'New'));   // from Google: becomes a listing when added
+              txt.appendChild(nm);
               txt.appendChild(el('span', 'walkplan__mine-meta', [p.category, p.address].filter(Boolean).join(' · ')));
               li.appendChild(txt);
               var add = el('button', '', picked ? 'Added' : '+ Add');
               add.type = 'button';
               add.disabled = picked || building.picks.length >= 15;
               add.addEventListener('click', function () {
-                building.picks.push({ slug: p.slug, name: p.name, category: p.category });
-                paintBuilder();
+                if (p.slug) {
+                  building.picks.push({ slug: p.slug, name: p.name, category: p.category });
+                  paintBuilder();
+                  return;
+                }
+                // A place from Google: the directory adds it first (/api/place-import), then it's a stop like any other.
+                add.disabled = true;
+                add.textContent = 'Adding…';
+                fetch('/api/place-import', { method: 'POST', credentials: 'same-origin',
+                  headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': READER.csrf || '' },
+                  body: JSON.stringify({ placeId: p.placeId }) })
+                  .then(function (r) { return r.json().catch(function () { return {}; }); })
+                  .then(function (d) {
+                    if (!d.ok || !d.place) { add.disabled = false; add.textContent = '+ Add'; mineNote.textContent = d.error || 'Couldn’t add that place. Try again.'; return; }
+                    if (!building.picks.some(function (x) { return x.slug === d.place.slug; })) {
+                      building.picks.push({ slug: d.place.slug, name: d.place.name || p.name, category: d.place.category || p.category });
+                    }
+                    paintBuilder();
+                  })
+                  .catch(function () { add.disabled = false; add.textContent = '+ Add'; mineNote.textContent = 'Couldn’t reach the server. Try again.'; });
               });
               li.appendChild(add);
               found.appendChild(li);
