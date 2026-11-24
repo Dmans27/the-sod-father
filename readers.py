@@ -298,9 +298,10 @@ def profile():
         routes_count = int((row or {}).get("n", 0))
     except Exception as exc:
         print("readers: could not count saved stories/places:", exc)
+    from newsletter import is_subscribed   # the Newsletter switch (newsletter.py)
     return render_template(
         "account/profile.html", saved_count=saved_count, places_count=places_count, routes_count=routes_count,
-        categories=CATEGORIES, active_category=None)
+        newsletter_on=is_subscribed(reader.get("email")), categories=CATEGORIES, active_category=None)
 
 
 # ── JSON API: save + comments ────────────────────────────────────────────

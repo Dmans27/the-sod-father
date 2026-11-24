@@ -35,6 +35,87 @@
   <span class="site-switch" aria-hidden="true"><span class="site-switch__knob"></span></span>
 </button>
 
+{# Newsletter (newsletter.py, /api/newsletter/me): on/off. Turning it on with an email that isn't on
+   the list yet asks for a name and profession first. #}
+<div class="account-nl" id="account-nl">
+  <button type="button" class="account-theme account-nl__switch" role="switch" aria-checked="{{ 'true' if newsletter_on else 'false' }}">
+    <span class="account-nl__text">Newsletter<small>New stories by email</small></span>
+    <span class="site-switch" aria-hidden="true"><span class="site-switch__knob"></span></span>
+  </button>
+  <form class="account-nl__ask" hidden>
+    <p class="account-nl__lead">Before we add {{ reader.email }}, tell us a bit about you:</p>
+    <label class="account-field">
+      <span>Name</span>
+      <input type="text" name="name" maxlength="80" autocomplete="name" required>
+    </label>
+    <label class="account-field">
+      <span>Profession <em>what do you do?</em></span>
+      <input type="text" name="profession" maxlength="80" list="account-nl-professions" autocomplete="organization-title" placeholder="e.g. Teacher, designer, student" required>
+      <datalist id="account-nl-professions">
+        <option value="Student"><option value="Teacher"><option value="Designer"><option value="Software developer">
+        <option value="IT / systems"><option value="Healthcare"><option value="Hospitality"><option value="Retired"><option value="Other">
+      </datalist>
+    </label>
+    <div class="account-nl__row">
+      <button type="submit" class="account-btn account-btn--small">Subscribe</button>
+      <button type="button" class="account-btn account-btn--small account-btn--ghost" data-nl-cancel>Not now</button>
+    </div>
+  </form>
+  <p class="account-nl__msg" role="status" aria-live="polite" hidden></p>
+</div>
+<style>
+  .account-nl { max-width: 420px; margin: 10px auto 0; }
+  .account-nl .account-theme { margin-top: 0; }
+  .account-nl__text { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; }
+  .account-nl__text small { font-size: 13px; font-weight: 500; color: var(--ink-faint); }
+  .account-nl__ask { margin-top: 10px; padding: 14px 16px 6px; border: 1px solid var(--line); border-radius: 14px; }
+  .account-nl__ask[hidden], .account-nl__msg[hidden] { display: none; }
+  .account-nl__lead { margin: 0 0 12px; font-size: 14.5px; color: var(--ink-soft); }
+  .account-nl__row { display: flex; gap: 8px; margin: 4px 0 10px; }
+  .account-nl__msg { margin: 8px 4px 0; font-size: 14px; color: var(--ink-soft); }
+  .is-dark .account-nl__ask { border-color: rgba(255, 255, 255, 0.14); }
+  .is-dark .account-nl__text small, .is-dark .account-nl__lead, .is-dark .account-nl__msg { color: rgba(228, 233, 229, 0.65); }
+</style>
+<script>
+  (function () {
+    var box = document.getElementById('account-nl');
+    if (!box) return;
+    var sw = box.querySelector('.account-nl__switch'), ask = box.querySelector('.account-nl__ask'), msg = box.querySelector('.account-nl__msg');
+    function say(text) { msg.textContent = text || ''; msg.hidden = !text; }
+    function setOn(on) { sw.setAttribute('aria-checked', on ? 'true' : 'false'); }
+    function send(body) {
+      sw.disabled = true;
+      return fetch('/api/newsletter/me', { method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': (window.READER && window.READER.csrf) || '' },
+        body: JSON.stringify(body) })
+        .then(function (r) { return r.json().catch(function () { return {}; }); })
+        .then(function (d) { sw.disabled = false; return d; }, function () { sw.disabled = false; return { error: 'Couldn’t reach the server. Try again.' }; });
+    }
+    sw.addEventListener('click', function () {
+      var turnOn = sw.getAttribute('aria-checked') !== 'true';
+      say('');
+      send({ on: turnOn }).then(function (d) {
+        if (d.need === 'details') {   // not on the list yet: ask for the details first
+          ask.elements.name.value = d.name || '';
+          ask.hidden = false;
+          (d.name ? ask.elements.profession : ask.elements.name).focus();
+          return;
+        }
+        if (d.ok) { setOn(d.on); ask.hidden = true; say(d.message); } else say(d.error || 'Something went wrong. Try again.');
+      });
+    });
+    ask.addEventListener('submit', function (e) {
+      e.preventDefault();
+      var name = ask.elements.name.value.trim(), profession = ask.elements.profession.value.trim();
+      if (!name || !profession) { say('Please add your name and what you do.'); return; }
+      send({ on: true, name: name, profession: profession }).then(function (d) {
+        if (d.ok) { setOn(true); ask.hidden = true; say(d.message); } else say(d.error || 'Something went wrong. Try again.');
+      });
+    });
+    box.querySelector('[data-nl-cancel]').addEventListener('click', function () { ask.hidden = true; say(''); });
+  })();
+</script>
+
 <form method="post" action="/account/logout" class="account-signout">
   <input type="hidden" name="csrf" value="{{ csrf_token }}">
   <button type="submit" class="account-btn account-btn--ghost">Sign out</button>

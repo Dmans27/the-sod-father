@@ -21,7 +21,7 @@ from sqlalchemy.exc import IntegrityError
 import db
 import newsletter_send
 from content import CATEGORIES, get_article
-from readers import EMAIL_RE, _csrf_ok
+from readers import EMAIL_RE, _csrf_ok, current_reader, reader_required_json
 
 newsletter_bp = Blueprint("newsletter", __name__)
 
@@ -30,7 +30,7 @@ UPLOADS_DIR = (PROJECT_ROOT / "static" / "uploads").resolve()
 
 MAX_NAME = 80
 MAX_PROFESSION = 80
-SOURCES = {"popup", "footer", "page"}
+SOURCES = {"popup", "footer", "page", "account"}
 
 
 def _clean(value, limit):
@@ -100,6 +100,56 @@ def subscribe():
         print("newsletter: could not clear unsubscribe:", exc)
 
     return respond(True, "You're on the list. Thanks for signing up!")
+
+
+# ── The Newsletter switch on the account page ───────────────────────────
+# On: if the reader's email is already on the list it's simply switched back on;
+# if not, the page asks for their name and profession first (need: "details").
+# Off: the same as the unsubscribe link in an email.
+
+def is_subscribed(email):
+    email = (email or "").strip().lower()
+    if not email:
+        return False
+    try:
+        on = db.query_one("SELECT 1 AS x FROM newsletter_subscribers WHERE email = :e", e=email)
+        off = db.query_one("SELECT 1 AS x FROM newsletter_unsubscribes WHERE email = :e", e=email)
+    except Exception as exc:
+        print("newsletter: could not check subscription:", exc)
+        return False
+    return bool(on) and not off
+
+
+@newsletter_bp.post("/api/newsletter/me")
+@reader_required_json
+def newsletter_me():
+    reader = current_reader()
+    email = (reader.get("email") or "").strip().lower()
+    data = request.get_json(silent=True) or {}
+    try:
+        if not data.get("on"):
+            try:
+                db.execute("INSERT INTO newsletter_unsubscribes (email, created_at) VALUES (:e, :t)", e=email, t=db.now_iso())
+            except IntegrityError:
+                pass   # already off
+            return jsonify(ok=True, on=False, message="You won't get the newsletter any more.")
+        known = db.query_one("SELECT 1 AS x FROM newsletter_subscribers WHERE email = :e", e=email)
+        if not known:
+            name = _clean(data.get("name"), MAX_NAME)
+            profession = _clean(data.get("profession"), MAX_PROFESSION)
+            if not name or not profession:   # not on the list yet: ask for the details first
+                return jsonify(ok=False, need="details", name=_clean(reader.get("display_name"), MAX_NAME))
+            try:
+                db.execute("INSERT INTO newsletter_subscribers (id, email, name, profession, source, created_at) "
+                           "VALUES (:id, :email, :name, :profession, 'account', :t)",
+                           id=db.new_id(), email=email, name=name, profession=profession, t=db.now_iso())
+            except IntegrityError:
+                pass
+        db.execute("DELETE FROM newsletter_unsubscribes WHERE email = :e", e=email)
+    except Exception as exc:
+        print("newsletter: could not change the subscription:", exc)
+        return jsonify(ok=False, error="Something went wrong. Please try again in a moment."), 500
+    return jsonify(ok=True, on=True, message="You're on the list. New stories will come to " + email + ".")
 
 
 # ── Unsubscribe ──────────────────────────────────────────────────────────

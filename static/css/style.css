@@ -1680,7 +1680,7 @@ body.article-page.is-dark,
   .bottom-nav {
     display: flex; align-items: center; gap: 6px; position: fixed; z-index: 90;
     left: 14px; right: 14px; max-width: 420px; margin: 0 auto;
-    bottom: calc(env(safe-area-inset-bottom, 0px) + 10px);
+    bottom: max(6px, calc(env(safe-area-inset-bottom, 0px) - 10px));   /* 20px lower than before, never off the screen */
     padding: 5px; border-radius: 999px; box-sizing: border-box;
     background: rgba(255, 255, 255, 0.94); border: 1px solid rgba(27, 42, 31, 0.08);
     -webkit-backdrop-filter: saturate(1.6) blur(16px); backdrop-filter: saturate(1.6) blur(16px);
@@ -1722,7 +1722,7 @@ body.article-page.is-dark,
   .is-dark .bottom-nav__item:active { background: rgba(255, 255, 255, 0.08); }
   .is-dark .bottom-nav__ask { background: #7fd1a6; color: #10241a; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4); }
   /* Keep the last of the page clear of the pill. */
-  body { padding-bottom: calc(82px + env(safe-area-inset-bottom, 0px)); }
+  body { padding-bottom: calc(62px + env(safe-area-inset-bottom, 0px)); }
   body.article-page { padding-bottom: 0; }
   body.article-page .bottom-nav { display: none; }
 }

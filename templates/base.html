@@ -37,7 +37,7 @@
     // reader never sees a white flash on load (the menu toggle sets this).
     try { if (localStorage.getItem('sf-theme') === 'dark') document.documentElement.classList.add('is-dark'); } catch (e) {}
   </script>
-  <link rel="stylesheet" href="/static/css/style.css?v=14">
+  <link rel="stylesheet" href="/static/css/style.css?v=15">
   <link rel="alternate" type="application/rss+xml" title="\\Mansfield" href="/feed.xml">
   {# Link previews + search results. Pages override the `seo` block (stories do);
      everything else gets these site-wide defaults. #}
@@ -169,7 +169,8 @@
   </main>
 
   <footer class="site-footer">
-    {% if request.path != '/newsletter' %}
+    {# Signed-in readers turn the newsletter on and off on their account page instead. #}
+    {% if request.path != '/newsletter' and not reader %}
     <form method="post" action="/newsletter/subscribe" class="footer-newsletter" data-newsletter-form>
       <input type="hidden" name="csrf" value="{{ csrf_token }}">
       <input type="hidden" name="source" value="footer">
