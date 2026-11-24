@@ -37,7 +37,7 @@
     // reader never sees a white flash on load (the menu toggle sets this).
     try { if (localStorage.getItem('sf-theme') === 'dark') document.documentElement.classList.add('is-dark'); } catch (e) {}
   </script>
-  <link rel="stylesheet" href="/static/css/style.css?v=15">
+  <link rel="stylesheet" href="/static/css/style.css?v=16">
   <link rel="alternate" type="application/rss+xml" title="\\Mansfield" href="/feed.xml">
   {# Link previews + search results. Pages override the `seo` block (stories do);
      everything else gets these site-wide defaults. #}
@@ -92,7 +92,9 @@
     </defs>
   </svg>
 
-  <header class="site-header">
+  {# Pages with their own top bar (the stories page's city search) drop the \\Mansfield wordmark:
+     on phones the brand row goes entirely and the search bar sits at the top. #}
+  <header class="site-header{% if self.header_bar() | trim %} has-bar{% endif %}">
     <div class="site-header__inner">
       <a href="/" class="site-brand">
         <span class="site-brand__text"><span class="site-brand__slashes">\\</span>Mansfield</span>

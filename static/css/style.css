@@ -87,6 +87,14 @@ a { color: inherit; }
 .site-brand__mark { font-size: 20px; flex-shrink: 0; }
 .site-brand__slashes { color: var(--gold, #b8860b); margin-right: 0.02em; }
 .site-brand__text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Pages with their own top bar (the stories page's city search, base.html adds .has-bar):
+   no wordmark. On phones the whole brand row goes (the ask button and avatar are hidden
+   there anyway), so the search bar sits right under the status bar. */
+.site-header.has-bar .site-brand { display: none; }
+@media (max-width: 699.98px) {
+  .site-header.has-bar .site-header__inner { display: none; }
+  .site-header.has-bar .citybar { padding-top: 8px; }
+}
 
 /* ── Category chip bar ──
    The same categories as the hamburger drawer, as a horizontally scrolling
