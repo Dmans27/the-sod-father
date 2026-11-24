@@ -3009,8 +3009,13 @@ body.walk-page .site-main { padding: 0; max-width: none; }
   padding: 18px 18px 6px; margin: 0 0 24px; border: 1px solid var(--line); border-radius: 18px;
   background: var(--cream); overflow: hidden;
 }
-.hero-story__media { margin: 16px -18px; }
-.hero-story--plain .hero-story__byline { margin-top: 14px; }
+/* The photo leads: flush with the card's top and sides; the category floats on it, top left. */
+.hero-story__media { margin: -18px -18px 16px; }
+.hero-story__pill--over { position: absolute; z-index: 1; top: 16px; left: 18px; margin: 0;
+  background: rgba(255, 255, 255, 0.9); color: var(--fairway-deep); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+html.is-dark .hero-story__pill--over { background: rgba(28, 35, 31, 0.78); color: #9fe0bd; }
+.hero-story__byline { margin-top: 14px; }
+.hero-story.is-current { padding-top: 18px; }
 .story-list:not(.story-list--compact) { gap: 12px; }
 .story-list:not(.story-list--compact) > .story-row,
 .story-list:not(.story-list--compact) > .story-row:first-child,

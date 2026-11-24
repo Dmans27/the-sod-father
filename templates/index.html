@@ -130,16 +130,19 @@
 {% for story in featured %}
   {% set fcat = categories[story.category] %}
   <a href="/article/{{ story.slug }}" class="hero-story{% if not story.cover_image %} hero-story--plain{% endif %}" data-slug="{{ story.slug }}">
-    <div class="hero-story__content">
-      <span class="hero-story__pill">{{ story.pill }}</span>
-      <h2 class="hero-story__title">{{ story.title }}</h2>
-      <p class="hero-story__dek">{{ story.dek }}</p>
-    </div>
+    {# Featured story card: the photo first (edge to edge, with the category on it), then the title and
+       subheader, then the author line and Save / Share / Comment. No photo: the category sits above the title. #}
     {% if story.cover_image %}
       <div class="hero-story__media" style="background-image: url('{{ story.cover_image }}'); background-size: cover; background-position: center;">
         <div class="hero-story__scrim"></div>
+        <span class="hero-story__pill hero-story__pill--over">{{ story.pill }}</span>
       </div>
     {% endif %}
+    <div class="hero-story__content">
+      {% if not story.cover_image %}<span class="hero-story__pill">{{ story.pill }}</span>{% endif %}
+      <h2 class="hero-story__title">{{ story.title }}</h2>
+      <p class="hero-story__dek">{{ story.dek }}</p>
+    </div>
     <div class="hero-story__byline">
       {% if story.author_photo %}<img class="hero-story__byline-avatar" src="{{ story.author_photo }}" alt="">{% endif %}
       <p class="hero-story__meta">{{ story.author }}{% if story.author_position %} &middot; {{ story.author_position }}{% endif %} &middot; {{ story.published_at }}</p>
