@@ -69,10 +69,9 @@
     });
     if (menu) menu.classList.toggle('is-dark', readingDark);
     if (csheet) csheet.classList.toggle('is-dark', readingDark);
-    var sw = document.getElementById('site-theme-toggle');
-    if (sw) {
+    Array.prototype.forEach.call(document.querySelectorAll('[data-site-theme-switch]'), function (sw) {   // the avatar menu's and the account page's
       sw.setAttribute('aria-checked', readingDark ? 'true' : 'false');
-    }
+    });
     var bt = document.getElementById('bar-theme-toggle');
     if (bt) {
       bt.setAttribute('aria-pressed', readingDark ? 'true' : 'false');

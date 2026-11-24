@@ -30,12 +30,18 @@
   </div>
 </dl>
 
+<button type="button" class="account-theme" role="switch" data-site-theme data-site-theme-switch aria-checked="false">
+  <span>Dark mode</span>
+  <span class="site-switch" aria-hidden="true"><span class="site-switch__knob"></span></span>
+</button>
+
 <form method="post" action="/account/logout" class="account-signout">
   <input type="hidden" name="csrf" value="{{ csrf_token }}">
   <button type="submit" class="account-btn account-btn--ghost">Sign out</button>
 </form>
 
 <ul class="account-links">
+  {% if header_user and header_user.is_author %}<li><a href="/authors/me">Author profile</a></li>{% endif %}
   <li><a href="/account/blocked">Blocked readers</a></li>
   <li><a href="/privacy">Privacy Policy</a></li>
   <li><a href="/terms">Terms of Use</a></li>

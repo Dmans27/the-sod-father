@@ -1668,9 +1668,10 @@ body.article-page.is-dark,
 }
 
 /* ── Bottom navigation pill (phones and the Duo's outer display) ──
-   Stories / Ask (the round button in the middle) / Walk, floating at the
-   bottom of the screen as a wide pill that stays put while you scroll. Saved
-   stories, your account and dark mode are in the avatar menu at the top.
+   Stories / Walk / Ask (the round button) / Account, floating at the bottom
+   of the screen as a wide pill that stays put while you scroll. Account goes
+   straight to the account page (saved stories, dark mode, sign out); on
+   phones it replaces the avatar menu at the top.
    Hidden at 700px and wider, where the two-page layout takes over, and on the
    full article page so it never competes with the "Written by" tag. The story
    pop-up sheet, the share sheet and the menu all sit above it. */
@@ -1709,6 +1710,12 @@ body.article-page.is-dark,
   }
   .bottom-nav__ask svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
   .bottom-nav__ask:active { transform: scale(0.94); }
+  .bottom-nav__me { position: relative; width: 28px; height: 28px; border-radius: 50%; overflow: hidden; display: flex; align-items: center; justify-content: center;
+    background: var(--fairway-deep); color: #fff; font-size: 13px; font-weight: 800; }
+  .bottom-nav__me img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .bottom-nav__item.is-active .bottom-nav__me { box-shadow: 0 0 0 2px var(--fairway-deep); }
+  /* On phones the account lives in the pill: no avatar menu at the top. */
+  .user-menu { display: none; }
   .is-dark .bottom-nav { background: rgba(28, 35, 31, 0.92); border-color: rgba(255, 255, 255, 0.12); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55); }
   .is-dark .bottom-nav__item { color: #e4e9e5; }
   .is-dark .bottom-nav__item.is-active { color: #9fe0bd; background: rgba(255, 255, 255, 0.09); }
@@ -2972,3 +2979,10 @@ body.walk-page .site-main { padding: 0; max-width: none; }
 /* "Plan your own walk" link under a route story's "Walk this route" card */
 .route-card__plan { display: block; margin-top: 12px; text-align: center; font-size: 14px; font-weight: 700; color: var(--fairway); }
 @media (max-width: 699px) { .walkplan__tools { gap: 5px; } .walkplan__tool { padding: 0 10px 0 8px; gap: 5px; font-size: 13px; } .walkplan__area { padding-left: 10px; font-size: 13px; } }
+
+/* Dark mode switch on the account page (the pill's Account button replaces the avatar menu on phones). */
+.account-theme { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; max-width: 420px; margin: 18px auto 0;
+  padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; background: none; color: var(--ink); font: 700 15px var(--font-sans); cursor: pointer; box-sizing: border-box; }
+.account-theme[aria-checked="true"] .site-switch { background: var(--gold); }
+.account-theme[aria-checked="true"] .site-switch__knob { transform: translateX(18px); }
+.is-dark .account-theme { color: #e4e9e5; border-color: rgba(255, 255, 255, 0.14); }

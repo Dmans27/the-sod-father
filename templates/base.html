@@ -37,7 +37,7 @@
     // reader never sees a white flash on load (the menu toggle sets this).
     try { if (localStorage.getItem('sf-theme') === 'dark') document.documentElement.classList.add('is-dark'); } catch (e) {}
   </script>
-  <link rel="stylesheet" href="/static/css/style.css?v=12">
+  <link rel="stylesheet" href="/static/css/style.css?v=13">
   <link rel="alternate" type="application/rss+xml" title="\\Mansfield" href="/feed.xml">
   {# Link previews + search results. Pages override the `seo` block (stories do);
      everything else gets these site-wide defaults. #}
@@ -139,7 +139,7 @@
               <a role="menuitem" class="user-menu__link" href="/account/signup{{ nxt }}">Create account</a>
             {% endif %}
             <a role="menuitem" class="user-menu__link" href="/walk">Plan a walk</a>
-            <button type="button" role="menuitemcheckbox" class="user-menu__theme" id="site-theme-toggle" data-site-theme aria-checked="false">
+            <button type="button" role="menuitemcheckbox" class="user-menu__theme" id="site-theme-toggle" data-site-theme data-site-theme-switch aria-checked="false">
               <span class="user-menu__theme-label">
                 <svg class="user-menu__theme-icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-moon"/></svg>
                 Dark mode
@@ -207,12 +207,22 @@
       <svg class="bottom-nav__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-stories"/></svg>
       <span>Stories</span>
     </a>
-    <button type="button" class="bottom-nav__ask" data-ask-open aria-label="Ask">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-search"/></svg>
-    </button>
     <a href="/walk" class="bottom-nav__item {% if request.path == '/walk' %}is-active{% endif %}">
       <svg class="bottom-nav__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-map"/></svg>
       <span>Walk</span>
+    </a>
+    <button type="button" class="bottom-nav__ask" data-ask-open aria-label="Ask">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-search"/></svg>
+    </button>
+    {# Account: straight to your account page (on phones this replaces the avatar menu at the top). #}
+    {% set acct_href = '/account/profile' if reader else ('/authors/me' if header_user and header_user.is_author else '/account/login?next=/account/profile') %}
+    <a href="{{ acct_href }}" class="bottom-nav__item {% if request.path.startswith('/account') or request.path.startswith('/authors/me') %}is-active{% endif %}">
+      {% if header_user %}
+        <span class="bottom-nav__me" aria-hidden="true">{{ header_user.initial }}{% if header_user.photo %}<img src="{{ header_user.photo }}" alt="" onerror="this.remove()">{% endif %}</span>
+      {% else %}
+        <svg class="bottom-nav__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"/></svg>
+      {% endif %}
+      <span>Account</span>
     </a>
   </nav>
 
@@ -222,7 +232,7 @@
     // Hosts the story maps may come from -- places.js only listens to those.
     window.MAP_HOSTS = {{ map_embed_hosts()|tojson }};
   </script>
-  <script src="/static/js/actions.js?v=8"></script>
+  <script src="/static/js/actions.js?v=9"></script>
   <script src="/static/js/native.js?v=3" defer></script>
   <script src="/static/js/map-list.js?v=4" defer></script>
   <script src="/static/js/map-story.js?v=12" defer></script>
