@@ -54,15 +54,12 @@
   html.is-dark .citybar__hit:hover, html.is-dark .citybar__hit:focus { background: #26302b; }
   html.is-dark .citybar__hit span, html.is-dark .citybar__none { color: rgba(228, 233, 229, 0.6); }
 
-  /* The city the feed is showing */
-  .cityhead { max-width: 720px; margin: 0 auto 18px; }
-  .cityhead__kicker { margin: 0; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fairway); }
-  .cityhead__name { margin: 2px 0 0; font: 800 34px/1.1 var(--font-serif); color: var(--fairway-deep); }
-  .cityhead__where { margin: 4px 0 0; font-size: 14.5px; color: var(--ink-faint); }
-  .cityhead__empty { margin: 10px 0 0; font-size: 15px; color: var(--ink-soft); }
-  html.is-dark .cityhead__kicker { color: #7fd1a6; }
-  html.is-dark .cityhead__name { color: #e4e9e5; }
-  html.is-dark .cityhead__where, html.is-dark .cityhead__empty { color: rgba(228, 233, 229, 0.65); }
+  /* The city the feed is showing: a small light-green pill */
+  .cityhead { max-width: 720px; margin: 0 auto 14px; }
+  .citypill { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px 5px 9px; border: 0; border-radius: 999px;
+    background: rgba(45, 106, 79, 0.12); color: var(--fairway-deep); font: 700 13px var(--font-sans); cursor: pointer; }
+  .citypill svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linejoin: round; }
+  html.is-dark .citypill { background: rgba(127, 209, 166, 0.16); color: #9fe0bd; }
   /* "Plan a walk in <city>" when the city has no walks yet */
   .cityplan { display: flex; align-items: center; gap: 14px; max-width: 720px; margin: 0 auto 28px; padding: 16px 18px; box-sizing: border-box;
     border-radius: 16px; background: var(--fairway-deep); color: #fff; text-decoration: none; }
@@ -114,13 +111,16 @@
 <p class="sub-crumb">{{ categories[active_category].label }} / {{ categories[active_category].subcategories[active_sub] }}</p>
 {% endif %}
 {% if city %}
-<section class="cityhead">
-  <p class="cityhead__kicker">Exploring</p>
-  <h1 class="cityhead__name">{{ city.name }}</h1>
-  {% set where = city.label.split(', ')[1:] | reject('equalto', city.name) | join(', ') %}
-  {% if where %}<p class="cityhead__where">{{ where }}</p>{% endif %}
-  {% if not featured %}<p class="cityhead__empty">No stories from {{ city.name }} yet{% if community_walks or walk_feed %}, but walkers have been busy{% endif %}.</p>{% endif %}
-</section>
+{# The city this feed is showing: a small pill; tapping it opens the city search bar. #}
+{% set parts = city.label.split(', ')[1:] | reject('equalto', city.name) | list %}
+{% set region = (parts[0] if parts|length >= 2 and parts[-1] in ('United States', 'Canada', 'Australia') else (parts[-1] if parts else '')) %}
+<div class="cityhead">
+  <button type="button" class="citypill" onclick="var i = document.querySelector('.site-header .citybar__input'); if (i) { window.scrollTo(0, 0); i.focus(); }"
+          aria-label="Showing {{ city.name }}{% if region %}, {{ region }}{% endif %}. Search another city">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+    {{ city.name }}{% if region %}, {{ region }}{% endif %}
+  </button>
+</div>
 {% endif %}
 
 {% macro city_walks() %}
