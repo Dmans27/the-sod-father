@@ -96,13 +96,6 @@
   html.is-dark .walk-strip__tag { background: rgba(127, 209, 166, 0.16); color: #9fe0bd; }
   html.is-dark .walk-strip__blurb { color: rgba(228, 233, 229, 0.8); }
   html.is-dark .walk-strip__stops { color: rgba(228, 233, 229, 0.6); }
-  /* "From walkers" (templates/_community_strip.html) */
-  .walk-strip__photo { display: block; height: 130px; margin: -14px -15px 4px; border-radius: 14px 14px 0 0; background: var(--cream-deep) center / cover no-repeat; }
-  .walk-strip__by { font-size: 12px; font-weight: 700; color: var(--ink-faint); }
-  .walk-strip__heart { color: #e5344f; font-weight: 700; }
-  .walk-strip--community .walk-strip__card { overflow: hidden; }
-  html.is-dark .walk-strip__by { color: rgba(228, 233, 229, 0.6); }
-  html.is-dark .walk-strip__heart { color: #ff5a6e; }
 </style>
 {% endblock %}
 
@@ -124,7 +117,7 @@
 {% endif %}
 
 {% macro city_walks() %}
-  {% include "_walk_strip.html" %}{% include "_community_strip.html" %}
+  {% include "_walk_strip.html" %}{# "From walkers" lives only in the walk map's This week drawer now #}
   {% if city and not walk_feed %}
   <a class="cityplan" href="/walk?ask={{ ('Plan a walk in ' ~ city.name) | urlencode }}">
     <span class="cityplan__body"><b>Plan a walk in {{ city.name }}</b><span>Tell the AI what you're in the mood for and it maps the walk for you.</span></span>

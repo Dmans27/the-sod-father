@@ -26,7 +26,7 @@ from newsletter import newsletter_bp
 from ask import ask_bp
 from walk_planner import walk_bp
 from walk_feed import feed_bp, feed_cards
-from community import community_bp, community_feed, feed_city
+from community import community_bp, feed_city
 from footprints import footprints_bp
 import city_feed
 from city_feed import city_bp
@@ -84,7 +84,6 @@ def home():
         active_category=None,
         comment_counts=readers.comment_counts(),
         walk_feed=feed_cards() if home_city else [],   # "Walks this week" is the home city's (walk_feed.py)
-        community_walks=community_feed(readers.current_reader(), center=(city["lat"], city["lng"])),   # (community.py)
         feed_city=city["name"],
     ))
     if cookie:   # remember the city you searched for
@@ -117,7 +116,6 @@ def category_page(slug, sub=None):
         active_sub=sub,
         comment_counts=readers.comment_counts(),
         walk_feed=feed_cards() if slug == "travel" else [],   # walks fit the Travel section too
-        community_walks=community_feed(readers.current_reader()) if slug == "travel" else [],
         feed_city=feed_city(),
     )
 
