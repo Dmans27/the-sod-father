@@ -1,0 +1,16 @@
+<script>
+  // Show / hide the password, and remember "Not now" so the app doesn't ask again at every launch for a week.
+  (function () {
+    document.querySelectorAll('[data-auth-eye]').forEach(function (b) {
+      b.addEventListener('click', function () {
+        var input = b.parentNode.querySelector('input');
+        var show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        b.setAttribute('aria-pressed', show ? 'true' : 'false');
+        b.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+      });
+    });
+    var skip = document.querySelector('[data-auth-skip]');
+    if (skip) skip.addEventListener('click', function () { try { localStorage.setItem('mf-login-skip', String(Date.now())); } catch (e) {} });
+  })();
+</script>

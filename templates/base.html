@@ -6,13 +6,19 @@
   <script>
     // The iOS app's front door is the walk map: when the app starts on the stories
     // homepage ("/"), go straight to /walk (the splash screen is still up, so nothing
-    // flashes). Only the first page of each app launch; after that "/" is the stories
+    // flashes). Signed-out people see Sign in first, unless they tapped "Not now" in the
+    // last 7 days. Only the first page of each app launch; after that "/" is the stories
     // page as usual. Browsers (no window.Capacitor) keep the stories homepage.
     (function () {
       try {
         if (!window.Capacitor || sessionStorage.getItem('mf-front-door')) return;
         sessionStorage.setItem('mf-front-door', '1');
-        if (location.pathname === '/') location.replace('/walk');
+        if (location.pathname !== '/') return;
+        var signedIn = {{ 'true' if reader else 'false' }};
+        var skipped = 0;
+        try { skipped = Number(localStorage.getItem('mf-login-skip')) || 0; } catch (e) {}
+        if (!signedIn && Date.now() - skipped > 7 * 864e5) location.replace('/account/login?next=/walk');
+        else location.replace('/walk');
       } catch (e) {}
     })();
   </script>

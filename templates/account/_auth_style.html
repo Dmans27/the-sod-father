@@ -1,0 +1,72 @@
+{# Shared look for Sign in / Create account: a route map on top, the form in a sheet at the bottom. #}
+<style>
+  body.auth-page .site-header, body.auth-page .popbar, body.auth-page .site-footer, body.auth-page .bottom-nav,
+  body.auth-page .nl-popup, body.auth-page .category-bar { display: none !important; }
+  body.auth-page { padding-bottom: 0; background: #1b211e; }
+  body.auth-page .site-main { width: 100%; padding: 0; margin: 0; max-width: none; }
+  .auth { min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; background: #1b211e; }
+  .auth__hero { position: relative; flex: 1 0 auto; min-height: 440px; overflow: hidden; }
+  .auth__map { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .auth__hero::after { content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(180deg, rgba(10, 14, 12, 0.45) 0%, rgba(10, 14, 12, 0) 20%, rgba(10, 14, 12, 0) 42%, rgba(10, 14, 12, 0.9) 100%); }
+  .auth__skip { position: absolute; z-index: 2; top: calc(env(safe-area-inset-top, 0px) + 12px); right: 16px; padding: 8px 15px; border-radius: 999px;
+    background: rgba(0, 0, 0, 0.4); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); color: #fff; font: 700 14px var(--font-sans); text-decoration: none; }
+  .auth__pill { position: absolute; z-index: 1; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top, 0px) + 66px);
+    display: flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 999px; background: rgba(20, 22, 24, 0.85);
+    color: #fff; font: 600 14px var(--font-sans); white-space: nowrap; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35); }
+  .auth__pill svg { width: 16px; height: 16px; fill: #2BEA6B; }
+  .auth__brand { position: absolute; z-index: 1; bottom: 50px; left: max(24px, calc(50% - 220px)); right: 24px; color: #fff; }
+  .auth__logo { margin: 0 0 10px; font: 800 40px/1 var(--font-serif); letter-spacing: 0.01em; }
+  .auth__logo span { color: #e0b23a; }
+  .auth__tag { margin: 0; max-width: 420px; font: 700 27px/1.18 var(--font-serif); text-shadow: 0 2px 14px rgba(0, 0, 0, 0.45); }
+  .auth__sheet { position: relative; z-index: 2; margin-top: -28px; padding: 28px 24px calc(env(safe-area-inset-bottom, 0px) + 26px);
+    border-radius: 28px 28px 0 0; background: #fff; color: var(--ink); }
+  .auth__inner { max-width: 440px; margin: 0 auto; }
+  .auth__note { margin: 0 0 14px; font-size: 15px; color: var(--ink-soft); }
+  .auth .account-error { margin-bottom: 14px; }
+  .auth__field { position: relative; display: block; margin-bottom: 12px; }
+  .auth__field input { width: 100%; box-sizing: border-box; padding: 17px 18px; border: 1px solid rgba(27, 42, 31, 0.1); border-radius: 14px;
+    background: #f3f4f3; color: var(--ink); font: 400 17px var(--font-sans); -webkit-appearance: none; appearance: none; }
+  .auth__field--pw input { padding-right: 58px; }
+  .auth__field input::placeholder { color: rgba(43, 54, 47, 0.5); }
+  .auth__field input:focus { outline: none; border-color: var(--fairway-deep); background: #fff; box-shadow: 0 0 0 3px rgba(27, 67, 50, 0.14); }
+  .auth__eye { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); width: 44px; height: 44px; padding: 0; border: 0; border-radius: 50%;
+    background: none; color: rgba(43, 54, 47, 0.6); cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .auth__eye svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .auth__eye .auth__eye-off { display: none; }
+  .auth__eye[aria-pressed="true"] .auth__eye-on { display: none; }
+  .auth__eye[aria-pressed="true"] .auth__eye-off { display: block; }
+  .auth__help { margin: -2px 2px 14px; font-size: 13px; line-height: 1.45; color: var(--ink-faint); }
+  .auth__btn { display: block; width: 100%; box-sizing: border-box; margin-top: 4px; padding: 16px; border: 0; border-radius: 14px;
+    background: var(--fairway-deep); color: #fff; font: 700 17px var(--font-sans); text-align: center; text-decoration: none; cursor: pointer; }
+  .auth__btn:active { filter: brightness(1.15); }
+  .auth__btn--line { margin-top: 0; background: transparent; color: var(--fairway-deep); border: 1px solid rgba(27, 42, 31, 0.2); }
+  .auth__rule { height: 0; margin: 22px 0; border: 0; border-top: 1px solid var(--line); }
+  .auth__legal { margin: 16px 0 0; text-align: center; font-size: 13px; line-height: 1.5; color: var(--ink-faint); }
+  .auth__legal a { color: var(--fairway-deep); font-weight: 600; text-decoration: none; }
+  @media (min-width: 700px) {
+    .auth__logo { font-size: 48px; }
+    .auth__tag { font-size: 34px; max-width: 520px; }
+    .auth__brand { left: max(24px, calc(50% - 220px)); }
+  }
+  /* iPad landscape and wider: the map on the left, the form in a panel on the right */
+  @media (min-width: 960px) and (min-aspect-ratio: 5/4) {
+    .auth { flex-direction: row; }
+    .auth__hero { flex: 1 1 auto; min-height: 100vh; min-height: 100svh; }
+    .auth__brand { left: 40px; right: 60px; bottom: 48px; }
+    .auth__sheet { flex: 0 0 460px; margin: 0 0 0 -28px; border-radius: 28px 0 0 28px; display: flex; align-items: center;
+      padding: calc(env(safe-area-inset-top, 0px) + 40px) 44px calc(env(safe-area-inset-bottom, 0px) + 40px); }
+    .auth__inner { width: 100%; }
+  }
+  html.is-dark .auth__sheet { background: #141618; color: #eef1ef; }
+  html.is-dark .auth__note, html.is-dark .auth__help, html.is-dark .auth__legal { color: rgba(238, 241, 239, 0.62); }
+  html.is-dark .auth__field input { background: #22272a; border-color: rgba(255, 255, 255, 0.1); color: #fff; }
+  html.is-dark .auth__field input::placeholder { color: rgba(255, 255, 255, 0.45); }
+  html.is-dark .auth__field input:focus { border-color: #2BEA6B; background: #22272a; box-shadow: 0 0 0 3px rgba(43, 234, 107, 0.16); }
+  html.is-dark .auth__field input:-webkit-autofill { -webkit-text-fill-color: #fff; box-shadow: 0 0 0 100px #22272a inset; }
+  html.is-dark .auth__eye { color: rgba(255, 255, 255, 0.6); }
+  html.is-dark .auth__btn { background: #2BEA6B; color: #0b2414; }
+  html.is-dark .auth__btn--line { background: transparent; color: #fff; border-color: rgba(255, 255, 255, 0.25); }
+  html.is-dark .auth__rule { border-top-color: rgba(255, 255, 255, 0.12); }
+  html.is-dark .auth__legal a { color: #9fe0bd; }
+</style>
