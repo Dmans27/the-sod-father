@@ -62,7 +62,8 @@ def commit_files(files, message, author_name=None, author_email=None):
     """files: {path_in_repo: bytes_content}. Creates one commit on BRANCH
     containing all of them (adds new paths, overwrites existing ones,
     leaves every other file in the repo untouched) and returns the new
-    commit sha."""
+    commit sha. A path whose content is None is deleted in that commit
+    (deleting a story: its JSON and its photos)."""
     if not files:
         raise GitHubContentError("Nothing to save.")
 
@@ -74,6 +75,9 @@ def commit_files(files, message, author_name=None, author_email=None):
 
     tree_entries = []
     for path, content in files.items():
+        if content is None:   # remove this file
+            tree_entries.append({"path": path, "mode": "100644", "type": "blob", "sha": None})
+            continue
         blob = _request(
             "POST",
             f"{API_ROOT}/git/blobs",

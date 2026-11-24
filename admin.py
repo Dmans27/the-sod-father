@@ -1223,7 +1223,9 @@ def _build_doc_from_form(form, files, slug, existing, draft=False):
         "dek": dek,
         "category": category,
         "subcategory": subcategory,
-        "city": " ".join(form.get("city", "").split())[:80],   # the city feed (city_feed.py); empty = matched from the title and dek
+        # Location (the city feed, city_feed.py): picked in the editor with its coordinates, so the story
+        # shows in that city's feed (within 30 km). Empty = matched from the title and dek instead.
+        **_city_fields(form),
         "author": author_name,
         "author_slug": author_slug or None,
         "author_photo": author_photo,
@@ -1414,6 +1416,37 @@ def _csrf_token():
     return csrf_token()
 
 
+def _city_fields(form):
+    name = " ".join(form.get("city", "").split())[:80]
+    label = " ".join(form.get("city_label", "").split())[:160] or name
+    try:
+        lat, lng = float(form.get("city_lat", "")), float(form.get("city_lng", ""))
+        if not (-90 <= lat <= 90 and -180 <= lng <= 180):
+            raise ValueError
+    except ValueError:
+        lat = lng = None
+    if not name:
+        return {"city": "", "city_label": "", "city_lat": None, "city_lng": None}
+    return {"city": name, "city_label": label, "city_lat": lat, "city_lng": lng}
+
+
+def _known_cities():
+    """Cities already used on stories (newest first), with the home city first: quick picks in the editor."""
+    import city_feed
+    home = city_feed.home_city()
+    out, seen = [dict(home)], {home["name"].lower()}
+    try:
+        stories = get_articles(include_drafts=True)
+    except Exception:  # noqa: BLE001
+        stories = []
+    for a in stories:
+        name = (a.get("city") or "").strip()
+        if name and name.lower() not in seen and a.get("city_lat") is not None:
+            seen.add(name.lower())
+            out.append({"name": name, "label": a.get("city_label") or name, "lat": a["city_lat"], "lng": a["city_lng"]})
+    return out[:8]
+
+
 def _render_form(mode, article, errors):
     return render_template(
         "admin/story_form.html",
@@ -1423,6 +1456,7 @@ def _render_form(mode, article, errors):
         authors=[public_fields(x) for x in get_authors()],
         block_types=BLOCK_TYPES,
         story_choices=_story_choices(),
+        known_cities=_known_cities(),
         errors=errors,
         csrf=_csrf_token(),
     )
@@ -1486,6 +1520,39 @@ def story_create():
         current_app.logger.exception("Saving story %s failed", slug)
         return _render_form("new", doc, [_save_error_text(exc)]), 502
     _flash_save(published, message, warnings, draft, action)
+    return redirect(url_for("admin.dashboard"))
+
+
+@admin_bp.post("/story/<slug>/delete")
+@login_required
+def story_delete(slug):
+    """Delete a story for good: its file and photos (one GitHub commit), then its comments and
+    readers' saves of it. The owner can delete any story; a writer only their own drafts."""
+    from readers import _csrf_ok
+    article = get_article(slug, include_drafts=True)
+    if not article:
+        abort(404)
+    if not _can_edit(article):
+        abort(403)
+    if not _csrf_ok():
+        flash("Your session expired. Open the story again and retry.", "error")
+        return redirect(url_for("admin.story_edit", slug=slug))
+    title = article.get("title") or slug
+    try:
+        published, message = story_store.delete_story(slug, title)
+    except Exception as exc:  # GitHub rejected the commit, token expired, etc.
+        current_app.logger.exception("Deleting story %s failed", slug)
+        flash("The story was NOT deleted: %s" % exc, "error")
+        return redirect(url_for("admin.story_edit", slug=slug))
+    try:   # what pointed at it: comments (and their reports) and readers' saves
+        import db
+        import moderation
+        for row in db.query("SELECT id FROM comments WHERE slug = :s", s=slug):
+            moderation.delete_comment(row["id"])
+        db.execute("DELETE FROM saved_articles WHERE slug = :s", s=slug)
+    except Exception as exc:  # noqa: BLE001 -- the story itself is gone; leftovers are harmless
+        current_app.logger.warning("Cleaning up after deleting %s: %s", slug, exc)
+    flash("Deleted “%s”. %s" % (title, message), "success" if published else "warning")
     return redirect(url_for("admin.dashboard"))
 
 

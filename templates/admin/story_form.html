@@ -68,10 +68,105 @@
       </select>
     </label>
 
-    <label class="admin-field">
-      <span>City <em style="font-style:normal;font-weight:500;color:var(--ink-faint,#888);">optional: puts the story in that city's feed (e.g. Vienna)</em></span>
-      <input type="text" name="city" value="{{ a.get('city', '') }}" maxlength="80" placeholder="Vienna" autocomplete="off">
-    </label>
+    {# Location: which city's feed the story shows in (city_feed.py). Search any city, or tap a recent one. #}
+    <div class="admin-field cityfield" id="cityfield">
+      <span>Location <em style="font-style:normal;font-weight:500;color:var(--ink-faint,#888);">which city's feed this story shows in</em></span>
+      <input type="hidden" name="city" value="{{ a.get('city') or '' }}">
+      <input type="hidden" name="city_label" value="{{ a.get('city_label') or a.get('city') or '' }}">
+      <input type="hidden" name="city_lat" value="{{ a.get('city_lat') if a.get('city_lat') is not none else '' }}">
+      <input type="hidden" name="city_lng" value="{{ a.get('city_lng') if a.get('city_lng') is not none else '' }}">
+      <div class="cityfield__chosen"{% if not a.get('city') %} hidden{% endif %}>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
+        <b class="cityfield__name">{{ a.get('city_label') or a.get('city') or '' }}</b>
+        <button type="button" class="cityfield__change" data-city-change>Change</button>
+      </div>
+      <div class="cityfield__find"{% if a.get('city') %} hidden{% endif %}>
+        <input type="search" class="cityfield__input" placeholder="Search a city, e.g. Vienna or Chicago" autocomplete="off" maxlength="80">
+        <ul class="cityfield__list" hidden></ul>
+        <div class="cityfield__quick">
+          {% for c in known_cities or [] %}
+          <button type="button" class="cityfield__chip" data-city='{{ c | tojson }}'>{{ c.label }}</button>
+          {% endfor %}
+          <button type="button" class="cityfield__chip cityfield__chip--none" data-city-none>No location</button>
+        </div>
+      </div>
+      <p class="cityfield__hint">No location: the story shows in a city's feed only when its title or summary names that city.</p>
+    </div>
+    <style>
+      .cityfield__chosen { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-radius: 10px; background: rgba(45, 106, 79, 0.1); }
+      .cityfield__chosen[hidden], .cityfield__find[hidden], .cityfield__list[hidden] { display: none; }
+      .cityfield__chosen svg { width: 18px; height: 18px; fill: none; stroke: #2d6a4f; stroke-width: 2.2; stroke-linejoin: round; flex: none; }
+      .cityfield__name { flex: 1; min-width: 0; }
+      .cityfield__change { border: 0; background: none; color: #2d6a4f; font-weight: 700; cursor: pointer; padding: 4px 6px; }
+      .cityfield__find { position: relative; }
+      .cityfield__input { width: 100%; box-sizing: border-box; }
+      .cityfield__list { position: absolute; z-index: 30; left: 0; right: 0; top: 100%; margin: 4px 0 0; padding: 4px; list-style: none; background: #fff;
+        border: 1px solid #dfe3df; border-radius: 10px; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.12); }
+      .cityfield__list button { display: block; width: 100%; padding: 9px 10px; border: 0; border-radius: 8px; background: none; text-align: left; cursor: pointer; font: inherit; color: inherit; }
+      .cityfield__list button:hover, .cityfield__list button:focus { background: #eef2ee; outline: none; }
+      .cityfield__list small { color: #777; margin-left: 6px; }
+      .cityfield__quick { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+      .cityfield__chip { padding: 5px 11px; border: 1px solid #cfd8d2; border-radius: 999px; background: #fff; font: inherit; font-size: 13px; cursor: pointer; color: inherit; }
+      .cityfield__chip:hover { border-color: #2d6a4f; color: #2d6a4f; }
+      .cityfield__chip--none { color: #777; }
+      .cityfield__hint { margin: 6px 0 0; font-size: 12.5px; color: var(--ink-faint, #888); }
+    </style>
+    <script>
+      // The Location picker: search a city (/api/cities, the same lookup as the stories page), tap a recent one, or none.
+      (function () {
+        var box = document.getElementById('cityfield');
+        if (!box) return;
+        var f = function (n) { return box.querySelector('input[name="' + n + '"]'); };
+        var chosen = box.querySelector('.cityfield__chosen'), find = box.querySelector('.cityfield__find');
+        var input = box.querySelector('.cityfield__input'), list = box.querySelector('.cityfield__list');
+        var timer = null, seq = 0;
+        function pick(c) {
+          f('city').value = c ? c.name : '';
+          f('city_label').value = c ? (c.label || c.name) : '';
+          f('city_lat').value = c ? c.lat : '';
+          f('city_lng').value = c ? c.lng : '';
+          box.querySelector('.cityfield__name').textContent = c ? (c.label || c.name) : '';
+          chosen.hidden = !c;
+          find.hidden = !!c;
+          list.hidden = true;
+          input.value = '';
+        }
+        box.querySelector('[data-city-change]').addEventListener('click', function () { chosen.hidden = true; find.hidden = false; input.focus(); });
+        box.querySelector('[data-city-none]').addEventListener('click', function () { pick(null); });
+        Array.prototype.forEach.call(box.querySelectorAll('[data-city]'), function (b) {
+          b.addEventListener('click', function () { try { pick(JSON.parse(b.getAttribute('data-city'))); } catch (e) {} });
+        });
+        input.addEventListener('keydown', function (e) { if (e.key === 'Enter') e.preventDefault(); });   // never submit the story from here
+        input.addEventListener('input', function () {
+          clearTimeout(timer);
+          var q = input.value.trim();
+          if (q.length < 2) { list.hidden = true; return; }
+          timer = setTimeout(function () {
+            var mine = ++seq;
+            fetch('/api/cities?q=' + encodeURIComponent(q), { headers: { 'Accept': 'application/json' } })
+              .then(function (r) { return r.json(); })
+              .then(function (d) {
+                if (mine !== seq) return;
+                list.innerHTML = '';
+                var cities = (d && d.cities) || [];
+                if (!cities.length) { var li = document.createElement('li'); li.textContent = 'No city found.'; li.style.padding = '9px 10px'; list.appendChild(li); }
+                cities.forEach(function (c) {
+                  var li = document.createElement('li'), b = document.createElement('button');
+                  b.type = 'button';
+                  b.textContent = c.name;
+                  var where = (c.label || '').split(', ').slice(1).join(', ');
+                  if (where) { var sm = document.createElement('small'); sm.textContent = where; b.appendChild(sm); }
+                  b.addEventListener('click', function () { pick(c); });
+                  li.appendChild(b);
+                  list.appendChild(li);
+                });
+                list.hidden = false;
+              })
+              .catch(function () {});
+          }, 250);
+        });
+      })();
+    </script>
 
     <label class="admin-field">
       <span>Author</span>
@@ -191,6 +286,18 @@
     </p>
   {% endif %}
 </form>
+
+{# Delete: a separate form (it can't sit inside the story form). Asks first. #}
+{% if mode == 'edit' and article and article.get('slug') %}
+<form method="post" action="{{ url_for('admin.story_delete', slug=article.slug) }}" class="admin-delete-story"
+      data-title="{{ article.get('title') or article.slug }}"
+      onsubmit="return confirm('Delete \u201c' + this.dataset.title + '\u201d for good?\n\nThis removes the story, its photos, its comments and readers\u2019 saves. It can\u2019t be undone.');">
+  <input type="hidden" name="csrf" value="{{ csrf }}">
+  <button type="submit" class="admin-btn admin-btn--danger">Delete story</button>
+  <span class="admin-hint" style="margin:0 0 0 10px;">Removes it from the site for good.</span>
+</form>
+<style>.admin-delete-story { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin: 34px 0 10px; padding-top: 18px; border-top: 1px solid var(--line, #e3e3e3); }</style>
+{% endif %}
 
 <!-- Block templates: one <template> per block type, cloned by JS below
      whenever a block is added (by clicking "+ ..." or when loading an

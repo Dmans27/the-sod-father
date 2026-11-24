@@ -89,3 +89,24 @@ def save_author(doc, images, is_update=False):
     verb = "Update" if is_update else "Add"
     message = f"{verb} author: {doc['name']}"
     return save_record(f"content/authors/{doc['slug']}.json", doc, images, message)
+
+
+def delete_story(slug, title=""):
+    """Removes content/articles/<slug>.json and the story's photos (static/uploads/<slug>/) as one
+    publish: one GitHub commit (Render redeploys, then it's gone), or a local delete in dev mode.
+    Returns (published, message) like save_record."""
+    paths = [f"content/articles/{slug}.json"]
+    uploads = PROJECT_ROOT / "static" / "uploads" / slug
+    if uploads.is_dir():
+        paths += [p.relative_to(PROJECT_ROOT).as_posix() for p in sorted(uploads.rglob("*")) if p.is_file()]
+    if os.environ.get("GITHUB_TOKEN"):
+        github_content.commit_files({p: None for p in paths}, f"Delete story: {title or slug}")
+        return True, "Deleted on GitHub. Render redeploys (usually 1-2 min), then it's gone from the site."
+    for p in paths:
+        try:
+            (PROJECT_ROOT / p).unlink()
+        except FileNotFoundError:
+            pass
+    if uploads.is_dir() and not any(uploads.iterdir()):
+        uploads.rmdir()
+    return False, "Deleted locally (dev mode, no GITHUB_TOKEN)."
