@@ -1240,4 +1240,12 @@
 
   // Opened with a walk in the link (a saved route)? If not, start on the explore map.
   if (!showLinked()) { loadMap(exploreUrl(), 'explore'); welcome(); }
+  // /walk?ask=... ("Plan a walk in Chicago" on the stories feed): plan it straight away.
+  (function () {
+    var asked = (new URLSearchParams(location.search || '').get('ask') || '').trim().slice(0, 200);
+    if (!asked || plan) return;
+    try { history.replaceState(null, '', '/walk'); } catch (e) {}
+    input.value = asked;
+    setTimeout(function () { ask(asked); }, 700);
+  })();
 })();

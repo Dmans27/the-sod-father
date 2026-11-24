@@ -258,16 +258,29 @@ _SELECT = (
 
 # ── The feed ─────────────────────────────────────────────────────────────
 
-def community_feed(viewer=None, city=None, limit=FEED_LIMIT):
+NEAR_M = 30000   # a walk belongs to a city when its middle is this close to the city's centre
+
+
+def community_feed(viewer=None, city=None, limit=FEED_LIMIT, center=None):
     """The city's community walks for this viewer: newest and most liked first, without
-    hidden posts, posts the viewer reported, or posts by people they blocked. Never fails."""
+    hidden posts, posts the viewer reported, or posts by people they blocked. Never fails.
+    center=(lat, lng): walks within NEAR_M of that point (the city feed); else by city name."""
     city = city or feed_city()
     viewer_id = viewer["id"] if viewer else None
     try:
         _tables()
         since = (datetime.now(timezone.utc) - timedelta(days=FEED_DAYS)).strftime("%Y-%m-%dT%H:%M:%SZ")
-        rows = db.query(_SELECT + "WHERE w.status = 'live' AND w.city = :city AND w.created_at >= :since "
-                        "ORDER BY w.created_at DESC LIMIT 200", city=city, since=since)
+        if center:
+            clat, clng = float(center[0]), float(center[1])
+            dlat = NEAR_M / 111320.0
+            dlng = NEAR_M / (111320.0 * max(0.2, math.cos(math.radians(clat))))
+            rows = db.query(_SELECT + "WHERE w.status = 'live' AND w.created_at >= :since "
+                            "AND w.lat BETWEEN :la AND :lb AND w.lng BETWEEN :na AND :nb "
+                            "ORDER BY w.created_at DESC LIMIT 200", since=since,
+                            la=clat - dlat, lb=clat + dlat, na=clng - dlng, nb=clng + dlng)
+        else:
+            rows = db.query(_SELECT + "WHERE w.status = 'live' AND w.city = :city AND w.created_at >= :since "
+                            "ORDER BY w.created_at DESC LIMIT 200", city=city, since=since)
         blocked, reported, liked = set(), set(), set()
         if viewer_id:
             blocked = {r["blocked_id"] for r in db.query("SELECT blocked_id FROM reader_blocks WHERE reader_id = :r", r=viewer_id)}

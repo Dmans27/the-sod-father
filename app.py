@@ -15,7 +15,7 @@ Run it:
 Then open http://localhost:5050
 """
 from textlinks import inline_links
-from flask import Flask, render_template, abort
+from flask import Flask, render_template, abort, make_response, request
 import os
 
 from content import (get_articles, get_article, get_featured, get_related, CATEGORIES,
@@ -28,6 +28,8 @@ from walk_planner import walk_bp
 from walk_feed import feed_bp, feed_cards
 from community import community_bp, community_feed, feed_city
 from footprints import footprints_bp
+import city_feed
+from city_feed import city_bp
 import safety
 from seo import seo_bp, register as register_seo
 import readers
@@ -42,6 +44,7 @@ app.register_blueprint(ask_bp)  # "Ask" chat answering from the articles (see as
 app.register_blueprint(walk_bp)  # "Plan a walk": AI walking routes from the directory (see walk_planner.py)
 app.register_blueprint(feed_bp)  # "This week": the weekly AI walk feed, approved by the owner (see walk_feed.py)
 app.register_blueprint(community_bp)  # walks readers post for other walkers in their city (see community.py)
+app.register_blueprint(city_bp)  # the city search bar on the stories page (see city_feed.py)
 app.register_blueprint(footprints_bp)  # walkers rate places 1-5 footprints: worth the walk? (see footprints.py)
 app.register_blueprint(seo_bp)  # robots.txt, sitemap.xml, feed.xml, share images (see seo.py)
 register_seo(app)  # canonical addresses + optional analytics for every page
@@ -56,28 +59,35 @@ safety.register(app)  # privacy/terms/contact pages, report + block, delete acco
 
 @app.get("/")
 def home():
-    # Up to content.MAX_FEATURED hero stories (picked via the admin
-    # portal's "Feature this story" checkbox) get pulled out of the list
-    # and rendered up top instead, newest first -- `articles` is what the
-    # list loops over, `all_articles` is the full set including the
-    # featured ones, used for the inline-sheet JS data so clicking a hero
-    # opens the same popup a list row does.
+    # The city feed (city_feed.py): one city at a time -- where you are, or the
+    # city you searched for in the bar at the top. Its stories come first (the
+    # ones you marked "Feature this story" lead), then its walks, then every
+    # other story under "More stories". `all_articles` is the full set, used
+    # for the inline-sheet JS data so any card opens the same popup.
+    city, cookie = city_feed.current_city()
     all_articles = get_articles()
-    featured = get_featured(all_articles)
-    featured_slugs = {a["slug"] for a in featured}
-    list_articles = [a for a in all_articles if a["slug"] not in featured_slugs]
-    return render_template(
+    featured_slugs = {a["slug"] for a in get_featured(all_articles)}
+    in_city = [a for a in all_articles if city_feed.story_in_city(a, city)]
+    in_city.sort(key=lambda a: a["slug"] not in featured_slugs)   # featured first, then newest (stable)
+    city_slugs = {a["slug"] for a in in_city}
+    home_city = city_feed.is_home(city)
+    reply = make_response(render_template(
         "index.html",
-        articles=list_articles,
+        city=city,
+        featured=in_city[:2],                       # hero cards
+        city_articles=in_city[2:],                  # the rest of the city's stories
+        articles=[a for a in all_articles if a["slug"] not in city_slugs],   # "More stories"
         all_articles=all_articles,
-        featured=featured,
         categories=CATEGORIES,
         active_category=None,
         comment_counts=readers.comment_counts(),
-        walk_feed=feed_cards(),   # "Walks this week" cards between the stories (walk_feed.py)
-        community_walks=community_feed(readers.current_reader()),   # "From walkers" (community.py)
-        feed_city=feed_city(),
-    )
+        walk_feed=feed_cards() if home_city else [],   # "Walks this week" is the home city's (walk_feed.py)
+        community_walks=community_feed(readers.current_reader(), center=(city["lat"], city["lng"])),   # (community.py)
+        feed_city=city["name"],
+    ))
+    if cookie:   # remember the city you searched for
+        reply.set_cookie(city_feed.COOKIE, cookie, max_age=365 * 86400, samesite="Lax", secure=request.is_secure)
+    return reply
 
 
 @app.get("/category/<slug>")

@@ -92,18 +92,6 @@
     </defs>
   </svg>
 
-{% macro category_items() %}
-        <div class="category-bar__item">
-  <a href="/" class="category-bar__chip {% if not active_category %}is-active{% endif %}">All</a>
-</div>
-{% for key, cat in categories.items() %}
-  {% set subs = cat.get('subcategories') %}
-  <div class="category-bar__item{% if subs %} has-sub{% endif %}">
-    <a href="/category/{{ key }}" class="category-bar__chip {% if active_category == key %}is-active{% endif %}"{% if subs %} data-subnav="subnav-{{ key }}" aria-haspopup="true" aria-expanded="false" aria-controls="subnav-{{ key }}"{% endif %}>{{ cat.label }}</a>
-  </div>
-{% endfor %}
-{% endmacro %}
-
   <header class="site-header">
     <div class="site-header__inner">
       <a href="/" class="site-brand">
@@ -162,37 +150,19 @@
         </div>
       </div>
     </div>
-    <!-- Categories as a horizontally scrolling row of chips right under the
-         brand bar, inside the header. -->
-    <nav class="category-bar" aria-label="Browse categories">
-      <div class="category-bar__scroll" id="category-bar-scroll">
-        {{ category_items() }}
-      </div>
-    </nav>
-    {% for key, cat in categories.items() %}
-      {% if cat.get('subcategories') %}
-        <div class="subnav" id="subnav-{{ key }}" role="menu" aria-label="{{ cat.label }}" hidden>
-          <a href="/category/{{ key }}" role="menuitem" class="subnav__link subnav__link--all {% if active_category == key and not active_sub %}is-active{% endif %}">All {{ cat.label }}</a>
-          {% for skey, slabel in cat.subcategories.items() %}
-            <a href="/category/{{ key }}/{{ skey }}" role="menuitem" class="subnav__link {% if active_category == key and active_sub == skey %}is-active{% endif %}">{{ slabel }}</a>
-          {% endfor %}
-        </div>
-      {% endif %}
-    {% endfor %}
+    {# Under the brand bar: the stories page puts its city search bar here (templates/_citybar.html). #}
+    {% block header_bar %}{% endblock %}
   </header>
 
-  <!-- Pop-up category bar: the main header above stays at the top of the page
-       and scrolls away like normal; once you are past ~150px this slim bar
-       slides down from the top with the same tabs (hover one for its
-       subcategories, same as the header's). Not used on story pages, which
-       have their own bar. Inert while hidden so it can't be tabbed to. -->
+  <!-- Pop-up bar: the main header above scrolls away like normal; once you are
+       past ~150px this slim bar slides down from the top with the same city
+       search bar, so it's always at hand. Only on pages that fill the popbar
+       block (the stories page). Inert while hidden so it can't be tabbed to. -->
+  {% if self.popbar() | trim %}
   <div class="popbar" id="popbar" inert>
-    <nav class="category-bar" aria-label="Quick category navigation">
-      <div class="category-bar__scroll" id="popbar-scroll">
-        {{ category_items() }}
-      </div>
-    </nav>
+    {% block popbar %}{% endblock %}
   </div>
+  {% endif %}
 
   <main class="site-main">
     {% block content %}{% endblock %}

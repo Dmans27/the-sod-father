@@ -69,6 +69,11 @@
     </label>
 
     <label class="admin-field">
+      <span>City <em style="font-style:normal;font-weight:500;color:var(--ink-faint,#888);">optional: puts the story in that city's feed (e.g. Vienna)</em></span>
+      <input type="text" name="city" value="{{ a.get('city', '') }}" maxlength="80" placeholder="Vienna" autocomplete="off">
+    </label>
+
+    <label class="admin-field">
       <span>Author</span>
       <select name="author_slug" id="author-select">
         {% if admin_is_owner %}

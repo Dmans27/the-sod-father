@@ -2,8 +2,78 @@
 {% from "_actions.html" import story_actions %}
 {% block title %}\\Mansfield{% if active_category %} — {{ categories[active_category].label }}{% if active_sub %} · {{ categories[active_category].subcategories[active_sub] }}{% endif %}{% endif %}{% endblock %}
 
+{% block header_bar %}{% include "_citybar.html" %}{% endblock %}
+{% block popbar %}{% include "_citybar.html" %}{% endblock %}
+
+{% macro story_row(article) %}
+    <a href="/article/{{ article.slug }}" class="story-row" data-slug="{{ article.slug }}">
+      <div class="story-row__body">
+        <span class="story-row__pill">{{ article.pill }}</span>
+        <h2 class="story-row__title">{{ article.title }}</h2>
+        <p class="story-row__meta">{{ article.author }} &middot; {{ article.read_minutes }} min read</p>
+        {{ story_actions(article.slug, article.title, article.slug in saved_slugs, comment_counts.get(article.slug, 0), compact=True) }}
+      </div>
+      {% if article.cover_image %}
+        <div class="story-row__thumb" style="background-image: url('{{ article.cover_image }}'); background-size: cover; background-position: center;"></div>
+      {% endif %}
+    </a>
+{% endmacro %}
+
 {% block head %}
 <style>
+  /* City search bar (templates/_citybar.html): under the brand bar, and in the pop-up bar when you scroll */
+  .citybar { position: relative; padding: 4px 16px 12px; max-width: 760px; margin: 0 auto; box-sizing: border-box; }
+  .popbar .citybar { padding: 8px 12px; }
+  .citybar__form { display: flex; align-items: center; gap: 8px; height: 46px; padding: 0 6px 0 14px; border-radius: 999px;
+    background: #f0f2f0; border: 1px solid transparent; box-sizing: border-box; }
+  .citybar__form:focus-within { background: #fff; border-color: var(--fairway, #2d6a4f); box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.14); }
+  .citybar__icon { flex: none; width: 19px; height: 19px; fill: none; stroke: var(--ink-faint); stroke-width: 2; stroke-linecap: round; }
+  .citybar__input { flex: 1; min-width: 0; height: 100%; border: 0; background: none; color: var(--ink); font: 500 16px var(--font-sans); outline: none; -webkit-appearance: none; }
+  .citybar__input::placeholder { color: var(--ink-faint); }
+  .citybar__input::-webkit-search-cancel-button { -webkit-appearance: none; }
+  .citybar__here { flex: none; width: 36px; height: 36px; border: 0; border-radius: 50%; background: var(--fairway-deep); color: #fff; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; }
+  .citybar__here svg { width: 17px; height: 17px; fill: currentColor; }
+  .citybar__here.is-busy { animation: citybar-pulse 0.9s ease-in-out infinite; }
+  @keyframes citybar-pulse { 50% { opacity: 0.45; } }
+  .citybar__list { position: absolute; z-index: 40; left: 16px; right: 16px; top: calc(100% - 6px); margin: 0; padding: 6px; list-style: none;
+    background: #fff; border-radius: 16px; box-shadow: 0 12px 32px rgba(27, 42, 31, 0.18); border: 1px solid var(--line); }
+  .popbar .citybar__list { left: 12px; right: 12px; top: calc(100% - 2px); }
+  .citybar__hit { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; width: 100%; padding: 10px 12px; border: 0; border-radius: 10px;
+    background: none; color: var(--ink); text-align: left; cursor: pointer; font-family: var(--font-sans); }
+  .citybar__hit:hover, .citybar__hit:focus { background: #f0f2f0; outline: none; }
+  .citybar__hit b { font-size: 15.5px; }
+  .citybar__hit span { font-size: 13px; color: var(--ink-faint); }
+  .citybar__none { padding: 12px; font-size: 14px; color: var(--ink-faint); }
+  html.is-dark .citybar__form { background: #26302b; }
+  html.is-dark .citybar__form:focus-within { background: #1c231f; border-color: #7fd1a6; box-shadow: 0 0 0 3px rgba(127, 209, 166, 0.16); }
+  html.is-dark .citybar__input { color: #e4e9e5; }
+  html.is-dark .citybar__here { background: #7fd1a6; color: #10241a; }
+  html.is-dark .citybar__list { background: #1c231f; border-color: rgba(255, 255, 255, 0.12); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5); }
+  html.is-dark .citybar__hit { color: #e4e9e5; }
+  html.is-dark .citybar__hit:hover, html.is-dark .citybar__hit:focus { background: #26302b; }
+  html.is-dark .citybar__hit span, html.is-dark .citybar__none { color: rgba(228, 233, 229, 0.6); }
+
+  /* The city the feed is showing */
+  .cityhead { max-width: 720px; margin: 0 auto 18px; }
+  .cityhead__kicker { margin: 0; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fairway); }
+  .cityhead__name { margin: 2px 0 0; font: 800 34px/1.1 var(--font-serif); color: var(--fairway-deep); }
+  .cityhead__where { margin: 4px 0 0; font-size: 14.5px; color: var(--ink-faint); }
+  .cityhead__empty { margin: 10px 0 0; font-size: 15px; color: var(--ink-soft); }
+  html.is-dark .cityhead__kicker { color: #7fd1a6; }
+  html.is-dark .cityhead__name { color: #e4e9e5; }
+  html.is-dark .cityhead__where, html.is-dark .cityhead__empty { color: rgba(228, 233, 229, 0.65); }
+  /* "Plan a walk in <city>" when the city has no walks yet */
+  .cityplan { display: flex; align-items: center; gap: 14px; max-width: 720px; margin: 0 auto 28px; padding: 16px 18px; box-sizing: border-box;
+    border-radius: 16px; background: var(--fairway-deep); color: #fff; text-decoration: none; }
+  .cityplan__body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+  .cityplan b { font: 700 19px/1.25 var(--font-serif); }
+  .cityplan span { font-size: 14px; color: rgba(255, 255, 255, 0.78); }
+  .cityplan svg { flex: none; width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  html.is-dark .cityplan { background: #26302b; border: 1px solid rgba(127, 209, 166, 0.35); }
+  .more-head { max-width: 720px; margin: 30px auto 6px; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fairway); }
+  html.is-dark .more-head { color: #7fd1a6; }
+
   /* "Walks this week" strip (templates/_walk_strip.html) */
   .walk-strip { max-width: 720px; margin: 0 auto 28px; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
   .walk-strip__head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 12px; }
@@ -43,6 +113,26 @@
 {% if active_category and active_sub %}
 <p class="sub-crumb">{{ categories[active_category].label }} / {{ categories[active_category].subcategories[active_sub] }}</p>
 {% endif %}
+{% if city %}
+<section class="cityhead">
+  <p class="cityhead__kicker">Exploring</p>
+  <h1 class="cityhead__name">{{ city.name }}</h1>
+  {% set where = city.label.split(', ')[1:] | reject('equalto', city.name) | join(', ') %}
+  {% if where %}<p class="cityhead__where">{{ where }}</p>{% endif %}
+  {% if not featured %}<p class="cityhead__empty">No stories from {{ city.name }} yet{% if community_walks or walk_feed %}, but walkers have been busy{% endif %}.</p>{% endif %}
+</section>
+{% endif %}
+
+{% macro city_walks() %}
+  {% include "_walk_strip.html" %}{% include "_community_strip.html" %}
+  {% if city and not walk_feed %}
+  <a class="cityplan" href="/walk?ask={{ ('Plan a walk in ' ~ city.name) | urlencode }}">
+    <span class="cityplan__body"><b>Plan a walk in {{ city.name }}</b><span>Tell the AI what you're in the mood for and it maps the walk for you.</span></span>
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+  </a>
+  {% endif %}
+{% endmacro %}
+
 {% for story in featured %}
   {% set fcat = categories[story.category] %}
   <a href="/article/{{ story.slug }}" class="hero-story{% if not story.cover_image %} hero-story--plain{% endif %}" data-slug="{{ story.slug }}">
@@ -62,32 +152,30 @@
     </div>
     {{ story_actions(story.slug, story.title, story.slug in saved_slugs, comment_counts.get(story.slug, 0)) }}
   </a>
-  {% if loop.first %}{% include "_walk_strip.html" %}{% include "_community_strip.html" %}{% endif %}
+  {% if loop.first %}{{ city_walks() }}{% endif %}
 {% endfor %}
-{% if not featured %}{% include "_walk_strip.html" %}{% include "_community_strip.html" %}{% endif %}
+{% if not featured %}{{ city_walks() }}{% endif %}
 
-<div class="story-list" id="card-grid">
-  {% for article in articles %}
-    {% set cat = categories[article.category] %}
-    <a href="/article/{{ article.slug }}" class="story-row" data-slug="{{ article.slug }}">
-      <div class="story-row__body">
-        <span class="story-row__pill">{{ article.pill }}</span>
-        <h2 class="story-row__title">{{ article.title }}</h2>
-        <p class="story-row__meta">{{ article.author }} &middot; {{ article.read_minutes }} min read</p>
-        {{ story_actions(article.slug, article.title, article.slug in saved_slugs, comment_counts.get(article.slug, 0), compact=True) }}
-      </div>
-      {% if article.cover_image %}
-        <div class="story-row__thumb" style="background-image: url('{{ article.cover_image }}'); background-size: cover; background-position: center;"></div>
-      {% endif %}
-    </a>
-  {% endfor %}
+<div id="card-grid">
+  {% if city_articles %}
+  <div class="story-list">
+    {% for article in city_articles %}{{ story_row(article) }}{% endfor %}
+  </div>
+  {% endif %}
+  {% if articles %}
+  {% if city %}<h2 class="more-head">More stories</h2>{% endif %}
+  <div class="story-list">
+    {% for article in articles %}{{ story_row(article) }}{% endfor %}
+  </div>
+  {% endif %}
 </div>
 
-{% if not articles and not featured %}
+{% if not city and not articles and not featured %}
   <p class="empty-state">No articles in this category yet.</p>
 {% endif %}
 
 {% include "_article_sheet.html" %}
+<script src="/static/js/citybar.js?v=1" defer></script>
 {% if walk_feed or community_walks %}{% include "_walk_sheet.html" %}{% endif %}
 {% if community_walks %}{% include "_community_ui.html" %}{% endif %}
 {% if walk_feed or community_walks %}{% include "_footprints_ui.html" %}{% endif %}

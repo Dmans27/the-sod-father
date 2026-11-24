@@ -359,8 +359,10 @@ def google_fill(settings, lat, lng, radius, min_rating, keywords, area, center):
             where = " in " + settings["city"]
     if keywords:
         searches = [(" ".join(keywords), list(settings["groups"]))]
-    else:
-        searches = [(GOOGLE_WORDS.get(g, "places"), [g]) for g in (settings["groups"] or ["other"])[:3]]
+    elif settings["groups"]:
+        searches = [(GOOGLE_WORDS.get(g, "places"), [g]) for g in settings["groups"][:3]]
+    else:   # no kind of place asked for ("plan a walk in Chicago"): whatever's good, any kind
+        searches = [("best things to do", [])]
     found, seen = [], set()
     for words, groups in searches:
         places, ok = google_places(words + where, clat, clng, rad, 20, rich=True, groups=groups,

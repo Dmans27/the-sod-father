@@ -1223,6 +1223,7 @@ def _build_doc_from_form(form, files, slug, existing, draft=False):
         "dek": dek,
         "category": category,
         "subcategory": subcategory,
+        "city": " ".join(form.get("city", "").split())[:80],   # the city feed (city_feed.py); empty = matched from the title and dek
         "author": author_name,
         "author_slug": author_slug or None,
         "author_photo": author_photo,
