@@ -302,6 +302,21 @@ def delete_reader_data(reader_id):
 
 # ── The screens ──────────────────────────────────────────────────────────
 
+VIDEO_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "static", "video")
+
+
+def tour_video():
+    """The screen recording for the "How it works" tour: static/video/onboarding.mp4 (with an optional
+    onboarding.jpg still for before it loads). None when there's no video: the tour is just the cards."""
+    path = os.path.join(VIDEO_DIR, "onboarding.mp4")
+    if not os.path.isfile(path):
+        return None
+    v = int(os.path.getmtime(path))
+    poster = os.path.join(VIDEO_DIR, "onboarding.jpg")
+    return {"src": f"/static/video/onboarding.mp4?v={v}",
+            "poster": f"/static/video/onboarding.jpg?v={v}" if os.path.isfile(poster) else None}
+
+
 @onboarding_bp.get("/welcome")
 def welcome():
     reader = current_reader()
@@ -318,6 +333,7 @@ def welcome():
         if not fresh:   # first visit (just signed up) or the last code ran out: send one now
             ok, sent = send_code(reader)
     return render_template("welcome.html", verified=verified, sent=sent, next=nxt, step=request.args.get("step") or "",
+                           tour_video=tour_video(),
                            profile=get_profile(reader["id"]), email=reader["email"], name=reader["display_name"],
                            purposes=PURPOSES, interests=INTERESTS, walk_lengths=WALK_LENGTHS, avoid=AVOID,
                            categories=CATEGORIES, active_category=None)

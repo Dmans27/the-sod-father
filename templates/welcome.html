@@ -46,6 +46,12 @@
   .wel__input { width: 100%; box-sizing: border-box; padding: 15px 16px; border: 1px solid rgba(27, 42, 31, 0.16); border-radius: 14px; background: #f3f4f3;
     font: 500 17px var(--font-sans); color: var(--ink); -webkit-appearance: none; }
   .wel__input:focus { outline: none; border-color: var(--fairway-deep); background: #fff; }
+  .wel__handle { display: flex; align-items: center; gap: 2px; padding: 0 16px; border: 1px solid rgba(27, 42, 31, 0.16); border-radius: 14px; background: #f3f4f3; }
+  .wel__handle span { font: 700 19px var(--font-sans); color: var(--ink-faint); }
+  .wel__handle input { flex: 1; min-width: 0; padding: 15px 0; border: 0; background: none; color: var(--ink); font: 700 19px var(--font-sans); outline: none; }
+  .wel__handle:focus-within { border-color: var(--fairway-deep); background: #fff; }
+  html.is-dark .wel__handle { background: #22272a; border-color: rgba(255, 255, 255, 0.12); }
+  html.is-dark .wel__handle input { color: #fff; }
   .wel__list { list-style: none; margin: 6px 0 0; padding: 4px; border: 1px solid var(--line); border-radius: 14px; background: #fff; }
   .wel__list[hidden] { display: none; }
   .wel__list button { display: flex; flex-direction: column; align-items: flex-start; width: 100%; padding: 11px 12px; border: 0; border-radius: 10px;
@@ -67,6 +73,9 @@
   .wel__art { height: 190px; border-radius: 22px; margin-bottom: 18px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
     background: linear-gradient(160deg, #1d2a22, #26392e); color: #fff; }
   .wel__art svg { width: 100%; height: 100%; }
+  .wel__phone { width: min(62vw, 250px); margin: 0 auto 16px; padding: 7px; border-radius: 34px; background: #15171a;
+    box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28); }
+  .wel__video { display: block; width: 100%; max-height: 48vh; aspect-ratio: 9 / 19.5; object-fit: cover; border-radius: 27px; background: #1d2a22; }
   .wel__th { margin: 0 0 6px; font: 800 23px/1.2 var(--font-serif); color: var(--fairway-deep); }
   .wel__tp { margin: 0; font-size: 15.5px; line-height: 1.55; color: var(--ink-soft); }
   .wel__tp b { color: var(--ink); }
@@ -103,7 +112,7 @@
 <div class="wel" id="wel">
   <div class="wel__top">
     <button type="button" class="wel__back" data-back hidden>&larr; Back</button>
-    <div class="wel__dots" aria-hidden="true">{% for i in range(4) %}<span class="wel__dot"></span>{% endfor %}</div>
+    <div class="wel__dots" aria-hidden="true">{% for i in range(5) %}<span class="wel__dot"></span>{% endfor %}</div>
     <button type="button" class="wel__skip" data-skip hidden>Skip</button>
   </div>
 
@@ -185,10 +194,34 @@
     <div class="wel__go"><button type="button" class="wel__btn" data-next>Continue</button></div>
   </section>
 
-  {# 6. A quick tour: how to use the app (swipe) #}
+  {# 6. Their @handle (friends.py): made from their name; change it here or later on the Friends page #}
+  <section class="wel__step" data-step="handle">
+    <p class="wel__kicker">Your @handle</p>
+    <h1 class="wel__h">How friends find you</h1>
+    <p class="wel__sub">Friends search for this to add you and plan walks together. You can change it any time.</p>
+    <label class="wel__handle">
+      <span aria-hidden="true">@</span>
+      <input id="wel-handle" type="text" maxlength="20" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="Your handle" value="{{ my_handle() }}">
+    </label>
+    <p class="wel__msg" id="wel-handle-msg" role="status" aria-live="polite"></p>
+    <div class="wel__go"><button type="button" class="wel__btn" id="wel-handle-next">Continue</button></div>
+  </section>
+
+  {# 7. A quick tour: how to use the app (swipe) #}
   <section class="wel__step" data-step="tour">
     <p class="wel__kicker">How it works</p>
     <div class="wel__tour" id="wel-tour">
+      {% if tour_video %}
+      {# Your screen recording (static/video/onboarding.mp4): plays silently on a loop; tap to pause. #}
+      <div class="wel__tcard">
+        <div class="wel__phone">
+          <video class="wel__video" id="wel-video" src="{{ tour_video.src }}"{% if tour_video.poster %} poster="{{ tour_video.poster }}"{% endif %}
+                 muted loop playsinline webkit-playsinline preload="metadata" aria-label="A quick look at the app"></video>
+        </div>
+        <h2 class="wel__th">See it in action</h2>
+        <p class="wel__tp">A quick look at planning a walk, your city's feed and sharing. Tap the video to pause.</p>
+      </div>
+      {% endif %}
       <div class="wel__tcard">
         <div class="wel__art" aria-hidden="true">
           <svg viewBox="0 0 320 190"><g stroke="#2e3a33" stroke-width="3"><path d="M0 40h320M0 95h320M0 150h320M60 0v190M150 0v190M245 0v190"/></g>
@@ -241,11 +274,11 @@
         <p class="wel__tp">When you reach a stop, give it 1 to 5 <b>footprints</b>: how worth the walk it was. Your ratings help everyone, and the AI plans better walks from them.</p>
       </div>
     </div>
-    <div class="wel__tdots" id="wel-tdots">{% for i in range(4) %}<button type="button" class="wel__tdot{% if loop.first %} is-on{% endif %}" aria-label="Card {{ loop.index }}"></button>{% endfor %}</div>
+    <div class="wel__tdots" id="wel-tdots">{% for i in range(4 + (1 if tour_video else 0)) %}<button type="button" class="wel__tdot{% if loop.first %} is-on{% endif %}" aria-label="Card {{ loop.index }}"></button>{% endfor %}</div>
     <div class="wel__go"><button type="button" class="wel__btn" id="wel-tour-next">Next</button></div>
   </section>
 
-  {# 7. Done #}
+  {# 8. Done #}
   <section class="wel__step" data-step="done">
     <p class="wel__kicker">All set</p>
     <h1 class="wel__h">You're ready to explore, {{ name }}</h1>
@@ -260,7 +293,7 @@
     var root = document.getElementById('wel');
     var NEXT = {{ next | tojson }}, VERIFIED = {{ 'true' if verified else 'false' }}, START = {{ step | tojson }};
     var ONBOARDED = {{ 'true' if profile.get('onboarded_at') else 'false' }};
-    var QUESTIONS = ['purpose', 'city', 'interests', 'walk'];
+    var QUESTIONS = ['purpose', 'city', 'interests', 'walk', 'handle'];
     var answers = {
       purpose: {{ (profile.get('purpose') or '') | tojson }},
       city: {{ ({'name': profile.city_name, 'label': profile.city_label, 'lat': profile.city_lat, 'lng': profile.city_lng} if profile.get('city_name') else none) | tojson }},
@@ -291,6 +324,7 @@
       if (name === 'city') document.getElementById('wel-city-h').textContent =
         answers.purpose === 'visiting' || answers.purpose === 'planning' ? 'Where are you headed?' : 'Where are you based?';
       if (name === 'done') summary();
+      if (window.MansfieldTourVideo) setTimeout(window.MansfieldTourVideo, 50);
       if (name === 'verify') setTimeout(function () { document.getElementById('wel-code').focus(); }, 150);
       window.scrollTo(0, 0);
     }
@@ -343,6 +377,20 @@
     root.querySelector('[data-later]').addEventListener('click', function () {
       if (order.length === 1) { location.href = NEXT; return; }
       nextStep();
+    });
+
+    // ---- @handle ----
+    var hIn = document.getElementById('wel-handle'), hMsg = document.getElementById('wel-handle-msg'), hWas = hIn.value;
+    function hSay(t, bad) { hMsg.textContent = t || ''; hMsg.classList.toggle('is-error', !!bad); }
+    hIn.addEventListener('input', function () { hIn.value = hIn.value.replace(/^@+/, '').toLowerCase().replace(/[^a-z0-9_.]/g, ''); hSay(''); });
+    document.getElementById('wel-handle-next').addEventListener('click', function () {
+      var v = hIn.value.trim(), b = this;
+      if (!v || v === hWas) { nextStep(); return; }
+      b.disabled = true;
+      post('/api/friends/handle', { handle: v }).then(function (d) {
+        b.disabled = false;
+        if (d.ok) { hWas = hIn.value = d.handle; hSay(''); nextStep(); } else hSay(d.error || 'Couldn’t save that. Try another.', true);
+      });
     });
 
     // ---- Choices ----
@@ -441,7 +489,19 @@
       Array.prototype.forEach.call(tdots, function (d, k) { d.classList.toggle('is-on', k === tat); });
       tnext.textContent = tat >= tdots.length - 1 ? 'Got it' : 'Next';
     }
-    tour.addEventListener('scroll', function () { clearTimeout(tour._t); tour._t = setTimeout(tmark, 60); }, { passive: true });
+    tour.addEventListener('scroll', function () { clearTimeout(tour._t); tour._t = setTimeout(function () { tmark(); playVideo(); }, 60); }, { passive: true });
+    // The video plays only while its card is showing.
+    var video = document.getElementById('wel-video');
+    function playVideo() {
+      if (!video) return;
+      var onTour = root.querySelector('.wel__step.is-on') === tour.closest('.wel__step');
+      if (onTour && tat === 0 && !video.dataset.paused) { var p = video.play(); if (p && p.catch) p.catch(function () {}); }
+      else video.pause();
+    }
+    if (video) video.addEventListener('click', function () {
+      if (video.paused) { delete video.dataset.paused; video.play(); } else { video.dataset.paused = '1'; video.pause(); }
+    });
+    window.MansfieldTourVideo = playVideo;
     Array.prototype.forEach.call(tdots, function (d, k) { d.addEventListener('click', function () { tour.scrollTo({ left: k * tour.clientWidth, behavior: 'smooth' }); }); });
     tnext.addEventListener('click', function () {
       if (tat < tdots.length - 1) { tour.scrollTo({ left: (tat + 1) * tour.clientWidth, behavior: 'smooth' }); return; }

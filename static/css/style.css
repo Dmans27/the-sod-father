@@ -1722,6 +1722,11 @@ body.article-page.is-dark,
     background: var(--fairway-deep); color: #fff; font-size: 13px; font-weight: 800; }
   .bottom-nav__me img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
   .bottom-nav__item.is-active .bottom-nav__me { box-shadow: 0 0 0 2px var(--fairway-deep); }
+  /* A red dot on Account: friend requests waiting (friends.py) */
+  .bottom-nav__item { position: relative; }
+  .bottom-nav__dot { position: absolute; top: 5px; left: calc(50% + 7px); width: 10px; height: 10px; border-radius: 50%;
+    background: #e5484d; box-shadow: 0 0 0 2px #fff; }
+  .is-dark .bottom-nav__dot { box-shadow: 0 0 0 2px #1c231f; }
   /* On phones the account lives in the pill: no avatar menu at the top. */
   .user-menu { display: none; }
   .is-dark .bottom-nav { background: rgba(28, 35, 31, 0.92); border-color: rgba(255, 255, 255, 0.12); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55); }

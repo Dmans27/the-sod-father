@@ -1,0 +1,286 @@
+{% extends "base.html" %}
+{% block title %}Friends — \\Mansfield{% endblock %}
+
+{# Friends (friends.py): your @handle and invite link/QR, search, requests, your friends,
+   and the group maps you plan with them (group_maps.py, opened on the walk page). #}
+{% block content %}
+<section class="fr" id="fr">
+  <h1 class="fr__title">Friends</h1>
+
+  <div class="fr__me">
+    <span class="fr__av fr__av--big" data-av="{{ me.handle }}">{{ me.initial }}</span>
+    <div class="fr__me-who">
+      <b>{{ me.name }}</b>
+      <span class="fr__handle">@<span id="fr-handle">{{ me.handle }}</span></span>
+    </div>
+    <button type="button" class="fr__link" id="fr-edit">Edit</button>
+  </div>
+  <form class="fr__edit" id="fr-edit-form" hidden>
+    <label class="fr__edit-row">
+      <span>@</span>
+      <input type="text" id="fr-handle-in" maxlength="20" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="Your handle" value="{{ me.handle }}">
+    </label>
+    <p class="fr__hint" id="fr-handle-msg">Friends find you by this. Letters, numbers, dots and underscores.</p>
+    <div class="fr__row">
+      <button type="submit" class="account-btn account-btn--small">Save</button>
+      <button type="button" class="account-btn account-btn--small account-btn--ghost" id="fr-edit-cancel">Cancel</button>
+    </div>
+  </form>
+
+  <div class="fr__invite">
+    <button type="button" class="account-btn" id="fr-share">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-share"/></svg>Share your invite link
+    </button>
+    {% if has_qr %}<button type="button" class="account-btn account-btn--ghost" id="fr-qr-btn" aria-expanded="false">Show QR code</button>{% endif %}
+  </div>
+  {% if has_qr %}
+  <div class="fr__qr" id="fr-qr" hidden>
+    <img src="/u/{{ me.handle }}/qr.svg" alt="QR code that opens your invite page" width="200" height="200" loading="lazy">
+    <p>Let a friend scan this with their phone camera to add you.</p>
+  </div>
+  {% endif %}
+  <p class="fr__hint fr__hint--center" id="fr-share-msg" role="status" aria-live="polite"></p>
+
+  <div class="fr__search">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4.5 4.5"/></svg>
+    <input type="search" id="fr-q" placeholder="Search by @handle or name" autocomplete="off" autocapitalize="none" spellcheck="false" aria-label="Search for friends">
+  </div>
+  <ul class="fr__list" id="fr-results" aria-live="polite"></ul>
+
+  <h2 class="fr__h" id="fr-in-h" hidden>Requests <span class="fr__count" id="fr-in-n"></span></h2>
+  <ul class="fr__list" id="fr-in"></ul>
+
+  <h2 class="fr__h">Your friends</h2>
+  <ul class="fr__list" id="fr-friends"></ul>
+
+  <h2 class="fr__h" id="fr-out-h" hidden>Sent</h2>
+  <ul class="fr__list" id="fr-out"></ul>
+
+  <h2 class="fr__h">Group maps</h2>
+  <p class="fr__hint">Plan an outing together: everyone on the map can add and reorder stops.</p>
+  <ul class="fr__list">
+    {% for m in maps %}
+    <li class="fr__map">
+      <a href="/walk?group={{ m.id }}">
+        <span class="fr__map-title">{{ m.title }}</span>
+        <span class="fr__map-meta">{{ m.members | length }} {{ 'person' if m.members | length == 1 else 'people' }} &middot; {{ m.stops | length }} {{ 'stop' if m.stops | length == 1 else 'stops' }}{% if m.stops %} &middot; {{ m.stops | map(attribute='name') | join(' → ') }}{% endif %}</span>
+      </a>
+    </li>
+    {% endfor %}
+  </ul>
+  <a class="account-btn account-btn--ghost fr__new" href="/walk?group=new">+ Plan a map with friends</a>
+
+  <p class="account-card__foot"><a href="/account/profile">Back to account</a></p>
+</section>
+
+<style>
+  .fr { max-width: 480px; margin: 0 auto; padding: 26px 0 24px; }
+  .fr__title { margin: 0 0 18px; font: 800 30px/1.15 var(--font-serif); color: var(--fairway-deep); }
+  .fr__me { display: flex; align-items: center; gap: 14px; }
+  .fr__me-who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .fr__me-who b { font-size: 18px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fr__handle { font-size: 15px; color: var(--ink-faint); }
+  .fr__av { flex: none; width: 42px; height: 42px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+    font: 800 17px var(--font-sans); color: #0b2414; background: #9fe0bd; }
+  .fr__av--big { width: 58px; height: 58px; font-size: 24px; }
+  .fr__link { border: 0; background: none; padding: 8px 4px; color: var(--fairway-deep); font: 800 15px var(--font-sans); cursor: pointer; }
+  .fr__edit { margin: 14px 0 0; }
+  .fr__edit[hidden], .fr__qr[hidden], .fr__h[hidden] { display: none; }
+  .fr__edit-row { display: flex; align-items: center; gap: 2px; padding: 0 14px; border: 1px solid rgba(27, 42, 31, 0.2); border-radius: 12px; background: #fff; }
+  .fr__edit-row span { font: 700 17px var(--font-sans); color: var(--ink-faint); }
+  .fr__edit-row input { flex: 1; min-width: 0; padding: 12px 0; border: 0; background: none; color: var(--ink); font: 600 17px var(--font-sans); outline: none; }
+  .fr__edit-row:focus-within { border-color: var(--fairway-deep); box-shadow: 0 0 0 3px rgba(27, 67, 50, 0.12); }
+  .fr__hint { margin: 8px 2px 0; font-size: 14px; line-height: 1.45; color: var(--ink-soft); }
+  .fr__hint.is-error { color: #a4303f; }
+  .fr__hint.is-ok { color: var(--fairway); }
+  .fr__hint--center { text-align: center; min-height: 0; }
+  .fr__hint--center:empty { display: none; }
+  .fr__row { display: flex; gap: 8px; margin-top: 12px; }
+  .fr__invite { display: flex; flex-direction: column; gap: 8px; margin: 22px 0 0; }
+  .fr__invite .account-btn { width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .fr__invite svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .fr__qr { margin: 14px 0 0; padding: 18px; border-radius: 18px; background: #fff; border: 1px solid var(--line); text-align: center; }
+  .fr__qr img { display: block; width: 200px; height: 200px; margin: 0 auto; }
+  .fr__qr p { margin: 10px 0 0; font-size: 14px; color: #4a5650; }
+  .fr__search { position: relative; margin: 26px 0 0; }
+  .fr__search svg { position: absolute; left: 15px; top: 50%; width: 19px; height: 19px; transform: translateY(-50%); fill: none; stroke: var(--ink-faint); stroke-width: 2; stroke-linecap: round; }
+  .fr__search input { width: 100%; box-sizing: border-box; height: 48px; padding: 0 16px 0 44px; border: 1px solid rgba(27, 42, 31, 0.14); border-radius: 999px;
+    background: #f1f3f1; color: var(--ink); font: 500 16px var(--font-sans); outline: none; -webkit-appearance: none; }
+  .fr__search input:focus { background: #fff; border-color: var(--fairway-deep); box-shadow: 0 0 0 3px rgba(27, 67, 50, 0.12); }
+  .fr__h { display: flex; align-items: center; gap: 8px; margin: 28px 0 4px; font: 800 13px var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--fairway); }
+  .fr__count { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: #d64545; color: #fff; font-size: 12px; letter-spacing: 0; display: inline-flex; align-items: center; justify-content: center; }
+  .fr__list { list-style: none; margin: 0; padding: 0; }
+  .fr__p { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+  .fr__p-who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .fr__p-who b { font-size: 15.5px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fr__p-who span { font-size: 13.5px; color: var(--ink-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fr__acts { flex: none; display: flex; gap: 6px; }
+  .fr__p--req { flex-wrap: wrap; row-gap: 10px; }
+  .fr__p--req .fr__acts { flex: 1 0 100%; padding-left: 54px; }
+  .fr__btn { padding: 8px 14px; border: 0; border-radius: 999px; background: var(--fairway-deep); color: #fff; font: 800 13.5px var(--font-sans); cursor: pointer; }
+  .fr__btn--ghost { background: none; color: var(--ink-soft); border: 1px solid rgba(27, 42, 31, 0.2); }
+  .fr__btn--done { background: rgba(45, 106, 79, 0.12); color: var(--fairway-deep); cursor: default; }
+  .fr__btn:disabled { opacity: 0.6; }
+  .fr__empty { padding: 12px 2px; font-size: 14.5px; color: var(--ink-faint); }
+  .fr__map a { display: flex; flex-direction: column; gap: 2px; padding: 13px 0; border-bottom: 1px solid var(--line); text-decoration: none; }
+  .fr__map-title { font-weight: 800; font-size: 16px; color: var(--ink); }
+  .fr__map-meta { font-size: 13.5px; color: var(--ink-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .fr__new { display: block; width: 100%; margin-top: 14px; text-align: center; text-decoration: none; box-sizing: border-box; }
+  .is-dark .fr__edit-row { background: #252d28; border-color: rgba(255, 255, 255, 0.22); }
+  .is-dark .fr__search input { background: #252d28; border-color: rgba(255, 255, 255, 0.16); }
+  .is-dark .fr__search input:focus { background: #2c352f; }
+  .is-dark .fr__btn { background: #2f7a55; }
+  .is-dark .fr__btn--ghost { background: none; border-color: rgba(255, 255, 255, 0.24); color: var(--ink-soft); }
+  .is-dark .fr__btn--done { background: rgba(127, 209, 166, 0.14); color: #9fe0bd; }
+  .is-dark .fr__hint.is-error { color: #ff9a9a; }
+</style>
+<script>
+  (function () {
+    var DATA = {{ data | tojson }}, INVITE = {{ invite_url | tojson }};
+    var COLORS = ['#9fe0bd', '#f6c89f', '#b9c8f7', '#f3b2c4', '#c9e59b', '#f1dd8c', '#a9e1e8', '#d6bff2'];
+    function tint(h) { var n = 0; for (var i = 0; i < h.length; i++) n = (n * 31 + h.charCodeAt(i)) >>> 0; return COLORS[n % COLORS.length]; }
+    function el(tag, cls, text) { var n = document.createElement(tag); if (cls) n.className = cls; if (text != null) n.textContent = text; return n; }
+    function csrf() { return (window.READER && window.READER.csrf) || ''; }
+    function post(url, body) {
+      return fetch(url, { method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': csrf() }, body: JSON.stringify(body || {}) })
+        .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { d.httpOk = r.ok; return d; }); })
+        .catch(function () { return { error: 'Couldn’t reach the server. Check your connection.' }; });
+    }
+    Array.prototype.forEach.call(document.querySelectorAll('[data-av]'), function (a) { a.style.background = tint(a.getAttribute('data-av')); });
+
+    // ---- People rows: the buttons depend on where you stand with them ----
+    function row(p, where) {
+      var li = el('li', 'fr__p' + (where === 'in' ? ' fr__p--req' : ''));
+      var av = el('span', 'fr__av', p.initial); av.style.background = tint(p.handle);
+      li.appendChild(av);
+      var who = el('div', 'fr__p-who');
+      who.appendChild(el('b', '', p.name));
+      who.appendChild(el('span', '', '@' + p.handle));
+      li.appendChild(who);
+      var acts = el('div', 'fr__acts');
+      function btn(label, cls, fn) {
+        var b = el('button', 'fr__btn' + (cls ? ' ' + cls : ''), label);
+        b.type = 'button';
+        if (fn) b.addEventListener('click', function () { b.disabled = true; fn(b); }); else b.disabled = true;
+        acts.appendChild(b);
+      }
+      function act(url, body, done) {
+        return function (b) {
+          post(url, body).then(function (d) {
+            if (d.verify) { b.disabled = false; return; }   // the verify-your-email card is showing (base.html)
+            if (!d.ok) { b.disabled = false; window.alert(d.error || 'Something went wrong. Try again.'); return; }
+            if (done) done(d);
+            refresh();
+          });
+        };
+      }
+      var st = p.state;
+      if (st === 'friends') {
+        if (where === 'friends') btn('Remove', 'fr__btn--ghost', function (b) {
+          if (!window.confirm('Remove ' + p.name + ' from your friends?')) { b.disabled = false; return; }
+          act('/api/friends/remove', { handle: p.handle })(b);
+        });
+        else btn('Friends ✓', 'fr__btn--done');
+      } else if (st === 'sent') {
+        btn(where === 'out' ? 'Cancel' : 'Requested', 'fr__btn--ghost', act('/api/friends/remove', { handle: p.handle }));
+      } else if (st === 'received') {
+        btn('Accept', '', act('/api/friends/respond', { handle: p.handle, accept: true }));
+        btn('Decline', 'fr__btn--ghost', act('/api/friends/respond', { handle: p.handle, accept: false }));
+        if (where === 'in') btn('Block', 'fr__btn--ghost', function (b) {
+          if (!window.confirm('Block ' + p.name + '? They won’t be able to find you or send you requests.')) { b.disabled = false; return; }
+          act('/api/friends/block', { handle: p.handle })(b);
+        });
+      } else {
+        btn('Add', '', act('/api/friends/request', { handle: p.handle }));
+      }
+      li.appendChild(acts);
+      return li;
+    }
+    function paintList(id, list, where, empty) {
+      var ul = document.getElementById(id);
+      ul.innerHTML = '';
+      list.forEach(function (p) { ul.appendChild(row(p, where)); });
+      if (!list.length && empty) ul.appendChild(el('li', 'fr__empty', empty));
+    }
+    function paint() {
+      paintList('fr-in', DATA.incoming, 'in');
+      document.getElementById('fr-in-h').hidden = !DATA.incoming.length;
+      document.getElementById('fr-in-n').textContent = DATA.incoming.length;
+      paintList('fr-friends', DATA.friends, 'friends', 'No friends yet. Search for them above, or share your invite link.');
+      paintList('fr-out', DATA.outgoing, 'out');
+      document.getElementById('fr-out-h').hidden = !DATA.outgoing.length;
+    }
+    function refresh() {
+      fetch('/api/friends', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+        .then(function (r) { return r.json(); })
+        .then(function (d) { if (d && d.friends) { DATA = d; paint(); } })
+        .catch(function () {});
+      if (q.value.trim().length >= 2) search();
+    }
+
+    // ---- Search ----
+    var q = document.getElementById('fr-q'), results = document.getElementById('fr-results'), timer = null, seq = 0;
+    function search() {
+      var text = q.value.trim(), mine = ++seq;
+      if (text.replace(/^@/, '').length < 2) { results.innerHTML = ''; return; }
+      fetch('/api/friends/search?q=' + encodeURIComponent(text), { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          if (mine !== seq) return;
+          results.innerHTML = '';
+          var people = (d && d.people) || [];
+          people.forEach(function (p) { results.appendChild(row(p, 'search')); });
+          if (!people.length) results.appendChild(el('li', 'fr__empty', d && d.error ? d.error : 'No one found for “' + text + '”. Try their @handle, or send them your invite link.'));
+        })
+        .catch(function () { if (mine === seq) { results.innerHTML = ''; results.appendChild(el('li', 'fr__empty', 'Couldn’t search right now.')); } });
+    }
+    q.addEventListener('input', function () { clearTimeout(timer); timer = setTimeout(search, 250); });
+
+    // ---- Your handle ----
+    var form = document.getElementById('fr-edit-form'), hin = document.getElementById('fr-handle-in'), hmsg = document.getElementById('fr-handle-msg');
+    var HINT = hmsg.textContent, htimer = null;
+    function hsay(text, cls) { hmsg.textContent = text; hmsg.className = 'fr__hint' + (cls ? ' ' + cls : ''); }
+    document.getElementById('fr-edit').addEventListener('click', function () { form.hidden = !form.hidden; if (!form.hidden) { hin.focus(); hin.select(); } });
+    document.getElementById('fr-edit-cancel').addEventListener('click', function () { form.hidden = true; hin.value = document.getElementById('fr-handle').textContent; hsay(HINT); });
+    hin.addEventListener('input', function () {
+      hin.value = hin.value.replace(/^@+/, '').toLowerCase().replace(/[^a-z0-9_.]/g, '');
+      clearTimeout(htimer);
+      var v = hin.value;
+      if (!v) { hsay(HINT); return; }
+      htimer = setTimeout(function () {
+        fetch('/api/friends/handle-check?h=' + encodeURIComponent(v), { credentials: 'same-origin' }).then(function (r) { return r.json(); })
+          .then(function (d) { if (hin.value === v) hsay(d.ok ? '@' + d.handle + ' is free.' : d.error, d.ok ? 'is-ok' : 'is-error'); }).catch(function () {});
+      }, 300);
+    });
+    form.addEventListener('submit', function (e) {
+      e.preventDefault();
+      post('/api/friends/handle', { handle: hin.value }).then(function (d) {
+        if (!d.ok) { hsay(d.error || 'Couldn’t save that.', 'is-error'); return; }
+        document.getElementById('fr-handle').textContent = d.handle;
+        INVITE = INVITE.replace(/\/u\/[^/]+$/, '/u/' + d.handle);
+        var img = document.querySelector('#fr-qr img'); if (img) img.src = '/u/' + d.handle + '/qr.svg';
+        form.hidden = true; hsay(HINT);
+      });
+    });
+
+    // ---- Invite link + QR ----
+    var smsg = document.getElementById('fr-share-msg');
+    document.getElementById('fr-share').addEventListener('click', function () {
+      var title = 'Add me on \\Mansfield';
+      if (window.MansfieldNative && window.MansfieldNative.share && window.MansfieldNative.share(INVITE, title)) return;
+      if (navigator.share) { navigator.share({ title: title, url: INVITE }).catch(function () {}); return; }
+      try { navigator.clipboard.writeText(INVITE).then(function () { smsg.textContent = 'Link copied. Paste it in a message to a friend.'; }, function () { smsg.textContent = INVITE; }); }
+      catch (err) { smsg.textContent = INVITE; }
+    });
+    var qrBtn = document.getElementById('fr-qr-btn'), qr = document.getElementById('fr-qr');
+    if (qrBtn) qrBtn.addEventListener('click', function () {
+      qr.hidden = !qr.hidden;
+      qrBtn.textContent = qr.hidden ? 'Show QR code' : 'Hide QR code';
+      qrBtn.setAttribute('aria-expanded', qr.hidden ? 'false' : 'true');
+    });
+
+    paint();
+  })();
+</script>
+{% endblock %}

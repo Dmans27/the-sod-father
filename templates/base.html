@@ -37,7 +37,7 @@
     // reader never sees a white flash on load (the menu toggle sets this).
     try { if (localStorage.getItem('sf-theme') === 'dark') document.documentElement.classList.add('is-dark'); } catch (e) {}
   </script>
-  <link rel="stylesheet" href="/static/css/style.css?v=16">
+  <link rel="stylesheet" href="/static/css/style.css?v=17">
   <link rel="alternate" type="application/rss+xml" title="\\Mansfield" href="/feed.xml">
   {# Link previews + search results. Pages override the `seo` block (stories do);
      everything else gets these site-wide defaults. #}
@@ -227,6 +227,7 @@
         <svg class="bottom-nav__icon" viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"/></svg>
       {% endif %}
       <span>Account</span>
+      {% if friend_requests %}<span class="bottom-nav__dot" aria-label="{{ friend_requests }} friend request{{ '' if friend_requests == 1 else 's' }}"></span>{% endif %}
     </a>
   </nav>
 

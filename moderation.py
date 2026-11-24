@@ -93,7 +93,7 @@ def delete_comment(comment_id):
 
 def delete_reader(reader_id, email=None, remove_newsletter=False):
     """Erase a reader and everything of theirs: saved stories and places,
-    their community walks and footprint ratings, their comments (and the reports about them), reports they made, blocks in
+    their community walks and footprint ratings, friends and group maps, their comments (and the reports about them), reports they made, blocks in
     both directions, their daily Ask counter -- then the account itself."""
     try:   # their community walks, photos, likes and reports (community.py)
         import community
@@ -110,6 +110,12 @@ def delete_reader(reader_id, email=None, remove_newsletter=False):
         footprints.delete_reader_ratings(reader_id)
     except Exception as exc:  # noqa: BLE001
         print("delete_reader: footprints cleanup failed:", exc)
+    try:   # their group maps (handed over or deleted), friendships and @handle (group_maps.py, friends.py)
+        import friends, group_maps
+        group_maps.delete_reader_data(reader_id)
+        friends.delete_reader_data(reader_id)
+    except Exception as exc:  # noqa: BLE001
+        print("delete_reader: friends cleanup failed:", exc)
     mine = "(SELECT id FROM comments WHERE reader_id = :r)"
     db.execute(f"DELETE FROM comment_reports WHERE comment_id IN {mine}", r=reader_id)
     db.execute(f"DELETE FROM comment_moderation WHERE comment_id IN {mine}", r=reader_id)

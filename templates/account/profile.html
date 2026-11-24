@@ -21,6 +21,10 @@
     <dd><a href="/welcome?step=profile&next=/account/profile">Edit</a></dd>
   </div>
   <div class="account-details__row">
+    <dt>Friends</dt>
+    <dd><a href="/account/friends">{% if friend_requests %}{{ friend_requests }} new request{{ '' if friend_requests == 1 else 's' }}{% else %}Friends &amp; group maps{% endif %}</a></dd>
+  </div>
+  <div class="account-details__row">
     <dt>How it works</dt>
     <dd><a href="/welcome?step=tour&next=/account/profile">Quick tour</a></dd>
   </div>

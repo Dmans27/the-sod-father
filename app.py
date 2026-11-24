@@ -28,6 +28,8 @@ from walk_planner import walk_bp
 from walk_feed import feed_bp, feed_cards
 from community import community_bp, feed_city
 from footprints import footprints_bp
+from friends import friends_bp
+from group_maps import group_bp
 import city_feed
 from city_feed import city_bp
 from onboarding import onboarding_bp
@@ -48,6 +50,8 @@ app.register_blueprint(community_bp)  # walks readers post for other walkers in 
 app.register_blueprint(onboarding_bp)  # email code + the welcome questions after sign-up (see onboarding.py)
 app.register_blueprint(city_bp)  # the city search bar on the stories page (see city_feed.py)
 app.register_blueprint(footprints_bp)  # walkers rate places 1-5 footprints: worth the walk? (see footprints.py)
+app.register_blueprint(friends_bp)  # @handles, friend requests, invite links (see friends.py)
+app.register_blueprint(group_bp)  # maps friends plan together (see group_maps.py)
 app.register_blueprint(seo_bp)  # robots.txt, sitemap.xml, feed.xml, share images (see seo.py)
 register_seo(app)  # canonical addresses + optional analytics for every page
 # Interactive map blocks (see content.py): templates use these two to check

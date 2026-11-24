@@ -326,6 +326,7 @@
     mine.setAttribute('aria-hidden', open ? 'false' : 'true');
     minePull.setAttribute('aria-expanded', open ? 'true' : 'false');
     if (open) loadMine();
+    else if (typeof stopGroupPoll === 'function') stopGroupPoll();
   }
   function loadMine() {
     var c = (view && view.center) || START.center;
@@ -338,13 +339,17 @@
   // Which view the panel shows: the ranking, the reader's routes, or the route builder.
   function paintMineView() {
     if (mineTabs) {
-      mineTabs.hidden = !!building;
+      mineTabs.hidden = !!(building || group || groupNew);
       Array.prototype.forEach.call(mineTabs.querySelectorAll('[data-mine-view]'), function (b) {
         b.setAttribute('aria-selected', b.getAttribute('data-mine-view') === mineView ? 'true' : 'false');
       });
     }
+    stopGroupPoll();
     if (building) paintBuilder();
+    else if (groupNew) paintGroupNew();
+    else if (group) paintGroup();
     else if (mineView === 'routes') paintRoutes();
+    else if (mineView === 'groups') paintGroups();
     else paintMine();
   }
   function routablePlaces() { return ((mineData && mineData.places) || []).filter(function (p) { return p.slug; }); }
@@ -430,7 +435,7 @@
     return fetch(url, { method: method, credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': READER.csrf || '' },
       body: body ? JSON.stringify(body) : undefined })
-      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; }); });
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, status: r.status, d: d }; }); });
   }
   function paintRoutes() {
     var d = mineData || {};
@@ -472,6 +477,11 @@
       act('Open on map', 'is-primary', function () { openRoute(rt); });
       act('Share', '', function (b) { shareList(rt.title, rt.stops, b); });
       act('Post to feed', 'is-post', function () { postToFeed(rt, 'route'); });
+      act('Plan with friends', '', function () {   // a group map that starts with this route's stops
+        groupNew = { title: rt.title, picks: [], stops: rt.stops.map(function (x) { return { slug: x.slug, name: x.name }; }) };
+        mineView = 'groups';
+        paintMineView();
+      });
       act('Edit', '', function () { building = { id: rt.id, title: rt.title, picks: rt.stops.map(function (x) { return { slug: x.slug, name: x.name }; }) }; paintMineView(); });
       act('Delete', 'is-danger', function () {
         if (!window.confirm('Delete “' + rt.title + '”?')) return;
@@ -493,6 +503,77 @@
       try { history.replaceState(null, '', '/walk?' + q.toString()); } catch (e) {}
       say(rt.title + ' · ' + rt.stops.length + ' stops. Tap Start to walk it.', true);
     }
+  }
+
+  // A search box for adding places: the directory first, Google for anything it doesn't have
+  // (those are imported as listings by /api/place-import, then added like any other place).
+  // opts.picked(p): already in?  opts.full(): no room left?  opts.add({slug, name, category}): a promise of true when added.
+  function placeSearch(opts) {
+    var findLi = el('li', 'walkplan__build-find');
+    var find = el('input', 'walkplan__build-search');
+    find.type = 'search';
+    find.placeholder = 'Search any place to add it';
+    find.setAttribute('aria-label', 'Search the directory');
+    find.autocomplete = 'off';
+    var found = el('ul', 'walkplan__build-results');
+    findLi.appendChild(find);
+    findLi.appendChild(found);
+    var findTimer = null, findSeq = 0;
+    find.addEventListener('input', function () {
+      clearTimeout(findTimer);
+      var q = find.value.trim();
+      if (q.length < 2) { found.innerHTML = ''; return; }
+      findTimer = setTimeout(function () {
+        var seq = ++findSeq, c = (view && view.center) || START.center;
+        found.innerHTML = '';
+        found.appendChild(el('li', 'walkplan__build-hint', 'Searching…'));
+        fetch('/api/place-search?' + new URLSearchParams({ q: q, lat: c[1].toFixed(5), lng: c[0].toFixed(5) }).toString(),
+              { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+          .then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (seq !== findSeq) return;   // a newer search is on its way
+            found.innerHTML = '';
+            var list = (d && d.places) || [];
+            if (!list.length) { found.appendChild(el('li', 'walkplan__build-hint', 'No places found for “' + q + '”.')); return; }
+            list.forEach(function (p) {
+              var picked = opts.picked(p);
+              var li = el('li', 'walkplan__build-hit');
+              var txt = el('span', 'walkplan__mine-body');
+              var nm = el('span', 'walkplan__mine-name', p.name);
+              if (p.google) nm.appendChild(el('span', 'walkplan__build-new', 'New'));   // from Google: becomes a listing when added
+              txt.appendChild(nm);
+              txt.appendChild(el('span', 'walkplan__mine-meta', [p.category, p.address].filter(Boolean).join(' · ')));
+              li.appendChild(txt);
+              var add = el('button', '', picked ? 'Added' : '+ Add');
+              add.type = 'button';
+              add.disabled = picked || opts.full();
+              function failed(text) { add.disabled = false; add.textContent = '+ Add'; mineNote.textContent = text; }
+              add.addEventListener('click', function () {
+                add.disabled = true;
+                add.textContent = 'Adding…';
+                if (p.slug) {
+                  opts.add({ slug: p.slug, name: p.name, category: p.category || '' }).then(function (ok) { if (!ok) failed('Couldn’t add that place. Try again.'); });
+                  return;
+                }
+                fetch('/api/place-import', { method: 'POST', credentials: 'same-origin',
+                  headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': READER.csrf || '' },
+                  body: JSON.stringify({ placeId: p.placeId }) })
+                  .then(function (r) { return r.json().catch(function () { return {}; }); })
+                  .then(function (d) {
+                    if (!d.ok || !d.place) { failed(d.error || 'Couldn’t add that place. Try again.'); return; }
+                    opts.add({ slug: d.place.slug, name: d.place.name || p.name, category: d.place.category || p.category || '' })
+                      .then(function (ok) { if (!ok) failed('Couldn’t add that place. Try again.'); });
+                  })
+                  .catch(function () { failed('Couldn’t reach the server. Try again.'); });
+              });
+              li.appendChild(add);
+              found.appendChild(li);
+            });
+          })
+          .catch(function () { if (seq === findSeq) { found.innerHTML = ''; found.appendChild(el('li', 'walkplan__build-hint', 'Couldn’t search right now.')); } });
+      }, 300);
+    });
+    return findLi;
   }
 
   // ── The route builder: name it, tap places in the order to visit them ──
@@ -520,75 +601,16 @@
     var nameLi = el('li', '');
     nameLi.appendChild(name);
     mineList.appendChild(nameLi);
-    // Search the whole directory to add a place that isn't saved yet.
-    var findLi = el('li', 'walkplan__build-find');
-    var find = el('input', 'walkplan__build-search');
-    find.type = 'search';
-    find.placeholder = 'Search any place to add it';
-    find.setAttribute('aria-label', 'Search the directory');
-    find.autocomplete = 'off';
-    var found = el('ul', 'walkplan__build-results');
-    findLi.appendChild(find);
-    findLi.appendChild(found);
-    mineList.appendChild(findLi);
-    var findTimer = null, findSeq = 0;
-    find.addEventListener('input', function () {
-      clearTimeout(findTimer);
-      var q = find.value.trim();
-      if (q.length < 2) { found.innerHTML = ''; return; }
-      findTimer = setTimeout(function () {
-        var seq = ++findSeq, c = (view && view.center) || START.center;
-        found.innerHTML = '';
-        found.appendChild(el('li', 'walkplan__build-hint', 'Searching…'));
-        fetch('/api/place-search?' + new URLSearchParams({ q: q, lat: c[1].toFixed(5), lng: c[0].toFixed(5) }).toString(),
-              { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
-          .then(function (r) { return r.json(); })
-          .then(function (d) {
-            if (seq !== findSeq) return;   // a newer search is on its way
-            found.innerHTML = '';
-            var list = (d && d.places) || [];
-            if (!list.length) { found.appendChild(el('li', 'walkplan__build-hint', 'No places found for “' + q + '”.')); return; }
-            list.forEach(function (p) {
-              var picked = building.picks.some(function (x) { return (p.slug && x.slug === p.slug) || (p.placeId && x.placeId === p.placeId); });
-              var li = el('li', 'walkplan__build-hit');
-              var txt = el('span', 'walkplan__mine-body');
-              var nm = el('span', 'walkplan__mine-name', p.name);
-              if (p.google) nm.appendChild(el('span', 'walkplan__build-new', 'New'));   // from Google: becomes a listing when added
-              txt.appendChild(nm);
-              txt.appendChild(el('span', 'walkplan__mine-meta', [p.category, p.address].filter(Boolean).join(' · ')));
-              li.appendChild(txt);
-              var add = el('button', '', picked ? 'Added' : '+ Add');
-              add.type = 'button';
-              add.disabled = picked || building.picks.length >= 15;
-              add.addEventListener('click', function () {
-                if (p.slug) {
-                  building.picks.push({ slug: p.slug, name: p.name, category: p.category });
-                  paintBuilder();
-                  return;
-                }
-                // A place from Google: the directory adds it first (/api/place-import), then it's a stop like any other.
-                add.disabled = true;
-                add.textContent = 'Adding…';
-                fetch('/api/place-import', { method: 'POST', credentials: 'same-origin',
-                  headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': READER.csrf || '' },
-                  body: JSON.stringify({ placeId: p.placeId }) })
-                  .then(function (r) { return r.json().catch(function () { return {}; }); })
-                  .then(function (d) {
-                    if (!d.ok || !d.place) { add.disabled = false; add.textContent = '+ Add'; mineNote.textContent = d.error || 'Couldn’t add that place. Try again.'; return; }
-                    if (!building.picks.some(function (x) { return x.slug === d.place.slug; })) {
-                      building.picks.push({ slug: d.place.slug, name: d.place.name || p.name, category: d.place.category || p.category });
-                    }
-                    paintBuilder();
-                  })
-                  .catch(function () { add.disabled = false; add.textContent = '+ Add'; mineNote.textContent = 'Couldn’t reach the server. Try again.'; });
-              });
-              li.appendChild(add);
-              found.appendChild(li);
-            });
-          })
-          .catch(function () { if (seq === findSeq) { found.innerHTML = ''; found.appendChild(el('li', 'walkplan__build-hint', 'Couldn’t search right now.')); } });
-      }, 300);
-    });
+    // Search the whole directory (and Google, via the directory) to add a place that isn't saved yet.
+    mineList.appendChild(placeSearch({
+      picked: function (p) { return building.picks.some(function (x) { return (p.slug && x.slug === p.slug) || (p.placeId && x.placeId === p.placeId); }); },
+      full: function () { return building.picks.length >= 15; },
+      add: function (place) {
+        if (!building.picks.some(function (x) { return x.slug === place.slug; })) building.picks.push(place);
+        paintBuilder();
+        return Promise.resolve(true);
+      }
+    }));
     places.forEach(function (p) {
       var at = building.picks.map(function (x) { return x.slug; }).indexOf(p.slug);
       var li = el('li', 'walkplan__mine-item is-pick' + (at >= 0 ? ' is-picked' : ''));
@@ -630,6 +652,363 @@
     mineFoot.appendChild(cancel);
     ready();
   }
+  // ── With friends: group maps planned together (group_maps.py) ─────────
+  // A list of your maps; a form to start one and pick who's coming; and the map itself,
+  // where everyone on it can rename it, add friends, and add, remove and reorder stops.
+  // Every change saves straight away; while a map is open the page checks for the others'
+  // changes every few seconds.
+  var groupMaps = null;      // [{id, title, rev, owner, members, stops}] once loaded
+  var group = null;          // the open map
+  var groupNew = null;       // the "start a map" form: {title, picks: [handles], stops: [{slug, name}]}
+  var groupFriends = null;   // your friends (for picking who's coming), once loaded
+  var groupPicker = false;   // the open map's "add friends" list is showing
+  var groupPoll = null;
+  var AV_COLORS = ['#9fe0bd', '#f6c89f', '#b9c8f7', '#f3b2c4', '#c9e59b', '#f1dd8c', '#a9e1e8', '#d6bff2'];
+  function avatar(p, cls) {
+    var n = 0, h = String(p.handle || p.name || '');
+    for (var i = 0; i < h.length; i++) n = (n * 31 + h.charCodeAt(i)) >>> 0;
+    var a = el('span', 'walkplan__gm-av' + (cls ? ' ' + cls : ''), p.initial || '?');
+    a.style.background = AV_COLORS[n % AV_COLORS.length];
+    return a;
+  }
+  function firstName(p) { return p.me ? 'You' : String(p.name || '').split(' ')[0]; }
+  function whoLine(members) {
+    var names = members.map(firstName);
+    if (names.length <= 3) return names.join(', ').replace(/, ([^,]*)$/, ' and $1');
+    return names.slice(0, 2).join(', ') + ' and ' + (names.length - 2) + ' more';
+  }
+  function loadFriends(then) {
+    if (groupFriends) { then(); return; }
+    fetch('/api/friends', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { groupFriends = (d && d.friends) || []; then(); })
+      .catch(function () { groupFriends = []; then(); });
+  }
+  function signInFirst(text) {
+    mineNote.innerHTML = text;
+    var a = el('a', 'walkplan__acct-btn', 'Sign in to start');
+    a.href = '/account/login?next=' + encodeURIComponent('/walk?group=new');
+    mineFoot.appendChild(a);
+  }
+  function stopGroupPoll() { clearInterval(groupPoll); groupPoll = null; }
+  function startGroupPoll() {
+    stopGroupPoll();
+    groupPoll = setInterval(function () {
+      if (!group || !root.classList.contains('mine-open')) { stopGroupPoll(); return; }
+      var a = document.activeElement;
+      if (a && mine.contains(a) && a.tagName === 'INPUT') return;   // typing: don't redraw under them
+      var id = group.id;
+      fetch('/api/group-maps/' + encodeURIComponent(id) + '?rev=' + group.rev, { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+        .then(function (r) { return r.json().then(function (d) { return { status: r.status, d: d }; }); })
+        .then(function (res) {
+          if (!group || group.id !== id) return;
+          if (res.status === 404) { group = null; groupMaps = null; paintMineView(); mineNote.textContent = 'That map was deleted, or you were taken off it.'; return; }
+          if (res.d && res.d.map) { group = res.d.map; paintGroup(); }
+        })
+        .catch(function () {});
+    }, 6000);
+  }
+  // One change to the open map; the reply is the map as it now stands.
+  function groupChange(method, path, body) {
+    var id = group.id;
+    return routeApi(method, '/api/group-maps/' + encodeURIComponent(id) + path, body).then(function (res) {
+      if (res.d && res.d.verify) return false;   // the verify-your-email card is showing (base.html)
+      if (res.status === 404 || (!res.ok && res.d && /isn’t there any more/.test(res.d.error || ''))) {
+        group = null; groupMaps = null; paintMineView();
+        mineNote.textContent = (res.d && res.d.error) || 'That map isn’t there any more.';
+        return false;
+      }
+      if (!res.ok) { mineNote.textContent = (res.d && res.d.error) || 'Couldn’t save that. Try again.'; return false; }
+      if (res.d.map && group && group.id === id) { group = res.d.map; paintGroup(); }
+      if (res.d.warning) mineNote.textContent = res.d.warning;
+      return true;
+    }, function () { mineNote.textContent = 'Couldn’t reach the server. Try again.'; return false; });
+  }
+  function openGroup(id) {
+    group = null;
+    groupNew = null;
+    mineView = 'groups';
+    mineNote.textContent = 'Opening the map…';
+    fetch('/api/group-maps/' + encodeURIComponent(id), { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (!d || !d.map) { groupMaps = null; paintMineView(); mineNote.textContent = (d && d.error) || 'Couldn’t open that map.'; return; }
+        group = d.map; groupPicker = false; paintMineView();
+      })
+      .catch(function () { mineNote.textContent = 'Couldn’t reach the server. Try again.'; });
+  }
+  function showGroupOnMap(g) {
+    openRoute({ title: g.title, stops: g.stops });
+  }
+
+  // The list of your group maps
+  function paintGroups() {
+    mineTitle.textContent = 'With friends';
+    mineList.innerHTML = '';
+    mineFoot.innerHTML = '';
+    if (!READER.signedIn) { signInFirst('Plan an outing <b>together</b>: add friends to a map and everyone can add stops.'); return; }
+    if (groupMaps === null) {
+      mineNote.textContent = 'Loading your group maps…';
+      fetch('/api/group-maps', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+        .then(function (r) { return r.json(); })
+        .then(function (d) { groupMaps = (d && d.maps) || []; if (mineView === 'groups' && !group && !groupNew && !building) paintGroups(); })
+        .catch(function () { mineNote.textContent = 'Couldn’t load your group maps. Check your connection and try again.'; });
+      return;
+    }
+    mineNote.innerHTML = groupMaps.length ? '' : 'Plan an outing <b>together</b>: start a map, add friends, and everyone can add, remove and reorder stops.';
+    groupMaps.forEach(function (g) {
+      var li = el('li', 'walkplan__route');
+      li.appendChild(el('p', 'walkplan__route-title', g.title));
+      var who = el('div', 'walkplan__gm-who');
+      var stack = el('span', 'walkplan__gm-stack');
+      g.members.slice(0, 5).forEach(function (p) { stack.appendChild(avatar(p, 'is-small')); });
+      who.appendChild(stack);
+      who.appendChild(el('span', '', whoLine(g.members)));
+      li.appendChild(who);
+      li.appendChild(el('p', 'walkplan__route-stops', g.stops.length ? g.stops.length + ' stop' + (g.stops.length === 1 ? '' : 's') + ' · ' +
+        g.stops.map(function (x) { return x.name; }).join(' → ') : 'No stops yet'));
+      var acts = el('div', 'walkplan__route-actions');
+      var open = el('button', 'is-primary', 'Open');
+      open.type = 'button';
+      open.addEventListener('click', function () { group = g; groupPicker = false; paintMineView(); });
+      acts.appendChild(open);
+      if (g.stops.length >= 2) {
+        var show = el('button', '', 'Show on map');
+        show.type = 'button';
+        show.addEventListener('click', function () { showGroupOnMap(g); });
+        acts.appendChild(show);
+      }
+      li.appendChild(acts);
+      mineList.appendChild(li);
+    });
+    var start = el('button', 'walkplan__acct-btn', '+ Plan with friends');
+    start.type = 'button';
+    start.addEventListener('click', function () { groupNew = { title: '', picks: [], stops: [] }; paintMineView(); });
+    mineFoot.appendChild(start);
+    var find = el('a', 'walkplan__acct-btn walkplan__acct-btn--ghost', 'Find friends');
+    find.href = '/account/friends';
+    mineFoot.appendChild(find);
+  }
+
+  // Starting a map: name it and pick who's coming
+  function paintGroupNew() {
+    mineTitle.textContent = 'Plan with friends';
+    mineList.innerHTML = '';
+    mineFoot.innerHTML = '';
+    if (!READER.signedIn) { signInFirst('Plan an outing <b>together</b>: add friends to a map and everyone can add stops.'); return; }
+    mineNote.innerHTML = 'Name your outing and pick <b>who’s coming</b>. Everyone you add can add and change stops.';
+    var name = el('input', 'walkplan__build-name');
+    name.type = 'text';
+    name.maxLength = 60;
+    name.placeholder = 'Name it, e.g. Saturday with the crew';
+    name.value = groupNew.title;
+    name.setAttribute('aria-label', 'Map name');
+    var nameLi = el('li', '');
+    nameLi.appendChild(name);
+    mineList.appendChild(nameLi);
+    if (groupNew.stops.length) {
+      mineList.appendChild(el('li', 'walkplan__build-hint', 'Starts with ' + groupNew.stops.length + ' stops: ' +
+        groupNew.stops.map(function (x) { return x.name; }).join(' → ')));
+    }
+    var go = el('button', 'walkplan__acct-btn', 'Start the map');
+    go.type = 'button';
+    function ready() { go.disabled = !name.value.trim(); }
+    name.addEventListener('input', function () { groupNew.title = name.value; ready(); });
+    var whoLi = el('li', 'walkplan__gm-pick');
+    whoLi.appendChild(el('p', 'walkplan__gm-label', 'Who’s coming?'));
+    var chips = el('div', 'walkplan__gm-chips');
+    whoLi.appendChild(chips);
+    mineList.appendChild(whoLi);
+    loadFriends(function () {
+      if (!groupNew) return;
+      chips.innerHTML = '';
+      if (!groupFriends.length) {
+        var none = el('p', 'walkplan__build-hint', 'No friends yet. Start the map now and add them later, or ');
+        var a = el('a', '', 'find friends');
+        a.href = '/account/friends';
+        none.appendChild(a);
+        none.appendChild(document.createTextNode(' first.'));
+        chips.appendChild(none);
+        return;
+      }
+      groupFriends.forEach(function (p) {
+        var on = groupNew.picks.indexOf(p.handle) >= 0;
+        var b = el('button', 'walkplan__gm-chip');
+        b.type = 'button';
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        b.appendChild(avatar(p, 'is-small'));
+        b.appendChild(document.createTextNode(p.name));
+        b.addEventListener('click', function () {
+          var i = groupNew.picks.indexOf(p.handle);
+          if (i >= 0) groupNew.picks.splice(i, 1); else groupNew.picks.push(p.handle);
+          b.setAttribute('aria-pressed', i >= 0 ? 'false' : 'true');
+        });
+        chips.appendChild(b);
+      });
+    });
+    go.addEventListener('click', function () {
+      go.disabled = true;
+      routeApi('POST', '/api/group-maps', { title: name.value, members: groupNew.picks, stops: groupNew.stops }).then(function (res) {
+        if (res.d && res.d.verify) { ready(); return; }
+        if (!res.ok || !res.d.map) { mineNote.textContent = (res.d && res.d.error) || 'Couldn’t start the map. Try again.'; ready(); return; }
+        groupNew = null;
+        groupMaps = null;
+        group = res.d.map;
+        groupPicker = false;
+        paintMineView();
+        if (res.d.warning) mineNote.textContent = res.d.warning;
+      }, function () { mineNote.textContent = 'Couldn’t reach the server. Try again.'; ready(); });
+    });
+    var cancel = el('button', 'walkplan__acct-btn walkplan__acct-btn--ghost', 'Cancel');
+    cancel.type = 'button';
+    cancel.addEventListener('click', function () { groupNew = null; paintMineView(); });
+    mineFoot.appendChild(go);
+    mineFoot.appendChild(cancel);
+    ready();
+  }
+
+  // One open map: everyone on it can change it
+  function paintGroup() {
+    var g = group;
+    mineTitle.textContent = 'With friends';
+    mineList.innerHTML = '';
+    mineFoot.innerHTML = '';
+    mineNote.innerHTML = 'Everyone on this map can add, remove and reorder stops. <b>Changes save for everyone.</b>';
+    // Name: saves when you leave the box
+    var name = el('input', 'walkplan__build-name');
+    name.type = 'text';
+    name.maxLength = 60;
+    name.value = g.title;
+    name.setAttribute('aria-label', 'Map name');
+    name.addEventListener('change', function () {
+      var t = name.value.trim();
+      if (!t) { name.value = g.title; return; }
+      if (t !== g.title) groupChange('POST', '', { title: t });
+    });
+    name.addEventListener('keydown', function (e) { if (e.key === 'Enter') name.blur(); });
+    var nameLi = el('li', '');
+    nameLi.appendChild(name);
+    mineList.appendChild(nameLi);
+    // Who's on it
+    var peopleLi = el('li', 'walkplan__gm-pick');
+    var chips = el('div', 'walkplan__gm-chips');
+    g.members.forEach(function (p) {
+      var c = el('span', 'walkplan__gm-chip is-member');
+      c.appendChild(avatar(p, 'is-small'));
+      c.appendChild(document.createTextNode(firstName(p) + (p.owner ? ' · started it' : '')));
+      if (g.owner && !p.me) {
+        var x = el('button', 'walkplan__gm-x', '×');
+        x.type = 'button';
+        x.setAttribute('aria-label', 'Take ' + p.name + ' off this map');
+        x.addEventListener('click', function () {
+          if (!window.confirm('Take ' + p.name + ' off “' + g.title + '”?')) return;
+          groupChange('DELETE', '/members/' + encodeURIComponent(p.handle));
+        });
+        c.appendChild(x);
+      }
+      chips.appendChild(c);
+    });
+    var addPeople = el('button', 'walkplan__gm-chip is-add', groupPicker ? 'Done' : '+ Add friends');
+    addPeople.type = 'button';
+    addPeople.addEventListener('click', function () { groupPicker = !groupPicker; loadFriends(paintGroup); });
+    chips.appendChild(addPeople);
+    peopleLi.appendChild(chips);
+    if (groupPicker && groupFriends) {
+      var onMap = g.members.map(function (p) { return p.handle; });
+      var left = groupFriends.filter(function (p) { return onMap.indexOf(p.handle) < 0; });
+      var pick = el('div', 'walkplan__gm-chips walkplan__gm-more');
+      if (!left.length) {
+        var none = el('p', 'walkplan__build-hint', groupFriends.length ? 'All your friends are on this map. ' : 'No friends yet. ');
+        var a = el('a', '', 'Find friends');
+        a.href = '/account/friends';
+        none.appendChild(a);
+        pick.appendChild(none);
+      }
+      left.forEach(function (p) {
+        var b = el('button', 'walkplan__gm-chip');
+        b.type = 'button';
+        b.appendChild(avatar(p, 'is-small'));
+        b.appendChild(document.createTextNode('+ ' + p.name));
+        b.addEventListener('click', function () { b.disabled = true; groupChange('POST', '/members', { handles: [p.handle] }); });
+        pick.appendChild(b);
+      });
+      peopleLi.appendChild(pick);
+    }
+    mineList.appendChild(peopleLi);
+    // Adding stops
+    mineList.appendChild(placeSearch({
+      picked: function (p) { return g.stops.some(function (x) { return p.slug && x.slug === p.slug; }); },
+      full: function () { return g.stops.length >= 15; },
+      add: function (place) { return groupChange('POST', '/stops', place); }
+    }));
+    // The stops, in order
+    if (!g.stops.length) mineList.appendChild(el('li', 'walkplan__mine-empty', 'No stops yet. Search above to add the first place.'));
+    g.stops.forEach(function (st, i) {
+      var li = el('li', 'walkplan__mine-item');
+      li.appendChild(el('span', 'walkplan__mine-rank', String(i + 1)));
+      var body = el('span', 'walkplan__mine-body');
+      body.appendChild(el('span', 'walkplan__mine-name', st.name));
+      body.appendChild(el('span', 'walkplan__mine-meta', (st.category ? st.category + ' · ' : '') + 'Added by ' + st.by));
+      li.appendChild(body);
+      var mv = el('span', 'walkplan__mine-move');
+      var up = el('button', '', '▲'), down = el('button', '', '▼');
+      up.type = down.type = 'button';
+      up.setAttribute('aria-label', 'Move ' + st.name + ' up');
+      down.setAttribute('aria-label', 'Move ' + st.name + ' down');
+      up.disabled = i === 0;
+      down.disabled = i === g.stops.length - 1;
+      function move(step) {
+        var slugs = g.stops.map(function (x) { return x.slug; }), j = i + step;
+        var t = slugs[i]; slugs[i] = slugs[j]; slugs[j] = t;
+        var s2 = g.stops.slice(); var t2 = s2[i]; s2[i] = s2[j]; s2[j] = t2;
+        g.stops = s2; paintGroup();   // move it now; the reply has the order as everyone sees it
+        groupChange('POST', '/order', { slugs: slugs });
+      }
+      up.addEventListener('click', function () { move(-1); });
+      down.addEventListener('click', function () { move(1); });
+      mv.appendChild(up); mv.appendChild(down);
+      li.appendChild(mv);
+      var rm = el('button', 'walkplan__gm-rm', '×');
+      rm.type = 'button';
+      rm.setAttribute('aria-label', 'Take ' + st.name + ' out');
+      rm.addEventListener('click', function () { rm.disabled = true; groupChange('DELETE', '/stops/' + encodeURIComponent(st.slug)); });
+      li.appendChild(rm);
+      mineList.appendChild(li);
+    });
+    // Actions
+    if (g.stops.length >= 2) {
+      var show = el('button', 'walkplan__acct-btn', 'Show on map');
+      show.type = 'button';
+      show.addEventListener('click', function () { showGroupOnMap(g); });
+      mineFoot.appendChild(show);
+      var share = el('button', 'walkplan__acct-btn walkplan__acct-btn--ghost', 'Share as a link');
+      share.type = 'button';
+      share.addEventListener('click', function () { shareList(g.title, g.stops, share); });
+      mineFoot.appendChild(share);
+    }
+    var row = el('div', 'walkplan__gm-row');
+    var back = el('button', 'walkplan__acct-btn walkplan__acct-btn--ghost', '← All maps');
+    back.type = 'button';
+    back.addEventListener('click', function () { group = null; groupMaps = null; paintMineView(); });
+    row.appendChild(back);
+    var bye = el('button', 'walkplan__acct-btn walkplan__acct-btn--out', g.owner ? 'Delete' : 'Leave');
+    bye.type = 'button';
+    bye.addEventListener('click', function () {
+      var ask = g.owner ? 'Delete “' + g.title + '” for everyone on it?' : 'Leave “' + g.title + '”? You can be added again later.';
+      if (!window.confirm(ask)) return;
+      var me = g.members.filter(function (p) { return p.me; })[0];
+      var req = g.owner ? routeApi('DELETE', '/api/group-maps/' + encodeURIComponent(g.id))
+                        : routeApi('DELETE', '/api/group-maps/' + encodeURIComponent(g.id) + '/members/' + encodeURIComponent(me ? me.handle : ''));
+      req.then(function (res) {
+        if (!res.ok) { mineNote.textContent = (res.d && res.d.error) || 'Couldn’t do that. Try again.'; return; }
+        group = null; groupMaps = null; paintMineView();
+      });
+    });
+    row.appendChild(bye);
+    mineFoot.appendChild(row);
+    startGroupPoll();
+  }
+
   function walkTo(p) {
     setMine(false);
     msg.hidden = true;
@@ -685,7 +1064,7 @@
       b.addEventListener('click', function () { setDrawer(false); mineView = 'routes'; setMine(true); });
     });
     if (mineTabs) Array.prototype.forEach.call(mineTabs.querySelectorAll('[data-mine-view]'), function (b) {
-      b.addEventListener('click', function () { mineView = b.getAttribute('data-mine-view'); paintMineView(); });
+      b.addEventListener('click', function () { mineView = b.getAttribute('data-mine-view'); if (mineView === 'groups') groupMaps = null; paintMineView(); });
     });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setMine(false); });
   }
@@ -705,10 +1084,12 @@
     acct.querySelector('.walkplan__acct-close').addEventListener('click', function () { setAcct(false); });
     document.getElementById('walkplan-acct-back').addEventListener('click', function () { setAcct(false); });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') setAcct(false); });
-    // Invite friends: the phone's share sheet with a link to the walk map.
+    // Invite friends: the phone's share sheet with your invite page (/u/<handle>, friends.py)
+    // when you're signed in, or a link to the walk map when you're not.
     acct.querySelector('[data-invite]').addEventListener('click', function () {
-      var url = window.location.origin + '/walk';
-      var text = 'Plan walks around Vienna with me on \\\\Mansfield';
+      var handle = this.getAttribute('data-invite') || '';
+      var url = window.location.origin + (handle ? '/u/' + encodeURIComponent(handle) : '/walk');
+      var text = handle ? 'Add me on \\\\Mansfield and let’s plan a walk together' : 'Plan walks around Vienna with me on \\\\Mansfield';
       if (window.MansfieldNative && window.MansfieldNative.share && window.MansfieldNative.share(url, text)) return;
       if (navigator.share) { navigator.share({ title: text, text: text, url: url }).catch(function () {}); return; }
       try {
@@ -1238,8 +1619,19 @@
       });
   }
 
+  // /walk?group=<id> (the Friends page) opens that group map; /walk?group=new starts one.
+  var groupLink = false;   // opened that way: no first-visit welcome card on top of it
+  (function () {
+    var g = (new URLSearchParams(location.search || '').get('group') || '').trim();
+    if (!g || !mine || !/^(new|[0-9a-f]{16})$/.test(g)) return;
+    try { history.replaceState(null, '', '/walk'); } catch (e) {}
+    mineView = 'groups';
+    groupLink = true;
+    if (g === 'new') groupNew = { title: '', picks: [], stops: [] }; else openGroup(g);
+    setMine(true);
+  })();
   // Opened with a walk in the link (a saved route)? If not, start on the explore map.
-  if (!showLinked()) { loadMap(exploreUrl(), 'explore'); welcome(); }
+  if (!showLinked()) { loadMap(exploreUrl(), 'explore'); if (!groupLink) welcome(); }
   // /walk?ask=... ("Plan a walk in Chicago" on the stories feed): plan it straight away.
   (function () {
     var asked = (new URLSearchParams(location.search || '').get('ask') || '').trim().slice(0, 200);

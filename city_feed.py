@@ -131,8 +131,13 @@ def _names(city):
 
 
 def story_in_city(article, city):
-    """A story belongs to the city when its City field names it, or (no City set) its title or dek
-    does. Not the body: a passing mention ("flew in from Chicago") shouldn't put a story in that feed."""
+    """A story belongs to the city when its Location (picked in the editor) is within NEAR_M of it,
+    or its City name matches (older stories), or (no location set) its title or dek names it. Not the body: a passing mention ("flew in from Chicago") shouldn't put a story in that feed."""
+    try:   # picked in the editor with its coordinates: within NEAR_M of the city's centre
+        lat, lng = float(article.get("city_lat")), float(article.get("city_lng"))
+        return _dist_m(lat, lng, city["lat"], city["lng"]) <= NEAR_M
+    except (TypeError, ValueError):
+        pass
     names = _names(city)
     field = str(article.get("city") or "").strip().lower()
     if field:

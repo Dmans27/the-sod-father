@@ -30,6 +30,8 @@
   .walkplan__me-btn { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer;
     color: #fff; background: rgba(16, 18, 20, 0.7); border: 0.5px solid rgba(255, 255, 255, 0.2); font: 800 17px var(--font-sans);
     -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25); }
+  .walkplan__me-btn { position: relative; }
+  .walkplan__me-dot { position: absolute; top: -1px; right: -1px; width: 12px; height: 12px; border-radius: 50%; background: #e5484d; box-shadow: 0 0 0 2px #15171a; }
   .walkplan__me-btn.is-in { background: #2BEA6B; color: #0b2414; border-color: #2BEA6B; }
   .walkplan__me-btn svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .walkplan.is-walking .walkplan__me, .walkplan.has-panel .walkplan__me { display: none; }
@@ -60,6 +62,8 @@
   .walkplan__acct-list a::after, .walkplan__acct-list button::after { content: "\203A"; margin-left: auto; font-size: 22px; line-height: 1; color: rgba(255, 255, 255, 0.35); }
   .walkplan__acct-list a:active, .walkplan__acct-list button:active { background: rgba(255, 255, 255, 0.06); }
   .walkplan__acct-list svg { flex: 0 0 auto; width: 22px; height: 22px; fill: none; stroke: #2BEA6B; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .walkplan__acct-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; margin-left: 6px; padding: 0 6px;
+    border-radius: 999px; background: #e5484d; color: #fff; font: 800 12px var(--font-sans); font-style: normal; vertical-align: 1px; }
   .walkplan__acct-foot { margin-top: auto; padding-top: 18px; display: flex; flex-direction: column; gap: 10px; }
   .walkplan__acct-foot form { margin: 0; }
   .walkplan__acct-btn { display: block; width: 100%; box-sizing: border-box; padding: 14px; border: 0; border-radius: 999px; background: #fff; color: #15171a;
@@ -122,6 +126,30 @@
   .walkplan__route-actions button.is-post { border-color: #2BEA6B; color: #2BEA6B; }
   .walkplan__build-new { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 5px; background: rgba(43, 234, 107, 0.16); color: #2BEA6B; font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; vertical-align: 2px; }
   .walkplan__route-actions button.is-danger { color: #ff8a80; border-color: rgba(255, 138, 128, 0.4); }
+  /* With friends: group maps (group_maps.py) */
+  .walkplan__gm-av { flex: none; width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+    color: #0b2414; font: 800 13px var(--font-sans); }
+  .walkplan__gm-av.is-small { width: 24px; height: 24px; font-size: 11px; }
+  .walkplan__gm-who { display: flex; align-items: center; gap: 8px; margin: 6px 0 0; font-size: 13px; color: rgba(255, 255, 255, 0.75); }
+  .walkplan__gm-stack { display: inline-flex; }
+  .walkplan__gm-stack .walkplan__gm-av { box-shadow: 0 0 0 2px #15171a; }
+  .walkplan__gm-stack .walkplan__gm-av + .walkplan__gm-av { margin-left: -7px; }
+  .walkplan__gm-pick { margin: 0 0 12px; }
+  .walkplan__gm-label { margin: 0 0 8px; font: 800 12px var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: rgba(255, 255, 255, 0.6); }
+  .walkplan__gm-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .walkplan__gm-more { margin-top: 10px; padding-top: 10px; border-top: 0.5px solid rgba(255, 255, 255, 0.12); }
+  .walkplan__gm-chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px 5px 5px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 999px;
+    background: none; color: #fff; font: 700 13.5px var(--font-sans); cursor: pointer; }
+  .walkplan__gm-chip[aria-pressed="true"] { background: #2BEA6B; border-color: #2BEA6B; color: #0b2414; }
+  .walkplan__gm-chip.is-member { cursor: default; background: rgba(255, 255, 255, 0.08); border-color: transparent; }
+  .walkplan__gm-chip.is-add { padding-left: 12px; border-style: dashed; color: #2BEA6B; border-color: rgba(43, 234, 107, 0.5); }
+  .walkplan__gm-chip:disabled { opacity: 0.5; }
+  .walkplan__gm-x { margin: 0 -4px 0 2px; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.14); color: #fff; font-size: 14px; line-height: 1; cursor: pointer; }
+  .walkplan__gm-rm { flex: 0 0 auto; width: 32px; height: 32px; border: 0; border-radius: 50%; background: rgba(255, 138, 128, 0.12); color: #ff8a80; font-size: 18px; line-height: 1; cursor: pointer; }
+  .walkplan__gm-row { display: flex; gap: 10px; }
+  .walkplan__gm-row .walkplan__acct-btn { flex: 1; }
+  .walkplan__mine-foot a.walkplan__acct-btn { text-align: center; text-decoration: none; }
+  .walkplan__build-hint a { color: #2BEA6B; font-weight: 800; }
   /* Route builder */
   .walkplan__build-name { width: 100%; box-sizing: border-box; margin: 0 0 12px; padding: 12px 14px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px;
     background: rgba(255, 255, 255, 0.06); color: #fff; font: 700 16px var(--font-sans); }
@@ -277,6 +305,7 @@
     <button type="button" class="walkplan__me-btn{% if reader %} is-in{% endif %}" aria-controls="walkplan-acct" aria-expanded="false"
             aria-label="{{ 'Account: ' ~ reader.display_name if reader else 'Sign in' }}">
       {% if reader %}{{ (reader.display_name or '?')[:1] | upper }}{% else %}<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"/></svg>{% endif %}
+      {% if friend_requests %}<span class="walkplan__me-dot" aria-hidden="true"></span>{% endif %}
     </button>
   </div>
 
@@ -294,6 +323,7 @@
     <div class="walkplan__mine-tabs" id="walkplan-mine-tabs" role="tablist">
       <button type="button" role="tab" data-mine-view="places" aria-selected="true">Places</button>
       <button type="button" role="tab" data-mine-view="routes" aria-selected="false">My routes</button>
+      <button type="button" role="tab" data-mine-view="groups" aria-selected="false">Friends</button>
     </div>
     <p class="walkplan__mine-note" id="walkplan-mine-note"></p>
     <ol class="walkplan__mine-list" id="walkplan-mine-list"></ol>
@@ -320,7 +350,8 @@
       <a href="{{ '/account' if reader else '/account/login?next=/account' }}"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-save"/></svg><span>Saved walks &amp; stories</span></a>
       <a href="{{ '/account/profile' if reader else '/account/login?next=/account/profile' }}"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"/></svg><span>Profile &amp; settings</span></a>
       <a href="/"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-stories"/></svg><span>Stories</span></a>
-      <button type="button" data-invite><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-share"/></svg><span>Invite friends</span></button>
+      <a href="{{ '/account/friends' if reader else '/account/login?next=/account/friends' }}"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"/></svg><span>Friends{% if friend_requests %} <em class="walkplan__acct-badge">{{ friend_requests }}</em>{% endif %}</span></a>
+      <button type="button" data-invite="{{ my_handle() }}"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-share"/></svg><span>Invite friends</span></button>
       <a href="/newsletter"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-mail"/></svg><span>Join Newsletter</span></a>
     </nav>
     <div class="walkplan__acct-foot">
@@ -522,5 +553,5 @@
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
 {% include "_community_ui.html" %}
 {% include "_footprints_ui.html" %}
-<script src="/static/js/walk-planner.js?v=28" defer></script>
+<script src="/static/js/walk-planner.js?v=29" defer></script>
 {% endblock %}

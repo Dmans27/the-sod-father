@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}{% if target %}Add {{ target.name }}{% else %}Not found{% endif %} — \\Mansfield{% endblock %}
+
+{# Someone's invite page (friends.py): where their invite link and QR code lead. #}
+{% block content %}
+<section class="fi">
+  {% if target %}
+    <span class="fi__av" data-av="{{ target.handle }}">{{ target.initial }}</span>
+    <h1 class="fi__name">{{ target.name }}</h1>
+    <p class="fi__handle">@{{ target.handle }}</p>
+    {% if not reader %}
+      <p class="fi__sub">{{ target.name.split(' ')[0] }} wants to plan walks with you on \\Mansfield.</p>
+      <a class="account-btn fi__btn" href="/account/signup?next=/u/{{ target.handle }}">Create an account to add {{ target.name.split(' ')[0] }}</a>
+      <a class="account-btn account-btn--ghost fi__btn" href="/account/login?next=/u/{{ target.handle }}">I have an account</a>
+    {% elif state == 'self' %}
+      <p class="fi__sub">This is your invite page. Share the link so friends can add you.</p>
+      <a class="account-btn fi__btn" href="/account/friends">Go to Friends</a>
+    {% else %}
+      <p class="fi__sub" id="fi-sub">
+        {% if state == 'friends' %}You're friends. Plan a map together from the walk page.
+        {% elif state == 'sent' %}Request sent. You'll be friends once {{ target.name.split(' ')[0] }} accepts.
+        {% elif state == 'received' %}{{ target.name.split(' ')[0] }} sent you a friend request.
+        {% else %}Add {{ target.name.split(' ')[0] }} to plan walks together.{% endif %}
+      </p>
+      {% if state in ('none', 'received') %}
+        <button type="button" class="account-btn fi__btn" id="fi-add">{{ 'Accept request' if state == 'received' else 'Add friend' }}</button>
+      {% endif %}
+      <a class="account-btn account-btn--ghost fi__btn" href="/account/friends">Your friends</a>
+    {% endif %}
+  {% else %}
+    <h1 class="fi__name">We couldn't find that person</h1>
+    <p class="fi__sub">The link may be old: people can change their @handle. Ask them for a fresh link.</p>
+    <a class="account-btn fi__btn" href="/">Back to stories</a>
+  {% endif %}
+</section>
+<style>
+  .fi { max-width: 400px; margin: 0 auto; padding: 48px 0 30px; text-align: center; }
+  .fi__av { width: 88px; height: 88px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+    background: #9fe0bd; color: #0b2414; font: 800 36px var(--font-sans); }
+  .fi__name { margin: 14px 0 2px; font: 800 28px/1.2 var(--font-serif); color: var(--fairway-deep); }
+  .fi__handle { margin: 0; font-size: 16px; color: var(--ink-faint); }
+  .fi__sub { margin: 16px 0 22px; font-size: 16px; line-height: 1.5; color: var(--ink-soft); }
+  .fi__btn { display: block; width: 100%; margin-top: 10px; text-align: center; text-decoration: none; box-sizing: border-box; }
+</style>
+{% if target and reader and state in ('none', 'received') %}
+<script>
+  (function () {
+    var b = document.getElementById('fi-add'), sub = document.getElementById('fi-sub');
+    b.addEventListener('click', function () {
+      b.disabled = true;
+      fetch('/api/friends/request', { method: 'POST', credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': (window.READER && window.READER.csrf) || '' },
+        body: JSON.stringify({ handle: {{ target.handle | tojson }} }) })
+        .then(function (r) { return r.json().catch(function () { return {}; }); })
+        .then(function (d) {
+          if (d.verify) { b.disabled = false; return; }
+          if (!d.ok) { b.disabled = false; sub.textContent = d.error || 'Something went wrong. Try again.'; return; }
+          b.remove();
+          sub.textContent = d.state === 'friends' ? 'You’re friends now. Plan a map together from the walk page.'
+            : 'Request sent. You’ll be friends once ' + {{ target.name.split(' ')[0] | tojson }} + ' accepts.';
+        })
+        .catch(function () { b.disabled = false; sub.textContent = 'Couldn’t reach the server. Try again.'; });
+    });
+  })();
+</script>
+{% endif %}
+{% if target %}
+<script>
+  (function () {
+    var COLORS = ['#9fe0bd', '#f6c89f', '#b9c8f7', '#f3b2c4', '#c9e59b', '#f1dd8c', '#a9e1e8', '#d6bff2'];
+    var a = document.querySelector('[data-av]'), h = a.getAttribute('data-av'), n = 0;
+    for (var i = 0; i < h.length; i++) n = (n * 31 + h.charCodeAt(i)) >>> 0;
+    a.style.background = COLORS[n % COLORS.length];
+  })();
+</script>
+{% endif %}
+{% endblock %}

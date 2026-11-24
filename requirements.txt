@@ -4,3 +4,4 @@ requests==2.34.2
 Pillow==12.3.0
 SQLAlchemy==2.0.36
 psycopg2-binary==2.9.10
+segno==1.6.1
