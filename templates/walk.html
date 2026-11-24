@@ -288,6 +288,73 @@
       .walkplan__drawer-all { font-size: 16px; margin-top: 20px; }
     .walkplan__drawer-plan { max-width: 420px; margin: 22px auto 0; padding: 14px; font-size: 16px; }
   }
+  /* ── Side panels in the stories feed's dark look (This week, My places, the account panel) ──
+     Same colours as the feed in dark mode (static/css/style.css html.is-dark and the "Walks this week"
+     strip in index.html): deep green-black #1c231f, soft mint #7fd1a6 / #9fe0bd for accents, cards with a
+     faint white tint, serif headings and card titles. This block only re-colours; sizes stay above. */
+  .walkplan__drawer, .walkplan__mine, .walkplan__acct { background: #1c231f; color: #e4e9e5; }
+  .walkplan__drawer-head h2 { font-family: var(--font-serif); font-weight: 700; letter-spacing: 0.005em; }
+  @media (max-width: 640px) { .walkplan__drawer-head h2 { font-size: 24px; } }
+  .walkplan__drawer-close, .walkplan__acct-close { background: rgba(255, 255, 255, 0.09); color: #e4e9e5; }
+  .walkplan__drawer-sub { color: #7fd1a6; }
+  .walkplan__drawer .walkplan__idea { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); color: #e4e9e5; }
+  .walkplan__drawer .walkplan__idea:active { background: rgba(255, 255, 255, 0.1); }
+  .walkplan__week-card, .walkplan__cwalk { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); }
+  .walkplan__week-card:active, .walkplan__cwalk-link:active { background: rgba(255, 255, 255, 0.08); }
+  .walkplan__week-card, .walkplan__cwalk-link, .walkplan__read { color: #e4e9e5; }
+  .walkplan__week-tag { padding: 2px 8px; border-radius: 6px; background: rgba(127, 209, 166, 0.16); color: #9fe0bd;
+    font-size: 10.5px; letter-spacing: 0.4px; text-transform: uppercase; }
+  .walkplan__week-title { font-family: var(--font-serif); font-weight: 700; font-size: 19px; line-height: 1.25; color: #e4e9e5; }
+  .walkplan__week-blurb { color: rgba(228, 233, 229, 0.8); }
+  .walkplan__week-stops, .walkplan__cwalk-by, .walkplan__read-min { color: rgba(228, 233, 229, 0.6); }
+  .walkplan__cwalk-like, .walkplan__cwalk-more { color: rgba(228, 233, 229, 0.85); }
+  .walkplan__read { border-top-color: rgba(255, 255, 255, 0.1); }
+  .walkplan__read-title { font-family: var(--font-serif); font-weight: 700; font-size: 15.5px; }
+  .walkplan__read-thumb, .walkplan__cwalk-photo, .walkplan__mine-thumb { background-color: rgba(255, 255, 255, 0.06); }
+  .walkplan__dot::before { background: rgba(228, 233, 229, 0.25); }
+  .walkplan__dot.is-on::before { background: #7fd1a6; }
+  .walkplan__cwalk-invite { border-color: rgba(127, 209, 166, 0.4); color: rgba(228, 233, 229, 0.8); }
+  .walkplan__cwalk-invite > b { color: #e4e9e5; font-family: var(--font-serif); font-size: 17px; }
+  .walkplan__drawer-all { color: #9fe0bd; }
+  /* Buttons: mint like the feed's location button and Ask circle */
+  .walkplan__cwalk-cta, .walkplan__drawer-plan, .walkplan__acct-btn,
+  .walkplan__route-actions button.is-primary, .walkplan__build-hit button, .walkplan__gm-chip[aria-pressed="true"] {
+    background: #7fd1a6; border-color: #7fd1a6; color: #0f2219; }
+  .walkplan__acct-btn--ghost { background: none; color: #e4e9e5; border: 1px solid rgba(255, 255, 255, 0.24); }
+  .walkplan__acct-btn--out { background: rgba(255, 138, 128, 0.12); color: #ff8a80; border: 0; }
+  .walkplan__build-hit button:disabled { background: rgba(255, 255, 255, 0.1); color: rgba(228, 233, 229, 0.55); }
+  .walkplan__route-actions button { border-color: rgba(255, 255, 255, 0.22); color: #e4e9e5; }
+  .walkplan__route-actions button.is-post, .walkplan__gm-chip.is-add { border-color: rgba(127, 209, 166, 0.55); color: #9fe0bd; }
+  /* My places */
+  .walkplan__mine-note { color: rgba(228, 233, 229, 0.75); }
+  .walkplan__mine-note b, .walkplan__mine-item.is-picked .walkplan__mine-name, .walkplan__build-hint a { color: #9fe0bd; }
+  .walkplan__mine-item, .walkplan__route { border-top-color: rgba(255, 255, 255, 0.1); }
+  .walkplan__mine-rank { background: #7fd1a6; color: #0f2219; }
+  .walkplan__mine-rank.is-dot { background: rgba(255, 255, 255, 0.08); color: rgba(228, 233, 229, 0.7); }
+  .walkplan__mine-meta, .walkplan__route-stops { color: rgba(228, 233, 229, 0.6); }
+  .walkplan__mine-meta a { color: #9fe0bd; }
+  .walkplan__route-title { font-family: var(--font-serif); font-weight: 700; font-size: 18px; }
+  .walkplan__mine-tabs { background: rgba(255, 255, 255, 0.06); }
+  .walkplan__mine-tabs button { color: rgba(228, 233, 229, 0.7); }
+  .walkplan__mine-tabs button[aria-selected="true"] { background: rgba(127, 209, 166, 0.16); color: #9fe0bd; }
+  .walkplan__build-name, .walkplan__build-search { background-color: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.14); color: #e4e9e5; }
+  .walkplan__build-name:focus, .walkplan__build-search:focus { outline: none; border-color: #7fd1a6; }
+  .walkplan__build-hit { background: rgba(255, 255, 255, 0.05); }
+  .walkplan__build-new { background: rgba(127, 209, 166, 0.16); color: #9fe0bd; }
+  .walkplan__gm-stack .walkplan__gm-av { box-shadow: 0 0 0 2px #1c231f; }
+  .walkplan__gm-chip { border-color: rgba(255, 255, 255, 0.2); color: #e4e9e5; }
+  .walkplan__gm-label { color: rgba(228, 233, 229, 0.6); }
+  /* Account panel */
+  .walkplan__acct-head { border-bottom-color: rgba(255, 255, 255, 0.1); }
+  .walkplan__acct-name { font-family: var(--font-serif); font-weight: 700; font-size: 22px; }
+  .walkplan__acct-sub { color: rgba(228, 233, 229, 0.65); }
+  .walkplan__acct-avatar.is-in, .walkplan__me-btn.is-in { background: #7fd1a6; border-color: #7fd1a6; color: #0f2219; }
+  .walkplan__acct-list a, .walkplan__acct-list button { color: #e4e9e5; border-bottom-color: rgba(255, 255, 255, 0.08); }
+  .walkplan__acct-list svg { stroke: #7fd1a6; }
+  .walkplan__acct-list a::after, .walkplan__acct-list button::after { color: rgba(228, 233, 229, 0.35); }
+  /* The tabs on the map's edges that open This week and My places */
+  .walkplan__pull { background: rgba(28, 35, 31, 0.92); border-color: rgba(255, 255, 255, 0.14); color: #e4e9e5; }
+  .walkplan__pull-label { color: #7fd1a6; }
 </style>
 {% endblock %}
 
