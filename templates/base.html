@@ -37,7 +37,7 @@
     // reader never sees a white flash on load (the menu toggle sets this).
     try { if (localStorage.getItem('sf-theme') === 'dark') document.documentElement.classList.add('is-dark'); } catch (e) {}
   </script>
-  <link rel="stylesheet" href="/static/css/style.css?v=19">
+  <link rel="stylesheet" href="/static/css/style.css?v=20">
   <link rel="alternate" type="application/rss+xml" title="\\Mansfield" href="/feed.xml">
   {# Link previews + search results. Pages override the `seo` block (stories do);
      everything else gets these site-wide defaults. #}
@@ -496,8 +496,11 @@
         var short = truncateBlocks(article.blocks || [], WORD_LIMIT);
         // No cover photo -> skip the hero block entirely (no colored
         // placeholder either), same as the real article page.
+        // The photo leads, with the category on it; then the title and subheader (like the feed's featured card).
+        var pillText = esc(article.pill || cat.label || '');
         var heroHtml = article.cover_image
-          ? '<div class="article-sheet__hero" style="background-image: url(\'' + article.cover_image + '\'); background-size: cover; background-position: center;"></div>'
+          ? '<div class="article-sheet__hero article-sheet__hero--top" style="background-image: url(\'' + article.cover_image + '\'); background-size: cover; background-position: center;">' +
+              '<span class="article__pill article__pill--over">' + pillText + '</span></div>'
           : '';
         var avatar = article.author_photo ? '<img class="article__avatar" src="' + article.author_photo + '" alt="">' : '';
         var stickyAvatar = article.author_photo ? '<img class="article-sticky-bar__avatar" src="' + article.author_photo + '" alt="">' : '';
@@ -519,12 +522,12 @@
           '</div>';
 
         inner.innerHTML =
+          heroHtml +
           '<div class="article-sheet__header">' +
-            '<span class="article__pill">' + esc(article.pill || cat.label || '') + '</span>' +
+            (article.cover_image ? '' : '<span class="article__pill">' + pillText + '</span>') +
             '<h1 class="article__title">' + article.title + '</h1>' +
             '<p class="article__dek">' + article.dek + '</p>' +
           '</div>' +
-          heroHtml +
           '<div class="article-sheet__body">' +
             '<div class="article__byline">' + avatar + '<p class="article__meta">' + article.author + (article.author_position ? ' &middot; ' + article.author_position : '') + ' &middot; ' + article.published_at + '</p></div>' +
             window.SodFather.actionsHtml(article.slug, article.title, false, true) +

@@ -112,15 +112,20 @@
     </div>
   </div>
 
+  {# The cover photo first, with the category on it; then the title and subheader (like the featured card on the feed).
+     No photo: the category sits above the title. #}
+  {% set pill_href = '/category/' ~ article.category ~ ('/' ~ article.subcategory if article.subcategory else '') %}
+  {% if article.cover_image %}
+    <div class="article__hero article__hero--top" style="background-image: url('{{ article.cover_image }}'); background-size: cover; background-position: center;">
+      <a href="{{ pill_href }}" class="article__pill article__pill--over">{{ article.pill }}</a>
+    </div>
+  {% endif %}
+
   <div class="article__header">
-    <a href="/category/{{ article.category }}{% if article.subcategory %}/{{ article.subcategory }}{% endif %}" class="article__pill">{{ article.pill }}</a>
+    {% if not article.cover_image %}<a href="{{ pill_href }}" class="article__pill">{{ article.pill }}</a>{% endif %}
     <h1 class="article__title">{{ article.title }}</h1>
     <p class="article__dek">{{ article.dek }}</p>
   </div>
-
-  {% if article.cover_image %}
-    <div class="article__hero" style="background-image: url('{{ article.cover_image }}'); background-size: cover; background-position: center;"></div>
-  {% endif %}
 
   <div class="article__body">
     <div class="article__byline">

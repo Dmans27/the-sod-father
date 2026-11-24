@@ -3041,3 +3041,27 @@ html.is-dark .story-list:not(.story-list--compact) > .story-row {
     height: env(safe-area-inset-top, 0px); background: #fff; pointer-events: none; }
   html.is-dark body.feed-page::before { background: #1c231f; }
 }
+
+/* ── Articles: the cover photo first ──
+   Same order as the featured card on the feed: the photo, with the category floating on its top
+   left, then the title and subheader; the author line and Save / Share / Comment stay below.
+   (templates/article.html, and the quick preview in base.html's renderSheet.) No photo: unchanged. */
+.article__hero--top, .article-sheet__hero--top { position: relative; }
+.article__hero--top { margin-top: 22px; margin-bottom: 18px; }   /* top and bottom only: the sides follow the layout rules above */
+.article-sheet__hero--top { margin-top: 20px; margin-bottom: 18px; }
+.article__hero--top + .article__header,
+html.in-sheet .article__hero--top + .article__header,
+.article-sheet__hero--top + .article-sheet__header,
+html .article-sheet .article-sheet__hero--top + .article-sheet__header { padding-top: 0; }
+.article__pill.article__pill--over { position: absolute; z-index: 1; top: 14px; left: 14px; margin: 0;
+  background: rgba(255, 255, 255, 0.9); color: var(--fairway-deep); -webkit-backdrop-filter: blur(8px); backdrop-filter: blur(8px); }
+.is-dark .article__pill.article__pill--over, html.is-dark .article__pill.article__pill--over { background: rgba(28, 35, 31, 0.78); color: #9fe0bd; }
+@media (min-width: 700px) {
+  /* iPad: the card's close button sits at its top left, so the photo starts below it. */
+  html.in-sheet .article__hero--top, .article-sheet__hero--top { margin-top: 60px; }
+}
+@media (min-width: 1000px) {
+  .article__hero--top { margin-top: 44px; margin-bottom: 30px; }
+  html .article-sheet .article-sheet__hero--top { margin-top: 76px; margin-bottom: 30px; }
+  html.in-sheet .article__hero--top { margin-top: 60px; }
+}
