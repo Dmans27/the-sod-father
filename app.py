@@ -29,6 +29,7 @@ from walk_feed import feed_bp, feed_cards
 from community import community_bp, feed_city
 from footprints import footprints_bp
 from friends import friends_bp
+import profiles  # noqa: F401 -- adds the walk history and cities routes to friends_bp (see profiles.py)
 from group_maps import group_bp
 import city_feed
 from city_feed import city_bp

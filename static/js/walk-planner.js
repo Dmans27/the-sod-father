@@ -111,6 +111,17 @@
     window.MansfieldCommunity.compose({ title: walk.title || '', stops: stops, source: source,
       onPosted: function () { msg.hidden = true; } });
   }
+  // A walk that ended with every stop reached (or at least 2 of them) goes on the walker's
+  // profile for their friends to see (profiles.py). Once per walk on screen.
+  function logWalk(finished, reached) {
+    if (!READER.signedIn || !plan || !plan.stops || plan.stops.length < 2 || plan.navigate) return;
+    if (!(finished || reached >= 2) || plan.logged === (finished ? 2 : 1) || plan.logged === 2) return;
+    plan.logged = finished ? 2 : 1;
+    fetch('/api/walk-history', { method: 'POST', credentials: 'same-origin', keepalive: true,
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': READER.csrf || '' },
+      body: JSON.stringify({ title: plan.title || plan.query || 'A walk', walk: plan.key || '', finished: finished, reached: reached,
+                             stops: plan.stops.map(function (x) { return { slug: x.slug, name: x.name }; }) }) }).catch(function () {});
+  }
   function offerPost() {
     if (!plan || !plan.stops || plan.stops.length < 2 || !window.MansfieldCommunity) return;
     say('You made it: all ' + plan.stops.length + ' stops! Share this walk with walkers in ' + (window.FEED_CITY || 'your city') + '?', false, true);
@@ -1347,6 +1358,7 @@
       sendInsets();   // Start walk is on: the map's walk banner takes the top
       if (e.data.on) msg.hidden = true;
       if (!e.data.on && e.data.finished) offerPost();   // reached the last stop: offer to post it to the feed
+      if (!e.data.on) logWalk(!!e.data.finished, Number(e.data.reached) || 0);
     }
   });
 
@@ -1623,11 +1635,12 @@
   var groupLink = false;   // opened that way: no first-visit welcome card on top of it
   (function () {
     var g = (new URLSearchParams(location.search || '').get('group') || '').trim();
+    var withWho = (new URLSearchParams(location.search || '').get('with') || '').toLowerCase();   // "Plan a map together" on a profile
     if (!g || !mine || !/^(new|[0-9a-f]{16})$/.test(g)) return;
     try { history.replaceState(null, '', '/walk'); } catch (e) {}
     mineView = 'groups';
     groupLink = true;
-    if (g === 'new') groupNew = { title: '', picks: [], stops: [] }; else openGroup(g);
+    if (g === 'new') groupNew = { title: '', picks: /^[a-z0-9_.]{3,20}$/.test(withWho) ? [withWho] : [], stops: [] }; else openGroup(g);
     setMine(true);
   })();
   // Opened with a walk in the link (a saved route)? If not, start on the explore map.

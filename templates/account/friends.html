@@ -11,7 +11,7 @@
     <span class="fr__av fr__av--big" data-av="{{ me.handle }}">{{ me.initial }}</span>
     <div class="fr__me-who">
       <b>{{ me.name }}</b>
-      <span class="fr__handle">@<span id="fr-handle">{{ me.handle }}</span></span>
+      <span class="fr__handle">@<span id="fr-handle">{{ me.handle }}</span> &middot; <a href="/u/{{ me.handle }}" id="fr-profile">Your profile</a></span>
     </div>
     <button type="button" class="fr__link" id="fr-edit">Edit</button>
   </div>
@@ -111,7 +111,8 @@
   .fr__count { min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: #d64545; color: #fff; font-size: 12px; letter-spacing: 0; display: inline-flex; align-items: center; justify-content: center; }
   .fr__list { list-style: none; margin: 0; padding: 0; }
   .fr__p { display: flex; align-items: center; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); }
-  .fr__p-who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+  .fr__p-who { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; text-decoration: none; }
+  .fr__handle a { color: var(--fairway-deep); font-weight: 700; text-decoration: none; }
   .fr__p-who b { font-size: 15.5px; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .fr__p-who span { font-size: 13.5px; color: var(--ink-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .fr__acts { flex: none; display: flex; gap: 6px; }
@@ -154,7 +155,8 @@
       var li = el('li', 'fr__p' + (where === 'in' ? ' fr__p--req' : ''));
       var av = el('span', 'fr__av', p.initial); av.style.background = tint(p.handle);
       li.appendChild(av);
-      var who = el('div', 'fr__p-who');
+      var who = el('a', 'fr__p-who');   // their profile (profiles.py)
+      who.href = '/u/' + encodeURIComponent(p.handle);
       who.appendChild(el('b', '', p.name));
       who.appendChild(el('span', '', '@' + p.handle));
       li.appendChild(who);
@@ -258,6 +260,7 @@
       post('/api/friends/handle', { handle: hin.value }).then(function (d) {
         if (!d.ok) { hsay(d.error || 'Couldn’t save that.', 'is-error'); return; }
         document.getElementById('fr-handle').textContent = d.handle;
+        document.getElementById('fr-profile').href = '/u/' + d.handle;
         INVITE = INVITE.replace(/\/u\/[^/]+$/, '/u/' + d.handle);
         var img = document.querySelector('#fr-qr img'); if (img) img.src = '/u/' + d.handle + '/qr.svg';
         form.hidden = true; hsay(HINT);

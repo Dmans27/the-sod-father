@@ -1,69 +1,192 @@
 {% extends "base.html" %}
-{% block title %}{% if target %}Add {{ target.name }}{% else %}Not found{% endif %} — \\Mansfield{% endblock %}
+{% block title %}{% if target %}{{ target.name }}{% else %}Not found{% endif %} — \\Mansfield{% endblock %}
 
-{# Someone's invite page (friends.py): where their invite link and QR code lead. #}
+{# /u/<handle> (friends.py): someone's profile -- a map of the cities they've been to, their recent walks
+   and favourite places (profiles.py) -- for their friends, for themselves (with the controls to hide a walk,
+   add or remove a city and make the profile public), and for anyone when it's public. Everyone else gets
+   the Add friend page: this is where invite links and QR codes lead. #}
 {% block content %}
-<section class="fi">
+{% set first = target.name.split(' ')[0] if target else '' %}
+<section class="up" id="up">
   {% if target %}
-    <span class="fi__av" data-av="{{ target.handle }}">{{ target.initial }}</span>
-    <h1 class="fi__name">{{ target.name }}</h1>
-    <p class="fi__handle">@{{ target.handle }}</p>
+  <header class="up__head">
+    <span class="up__av" data-av="{{ target.handle }}">{{ target.initial }}</span>
+    <h1 class="up__name">{{ target.name }}</h1>
+    <p class="up__handle">@{{ target.handle }}</p>
+    {% if profile %}
+    <p class="up__stats"><b>{{ profile.counts.walks }}</b> {{ 'walk' if profile.counts.walks == 1 else 'walks' }} &middot; <b>{{ profile.counts.cities }}</b> {{ 'city' if profile.counts.cities == 1 else 'cities' }}</p>
+    {% endif %}
+  </header>
+
+  <div class="up__acts">
     {% if not reader %}
-      <p class="fi__sub">{{ target.name.split(' ')[0] }} wants to plan walks with you on \\Mansfield.</p>
-      <a class="account-btn fi__btn" href="/account/signup?next=/u/{{ target.handle }}">Create an account to add {{ target.name.split(' ')[0] }}</a>
-      <a class="account-btn account-btn--ghost fi__btn" href="/account/login?next=/u/{{ target.handle }}">I have an account</a>
+      <p class="up__sub">{{ first }} wants to plan walks with you on \\Mansfield.</p>
+      <a class="account-btn up__btn" href="/account/signup?next=/u/{{ target.handle }}">Create an account to add {{ first }}</a>
+      <a class="account-btn account-btn--ghost up__btn" href="/account/login?next=/u/{{ target.handle }}">I have an account</a>
     {% elif state == 'self' %}
-      <p class="fi__sub">This is your invite page. Share the link so friends can add you.</p>
-      <a class="account-btn fi__btn" href="/account/friends">Go to Friends</a>
+      <button type="button" class="up__switch" id="up-public" role="switch" aria-checked="{{ 'true' if profile.public else 'false' }}">
+        <span class="up__switch-text">Public profile<small id="up-public-note">{{ 'Anyone with your link can see this page.' if profile.public else 'Only your friends can see this page.' }}</small></span>
+        <span class="site-switch" aria-hidden="true"><span class="site-switch__knob"></span></span>
+      </button>
+    {% elif state == 'friends' %}
+      <div class="up__row">
+        <span class="up__pill">Friends &check;</span>
+        <a class="account-btn account-btn--small" href="/walk?group=new&with={{ target.handle }}">Plan a map together</a>
+      </div>
     {% else %}
-      <p class="fi__sub" id="fi-sub">
-        {% if state == 'friends' %}You're friends. Plan a map together from the walk page.
-        {% elif state == 'sent' %}Request sent. You'll be friends once {{ target.name.split(' ')[0] }} accepts.
-        {% elif state == 'received' %}{{ target.name.split(' ')[0] }} sent you a friend request.
-        {% else %}Add {{ target.name.split(' ')[0] }} to plan walks together.{% endif %}
+      <p class="up__sub" id="up-sub">
+        {% if state == 'sent' %}Request sent. You'll be friends once {{ first }} accepts.
+        {% elif state == 'received' %}{{ first }} sent you a friend request.
+        {% elif profile %}Add {{ first }} to plan walks together.
+        {% else %}Add {{ first }} to see their walks and the cities they've been to.{% endif %}
       </p>
       {% if state in ('none', 'received') %}
-        <button type="button" class="account-btn fi__btn" id="fi-add">{{ 'Accept request' if state == 'received' else 'Add friend' }}</button>
+        <button type="button" class="account-btn up__btn" id="up-add">{{ 'Accept request' if state == 'received' else 'Add friend' }}</button>
       {% endif %}
-      <a class="account-btn account-btn--ghost fi__btn" href="/account/friends">Your friends</a>
     {% endif %}
+  </div>
+
+  {% if profile %}
+  {# Cities: a map with a pin for each, and the list #}
+  <h2 class="up__h">Cities</h2>
+  {% if profile.cities %}
+  <div class="up__map" id="up-map" aria-label="Map of the cities {{ 'you have' if state == 'self' else first ~ ' has' }} been to"></div>
+  {% endif %}
+  <ul class="up__cities" id="up-cities">
+    {% for c in profile.cities %}
+    <li class="up__city{% if c.hidden %} is-hidden{% endif %}" data-key="{{ c.key }}">
+      <span class="up__city-name">{{ c.name }}</span>
+      {% set bits = ([c.where] if c.where else []) + ([c.walks ~ (' walk' if c.walks == 1 else ' walks')] if c.walks else []) + (['hidden'] if c.hidden else []) %}
+      <span class="up__city-meta">{{ bits | join(' · ') }}</span>
+      {% if state == 'self' %}<button type="button" class="up__x" data-remove-city="{{ c.key }}" aria-label="Take {{ c.name }} off your profile">&times;</button>{% endif %}
+    </li>
+    {% endfor %}
+  </ul>
+  {% if not profile.cities %}<p class="up__empty">{{ 'Cities where you finish a walk show up here. You can add others you’ve been to.' if state == 'self' else 'No cities yet.' }}</p>{% endif %}
+  {% if state == 'self' %}
+  <div class="up__find">
+    <input type="search" id="up-city-q" placeholder="+ Add a city you've been to" autocomplete="off" autocapitalize="words" spellcheck="false" maxlength="80" aria-label="Add a city">
+    <ul class="up__find-list" id="up-city-list" hidden></ul>
+  </div>
+  {% endif %}
+
+  {# Recent walks #}
+  <h2 class="up__h">Recent walks</h2>
+  {% if profile.walks %}
+  <ul class="up__walks">
+    {% for w in profile.walks %}
+    <li class="up__walk{% if w.hidden %} is-hidden{% endif %}">
+      <a class="up__walk-main" href="{{ w.open }}">
+        <span class="up__walk-title">{{ w.title }}</span>
+        <span class="up__walk-meta">{% if w.city %}{{ w.city }} &middot; {% endif %}{{ w.ago }}{% if not w.finished %} &middot; part of it{% endif %}{% if w.hidden %} &middot; hidden{% endif %}</span>
+        <span class="up__walk-stops">{{ w.stops | length }} stops &middot; {{ w.stops | map(attribute='name') | join(' → ') }}</span>
+      </a>
+      {% if state == 'self' %}
+      <button type="button" class="up__hide" data-hide-walk="{{ w.id }}" data-hidden="{{ 'true' if w.hidden else 'false' }}">{{ 'Show' if w.hidden else 'Hide' }}</button>
+      {% endif %}
+    </li>
+    {% endfor %}
+  </ul>
   {% else %}
-    <h1 class="fi__name">We couldn't find that person</h1>
-    <p class="fi__sub">The link may be old: people can change their @handle. Ask them for a fresh link.</p>
-    <a class="account-btn fi__btn" href="/">Back to stories</a>
+  <p class="up__empty">{{ 'Finish a walk and it shows up here for your friends.' if state == 'self' else first ~ ' hasn’t finished a walk yet.' }}</p>
+  {% endif %}
+
+  {# Favourite places: 4 or 5 footprints #}
+  {% if profile.places %}
+  <h2 class="up__h">Favourite places</h2>
+  <ul class="up__places">
+    {% for p in profile.places %}
+    <li><a href="{{ p.open }}"><span class="up__place-name">{{ p.name }}</span><span class="up__steps" aria-label="{{ p.steps }} footprints">{% for i in range(5) %}<i class="{{ 'is-on' if i < p.steps else '' }}"></i>{% endfor %}</span></a></li>
+    {% endfor %}
+  </ul>
+  {% endif %}
+
+  {% if state == 'self' %}<p class="up__fine">Only a walk's name, its stops and the city are saved, never the route you walked. Hide any walk, or take a city off, and it's gone from this page.</p>{% endif %}
+  {% endif %}
+
+  {% if reader %}<p class="account-card__foot"><a href="/account/friends">Your friends</a></p>{% endif %}
+  {% else %}
+    <h1 class="up__name">We couldn't find that person</h1>
+    <p class="up__sub">The link may be old: people can change their @handle. Ask them for a fresh link.</p>
+    <a class="account-btn up__btn" href="/">Back to stories</a>
   {% endif %}
 </section>
+
 <style>
-  .fi { max-width: 400px; margin: 0 auto; padding: 48px 0 30px; text-align: center; }
-  .fi__av { width: 88px; height: 88px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
-    background: #9fe0bd; color: #0b2414; font: 800 36px var(--font-sans); }
-  .fi__name { margin: 14px 0 2px; font: 800 28px/1.2 var(--font-serif); color: var(--fairway-deep); }
-  .fi__handle { margin: 0; font-size: 16px; color: var(--ink-faint); }
-  .fi__sub { margin: 16px 0 22px; font-size: 16px; line-height: 1.5; color: var(--ink-soft); }
-  .fi__btn { display: block; width: 100%; margin-top: 10px; text-align: center; text-decoration: none; box-sizing: border-box; }
+  .up { max-width: 520px; margin: 0 auto; padding: 30px 0 26px; }
+  .up__head { text-align: center; }
+  .up__av { width: 84px; height: 84px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
+    background: #9fe0bd; color: #0b2414; font: 800 34px var(--font-sans); }
+  .up__name { margin: 12px 0 2px; font: 800 28px/1.2 var(--font-serif); color: var(--fairway-deep); text-align: center; }
+  .up__handle { margin: 0; font-size: 15.5px; color: var(--ink-faint); }
+  .up__stats { margin: 10px 0 0; font-size: 15px; color: var(--ink-soft); }
+  .up__stats b { color: var(--ink); }
+  .up__acts { margin: 18px 0 4px; text-align: center; }
+  .up__sub { margin: 0 0 18px; font-size: 16px; line-height: 1.5; color: var(--ink-soft); text-align: center; }
+  .up__btn { display: block; width: 100%; margin-top: 10px; text-align: center; text-decoration: none; box-sizing: border-box; }
+  .up__row { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+  .up__row .account-btn { text-decoration: none; }
+  .up__pill { padding: 9px 14px; border-radius: 999px; background: rgba(45, 106, 79, 0.12); color: var(--fairway-deep); font: 800 14px var(--font-sans); }
+  .up__switch { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; padding: 14px 16px; border: 1px solid var(--line);
+    border-radius: 14px; background: none; color: var(--ink); font: 800 15.5px var(--font-sans); text-align: left; cursor: pointer; }
+  .up__switch-text { display: flex; flex-direction: column; gap: 2px; }
+  .up__switch-text small { font-size: 13px; font-weight: 500; color: var(--ink-faint); }
+  .up__h { margin: 28px 0 10px; font: 800 13px var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: var(--fairway); }
+  .up__map { position: relative; border-radius: 16px; overflow: hidden; background: #e6eef1; aspect-ratio: 16 / 10; }
+  .up__map svg { display: block; width: 100%; height: 100%; }
+  .up__map .land { fill: #d3e2d8; }
+  .up__map .borders { stroke: #ffffff; stroke-width: 0.8; }
+  .up__map .pin { fill: #1b4332; stroke: #fff; }
+  .up__map .pin-label { fill: #1b2a1f; stroke: #e6eef1; font-family: var(--font-sans); font-weight: 800; paint-order: stroke; stroke-linejoin: round; }
+  .up__cities { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0 0; padding: 0; }
+  .up__city { display: inline-flex; align-items: center; gap: 6px; padding: 7px 8px 7px 13px; border-radius: 999px; background: rgba(45, 106, 79, 0.1); }
+  .up__city:not(:has(.up__x)) { padding-right: 13px; }
+  .up__city.is-hidden { opacity: 0.5; }
+  .up__city-name { font: 800 14px var(--font-sans); color: var(--fairway-deep); }
+  .up__city-meta { font-size: 12.5px; color: var(--ink-faint); }
+  .up__city-meta:empty { display: none; }
+  .up__x { width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; background: rgba(27, 42, 31, 0.1); color: var(--ink-soft); font-size: 15px; line-height: 1; cursor: pointer; }
+  .up__find { position: relative; margin: 12px 0 0; }
+  .up__find input { width: 100%; box-sizing: border-box; height: 44px; padding: 0 16px; border: 1px dashed rgba(27, 42, 31, 0.3); border-radius: 999px;
+    background: none; color: var(--ink); font: 600 15px var(--font-sans); outline: none; -webkit-appearance: none; }
+  .up__find input:focus { border-style: solid; border-color: var(--fairway-deep); }
+  .up__find-list { position: absolute; z-index: 5; left: 0; right: 0; top: calc(100% + 4px); margin: 0; padding: 6px; list-style: none; border-radius: 14px;
+    background: #fff; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15); }
+  .up__find-list[hidden] { display: none; }
+  .up__find-list button { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; width: 100%; padding: 10px 12px; border: 0; border-radius: 10px;
+    background: none; color: var(--ink); font: 700 15px var(--font-sans); text-align: left; cursor: pointer; }
+  .up__find-list button span { font-size: 13px; font-weight: 500; color: var(--ink-faint); }
+  .up__find-list button:hover { background: #f0f2f0; }
+  .up__walks, .up__places { list-style: none; margin: 0; padding: 0; }
+  .up__walk { display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--line); }
+  .up__walk.is-hidden .up__walk-main { opacity: 0.5; }
+  .up__walk-main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; padding: 13px 0; text-decoration: none; }
+  .up__walk-title { font: 800 16px var(--font-sans); color: var(--ink); }
+  .up__walk-meta { font-size: 13.5px; color: var(--fairway); font-weight: 700; }
+  .up__walk-stops { font-size: 13.5px; color: var(--ink-faint); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .up__hide { flex: none; padding: 7px 12px; border: 1px solid rgba(27, 42, 31, 0.2); border-radius: 999px; background: none; color: var(--ink-soft); font: 700 13px var(--font-sans); cursor: pointer; }
+  .up__places li a { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--line); text-decoration: none; }
+  .up__place-name { font: 800 15.5px var(--font-sans); color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .up__steps { flex: none; display: inline-flex; gap: 3px; }
+  .up__steps i { width: 9px; height: 13px; border-radius: 50% 50% 45% 45%; background: rgba(27, 42, 31, 0.15); }
+  .up__steps i.is-on { background: var(--fairway); }
+  .up__empty { margin: 4px 0 0; font-size: 14.5px; line-height: 1.5; color: var(--ink-faint); }
+  .up__fine { margin: 26px 0 0; font-size: 13px; line-height: 1.5; color: var(--ink-faint); }
+  .is-dark .up__map { background: #1d2a30; }
+  .is-dark .up__map .land { fill: #2f3d35; }
+  .is-dark .up__map .borders { stroke: #1d2a30; }
+  .is-dark .up__map .pin { fill: #7fd1a6; stroke: #13201a; }
+  .is-dark .up__map .pin-label { fill: #e4e9e5; stroke: #1d2a30; }
+  .is-dark .up__city { background: rgba(127, 209, 166, 0.12); }
+  .is-dark .up__x { background: rgba(255, 255, 255, 0.12); }
+  .is-dark .up__find input { border-color: rgba(255, 255, 255, 0.25); }
+  .is-dark .up__find-list { background: #252d28; }
+  .is-dark .up__find-list button:hover { background: rgba(255, 255, 255, 0.06); }
+  .is-dark .up__hide { border-color: rgba(255, 255, 255, 0.24); }
+  .is-dark .up__steps i { background: rgba(255, 255, 255, 0.15); }
+  .is-dark .up__pill { background: rgba(127, 209, 166, 0.14); color: #9fe0bd; }
+  .is-dark .up__switch { border-color: rgba(255, 255, 255, 0.14); }
 </style>
-{% if target and reader and state in ('none', 'received') %}
-<script>
-  (function () {
-    var b = document.getElementById('fi-add'), sub = document.getElementById('fi-sub');
-    b.addEventListener('click', function () {
-      b.disabled = true;
-      fetch('/api/friends/request', { method: 'POST', credentials: 'same-origin',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': (window.READER && window.READER.csrf) || '' },
-        body: JSON.stringify({ handle: {{ target.handle | tojson }} }) })
-        .then(function (r) { return r.json().catch(function () { return {}; }); })
-        .then(function (d) {
-          if (d.verify) { b.disabled = false; return; }
-          if (!d.ok) { b.disabled = false; sub.textContent = d.error || 'Something went wrong. Try again.'; return; }
-          b.remove();
-          sub.textContent = d.state === 'friends' ? 'You’re friends now. Plan a map together from the walk page.'
-            : 'Request sent. You’ll be friends once ' + {{ target.name.split(' ')[0] | tojson }} + ' accepts.';
-        })
-        .catch(function () { b.disabled = false; sub.textContent = 'Couldn’t reach the server. Try again.'; });
-    });
-  })();
-</script>
-{% endif %}
 {% if target %}
 <script>
   (function () {
@@ -71,6 +194,130 @@
     var a = document.querySelector('[data-av]'), h = a.getAttribute('data-av'), n = 0;
     for (var i = 0; i < h.length; i++) n = (n * 31 + h.charCodeAt(i)) >>> 0;
     a.style.background = COLORS[n % COLORS.length];
+    function csrf() { return (window.READER && window.READER.csrf) || ''; }
+    function call(method, url, body) {
+      return fetch(url, { method: method, credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': csrf() }, body: body ? JSON.stringify(body) : undefined })
+        .then(function (r) { return r.json().catch(function () { return {}; }); })
+        .catch(function () { return { error: 'Couldn’t reach the server. Try again.' }; });
+    }
+
+    // ---- Add friend / accept ----
+    var add = document.getElementById('up-add'), sub = document.getElementById('up-sub');
+    if (add) add.addEventListener('click', function () {
+      add.disabled = true;
+      call('POST', '/api/friends/request', { handle: h }).then(function (d) {
+        if (d.verify) { add.disabled = false; return; }
+        if (!d.ok) { add.disabled = false; sub.textContent = d.error || 'Something went wrong. Try again.'; return; }
+        if (d.state === 'friends') { location.reload(); return; }
+        add.remove();
+        sub.textContent = 'Request sent. You’ll be friends once ' + {{ first | tojson }} + ' accepts.';
+      });
+    });
+
+    // ---- The map: Mercator, the same projection as static/img/world-map.svg (1000 units wide) ----
+    var CITIES = {{ ((profile.cities | selectattr('hidden', 'equalto', false) | list) if profile else []) | tojson }};
+    var box = document.getElementById('up-map');
+    if (box && CITIES.length) {
+      var W = 1000, H = 887.7, NS = 'http://www.w3.org/2000/svg';
+      function proj(lat, lng) {
+        lat = Math.max(-80, Math.min(80, lat));
+        return [(lng + 180) / 360 * W, W / 2 - W / (2 * Math.PI) * Math.log(Math.tan(Math.PI / 4 + lat * Math.PI / 360))];
+      }
+      var pts = CITIES.map(function (c) { return proj(c.lat, c.lng); });
+      var xs = pts.map(function (p) { return p[0]; }), ys = pts.map(function (p) { return p[1]; });
+      var x0 = Math.min.apply(null, xs), x1 = Math.max.apply(null, xs), y0 = Math.min.apply(null, ys), y1 = Math.max.apply(null, ys);
+      // Frame the pins with room around them; at least ~25 degrees across, so one city still shows its region.
+      var ratio = 1.6, w = Math.max((x1 - x0) * 1.35, (y1 - y0) * 1.35 * ratio, 70), hh = w / ratio;
+      if (w > W) { w = W; hh = w / ratio; }
+      var cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+      // The map is cut off at 80 degrees north, so keep the far north (a flat band) out of the frame when we can.
+      var top = Math.min(180, y0 - hh * 0.15);
+      var vx = Math.max(0, Math.min(W - w, cx - w / 2)), vy = Math.max(Math.max(0, top), Math.min(H - hh, cy - hh / 2));
+      var svg = document.createElementNS(NS, 'svg');
+      svg.setAttribute('viewBox', [vx, vy, w, hh].map(function (v) { return v.toFixed(2); }).join(' '));
+      svg.setAttribute('preserveAspectRatio', 'xMidYMid slice');
+      ['land', 'borders'].forEach(function (id) {
+        var u = document.createElementNS(NS, 'use');
+        u.setAttribute('href', '/static/img/world-map.svg?v=2#' + id);
+        u.setAttribute('class', id);
+        svg.appendChild(u);
+      });
+      var r = w / 95, fs = w / 34, labels = CITIES.length <= 8;
+      CITIES.forEach(function (c, k) {
+        var p = pts[k];
+        var dot = document.createElementNS(NS, 'circle');
+        dot.setAttribute('cx', p[0]); dot.setAttribute('cy', p[1]); dot.setAttribute('r', r);
+        dot.setAttribute('class', 'pin'); dot.setAttribute('stroke-width', r * 0.45);
+        var t = document.createElementNS(NS, 'title'); t.textContent = c.label; dot.appendChild(t);
+        svg.appendChild(dot);
+        if (labels) {
+          var tx = document.createElementNS(NS, 'text');
+          tx.setAttribute('x', p[0] + r * 1.6); tx.setAttribute('y', p[1] + fs * 0.35);
+          tx.setAttribute('font-size', fs); tx.setAttribute('stroke-width', fs * 0.28);
+          tx.setAttribute('class', 'pin-label');
+          tx.textContent = c.name;
+          svg.appendChild(tx);
+        }
+      });
+      box.appendChild(svg);
+    }
+
+    {% if state == 'self' %}
+    // ---- Your own profile: public switch, hide walks, add / remove cities ----
+    var pub = document.getElementById('up-public'), note = document.getElementById('up-public-note');
+    pub.addEventListener('click', function () {
+      var on = pub.getAttribute('aria-checked') !== 'true';
+      pub.disabled = true;
+      call('POST', '/api/profile/visibility', { public: on }).then(function (d) {
+        pub.disabled = false;
+        if (!d.ok) return;
+        pub.setAttribute('aria-checked', d.public ? 'true' : 'false');
+        note.textContent = d.public ? 'Anyone with your link can see this page.' : 'Only your friends can see this page.';
+      });
+    });
+    document.getElementById('up').addEventListener('click', function (e) {
+      var hb = e.target.closest('[data-hide-walk]');
+      if (hb) {
+        hb.disabled = true;
+        call('POST', '/api/walk-history/' + encodeURIComponent(hb.getAttribute('data-hide-walk')), { hidden: hb.getAttribute('data-hidden') !== 'true' })
+          .then(function (d) { if (d.ok) location.reload(); else hb.disabled = false; });
+        return;
+      }
+      var rb = e.target.closest('[data-remove-city]');
+      if (rb) {
+        rb.disabled = true;
+        call('DELETE', '/api/my-cities?key=' + encodeURIComponent(rb.getAttribute('data-remove-city'))).then(function (d) { if (d.ok) location.reload(); else rb.disabled = false; });
+      }
+    });
+    var q = document.getElementById('up-city-q'), list = document.getElementById('up-city-list'), timer = null, seq = 0;
+    q.addEventListener('input', function () {
+      clearTimeout(timer);
+      var text = q.value.trim();
+      if (text.length < 2) { list.hidden = true; return; }
+      timer = setTimeout(function () {
+        var mine = ++seq;
+        fetch('/api/cities?q=' + encodeURIComponent(text), { headers: { 'Accept': 'application/json' } }).then(function (r) { return r.json(); })
+          .then(function (d) {
+            if (mine !== seq) return;
+            list.innerHTML = '';
+            ((d && d.cities) || []).forEach(function (c) {
+              var li = document.createElement('li'), b = document.createElement('button');
+              b.type = 'button';
+              b.appendChild(document.createTextNode(c.name));
+              var where = (c.label || '').split(', ').slice(1).join(', ');
+              if (where) { var s = document.createElement('span'); s.textContent = where; b.appendChild(s); }
+              b.addEventListener('click', function () {
+                list.hidden = true; q.value = ''; q.disabled = true;
+                call('POST', '/api/my-cities', c).then(function (r) { q.disabled = false; if (r.ok) location.reload(); });
+              });
+              li.appendChild(b); list.appendChild(li);
+            });
+            list.hidden = !list.children.length;
+          }).catch(function () {});
+      }, 250);
+    });
+    {% endif %}
   })();
 </script>
 {% endif %}

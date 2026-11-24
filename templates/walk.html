@@ -350,6 +350,7 @@
       <a href="{{ '/account' if reader else '/account/login?next=/account' }}"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-save"/></svg><span>Saved walks &amp; stories</span></a>
       <a href="{{ '/account/profile' if reader else '/account/login?next=/account/profile' }}"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"/></svg><span>Profile &amp; settings</span></a>
       <a href="/"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-stories"/></svg><span>Stories</span></a>
+      {% if reader %}<a href="/u/{{ my_handle() }}"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-map"/></svg><span>Your walks &amp; cities</span></a>{% endif %}
       <a href="{{ '/account/friends' if reader else '/account/login?next=/account/friends' }}"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"/></svg><span>Friends{% if friend_requests %} <em class="walkplan__acct-badge">{{ friend_requests }}</em>{% endif %}</span></a>
       <button type="button" data-invite="{{ my_handle() }}"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-share"/></svg><span>Invite friends</span></button>
       <a href="/newsletter"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-mail"/></svg><span>Join Newsletter</span></a>
@@ -553,5 +554,5 @@
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
 {% include "_community_ui.html" %}
 {% include "_footprints_ui.html" %}
-<script src="/static/js/walk-planner.js?v=29" defer></script>
+<script src="/static/js/walk-planner.js?v=30" defer></script>
 {% endblock %}

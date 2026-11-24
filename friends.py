@@ -3,7 +3,8 @@ Friends: everyone has an @handle; you find people by handle or name, send a requ
 and they accept. Friends can plan group maps together (group_maps.py).
 
   GET  /account/friends                the Friends page (search, requests, friends, invite link + QR)
-  GET  /u/<handle>                     someone's invite page: "Add Danny" (the link and QR point here)
+  GET  /u/<handle>                     someone's profile (walks, cities, favourite places: profiles.py) for
+                                       friends, or when it's public; otherwise "Add Danny" (the link and QR point here)
   GET  /u/<handle>/qr.svg              the QR code for that page
   GET  /api/friends                    {me, friends, incoming, outgoing}
   GET  /api/friends/search?q=          up to 12 people, by @handle or name
@@ -292,7 +293,13 @@ def invite_page(handle):
         return render_template("account/friend_invite.html", target=None, state=None,
                                categories=CATEGORIES, active_category=None), 404
     state = state_with(reader["id"], target["id"]) if reader else None
-    return render_template("account/friend_invite.html", state=state,
+    # The full profile (profiles.py) for themselves, their friends, or anyone when it's public;
+    # everyone else gets the Add friend page.
+    import profiles
+    full = None
+    if state in ("self", "friends") or profiles.is_public(target["id"]):
+        full = profiles.profile_data(target["id"], owner=state == "self")
+    return render_template("account/friend_invite.html", state=state, profile=full,
                            target=person(target["id"], target["display_name"], target["handle"]),
                            categories=CATEGORIES, active_category=None)
 
