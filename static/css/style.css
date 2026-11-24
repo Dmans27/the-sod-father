@@ -2999,3 +2999,40 @@ body.walk-page .site-main { padding: 0; max-width: none; }
 .account-theme[aria-checked="true"] .site-switch { background: var(--gold); }
 .account-theme[aria-checked="true"] .site-switch__knob { transform: translateX(18px); }
 .is-dark .account-theme { color: #e4e9e5; border-color: rgba(255, 255, 255, 0.14); }
+
+/* ── Story cards ──
+   Stories on the feed (and the saved list) sit in the same cards as the "Walks this week" strip
+   (templates/index.html): a soft cream card with a hairline border in light mode, a faint white
+   tint in dark mode, rounded corners. The featured story is a bigger card whose photo runs edge to
+   edge. The compact "Read next" list under an article stays a plain list. */
+.hero-story {
+  padding: 18px 18px 6px; margin: 0 0 24px; border: 1px solid var(--line); border-radius: 18px;
+  background: var(--cream); overflow: hidden;
+}
+.hero-story__media { margin: 16px -18px; }
+.hero-story--plain .hero-story__byline { margin-top: 14px; }
+.story-list:not(.story-list--compact) { gap: 12px; }
+.story-list:not(.story-list--compact) > .story-row,
+.story-list:not(.story-list--compact) > .story-row:first-child,
+.story-list:not(.story-list--compact) > .story-row:last-child {
+  padding: 14px; border: 1px solid var(--line); border-radius: 14px; background: var(--cream);
+}
+.story-list:not(.story-list--compact) .story-row__thumb { border-radius: 10px; }
+html.is-dark .hero-story,
+html.is-dark .story-list:not(.story-list--compact) > .story-row {
+  background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.12);
+}
+/* The story open beside the feed on iPad: a gold edge on its card (it used to be a full-width band). */
+.hero-story.is-current,
+.story-list:not(.story-list--compact) > .story-row.is-current {
+  margin-left: 0; margin-right: 0; padding-left: 18px; border-color: var(--gold); box-shadow: inset 3px 0 0 var(--gold);
+}
+.story-list:not(.story-list--compact) > .story-row.is-current { padding-left: 14px; }
+
+/* The phone's status bar on the stories feed: an opaque strip under the clock, so the search bar and
+   stories scrolling up don't run into it before the pop-up search bar slides down. */
+@media (max-width: 699.98px) {
+  body.feed-page::before { content: ""; position: fixed; z-index: 14; top: 0; left: 0; right: 0;
+    height: env(safe-area-inset-top, 0px); background: #fff; pointer-events: none; }
+  html.is-dark body.feed-page::before { background: #1c231f; }
+}
