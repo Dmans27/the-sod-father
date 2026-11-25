@@ -538,9 +538,9 @@
      static/js/walk-planner.js fills it from /api/my-places each time it opens. #}
   <button type="button" class="walkplan__pull walkplan__pull--right" id="walkplan-mine-pull" aria-controls="walkplan-mine" aria-expanded="false">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
-    <span class="walkplan__pull-label">My places</span>
+    <span class="walkplan__pull-label">Saved</span>
   </button>
-  <aside class="walkplan__mine" id="walkplan-mine" aria-label="My places" aria-hidden="true">
+  <aside class="walkplan__mine" id="walkplan-mine" aria-label="Saved" aria-hidden="true">
     <div class="walkplan__drawer-head">
       <h2 id="walkplan-mine-title">My places</h2>
       <button type="button" class="walkplan__drawer-close" aria-label="Close">&times;</button>
@@ -604,7 +604,7 @@
     <ol class="walkplan__steps">
       <li><b>Ask</b> for a walk below, typed or spoken: “3 cozy cafés near me”.</li>
       <li><b>Draw area</b> to circle the exact part of town you want.</li>
-      <li>Open <b>This week</b> on the left for ideas, walks to try and good reads.</li>
+      <li>Open <b>News</b> on the left for ideas, walks to try and good reads, and <b>Saved</b> on the right for your places.</li>
       <li>Tap your account button (top right) for <b>Stories</b>, saved walks and settings.</li>
     </ol>
     <button type="button" class="walkplan__got-it">Got it</button>
@@ -615,10 +615,10 @@
      static/js/walk-planner.js opens it and hides the tab once the map is in use. #}
   <button type="button" class="walkplan__pull" id="walkplan-pull" aria-controls="walkplan-drawer" aria-expanded="false">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-    <span class="walkplan__pull-label">This week</span>
+    <span class="walkplan__pull-label">News</span>
   </button>
   <div class="walkplan__drawer-back" id="walkplan-drawer-back"></div>
-  <aside class="walkplan__drawer" id="walkplan-drawer" aria-label="This week" aria-hidden="true">
+  <aside class="walkplan__drawer" id="walkplan-drawer" aria-label="News" aria-hidden="true">
    <div class="walkplan__drawer-inner">
     <div class="walkplan__drawer-head">
       <h2>This week in {{ feed_city or 'Vienna' }}</h2>
