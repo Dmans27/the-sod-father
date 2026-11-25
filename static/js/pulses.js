@@ -353,6 +353,8 @@
     var meta = el('div', 'pp__meta');
     meta.appendChild(who); meta.appendChild(when);
     top.appendChild(meta);
+    // Everything floats over the video in frosted pills: who and when (left), ••• and × (right).
+    var acts = el('div', 'pp__acts');
     var more = el('button', 'pp__btn', '•••');
     more.type = 'button';
     more.setAttribute('aria-label', 'More');
@@ -361,7 +363,8 @@
     close.type = 'button';
     close.setAttribute('aria-label', 'Close');
     close.addEventListener('click', function (e) { e.stopPropagation(); closePlayer(); });
-    top.appendChild(more); top.appendChild(close);
+    acts.appendChild(more); acts.appendChild(close);
+    top.appendChild(acts);
     player.appendChild(top);
     video = el('video', 'pp__video');
     video.playsInline = true; video.setAttribute('playsinline', ''); video.setAttribute('webkit-playsinline', '');
@@ -385,8 +388,10 @@
     bottom.appendChild(districtLine);
     placeBtn = el('a', 'pp__place');
     bottom.appendChild(placeBtn);
-    soundBtn = el('button', 'pp__sound', 'Tap for sound');
+    soundBtn = el('button', 'pp__sound');   // a microphone: crossed out while the sound is off
     soundBtn.type = 'button';
+    soundBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/>' +
+      '<path d="M5.5 11a6.5 6.5 0 0 0 13 0M12 17.5V21M8.5 21h7"/><path class="pp__sound-off" d="M4 4l16 16"/></svg>';
     soundBtn.addEventListener('click', function (e) { e.stopPropagation(); muted = !muted; video.muted = muted; paintSound(); if (video.paused) video.play().catch(function () {}); });
     bottom.appendChild(soundBtn);
     player.appendChild(bottom);
@@ -401,7 +406,11 @@
       else if (e.key === 'ArrowLeft') step(-1);
     });
   }
-  function paintSound() { soundBtn.textContent = muted ? 'Tap for sound' : 'Sound on'; soundBtn.classList.toggle('is-on', !muted); }
+  function paintSound() {
+    soundBtn.classList.toggle('is-on', !muted);
+    soundBtn.setAttribute('aria-pressed', muted ? 'false' : 'true');
+    soundBtn.setAttribute('aria-label', muted ? 'Turn the sound on' : 'Turn the sound off');
+  }
   function openPlayer(id) {
     if (!/^[0-9a-f]{16}$/.test(id)) return;
     if (!player) buildPlayer();

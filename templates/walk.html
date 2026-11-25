@@ -401,29 +401,37 @@
   /* The player: one district's clips, like stories */
   .pp { position: fixed; z-index: 45; inset: 0; background: #000; color: #fff; }
   .pp[hidden] { display: none; }
-  .pp__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; background: #000; }
+  .pp__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; }   /* fills the screen */
   .pp__bars { position: absolute; z-index: 3; top: calc(env(safe-area-inset-top, 0px) + 8px); left: 10px; right: 10px; display: flex; gap: 4px; }
-  .pp__bar { flex: 1; height: 3px; border-radius: 999px; background: rgba(255, 255, 255, 0.3); overflow: hidden; }
+  .pp__bar { flex: 1; height: 3px; border-radius: 999px; background: rgba(255, 255, 255, 0.35); overflow: hidden; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25); }
   .pp__bar i { display: block; height: 100%; width: 0; background: #fff; }
-  .pp__top { position: absolute; z-index: 3; top: calc(env(safe-area-inset-top, 0px) + 18px); left: 14px; right: 10px; display: flex; align-items: center; gap: 6px; }
-  .pp__meta { flex: 1; min-width: 0; display: flex; flex-direction: column; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6); }
+  /* Everything else floats over the video in frosted pills */
+  .pp__top { position: absolute; z-index: 3; top: calc(env(safe-area-inset-top, 0px) + 20px); left: 12px; right: 12px; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+  .pp__meta, .pp__acts, .pp__district, .pp__place, .pp__sound {
+    background: rgba(20, 22, 21, 0.5); border: 0.5px solid rgba(255, 255, 255, 0.16);
+    -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px); }
+  .pp__meta { min-width: 0; display: flex; flex-direction: column; padding: 8px 14px; border-radius: 16px; }
   .pp__who { font: 800 15px var(--font-sans); }
   .pp__when { font-size: 12.5px; opacity: 0.85; }
-  .pp__btn { width: 38px; height: 38px; border: 0; border-radius: 50%; background: rgba(0, 0, 0, 0.35); color: #fff; font-size: 18px; letter-spacing: 1px; cursor: pointer; }
+  .pp__acts { flex: none; display: flex; align-items: center; gap: 2px; padding: 3px; border-radius: 999px; }
+  .pp__btn { width: 38px; height: 38px; border: 0; border-radius: 50%; background: none; color: #fff; font-size: 18px; letter-spacing: 1px; cursor: pointer; }
+  .pp__btn:active { background: rgba(255, 255, 255, 0.15); }
   .pp__zone { position: absolute; z-index: 2; top: 90px; bottom: 150px; width: 40%; border: 0; background: none; cursor: pointer; -webkit-tap-highlight-color: transparent; }
   .pp__zone--prev { left: 0; width: 30%; }
   .pp__zone--next { right: 0; width: 70%; }
-  .pp__bottom { position: absolute; z-index: 3; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 10px;
-    padding: 40px 16px calc(env(safe-area-inset-bottom, 0px) + 18px); background: linear-gradient(to top, rgba(0, 0, 0, 0.65), rgba(0, 0, 0, 0)); }
-  .pp__district { display: flex; align-items: center; gap: 6px; margin: 0; font: 700 13.5px var(--font-sans); opacity: 0.9; }
-  .pp__place { display: flex; flex-direction: column; gap: 1px; padding: 10px 14px; border-radius: 14px; background: rgba(28, 35, 31, 0.85); color: #e4e9e5; text-decoration: none;
-    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  .pp__bottom { position: absolute; z-index: 3; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+    padding: 60px 16px calc(env(safe-area-inset-bottom, 0px) + 18px); background: linear-gradient(to top, rgba(0, 0, 0, 0.35), rgba(0, 0, 0, 0)); pointer-events: none; }
+  .pp__bottom > * { pointer-events: auto; }
+  .pp__district { display: inline-flex; align-items: center; gap: 6px; margin: 0; padding: 6px 12px; border-radius: 999px; font: 700 13.5px var(--font-sans); }
+  .pp__place { display: flex; flex-direction: column; gap: 1px; padding: 10px 14px; border-radius: 16px; color: #fff; text-decoration: none; }
   .pp__place[hidden] { display: none; }
   .pp__place b { font: 800 15px var(--font-sans); }
   .pp__place span { font-size: 12.5px; font-weight: 700; color: #9fe0bd; }
-  .pp__sound { position: absolute; right: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); padding: 8px 12px; border: 0; border-radius: 999px;
-    background: rgba(0, 0, 0, 0.45); color: #fff; font: 700 12.5px var(--font-sans); cursor: pointer; }
-  .pp__sound.is-on { background: rgba(127, 209, 166, 0.25); }
+  .pp__sound { position: absolute; right: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); width: 46px; height: 46px; padding: 0; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; pointer-events: auto; }
+  .pp__sound svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .pp__sound.is-on { background: rgba(127, 209, 166, 0.85); color: #0f2219; border-color: rgba(127, 209, 166, 0.9); }
+  .pp__sound.is-on .pp__sound-off { display: none; }
   .pp__menu { position: absolute; z-index: 4; left: 12px; right: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); display: flex; flex-direction: column; gap: 6px;
     padding: 10px; border-radius: 18px; background: #1c231f; box-shadow: 0 -6px 30px rgba(0, 0, 0, 0.5); }
   .pp__menu[hidden] { display: none; }
@@ -719,5 +727,5 @@
 {% include "_community_ui.html" %}
 {% include "_footprints_ui.html" %}
 <script src="/static/js/walk-planner.js?v=31" defer></script>
-<script src="/static/js/pulses.js?v=2" defer></script>
+<script src="/static/js/pulses.js?v=3" defer></script>
 {% endblock %}
