@@ -160,19 +160,78 @@
   function stopMe() {
     if (meWatch !== null && 'geolocation' in navigator) navigator.geolocation.clearWatch(meWatch);
     meWatch = null;
+    compassOff();
+  }
+
+  // Which way you're facing, for the arrow: the phone's compass when it has one (iPhone asks once,
+  // on your first tap on the page), otherwise the direction you're moving in.
+  var gpsHeading = null, compass = null, compassAt = 0, compassSent = 0, compassOn = false, compassAsked = false, compassWaiting = false;
+  function heading() { return compass !== null && Date.now() - compassAt < 3000 ? compass : gpsHeading; }
+  function screenAngle() {
+    var a = (screen.orientation && typeof screen.orientation.angle === 'number') ? screen.orientation.angle : (window.orientation || 0);
+    return Number(a) || 0;
+  }
+  function onCompass(e) {
+    var h = null;
+    if (typeof e.webkitCompassHeading === 'number' && !isNaN(e.webkitCompassHeading)) h = e.webkitCompassHeading;   // iPhone
+    else if (e.absolute && typeof e.alpha === 'number') h = 360 - e.alpha;                                         // Android
+    if (h === null) return;
+    h = ((h + screenAngle()) % 360 + 360) % 360;
+    var now = Date.now(), moved = compass === null ? 999 : Math.abs(((h - compass + 540) % 360) - 180);
+    compass = h; compassAt = now;
+    if (meLast && moved >= 4 && now - compassSent >= 120) {   // small turns and fast repeats aren't worth a message
+      compassSent = now;
+      meLast.heading = Math.round(h);
+      sendMe();
+    }
+  }
+  function compassEvent() { return 'ondeviceorientationabsolute' in window ? 'deviceorientationabsolute' : 'deviceorientation'; }
+  function compassOnNow() {
+    if (compassOn || document.hidden || !meWanted) return;
+    compassOn = true;
+    window.addEventListener(compassEvent(), onCompass);
+  }
+  function compassOff() {
+    if (!compassOn) return;
+    compassOn = false;
+    window.removeEventListener(compassEvent(), onCompass);
+    compass = null;
+  }
+  function startCompass() {
+    if (!('DeviceOrientationEvent' in window)) return;
+    if (typeof DeviceOrientationEvent.requestPermission !== 'function') return compassOnNow();   // Android: no question needed
+    // iPhone only lets a page ask inside a tap, so ask on the first tap (not while typing).
+    if (compassAsked) return compassOnNow();
+    if (compassWaiting) return;
+    compassWaiting = true;
+    function ask(e) {
+      if (e && e.target && e.target.closest && e.target.closest('input, textarea, [contenteditable]')) return;
+      document.removeEventListener('touchend', ask, true);
+      document.removeEventListener('click', ask, true);
+      if (compassAsked) return;
+      compassAsked = true;
+      DeviceOrientationEvent.requestPermission().then(function (r) {
+        if (r === 'granted') compassOnNow(); else compassAsked = 'no';
+      }).catch(function () { compassAsked = 'no'; });
+    }
+    document.addEventListener('touchend', ask, true);
+    document.addEventListener('click', ask, true);
   }
   function startMe() {
     if (meWatch !== null || !meWanted || !('geolocation' in navigator) || document.hidden) return;
     meWatch = navigator.geolocation.watchPosition(function (pos) {
       var c = pos.coords;
       var moving = c.speed !== null && !isNaN(c.speed) && c.speed > 0.5;
+      gpsHeading = moving && c.heading !== null && !isNaN(c.heading) ? c.heading : (compass === null ? null : gpsHeading);
+      var hd = heading();
       meLast = { type: 'mansfield:me', lat: c.latitude, lng: c.longitude, acc: c.accuracy,
-                 heading: moving && c.heading !== null && !isNaN(c.heading) ? c.heading : null };
+                 heading: hd === null ? null : Math.round(hd) };
       here = { lat: c.latitude, lng: c.longitude };
       sendMe();
     }, function (err) {
       if (err && err.code === 1) { meWanted = false; stopMe(); meLast = null; post({ type: 'mansfield:me', off: true }); }
     }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
+    if (compassAsked !== 'no') startCompass();
   }
   function wantMe() { meWanted = true; startMe(); }
   document.addEventListener('visibilitychange', function () { if (document.hidden) stopMe(); else startMe(); });
