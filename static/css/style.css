@@ -3065,3 +3065,11 @@ html .article-sheet .article-sheet__hero--top + .article-sheet__header { padding
   html .article-sheet .article-sheet__hero--top { margin-top: 76px; margin-bottom: 30px; }
   html.in-sheet .article__hero--top { margin-top: 60px; }
 }
+
+/* iPhone zooms the whole page in when you tap into a text box whose text is smaller than 16px, and
+   stays zoomed -- the map and its buttons then sit half off the screen (it happened when tagging a
+   place on a video). On touch screens every text box uses at least 16px so that never happens. */
+@media (hover: none) and (pointer: coarse) {
+  input[type="text"], input[type="search"], input[type="email"], input[type="password"], input[type="url"],
+  input[type="tel"], input[type="number"], input:not([type]), textarea, select { font-size: 16px !important; }
+}
