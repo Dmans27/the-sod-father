@@ -478,6 +478,39 @@
   .walkplan__go { background: #7fd1a6; color: #0f2219; }
   .walkplan__bar .walkplan__me-btn, .walkplan__bar .walkplan__me-btn.is-in { background: none; color: #e4e9e5; box-shadow: inset 0 0 0 1.5px rgba(228, 233, 229, 0.45); }
   .walkplan__got-it { background: #7fd1a6; color: #0f2219; }
+  /* ── The pulse camera: opens ready to record (static/js/pulses.js) ── */
+  .pc { position: absolute; z-index: 5; inset: 0; background: #000; overflow: hidden; }
+  .pc[hidden] { display: none; }
+  .pc__video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; background: #000; }
+  .pc.is-front .pc__video { transform: scaleX(-1); }   /* the front camera shows you as in a mirror */
+  .pc__top { position: absolute; z-index: 2; top: calc(env(safe-area-inset-top, 0px) + 14px); left: 14px; right: 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .pc__where { display: inline-flex; align-items: center; gap: 6px; min-width: 0; padding: 8px 14px; border-radius: 999px; color: #fff; font: 700 13.5px var(--font-sans);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pc__where svg { flex: none; width: 15px; height: 15px; fill: none; stroke: #9fe0bd; stroke-width: 2; }
+  .pc__where, .pc__round, .pc__next {
+    background: rgba(20, 22, 21, 0.5); border: 0.5px solid rgba(255, 255, 255, 0.18); -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); }
+  .pc__round { flex: none; width: 48px; height: 48px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; }
+  .pc__close { width: 40px; height: 40px; font-size: 20px; }
+  .pc__round svg { width: 23px; height: 23px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .pc__bottom { position: absolute; z-index: 2; left: 0; right: 0; bottom: 0; display: flex; flex-direction: column; align-items: center; gap: 10px;
+    padding: 50px 22px calc(env(safe-area-inset-bottom, 0px) + 24px); background: linear-gradient(to top, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0)); }
+  .pc__trayrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; width: 100%; min-height: 56px; }
+  .pc__tray { flex: 1; min-width: 0; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
+  .pc__tray::-webkit-scrollbar { display: none; }
+  .pc__thumb { flex: none; width: 42px; height: 56px; border-radius: 8px; object-fit: cover; background: #111; border: 1.5px solid rgba(255, 255, 255, 0.7); }
+  .pc__next { flex: none; padding: 10px 16px; border-radius: 999px; color: #0f2219; background: #7fd1a6; border-color: #7fd1a6; font: 800 14.5px var(--font-sans); cursor: pointer; }
+  .pc__next[hidden] { display: none; }
+  .pc__hint { margin: 0; color: rgba(255, 255, 255, 0.85); font: 700 13px var(--font-sans); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6); }
+  .pc__controls { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 330px; }
+  .pc__shutter { position: relative; width: 84px; height: 84px; padding: 0; border: 0; border-radius: 50%; background: none; cursor: pointer;
+    -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; touch-action: none; -webkit-tap-highlight-color: transparent; }
+  .pc__shutter:disabled { opacity: 0.4; }
+  .pc__ring { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+  .pc__ring circle { fill: none; stroke: #fff; stroke-width: 5; stroke-dasharray: 289; stroke-dashoffset: 289; }
+  .pc__shutter::before { content: ""; position: absolute; inset: 0; border-radius: 50%; border: 5px solid rgba(255, 255, 255, 0.85); box-sizing: border-box; }
+  .pc__shutter.is-rec::before { border-color: rgba(255, 255, 255, 0.3); }
+  .pc__dot { position: absolute; inset: 10px; border-radius: 50%; background: #7fd1a6; box-shadow: 0 0 18px rgba(127, 209, 166, 0.5); transition: transform 0.15s ease; }
+  .pc__shutter.is-rec .pc__dot { transform: scale(0.82); background: #6cc795; }
 </style>
 {% endblock %}
 
@@ -751,6 +784,6 @@
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
 {% include "_community_ui.html" %}
 {% include "_footprints_ui.html" %}
-<script src="/static/js/walk-planner.js?v=32" defer></script>
-<script src="/static/js/pulses.js?v=3" defer></script>
+<script src="/static/js/walk-planner.js?v=33" defer></script>
+<script src="/static/js/pulses.js?v=5" defer></script>
 {% endblock %}

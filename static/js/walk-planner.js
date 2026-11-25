@@ -140,6 +140,7 @@
         done = true;
         clearTimeout(timer);
         here = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        wantMe();
         resolve(here);
       }, function () {
         if (done) return;
@@ -150,6 +151,44 @@
       }, { enableHighAccuracy: false, maximumAge: 120000, timeout: 8000 });
     });
   }
+
+  // ── Your dot on the map ───────────────────────────────────────────────
+  // Once the reader has shared their location (now or on an earlier visit), the page
+  // follows it while it's on screen and hands it to the map, which draws a blue
+  // "you are here" dot. The map itself never asks for location.
+  var meWatch = null, meLast = null, meWanted = false;
+  function sendMe() { if (meLast) post(meLast); }
+  function stopMe() {
+    if (meWatch !== null && 'geolocation' in navigator) navigator.geolocation.clearWatch(meWatch);
+    meWatch = null;
+  }
+  function startMe() {
+    if (meWatch !== null || !meWanted || !('geolocation' in navigator) || document.hidden) return;
+    meWatch = navigator.geolocation.watchPosition(function (pos) {
+      var c = pos.coords;
+      var moving = c.speed !== null && !isNaN(c.speed) && c.speed > 0.5;
+      meLast = { type: 'mansfield:me', lat: c.latitude, lng: c.longitude, acc: c.accuracy,
+                 heading: moving && c.heading !== null && !isNaN(c.heading) ? c.heading : null };
+      here = { lat: c.latitude, lng: c.longitude };
+      sendMe();
+    }, function (err) {
+      if (err && err.code === 1) { meWanted = false; stopMe(); meLast = null; post({ type: 'mansfield:me', off: true }); }
+    }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
+  }
+  function wantMe() { meWanted = true; startMe(); }
+  document.addEventListener('visibilitychange', function () { if (document.hidden) stopMe(); else startMe(); });
+  window.addEventListener('mansfield:located', wantMe);
+  try {
+    if (navigator.permissions && navigator.permissions.query) {
+      navigator.permissions.query({ name: 'geolocation' }).then(function (st) {
+        if (st.state === 'granted') wantMe();
+        st.onchange = function () {
+          if (st.state === 'granted') wantMe();
+          else if (st.state === 'denied') { meWanted = false; stopMe(); meLast = null; post({ type: 'mansfield:me', off: true }); }
+        };
+      }).catch(function () {});
+    }
+  } catch (e) {}
 
   function needsSignIn(btn) {
     if (READER.signedIn) return false;
@@ -1268,6 +1307,7 @@
       asking = null;
       post({ type: 'mansfield:watch-view' });              // tell us what's on screen as the reader moves
       sendInsets();
+      sendMe(); setTimeout(sendMe, 1500);                   // your dot, on the new map too
       if (circle && circle.polygon) post({ type: 'mansfield:area-set', polygon: circle.polygon });
       else if (circle) post({ type: 'mansfield:circle-set', center: circle.center, radius: circle.radius });
       if (kind !== 'walk' || !plan) return;

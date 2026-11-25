@@ -88,7 +88,9 @@
   function whereAmI() {
     return new Promise(function (resolve) {
       if (!('geolocation' in navigator)) return resolve(null);
-      navigator.geolocation.getCurrentPosition(function (p) { resolve({ lat: p.coords.latitude, lng: p.coords.longitude }); },
+      navigator.geolocation.getCurrentPosition(function (p) {
+        try { window.dispatchEvent(new Event('mansfield:located')); } catch (e) {}   // the walk map can show your dot now
+        resolve({ lat: p.coords.latitude, lng: p.coords.longitude }); },
         function () { resolve(null); }, { enableHighAccuracy: false, maximumAge: 60000, timeout: 10000 });
     });
   }
@@ -101,10 +103,12 @@
     document.body.classList.add('pz-open');
     paintClips();
     whereLine.textContent = 'Finding where you are…';
+    setCamWhere('Finding where you are…');
     here = null; district = '';
     paintPost();
+    showCamera();   // ready to record straight away (falls back to the list where a live camera isn't available)
     whereAmI().then(function (at) {
-      if (!at) { whereLine.textContent = 'Turn on location to post: your video shows in the district you’re in.'; return; }
+      if (!at) { whereLine.textContent = 'Turn on location to post: your video shows in the district you’re in.'; setCamWhere('Turn on location to post'); return; }
       here = at;
       api('POST', '/api/pulses/where', at).then(function (res) {
         if (res.d && res.d.ok) {
@@ -112,13 +116,17 @@
           whereLine.innerHTML = '';
           whereLine.insertAdjacentHTML('beforeend', PIN);
           whereLine.appendChild(document.createTextNode('Shows in ' + district + ' for 8 hours, then disappears.'));
-        } else whereLine.textContent = (res.d && res.d.error) || 'Couldn’t work out where you are.';
+          setCamWhere(district + ' · 8 hours');
+        } else { whereLine.textContent = (res.d && res.d.error) || 'Couldn’t work out where you are.'; setCamWhere('Location unavailable'); }
         paintPost();
       });
     });
   }
   function closeComposer() {
     if (busy) return;
+    stopRecording(true);
+    stopStream();
+    if (camEl) camEl.hidden = true;
     box.hidden = true;
     document.body.classList.remove('pz-open');
     clips.forEach(function (c) { URL.revokeObjectURL(c.url); });
@@ -148,7 +156,7 @@
     var pick = el('button', 'pz__add', 'Choose videos');
     pick.type = 'button';
     pick.insertAdjacentHTML('afterbegin', '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M8 13l3 3 5-6"/></svg>');
-    rec.addEventListener('click', function () { recIn.click(); });
+    rec.addEventListener('click', function () { if (camSupported()) showCamera(); else recIn.click(); });
     pick.addEventListener('click', function () { pickIn.click(); });
     [recIn, pickIn].forEach(function (inp) {
       inp.addEventListener('change', function () { addFiles(inp.files); inp.value = ''; });
@@ -167,6 +175,169 @@
     box.appendChild(foot);
     document.body.appendChild(box);
   }
+
+  // ── The camera: opens ready to record ────────────────────────────────
+  // A live preview fills the screen. Hold the green button to record (up to 8 seconds; it stops by
+  // itself), let go to stop. Each recording joins the row of clips above the button; "Next" goes to
+  // the list, where you tag places and post. The photo icon picks videos from the camera roll; the
+  // arrows flip between the back and front cameras. Where the phone or browser can't do a live camera
+  // (or it's refused), the list opens instead with Record and Choose videos.
+  var camEl = null, camVideo, camStream = null, camFacing = 'environment', camWhereEl, camTray, camNext, camHint, camShutter, camRing;
+  var recorder = null, recChunks = [], recStart = 0, recTimer = null, recRaf = 0, recMime = '', recDiscard = false;
+  function camSupported() {
+    return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
+  }
+  function setCamWhere(text) { if (camWhereEl) camWhereEl.lastChild.textContent = text; }
+  function buildCamera() {
+    camEl = el('div', 'pc');
+    camEl.hidden = true;
+    camVideo = el('video', 'pc__video');
+    camVideo.muted = true; camVideo.playsInline = true; camVideo.setAttribute('playsinline', ''); camVideo.setAttribute('autoplay', '');
+    camEl.appendChild(camVideo);
+    var top = el('div', 'pc__top');
+    camWhereEl = el('span', 'pc__where');
+    camWhereEl.insertAdjacentHTML('afterbegin', PIN);
+    camWhereEl.appendChild(document.createTextNode(''));
+    top.appendChild(camWhereEl);
+    var x = el('button', 'pc__round pc__close', '×');
+    x.type = 'button';
+    x.setAttribute('aria-label', 'Close');
+    x.addEventListener('click', closeComposer);
+    top.appendChild(x);
+    camEl.appendChild(top);
+    var bottom = el('div', 'pc__bottom');
+    var row = el('div', 'pc__trayrow');
+    camTray = el('div', 'pc__tray');
+    camNext = el('button', 'pc__next', 'Next');
+    camNext.type = 'button';
+    camNext.addEventListener('click', showReview);
+    row.appendChild(camTray); row.appendChild(camNext);
+    bottom.appendChild(row);
+    camHint = el('p', 'pc__hint', 'Hold to record · up to 8 seconds');
+    bottom.appendChild(camHint);
+    var controls = el('div', 'pc__controls');
+    var roll = el('button', 'pc__round pc__roll');
+    roll.type = 'button';
+    roll.setAttribute('aria-label', 'Choose videos from your camera roll');
+    roll.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><circle cx="9" cy="9.5" r="1.6"/><path d="M21 16l-5.2-5.2L7 19.5"/></svg>';
+    roll.addEventListener('click', function () { pickIn.click(); });
+    camShutter = el('button', 'pc__shutter');
+    camShutter.type = 'button';
+    camShutter.setAttribute('aria-label', 'Hold to record a video');
+    camShutter.innerHTML = '<svg class="pc__ring" viewBox="0 0 100 100" aria-hidden="true"><circle cx="50" cy="50" r="46"/></svg><span class="pc__dot"></span>';
+    camRing = camShutter.querySelector('circle');
+    var flip = el('button', 'pc__round pc__flip');
+    flip.type = 'button';
+    flip.setAttribute('aria-label', 'Switch camera');
+    flip.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9a8 8 0 0 1 14.3-3.3L20 8M20 4v4h-4"/><path d="M20 15a8 8 0 0 1-14.3 3.3L4 16M4 20v-4h4"/></svg>';
+    flip.addEventListener('click', function () { if (recorder) return; camFacing = camFacing === 'environment' ? 'user' : 'environment'; startStream(); });
+    controls.appendChild(roll); controls.appendChild(camShutter); controls.appendChild(flip);
+    bottom.appendChild(controls);
+    camEl.appendChild(bottom);
+    // Hold to record; let go (or slide off) to stop.
+    camShutter.addEventListener('pointerdown', function (e) { e.preventDefault(); startRecording(); });
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (t) { camShutter.addEventListener(t, function () { stopRecording(false); }); });
+    camShutter.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    box.appendChild(camEl);
+  }
+  function stopStream() {
+    if (camStream) camStream.getTracks().forEach(function (t) { t.stop(); });
+    camStream = null;
+    if (camVideo) camVideo.srcObject = null;
+  }
+  function startStream() {
+    stopStream();
+    camEl.classList.toggle('is-front', camFacing === 'user');
+    var want = { video: { facingMode: camFacing, width: { ideal: 1080 }, height: { ideal: 1920 } }, audio: true };
+    return navigator.mediaDevices.getUserMedia(want)
+      .catch(function () { return navigator.mediaDevices.getUserMedia({ video: { facingMode: camFacing }, audio: false }); })   // no microphone: video only
+      .then(function (s) {
+        if (camEl.hidden) { s.getTracks().forEach(function (t) { t.stop(); }); return; }   // closed while asking
+        camStream = s;
+        camVideo.srcObject = s;
+        var p = camVideo.play();
+        if (p && p.catch) p.catch(function () {});
+      })
+      .catch(function () {
+        toast('The camera isn’t available. Choose videos from your camera roll instead.');
+        showReview();
+      });
+  }
+  function showCamera() {
+    if (!camSupported()) { showReview(); return; }
+    if (!camEl) buildCamera();
+    camEl.hidden = false;
+    paintTray();
+    startStream();
+  }
+  function showReview() {
+    stopRecording(true);
+    stopStream();
+    if (camEl) camEl.hidden = true;
+    paintClips();
+  }
+  function paintTray() {
+    if (!camTray) return;
+    camTray.innerHTML = '';
+    clips.forEach(function (c) {
+      var v = el('video', 'pc__thumb');
+      v.muted = true; v.playsInline = true; v.setAttribute('playsinline', ''); v.preload = 'metadata';
+      v.src = c.url + '#t=0.2';
+      camTray.appendChild(v);
+    });
+    camNext.hidden = !clips.length;
+    camNext.textContent = clips.length ? 'Next (' + clips.length + ')' : 'Next';
+    camShutter.disabled = clips.length >= MAX_CLIPS;
+    camHint.textContent = clips.length >= MAX_CLIPS ? 'That’s 10 videos. Tap Next to post them.' : 'Hold to record · up to 8 seconds';
+  }
+  function pickMime() {
+    var types = ['video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+    for (var i = 0; i < types.length; i++) { if (window.MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(types[i])) return types[i]; }
+    return '';
+  }
+  function startRecording() {
+    if (recorder || !camStream || clips.length >= MAX_CLIPS) return;
+    recMime = pickMime();
+    try { recorder = recMime ? new MediaRecorder(camStream, { mimeType: recMime }) : new MediaRecorder(camStream); }
+    catch (e) { recorder = null; toast('Recording isn’t available here. Choose a video instead.'); return; }
+    recChunks = []; recDiscard = false;
+    recorder.ondataavailable = function (e) { if (e.data && e.data.size) recChunks.push(e.data); };
+    recorder.onstop = finishRecording;
+    recorder.start(250);
+    recStart = Date.now();
+    camShutter.classList.add('is-rec');
+    camHint.textContent = 'Recording…';
+    if (navigator.vibrate) navigator.vibrate(15);
+    recTimer = setTimeout(function () { stopRecording(false); }, CLIP_S * 1000);
+    (function tick() {
+      var f = Math.min(1, (Date.now() - recStart) / (CLIP_S * 1000));
+      camRing.style.strokeDashoffset = String(289 * (1 - f));
+      if (recorder) recRaf = requestAnimationFrame(tick);
+    })();
+  }
+  function stopRecording(discard) {
+    if (!recorder) return;
+    recDiscard = !!discard;
+    clearTimeout(recTimer);
+    cancelAnimationFrame(recRaf);
+    try { if (recorder.state !== 'inactive') recorder.stop(); else finishRecording(); } catch (e) { finishRecording(); }
+  }
+  function finishRecording() {
+    var secs = (Date.now() - recStart) / 1000, type = (recorder && recorder.mimeType) || recMime || 'video/webm';
+    recorder = null;
+    if (camShutter) camShutter.classList.remove('is-rec');
+    if (camRing) camRing.style.strokeDashoffset = '289';
+    if (recDiscard) return;
+    if (secs < 0.6 || !recChunks.length) { paintTray(); camHint.textContent = 'Hold the button down to record'; return; }
+    var blob = new Blob(recChunks, { type: type.split(';')[0] });
+    var ext = /mp4/.test(type) ? '.mp4' : '.webm';
+    var file;
+    try { file = new File([blob], 'pulse-' + Date.now() + ext, { type: blob.type }); } catch (e) { file = blob; file.name = 'pulse' + ext; }
+    addFiles([file]);
+    var c = clips[clips.length - 1];
+    if (c && c.file === file) c.duration = Math.min(CLIP_S, secs);   // recorded clips may not report a length
+    paintTray();
+  }
   function addFiles(files) {
     var tooBig = 0, tooMany = 0;
     Array.prototype.forEach.call(files || [], function (f) {
@@ -184,6 +355,7 @@
     if (tooBig) toast(tooBig + ' video' + (tooBig === 1 ? ' is' : 's are') + ' over ' + MAX_MB + ' MB. Pick a shorter clip.');
     else if (tooMany) toast('Up to ' + MAX_CLIPS + ' videos at once.');
     paintClips();
+    if (camEl && !camEl.hidden) paintTray();
   }
   function paintPost() {
     if (!postBtn) return;
