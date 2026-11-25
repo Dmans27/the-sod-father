@@ -153,9 +153,8 @@
   }
 
   // ── Your dot on the map ───────────────────────────────────────────────
-  // Once the reader has shared their location (now or on an earlier visit), the page
-  // follows it while it's on screen and hands it to the map, which draws a blue
-  // "you are here" dot. The map itself never asks for location.
+  // While the walk page is on screen the page follows the reader's location and hands
+  // it to the map, which draws a blue "you are here" dot. The map itself never asks.
   var meWatch = null, meLast = null, meWanted = false;
   function sendMe() { if (meLast) post(meLast); }
   function stopMe() {
@@ -178,10 +177,12 @@
   function wantMe() { meWanted = true; startMe(); }
   document.addEventListener('visibilitychange', function () { if (document.hidden) stopMe(); else startMe(); });
   window.addEventListener('mansfield:located', wantMe);
+  // The dot is always on: follow the reader from the moment the map opens (the phone asks
+  // once; if they say no, nothing more happens). The location stays on the phone.
+  wantMe();
   try {
     if (navigator.permissions && navigator.permissions.query) {
       navigator.permissions.query({ name: 'geolocation' }).then(function (st) {
-        if (st.state === 'granted') wantMe();
         st.onchange = function () {
           if (st.state === 'granted') wantMe();
           else if (st.state === 'denied') { meWanted = false; stopMe(); meLast = null; post({ type: 'mansfield:me', off: true }); }
