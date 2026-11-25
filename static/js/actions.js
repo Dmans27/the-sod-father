@@ -80,7 +80,7 @@
       bt.querySelector('.bottom-nav__label').textContent = readingDark ? 'Light' : 'Dark';
     }
     var tc = document.querySelector('meta[name="theme-color"]');
-    if (tc) tc.setAttribute('content', readingDark ? '#1c231f' : '#ffffff');
+    if (tc) tc.setAttribute('content', readingDark ? '#1d1a17' : '#ffffff');
     Array.prototype.forEach.call(document.querySelectorAll('[data-action="theme"]'), function (b) {
       b.setAttribute('aria-pressed', readingDark ? 'true' : 'false');
       b.setAttribute('aria-label', readingDark ? 'Switch to light reading mode' : 'Switch to dark reading mode');

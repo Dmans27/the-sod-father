@@ -20,7 +20,7 @@
     background: rgba(255, 255, 255, 0.08); color: #fff; font: 700 13.5px var(--font-sans); cursor: pointer; }
   .walkplan__msg-act[hidden] { display: none; }
   .walkplan__msg-act svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  .walkplan__msg-act.is-saved { background: #7fd1a6; border-color: #7fd1a6; color: #0f2219; }
+  .walkplan__msg-act.is-saved { background: #ffb37a; border-color: #ffb37a; color: #2b1708; }
   .walkplan__msg-act.is-saved svg { fill: currentColor; }
   .walkplan__msg-row > .walkplan__msg-close { margin-left: auto; }
   @media (max-width: 400px) { .walkplan__msg-act { padding: 8px 10px; } .walkplan__msg-stops { padding: 8px 12px; } }
@@ -30,7 +30,7 @@
     -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25); }
   .walkplan__me-btn { position: relative; }
   .walkplan__me-dot { position: absolute; top: -1px; right: -1px; width: 12px; height: 12px; border-radius: 50%; background: #e5484d; box-shadow: 0 0 0 2px #15171a; }
-  .walkplan__me-btn.is-in { background: #7fd1a6; color: #0f2219; border-color: #7fd1a6; }
+  .walkplan__me-btn.is-in { background: #ffb37a; color: #2b1708; border-color: #ffb37a; }
   .walkplan__me-btn svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   /* Account panel: slides in from the right; the whole screen on phones, half of it on iPad */
   .walkplan__acct-back { position: fixed; z-index: 19; inset: 0; background: rgba(0, 0, 0, 0.4); opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
@@ -45,7 +45,7 @@
   .walkplan__acct-head { display: flex; align-items: center; gap: 14px; padding-bottom: 18px; border-bottom: 0.5px solid rgba(255, 255, 255, 0.12); }
   .walkplan__acct-avatar { flex: 0 0 auto; width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
     background: rgba(255, 255, 255, 0.1); color: #fff; font: 800 24px var(--font-sans); }
-  .walkplan__acct-avatar.is-in { background: #7fd1a6; color: #0f2219; }
+  .walkplan__acct-avatar.is-in { background: #ffb37a; color: #2b1708; }
   .walkplan__acct-avatar svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .walkplan__acct-who { flex: 1; min-width: 0; }
   .walkplan__acct-name { margin: 0; font: 800 20px/1.25 var(--font-sans); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -58,7 +58,7 @@
     text-align: left; text-decoration: none; cursor: pointer; }
   .walkplan__acct-list a::after, .walkplan__acct-list button::after { content: "\203A"; margin-left: auto; font-size: 22px; line-height: 1; color: rgba(255, 255, 255, 0.35); }
   .walkplan__acct-list a:active, .walkplan__acct-list button:active { background: rgba(255, 255, 255, 0.06); }
-  .walkplan__acct-list svg { flex: 0 0 auto; width: 22px; height: 22px; fill: none; stroke: #7fd1a6; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .walkplan__acct-list svg { flex: 0 0 auto; width: 22px; height: 22px; fill: none; stroke: #ffb37a; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
   .walkplan__acct-badge { display: inline-flex; align-items: center; justify-content: center; min-width: 20px; height: 20px; margin-left: 6px; padding: 0 6px;
     border-radius: 999px; background: #e5484d; color: #fff; font: 800 12px var(--font-sans); font-style: normal; vertical-align: 1px; }
   .walkplan__acct-foot { margin-top: auto; padding-top: 18px; display: flex; flex-direction: column; gap: 10px; }
@@ -67,7 +67,7 @@
     font: 800 15.5px var(--font-sans); text-align: center; text-decoration: none; cursor: pointer; }
   .walkplan__acct-btn--ghost { background: none; color: #fff; border: 1px solid rgba(255, 255, 255, 0.3); }
   .walkplan__acct-btn--out { background: rgba(255, 138, 128, 0.12); color: #ff8a80; }
-  .walkplan__drawer-all { display: block; margin-top: 12px; font-weight: 800; font-size: 14.5px; color: #7fd1a6; text-decoration: none; }
+  .walkplan__drawer-all { display: block; margin-top: 12px; font-weight: 800; font-size: 14.5px; color: #ffb37a; text-decoration: none; }
 
   /* The Stories button rides in the pill row. On a fresh map (no walk, nothing drawn: .is-idle)
      the row sits centred at the very top; once an area is drawn or a walk is on, it moves to its
@@ -88,18 +88,18 @@
   @media (min-width: 641px) { .walkplan__mine { width: 50%; padding-left: 26px; padding-right: 26px; } }
   .walkplan.mine-open .walkplan__mine { transform: none; visibility: visible; box-shadow: -8px 0 30px rgba(0, 0, 0, 0.35); transition: transform 0.3s ease; }
   .walkplan__mine-note { margin: 0 0 12px; font-size: 14px; line-height: 1.45; color: rgba(255, 255, 255, 0.72); }
-  .walkplan__mine-note b { color: #7fd1a6; }
+  .walkplan__mine-note b { color: #ffb37a; }
   .walkplan__mine-list { list-style: none; margin: 0; padding: 0; }
   .walkplan__mine-item { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-top: 0.5px solid rgba(255, 255, 255, 0.1); }
   .walkplan__mine-item:first-child { border-top: 0; }
   .walkplan__mine-rank { flex: 0 0 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
-    background: #7fd1a6; color: #0f2219; font: 800 15px var(--font-sans); }
+    background: #ffb37a; color: #2b1708; font: 800 15px var(--font-sans); }
   .walkplan__mine-rank.is-dot { background: rgba(255, 255, 255, 0.1); color: rgba(255, 255, 255, 0.7); }
   .walkplan__mine-thumb { flex: 0 0 52px; height: 52px; border-radius: 10px; background: rgba(255, 255, 255, 0.08) center / cover no-repeat; }
   .walkplan__mine-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
   .walkplan__mine-name { font-weight: 800; font-size: 15.5px; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .walkplan__mine-meta { font-size: 12.5px; color: rgba(255, 255, 255, 0.6); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .walkplan__mine-meta a { color: #9fe0bd; text-decoration: none; font-weight: 700; }
+  .walkplan__mine-meta a { color: #ffcfa8; text-decoration: none; font-weight: 700; }
   .walkplan__mine-move { flex: 0 0 auto; display: flex; flex-direction: column; gap: 4px; }
   .walkplan__mine-move button { width: 32px; height: 26px; border: 0; border-radius: 8px; background: rgba(255, 255, 255, 0.1); color: #fff; font-size: 13px; cursor: pointer; }
   .walkplan__mine-move button:disabled { opacity: 0.25; cursor: default; }
@@ -119,13 +119,13 @@
   .walkplan__route-actions { display: flex; flex-wrap: wrap; gap: 8px; }
   .walkplan__route-actions button { padding: 8px 13px; border: 0.5px solid rgba(255, 255, 255, 0.25); border-radius: 999px; background: none; color: #fff;
     font: 700 13.5px var(--font-sans); cursor: pointer; }
-  .walkplan__route-actions button.is-primary { background: #7fd1a6; border-color: #7fd1a6; color: #0f2219; }
-  .walkplan__route-actions button.is-post { border-color: #7fd1a6; color: #7fd1a6; }
-  .walkplan__build-new { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 5px; background: rgba(127, 209, 166, 0.16); color: #7fd1a6; font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; vertical-align: 2px; }
+  .walkplan__route-actions button.is-primary { background: #ffb37a; border-color: #ffb37a; color: #2b1708; }
+  .walkplan__route-actions button.is-post { border-color: #ffb37a; color: #ffb37a; }
+  .walkplan__build-new { display: inline-block; margin-left: 6px; padding: 1px 6px; border-radius: 5px; background: rgba(255, 179, 122, 0.16); color: #ffb37a; font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; vertical-align: 2px; }
   .walkplan__route-actions button.is-danger { color: #ff8a80; border-color: rgba(255, 138, 128, 0.4); }
   /* With friends: group maps (group_maps.py) */
   .walkplan__gm-av { flex: none; width: 30px; height: 30px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center;
-    color: #0f2219; font: 800 13px var(--font-sans); }
+    color: #2b1708; font: 800 13px var(--font-sans); }
   .walkplan__gm-av.is-small { width: 24px; height: 24px; font-size: 11px; }
   .walkplan__gm-who { display: flex; align-items: center; gap: 8px; margin: 6px 0 0; font-size: 13px; color: rgba(255, 255, 255, 0.75); }
   .walkplan__gm-stack { display: inline-flex; }
@@ -137,16 +137,16 @@
   .walkplan__gm-more { margin-top: 10px; padding-top: 10px; border-top: 0.5px solid rgba(255, 255, 255, 0.12); }
   .walkplan__gm-chip { display: inline-flex; align-items: center; gap: 7px; padding: 5px 12px 5px 5px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 999px;
     background: none; color: #fff; font: 700 13.5px var(--font-sans); cursor: pointer; }
-  .walkplan__gm-chip[aria-pressed="true"] { background: #7fd1a6; border-color: #7fd1a6; color: #0f2219; }
+  .walkplan__gm-chip[aria-pressed="true"] { background: #ffb37a; border-color: #ffb37a; color: #2b1708; }
   .walkplan__gm-chip.is-member { cursor: default; background: rgba(255, 255, 255, 0.08); border-color: transparent; }
-  .walkplan__gm-chip.is-add { padding-left: 12px; border-style: dashed; color: #7fd1a6; border-color: rgba(127, 209, 166, 0.5); }
+  .walkplan__gm-chip.is-add { padding-left: 12px; border-style: dashed; color: #ffb37a; border-color: rgba(255, 179, 122, 0.5); }
   .walkplan__gm-chip:disabled { opacity: 0.5; }
   .walkplan__gm-x { margin: 0 -4px 0 2px; width: 20px; height: 20px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.14); color: #fff; font-size: 14px; line-height: 1; cursor: pointer; }
   .walkplan__gm-rm { flex: 0 0 auto; width: 32px; height: 32px; border: 0; border-radius: 50%; background: rgba(255, 138, 128, 0.12); color: #ff8a80; font-size: 18px; line-height: 1; cursor: pointer; }
   .walkplan__gm-row { display: flex; gap: 10px; }
   .walkplan__gm-row .walkplan__acct-btn { flex: 1; }
   .walkplan__mine-foot a.walkplan__acct-btn { text-align: center; text-decoration: none; }
-  .walkplan__build-hint a { color: #7fd1a6; font-weight: 800; }
+  .walkplan__build-hint a { color: #ffb37a; font-weight: 800; }
   /* Route builder */
   .walkplan__build-name { width: 100%; box-sizing: border-box; margin: 0 0 12px; padding: 12px 14px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px;
     background: rgba(255, 255, 255, 0.06); color: #fff; font: 700 16px var(--font-sans); }
@@ -160,24 +160,24 @@
   .walkplan__build-results { list-style: none; margin: 6px 0 0; padding: 0; }
   .walkplan__build-results:empty { display: none; }
   .walkplan__build-hit { display: flex; align-items: center; gap: 10px; padding: 9px 12px; margin-top: 6px; border-radius: 12px; background: rgba(255, 255, 255, 0.06); }
-  .walkplan__build-hit button { flex: 0 0 auto; padding: 7px 12px; border: 0; border-radius: 999px; background: #7fd1a6; color: #0f2219; font: 800 13px var(--font-sans); cursor: pointer; }
+  .walkplan__build-hit button { flex: 0 0 auto; padding: 7px 12px; border: 0; border-radius: 999px; background: #ffb37a; color: #2b1708; font: 800 13px var(--font-sans); cursor: pointer; }
   .walkplan__build-hit button:disabled { background: rgba(255, 255, 255, 0.12); color: rgba(255, 255, 255, 0.6); cursor: default; }
   .walkplan__build-hint { padding: 8px 4px; font-size: 13.5px; color: rgba(255, 255, 255, 0.6); }
-  .walkplan__mine-item.is-picked .walkplan__mine-name { color: #7fd1a6; }
+  .walkplan__mine-item.is-picked .walkplan__mine-name { color: #ffb37a; }
   .walkplan__mine-empty { margin: 30px 0; text-align: center; font-size: 15px; line-height: 1.5; color: rgba(255, 255, 255, 0.75); }
 
   /* Welcome card (first visit only) */
   .walkplan__welcome { margin: 4px 34px 10px; font: 800 17px/1.3 var(--font-sans); color: #fff; }
   .walkplan__steps { margin: 0 0 12px; padding: 0 4px 0 22px; text-align: left; font-size: 14.5px; line-height: 1.45; color: rgba(255, 255, 255, 0.85); }
   .walkplan__steps li { margin-bottom: 6px; }
-  .walkplan__steps b { color: #7fd1a6; }
+  .walkplan__steps b { color: #ffb37a; }
   .walkplan__got-it { display: block; width: 100%; padding: 11px; border: 0; border-radius: 999px; background: #fff; color: #15171a; font: 800 14.5px var(--font-sans); cursor: pointer; }
   /* "This week" pull tab and drawer (left edge). Hidden from "Draw area" until the next walk or New walk. */
   .walkplan__pull { position: absolute; z-index: 7; left: 0; top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; align-items: center; gap: 8px;
     width: 30px; padding: 12px 0; border: 0.5px solid rgba(255, 255, 255, 0.2); border-left: 0; border-radius: 0 14px 14px 0;
     background: rgba(16, 18, 20, 0.88); color: #fff; cursor: pointer; touch-action: none;
     -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3); transition: opacity 0.2s, transform 0.2s; }
-  .walkplan__pull-label { writing-mode: vertical-rl; transform: rotate(180deg); font: 800 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: #7fd1a6; }
+  .walkplan__pull-label { writing-mode: vertical-rl; transform: rotate(180deg); font: 800 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: #ffb37a; }
   .walkplan__pull svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
   .walkplan.map-used .walkplan__pull, .walkplan.is-walking .walkplan__pull,
   .walkplan.has-panel .walkplan__pull { opacity: 0; transform: translate(-100%, -50%); pointer-events: none; }
@@ -198,7 +198,7 @@
   .walkplan__drawer-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 14px; }
   .walkplan__drawer-head h2 { margin: 0; font: 800 19px/1.2 var(--font-sans); }
   .walkplan__drawer-close { flex: 0 0 auto; width: 32px; height: 32px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.12); color: #fff; font-size: 18px; cursor: pointer; }
-  .walkplan__drawer-sub { margin: 18px 0 8px; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #7fd1a6; }
+  .walkplan__drawer-sub { margin: 18px 0 8px; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #ffb37a; }
   .walkplan__drawer-sub:first-of-type { margin-top: 0; }
   /* The ask ideas: one row you swipe sideways */
   .walkplan__drawer .walkplan__ideas { flex-wrap: nowrap; justify-content: flex-start; overflow-x: auto; scroll-snap-type: x proximity; scroll-padding: 0 16px;
@@ -208,7 +208,7 @@
   .walkplan__week-card { display: flex; flex-direction: column; gap: 5px; margin-bottom: 10px; padding: 13px 14px; border-radius: 14px; text-align: left;
     background: rgba(255, 255, 255, 0.07); border: 0.5px solid rgba(255, 255, 255, 0.16); color: #fff; text-decoration: none; }
   .walkplan__week-card:active { background: rgba(255, 255, 255, 0.13); }
-  .walkplan__week-tag { align-self: flex-start; padding: 1px 8px; border-radius: 999px; background: #7fd1a6; color: #0f2219; font-size: 11px; font-weight: 800; }
+  .walkplan__week-tag { align-self: flex-start; padding: 1px 8px; border-radius: 999px; background: #ffb37a; color: #2b1708; font-size: 11px; font-weight: 800; }
   .walkplan__week-title { font-weight: 800; font-size: 15.5px; line-height: 1.25; }
   .walkplan__week-blurb { font-size: 13.5px; line-height: 1.4; color: rgba(255, 255, 255, 0.82); }
   .walkplan__week-stops { font-size: 12px; line-height: 1.4; color: rgba(255, 255, 255, 0.6); }
@@ -216,7 +216,7 @@
   .walkplan__read:first-of-type { border-top: 0; }
   .walkplan__read-thumb { flex: 0 0 64px; height: 64px; border-radius: 10px; background: rgba(255, 255, 255, 0.08) center / cover no-repeat; }
   .walkplan__read-body { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
-  .walkplan__read-pill { font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #9fe0bd; }
+  .walkplan__read-pill { font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #ffcfa8; }
   .walkplan__read-title { font-weight: 700; font-size: 14.5px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .walkplan__read-min { font-size: 12px; color: rgba(255, 255, 255, 0.6); }
   /* Walks to try / Good reads: two slides you swipe between, with dots centred on the heading line */
@@ -229,7 +229,7 @@
   .walkplan__dot { width: 22px; height: 28px; padding: 0; border: 0; background: none; cursor: pointer; display: flex; align-items: center; justify-content: center; }
   .walkplan__dot::before { content: ""; width: 8px; height: 8px; border-radius: 999px; background: rgba(255, 255, 255, 0.3); transition: width 0.2s, background 0.2s; }
   .walkplan__dot.is-on { width: 34px; }
-  .walkplan__dot.is-on::before { width: 22px; background: #7fd1a6; }
+  .walkplan__dot.is-on::before { width: 22px; background: #ffb37a; }
   /* From walkers: walks readers posted (community.py) */
   .walkplan__cwalks { display: flex; flex-direction: column; gap: 10px; }
   .walkplan__cwalk { position: relative; border-radius: 14px; overflow: hidden; background: rgba(255, 255, 255, 0.07); border: 0.5px solid rgba(255, 255, 255, 0.16); }
@@ -246,10 +246,10 @@
   .walkplan__cwalk-like.is-on { color: #ff5a6e; }
   .walkplan__cwalk-like.is-on svg { fill: currentColor; }
   .walkplan__cwalk-more { font-size: 18px; letter-spacing: 1px; line-height: 1; }
-  .walkplan__cwalk-invite { display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 14px; border: 1px dashed rgba(127, 209, 166, 0.45); font-size: 13.5px; line-height: 1.45; color: rgba(255, 255, 255, 0.78); }
+  .walkplan__cwalk-invite { display: flex; flex-direction: column; gap: 6px; padding: 14px; border-radius: 14px; border: 1px dashed rgba(255, 179, 122, 0.45); font-size: 13.5px; line-height: 1.45; color: rgba(255, 255, 255, 0.78); }
   .walkplan__cwalk-invite > b { color: #fff; font-size: 15px; }
-  .walkplan__cwalk-cta { align-self: flex-start; margin-top: 4px; padding: 9px 14px; border: 0; border-radius: 999px; background: #7fd1a6; color: #0f2219; font: 800 14px var(--font-sans); cursor: pointer; }
-  .walkplan__msg-act--post { background: #7fd1a6; border-color: #7fd1a6; color: #0f2219; }
+  .walkplan__cwalk-cta { align-self: flex-start; margin-top: 4px; padding: 9px 14px; border: 0; border-radius: 999px; background: #ffb37a; color: #2b1708; font: 800 14px var(--font-sans); cursor: pointer; }
+  .walkplan__msg-act--post { background: #ffb37a; border-color: #ffb37a; color: #2b1708; }
   .walkplan__drawer-plan { display: block; margin-top: 18px; padding: 12px; border-radius: 999px; background: #fff; color: #15171a; font-weight: 800; text-align: center; text-decoration: none; border: 0; width: 100%; font-size: 14.5px; cursor: pointer; }
   /* iPad and wider: the drawer comes across the whole page as a feed, with bigger cards in two columns */
   .walkplan__drawer-inner { max-width: 880px; margin: 0 auto; }
@@ -287,115 +287,115 @@
   }
   /* ── Side panels in the stories feed's dark look (This week, My places, the account panel) ──
      Same colours as the feed in dark mode (static/css/style.css html.is-dark and the "Walks this week"
-     strip in index.html): deep green-black #1c231f, soft mint #7fd1a6 / #9fe0bd for accents, cards with a
+     strip in index.html): deep green-black #1d1a17, soft mint #ffb37a / #ffcfa8 for accents, cards with a
      faint white tint, serif headings and card titles. This block only re-colours; sizes stay above. */
-  .walkplan__drawer, .walkplan__mine, .walkplan__acct { background: #1c231f; color: #e4e9e5; }
+  .walkplan__drawer, .walkplan__mine, .walkplan__acct { background: #1d1a17; color: #e9e6e4; }
   .walkplan__drawer-head h2 { font-family: var(--font-serif); font-weight: 700; letter-spacing: 0.005em; }
   @media (max-width: 640px) { .walkplan__drawer-head h2 { font-size: 24px; } }
-  .walkplan__drawer-close, .walkplan__acct-close { background: rgba(255, 255, 255, 0.09); color: #e4e9e5; }
-  .walkplan__drawer-sub { color: #7fd1a6; }
-  .walkplan__drawer .walkplan__idea { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); color: #e4e9e5; }
+  .walkplan__drawer-close, .walkplan__acct-close { background: rgba(255, 255, 255, 0.09); color: #e9e6e4; }
+  .walkplan__drawer-sub { color: #ffb37a; }
+  .walkplan__drawer .walkplan__idea { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); color: #e9e6e4; }
   .walkplan__drawer .walkplan__idea:active { background: rgba(255, 255, 255, 0.1); }
   .walkplan__week-card, .walkplan__cwalk { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); }
   .walkplan__week-card:active, .walkplan__cwalk-link:active { background: rgba(255, 255, 255, 0.08); }
-  .walkplan__week-card, .walkplan__cwalk-link, .walkplan__read { color: #e4e9e5; }
-  .walkplan__week-tag { padding: 2px 8px; border-radius: 6px; background: rgba(127, 209, 166, 0.16); color: #9fe0bd;
+  .walkplan__week-card, .walkplan__cwalk-link, .walkplan__read { color: #e9e6e4; }
+  .walkplan__week-tag { padding: 2px 8px; border-radius: 6px; background: rgba(255, 179, 122, 0.16); color: #ffcfa8;
     font-size: 10.5px; letter-spacing: 0.4px; text-transform: uppercase; }
-  .walkplan__week-title { font-family: var(--font-serif); font-weight: 700; font-size: 19px; line-height: 1.25; color: #e4e9e5; }
-  .walkplan__week-blurb { color: rgba(228, 233, 229, 0.8); }
-  .walkplan__week-stops, .walkplan__cwalk-by, .walkplan__read-min { color: rgba(228, 233, 229, 0.6); }
-  .walkplan__cwalk-like, .walkplan__cwalk-more { color: rgba(228, 233, 229, 0.85); }
+  .walkplan__week-title { font-family: var(--font-serif); font-weight: 700; font-size: 19px; line-height: 1.25; color: #e9e6e4; }
+  .walkplan__week-blurb { color: rgba(233, 230, 228, 0.8); }
+  .walkplan__week-stops, .walkplan__cwalk-by, .walkplan__read-min { color: rgba(233, 230, 228, 0.6); }
+  .walkplan__cwalk-like, .walkplan__cwalk-more { color: rgba(233, 230, 228, 0.85); }
   .walkplan__read { border-top-color: rgba(255, 255, 255, 0.1); }
   .walkplan__read-title { font-family: var(--font-serif); font-weight: 700; font-size: 15.5px; }
   .walkplan__read-thumb, .walkplan__cwalk-photo, .walkplan__mine-thumb { background-color: rgba(255, 255, 255, 0.06); }
-  .walkplan__dot::before { background: rgba(228, 233, 229, 0.25); }
-  .walkplan__dot.is-on::before { background: #7fd1a6; }
-  .walkplan__cwalk-invite { border-color: rgba(127, 209, 166, 0.4); color: rgba(228, 233, 229, 0.8); }
-  .walkplan__cwalk-invite > b { color: #e4e9e5; font-family: var(--font-serif); font-size: 17px; }
-  .walkplan__drawer-all { color: #9fe0bd; }
+  .walkplan__dot::before { background: rgba(233, 230, 228, 0.25); }
+  .walkplan__dot.is-on::before { background: #ffb37a; }
+  .walkplan__cwalk-invite { border-color: rgba(255, 179, 122, 0.4); color: rgba(233, 230, 228, 0.8); }
+  .walkplan__cwalk-invite > b { color: #e9e6e4; font-family: var(--font-serif); font-size: 17px; }
+  .walkplan__drawer-all { color: #ffcfa8; }
   /* Buttons: mint like the feed's location button and Ask circle */
   .walkplan__cwalk-cta, .walkplan__drawer-plan, .walkplan__acct-btn,
   .walkplan__route-actions button.is-primary, .walkplan__build-hit button, .walkplan__gm-chip[aria-pressed="true"] {
-    background: #7fd1a6; border-color: #7fd1a6; color: #0f2219; }
-  .walkplan__acct-btn--ghost { background: none; color: #e4e9e5; border: 1px solid rgba(255, 255, 255, 0.24); }
+    background: #ffb37a; border-color: #ffb37a; color: #2b1708; }
+  .walkplan__acct-btn--ghost { background: none; color: #e9e6e4; border: 1px solid rgba(255, 255, 255, 0.24); }
   .walkplan__acct-btn--out { background: rgba(255, 138, 128, 0.12); color: #ff8a80; border: 0; }
-  .walkplan__build-hit button:disabled { background: rgba(255, 255, 255, 0.1); color: rgba(228, 233, 229, 0.55); }
-  .walkplan__route-actions button { border-color: rgba(255, 255, 255, 0.22); color: #e4e9e5; }
-  .walkplan__route-actions button.is-post, .walkplan__gm-chip.is-add { border-color: rgba(127, 209, 166, 0.55); color: #9fe0bd; }
+  .walkplan__build-hit button:disabled { background: rgba(255, 255, 255, 0.1); color: rgba(233, 230, 228, 0.55); }
+  .walkplan__route-actions button { border-color: rgba(255, 255, 255, 0.22); color: #e9e6e4; }
+  .walkplan__route-actions button.is-post, .walkplan__gm-chip.is-add { border-color: rgba(255, 179, 122, 0.55); color: #ffcfa8; }
   /* My places */
-  .walkplan__mine-note { color: rgba(228, 233, 229, 0.75); }
-  .walkplan__mine-note b, .walkplan__mine-item.is-picked .walkplan__mine-name, .walkplan__build-hint a { color: #9fe0bd; }
+  .walkplan__mine-note { color: rgba(233, 230, 228, 0.75); }
+  .walkplan__mine-note b, .walkplan__mine-item.is-picked .walkplan__mine-name, .walkplan__build-hint a { color: #ffcfa8; }
   .walkplan__mine-item, .walkplan__route { border-top-color: rgba(255, 255, 255, 0.1); }
-  .walkplan__mine-rank { background: #7fd1a6; color: #0f2219; }
-  .walkplan__mine-rank.is-dot { background: rgba(255, 255, 255, 0.08); color: rgba(228, 233, 229, 0.7); }
-  .walkplan__mine-meta, .walkplan__route-stops { color: rgba(228, 233, 229, 0.6); }
-  .walkplan__mine-meta a { color: #9fe0bd; }
+  .walkplan__mine-rank { background: #ffb37a; color: #2b1708; }
+  .walkplan__mine-rank.is-dot { background: rgba(255, 255, 255, 0.08); color: rgba(233, 230, 228, 0.7); }
+  .walkplan__mine-meta, .walkplan__route-stops { color: rgba(233, 230, 228, 0.6); }
+  .walkplan__mine-meta a { color: #ffcfa8; }
   .walkplan__route-title { font-family: var(--font-serif); font-weight: 700; font-size: 18px; }
   .walkplan__mine-tabs { background: rgba(255, 255, 255, 0.06); }
-  .walkplan__mine-tabs button { color: rgba(228, 233, 229, 0.7); }
-  .walkplan__mine-tabs button[aria-selected="true"] { background: rgba(127, 209, 166, 0.16); color: #9fe0bd; }
-  .walkplan__build-name, .walkplan__build-search { background-color: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.14); color: #e4e9e5; }
-  .walkplan__build-name:focus, .walkplan__build-search:focus { outline: none; border-color: #7fd1a6; }
+  .walkplan__mine-tabs button { color: rgba(233, 230, 228, 0.7); }
+  .walkplan__mine-tabs button[aria-selected="true"] { background: rgba(255, 179, 122, 0.16); color: #ffcfa8; }
+  .walkplan__build-name, .walkplan__build-search { background-color: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.14); color: #e9e6e4; }
+  .walkplan__build-name:focus, .walkplan__build-search:focus { outline: none; border-color: #ffb37a; }
   .walkplan__build-hit { background: rgba(255, 255, 255, 0.05); }
-  .walkplan__build-new { background: rgba(127, 209, 166, 0.16); color: #9fe0bd; }
-  .walkplan__gm-stack .walkplan__gm-av { box-shadow: 0 0 0 2px #1c231f; }
-  .walkplan__gm-chip { border-color: rgba(255, 255, 255, 0.2); color: #e4e9e5; }
-  .walkplan__gm-label { color: rgba(228, 233, 229, 0.6); }
+  .walkplan__build-new { background: rgba(255, 179, 122, 0.16); color: #ffcfa8; }
+  .walkplan__gm-stack .walkplan__gm-av { box-shadow: 0 0 0 2px #1d1a17; }
+  .walkplan__gm-chip { border-color: rgba(255, 255, 255, 0.2); color: #e9e6e4; }
+  .walkplan__gm-label { color: rgba(233, 230, 228, 0.6); }
   /* Account panel */
   .walkplan__acct-head { border-bottom-color: rgba(255, 255, 255, 0.1); }
   .walkplan__acct-name { font-family: var(--font-serif); font-weight: 700; font-size: 22px; }
-  .walkplan__acct-sub { color: rgba(228, 233, 229, 0.65); }
-  .walkplan__acct-avatar.is-in, .walkplan__me-btn.is-in { background: #7fd1a6; border-color: #7fd1a6; color: #0f2219; }
-  .walkplan__acct-list a, .walkplan__acct-list button { color: #e4e9e5; border-bottom-color: rgba(255, 255, 255, 0.08); }
-  .walkplan__acct-list svg { stroke: #7fd1a6; }
-  .walkplan__acct-list a::after, .walkplan__acct-list button::after { color: rgba(228, 233, 229, 0.35); }
+  .walkplan__acct-sub { color: rgba(233, 230, 228, 0.65); }
+  .walkplan__acct-avatar.is-in, .walkplan__me-btn.is-in { background: #ffb37a; border-color: #ffb37a; color: #2b1708; }
+  .walkplan__acct-list a, .walkplan__acct-list button { color: #e9e6e4; border-bottom-color: rgba(255, 255, 255, 0.08); }
+  .walkplan__acct-list svg { stroke: #ffb37a; }
+  .walkplan__acct-list a::after, .walkplan__acct-list button::after { color: rgba(233, 230, 228, 0.35); }
   /* The tabs on the map's edges that open This week and My places */
-  .walkplan__pull { background: rgba(28, 35, 31, 0.92); border-color: rgba(255, 255, 255, 0.14); color: #e4e9e5; }
-  .walkplan__pull-label { color: #7fd1a6; }
+  .walkplan__pull { background: rgba(29, 26, 23, 0.92); border-color: rgba(255, 255, 255, 0.14); color: #e9e6e4; }
+  .walkplan__pull-label { color: #ffb37a; }
   /* ── Pulses: post short videos to the map (static/js/pulses.js) ── */
   body.pz-open, body.pp-open { overflow: hidden; }
   .pz { position: fixed; z-index: 40; inset: 0; display: flex; flex-direction: column; box-sizing: border-box; overflow-y: auto; overscroll-behavior: contain;
-    padding: calc(env(safe-area-inset-top, 0px) + 18px) 18px calc(env(safe-area-inset-bottom, 0px) + 18px); background: #1c231f; color: #e4e9e5; }
+    padding: calc(env(safe-area-inset-top, 0px) + 18px) 18px calc(env(safe-area-inset-bottom, 0px) + 18px); background: #231f1c; color: #e9e6e4; }
   .pz[hidden] { display: none; }
   @media (min-width: 641px) { .pz { left: auto; width: 50%; box-shadow: -10px 0 34px rgba(0, 0, 0, 0.35); } }
   .pz__head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   .pz__title { margin: 0; font: 700 24px/1.2 var(--font-serif); }
-  .pz__close { width: 34px; height: 34px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.09); color: #e4e9e5; font-size: 19px; cursor: pointer; }
+  .pz__close { width: 34px; height: 34px; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.09); color: #e9e6e4; font-size: 19px; cursor: pointer; }
   .pz__where { display: flex; align-items: center; gap: 6px; margin: 10px 0 0; font-size: 14px; line-height: 1.4; color: #9fe0bd; font-weight: 700; }
   .pz__where svg, .pz__tag svg, .pz__tagbtn svg, .pp__district svg { flex: none; width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2; }
   .pz__adds { display: flex; gap: 10px; margin: 18px 0 0; }
   .pz__add { flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 13px 10px; border-radius: 14px; cursor: pointer;
-    border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(255, 255, 255, 0.05); color: #e4e9e5; font: 800 15px var(--font-sans); }
+    border: 1px solid rgba(255, 255, 255, 0.14); background: rgba(255, 255, 255, 0.05); color: #e9e6e4; font: 800 15px var(--font-sans); }
   .pz__add svg { width: 21px; height: 21px; fill: none; stroke: #7fd1a6; stroke-width: 1.9; stroke-linejoin: round; stroke-linecap: round; }
-  .pz__note { margin: 10px 2px 0; font-size: 12.5px; line-height: 1.45; color: rgba(228, 233, 229, 0.6); }
+  .pz__note { margin: 10px 2px 0; font-size: 12.5px; line-height: 1.45; color: rgba(233, 230, 228, 0.6); }
   .pz__list { list-style: none; margin: 14px 0 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
   .pz__clip { position: relative; display: flex; gap: 12px; padding: 10px; border-radius: 14px; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.12); }
   .pz__thumb { flex: none; width: 72px; height: 96px; border-radius: 10px; object-fit: cover; background: #111; }
   .pz__clip-body { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 8px; padding-right: 28px; }
-  .pz__len { font-size: 12.5px; font-weight: 700; color: rgba(228, 233, 229, 0.65); }
+  .pz__len { font-size: 12.5px; font-weight: 700; color: rgba(233, 230, 228, 0.65); }
   .pz__tagbtn, .pz__tag { display: inline-flex; align-items: center; gap: 6px; padding: 7px 12px; border-radius: 999px; font: 800 13px var(--font-sans); }
   .pz__tagbtn { border: 1px dashed rgba(127, 209, 166, 0.55); background: none; color: #9fe0bd; cursor: pointer; }
   .pz__tag { background: rgba(127, 209, 166, 0.16); color: #9fe0bd; max-width: 100%; }
-  .pz__tag-x { margin-left: 2px; width: 18px; height: 18px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.14); color: #e4e9e5; font-size: 13px; line-height: 1; cursor: pointer; }
-  .pz__rm { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.1); color: #e4e9e5; font-size: 16px; cursor: pointer; }
+  .pz__tag-x { margin-left: 2px; width: 18px; height: 18px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.14); color: #e9e6e4; font-size: 13px; line-height: 1; cursor: pointer; }
+  .pz__rm { position: absolute; top: 8px; right: 8px; width: 26px; height: 26px; padding: 0; border: 0; border-radius: 50%; background: rgba(255, 255, 255, 0.1); color: #e9e6e4; font-size: 16px; cursor: pointer; }
   .pz__find { width: 100%; }
   .pz__find-in { width: 100%; box-sizing: border-box; padding: 10px 14px; border-radius: 999px; border: 1px solid rgba(255, 255, 255, 0.16); background: rgba(255, 255, 255, 0.05);
-    color: #e4e9e5; font: 600 14.5px var(--font-sans); outline: none; -webkit-appearance: none; }
+    color: #e9e6e4; font: 600 14.5px var(--font-sans); outline: none; -webkit-appearance: none; }
   .pz__find-in:focus { border-color: #7fd1a6; }
   .pz__find-list { list-style: none; margin: 6px 0 0; padding: 0; }
   .pz__find-list button { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; width: 100%; padding: 8px 10px; border: 0; border-radius: 10px;
-    background: none; color: #e4e9e5; font: 700 14px var(--font-sans); text-align: left; cursor: pointer; }
+    background: none; color: #e9e6e4; font: 700 14px var(--font-sans); text-align: left; cursor: pointer; }
   .pz__find-list button:active { background: rgba(255, 255, 255, 0.06); }
-  .pz__find-list button span { font-size: 12px; font-weight: 500; color: rgba(228, 233, 229, 0.6); }
-  .pz__hint, .pz__empty { padding: 8px 4px; font-size: 13.5px; color: rgba(228, 233, 229, 0.6); }
+  .pz__find-list button span { font-size: 12px; font-weight: 500; color: rgba(233, 230, 228, 0.6); }
+  .pz__hint, .pz__empty { padding: 8px 4px; font-size: 13.5px; color: rgba(233, 230, 228, 0.6); }
   .pz__empty { padding: 22px 8px; text-align: center; }
   .pz__bar { display: block; width: 100%; height: 4px; border-radius: 999px; background: rgba(255, 255, 255, 0.1); overflow: hidden; }
   .pz__bar i { display: block; height: 100%; width: 0; background: #7fd1a6; transition: width 0.2s; }
   .pz__foot { margin-top: auto; padding-top: 18px; }
-  .pz__post { display: block; width: 100%; padding: 15px; border: 0; border-radius: 999px; background: #7fd1a6; color: #0f2219; font: 800 16px var(--font-sans); cursor: pointer; }
+  .pz__post { display: block; width: 100%; padding: 15px; border: 0; border-radius: 999px; background: #7fd1a6; color: #1c1815; font: 800 16px var(--font-sans); cursor: pointer; }
   .pz__post:disabled { opacity: 0.45; cursor: default; }
   .pz-toast { position: fixed; z-index: 60; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 96px); transform: translate(-50%, 20px); max-width: min(92vw, 420px);
-    padding: 12px 16px; border-radius: 14px; background: rgba(28, 35, 31, 0.96); color: #e4e9e5; font: 700 14px/1.4 var(--font-sans); text-align: center;
+    padding: 12px 16px; border-radius: 14px; background: rgba(29, 26, 23, 0.96); color: #e9e6e4; font: 700 14px/1.4 var(--font-sans); text-align: center;
     box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4); opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; }
   .pz-toast.is-on { opacity: 1; transform: translate(-50%, 0); }
   /* The player: one district's clips, like stories */
@@ -430,31 +430,31 @@
   .pp__sound { position: absolute; right: 16px; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); width: 46px; height: 46px; padding: 0; border-radius: 50%;
     display: flex; align-items: center; justify-content: center; color: #fff; cursor: pointer; pointer-events: auto; }
   .pp__sound svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
-  .pp__sound.is-on { background: rgba(127, 209, 166, 0.85); color: #0f2219; border-color: rgba(127, 209, 166, 0.9); }
+  .pp__sound.is-on { background: rgba(127, 209, 166, 0.85); color: #1c1815; border-color: rgba(127, 209, 166, 0.9); }
   .pp__sound.is-on .pp__sound-off { display: none; }
   .pp__menu { position: absolute; z-index: 4; left: 12px; right: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 12px); display: flex; flex-direction: column; gap: 6px;
-    padding: 10px; border-radius: 18px; background: #1c231f; box-shadow: 0 -6px 30px rgba(0, 0, 0, 0.5); }
+    padding: 10px; border-radius: 18px; background: #231f1c; box-shadow: 0 -6px 30px rgba(0, 0, 0, 0.5); }
   .pp__menu[hidden] { display: none; }
-  .pp__menu button { padding: 14px; border: 0; border-radius: 12px; background: rgba(255, 255, 255, 0.06); color: #e4e9e5; font: 800 15px var(--font-sans); cursor: pointer; }
+  .pp__menu button { padding: 14px; border: 0; border-radius: 12px; background: rgba(255, 255, 255, 0.06); color: #e9e6e4; font: 800 15px var(--font-sans); cursor: pointer; }
   .pp__menu button.is-danger { color: #ff8a80; }
   .pp__menu button.is-ghost { background: none; }
   /* ── The top pill: pencil (draw an area) · + (post a video) · account ── */
   .walkplan__bar { display: inline-flex; align-items: center; gap: 6px; padding: 4px; border-radius: 999px; flex: 0 0 auto;
-    background: rgba(28, 35, 31, 0.88); border: 0.5px solid rgba(255, 255, 255, 0.16); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    background: rgba(29, 26, 23, 0.88); border: 0.5px solid rgba(255, 255, 255, 0.16); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
     -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
   .walkplan__bar-btn, .walkplan__bar .walkplan__me-btn { position: relative; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; background: none; color: #e4e9e5; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+    display: flex; align-items: center; justify-content: center; background: none; color: #e9e6e4; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
   .walkplan__bar-btn svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
   .walkplan__bar-btn:active { background: rgba(255, 255, 255, 0.08); }
-  .walkplan__bar-btn.is-on { background: #7fd1a6; color: #0f2219; }
+  .walkplan__bar-btn.is-on { background: #ffb37a; color: #2b1708; }
   .walkplan__bar-plus { width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
-    background: #7fd1a6; color: #0f2219; box-shadow: 0 4px 12px rgba(127, 209, 166, 0.3); }
+    background: #ffb37a; color: #2b1708; box-shadow: 0 4px 12px rgba(255, 179, 122, 0.3); }
   .walkplan__bar-plus[hidden] { display: none; }
   .walkplan__bar-plus svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; }
   .walkplan__bar-plus:active { transform: scale(0.94); }
   .walkplan__bar .walkplan__me-btn { width: 36px; height: 36px; margin: 0 2px; font: 800 15px var(--font-sans); border: 0; background: rgba(255, 255, 255, 0.1); }
-  .walkplan__bar .walkplan__me-btn.is-in { background: #7fd1a6; color: #0f2219; }
-  .walkplan__bar .walkplan__me-dot { top: -2px; right: -2px; box-shadow: 0 0 0 2px #1c231f; }
+  .walkplan__bar .walkplan__me-btn.is-in { background: #ffb37a; color: #2b1708; }
+  .walkplan__bar .walkplan__me-dot { top: -2px; right: -2px; box-shadow: 0 0 0 2px #1d1a17; }
   .walkplan__vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
   /* The little map in the route builder and group maps */
   .walkplan__mine-map { position: relative; flex: none; height: 240px; margin: 4px 0 12px; border-radius: 16px; overflow: hidden;
@@ -463,21 +463,21 @@
   @media (min-width: 641px) { .walkplan__mine-map { height: 300px; } }
   .walkplan__mine-frame { display: block; width: 100%; height: 100%; border: 0; }
   .walkplan__mine-hint { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); margin: 0; padding: 8px 14px; border-radius: 999px; white-space: nowrap;
-    background: rgba(20, 22, 21, 0.6); border: 0.5px solid rgba(255, 255, 255, 0.16); color: #e4e9e5; font: 700 13px var(--font-sans); pointer-events: none;
+    background: rgba(20, 22, 21, 0.6); border: 0.5px solid rgba(255, 255, 255, 0.16); color: #e9e6e4; font: 700 13px var(--font-sans); pointer-events: none;
     -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
   .walkplan__mine-hint[hidden] { display: none; }
   .walkplan__mine-empty--map { margin: 10px 0; font-size: 14px; }
-  /* ── One palette (see the notes in the project): deep green-black, mint as the one bright accent ──
-     The bottom search bar is a dark frosted pill like the top one, with a mint send button;
+  /* ── One palette, "Vienna Night": warm black, apricot as the one bright accent (mint only for live video pulses) ──
+     The bottom search bar is a dark frosted pill like the top one, with an apricot send button;
      the account circle in the top pill is quiet so the + is the only bright thing up there. */
-  .walkplan__ask { background: rgba(28, 35, 31, 0.9); border: 0.5px solid rgba(255, 255, 255, 0.16);
+  .walkplan__ask { background: rgba(29, 26, 23, 0.9); border: 0.5px solid rgba(255, 255, 255, 0.16);
     -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: 0 8px 28px rgba(0, 0, 0, 0.45); }
-  .walkplan__input { color: #e4e9e5; }
-  .walkplan__input::placeholder { color: rgba(228, 233, 229, 0.55); }
-  .walkplan__list, .walkplan__mic { background: rgba(255, 255, 255, 0.08); color: #e4e9e5; }
-  .walkplan__go { background: #7fd1a6; color: #0f2219; }
-  .walkplan__bar .walkplan__me-btn, .walkplan__bar .walkplan__me-btn.is-in { background: none; color: #e4e9e5; box-shadow: inset 0 0 0 1.5px rgba(228, 233, 229, 0.45); }
-  .walkplan__got-it { background: #7fd1a6; color: #0f2219; }
+  .walkplan__input { color: #e9e6e4; }
+  .walkplan__input::placeholder { color: rgba(233, 230, 228, 0.55); }
+  .walkplan__list, .walkplan__mic { background: rgba(255, 255, 255, 0.08); color: #e9e6e4; }
+  .walkplan__go { background: #ffb37a; color: #2b1708; }
+  .walkplan__bar .walkplan__me-btn, .walkplan__bar .walkplan__me-btn.is-in { background: none; color: #e9e6e4; box-shadow: inset 0 0 0 1.5px rgba(233, 230, 228, 0.45); }
+  .walkplan__got-it { background: #ffb37a; color: #2b1708; }
   /* ── The pulse camera: opens ready to record (static/js/pulses.js) ── */
   .pc { position: absolute; z-index: 5; inset: 0; background: #000; overflow: hidden; }
   .pc[hidden] { display: none; }
@@ -498,7 +498,7 @@
   .pc__tray { flex: 1; min-width: 0; display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; }
   .pc__tray::-webkit-scrollbar { display: none; }
   .pc__thumb { flex: none; width: 42px; height: 56px; border-radius: 8px; object-fit: cover; background: #111; border: 1.5px solid rgba(255, 255, 255, 0.7); }
-  .pc__next { flex: none; padding: 10px 16px; border-radius: 999px; color: #0f2219; background: #7fd1a6; border-color: #7fd1a6; font: 800 14.5px var(--font-sans); cursor: pointer; }
+  .pc__next { flex: none; padding: 10px 16px; border-radius: 999px; color: #1c1815; background: #7fd1a6; border-color: #7fd1a6; font: 800 14.5px var(--font-sans); cursor: pointer; }
   .pc__next[hidden] { display: none; }
   .pc__hint { margin: 0; color: rgba(255, 255, 255, 0.85); font: 700 13px var(--font-sans); text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6); }
   .pc__controls { display: flex; align-items: center; justify-content: space-between; width: 100%; max-width: 330px; }
@@ -784,6 +784,6 @@
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
 {% include "_community_ui.html" %}
 {% include "_footprints_ui.html" %}
-<script src="/static/js/walk-planner.js?v=36" defer></script>
+<script src="/static/js/walk-planner.js?v=37" defer></script>
 <script src="/static/js/pulses.js?v=5" defer></script>
 {% endblock %}

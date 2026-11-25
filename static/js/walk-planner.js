@@ -1567,7 +1567,7 @@
     plan.stops.forEach(function (s, i) {
       var li = el('li', 'wsheet__stop');
       var num = el('span', 'route-num wsheet__num', String(i + 1));
-      num.style.setProperty('--c', s.color || '#2f9e7e');
+      num.style.setProperty('--c', s.color || '#e0864a');
       li.appendChild(num);
       var body = el('div', 'wsheet__body');
       var top = el('div', 'wsheet__top');
@@ -1677,7 +1677,7 @@
         method: 'POST', credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-Token': READER.csrf || '' },
         body: JSON.stringify({ article: key, title: plan.title, saved: !saved, stops: ready.map(function (s) {
-          return { name: s.name, listing: s.slug, lat: s.lat, lng: s.lng, color: s.color || '#2f9e7e', category: s.category || '' };
+          return { name: s.name, listing: s.slug, lat: s.lat, lng: s.lng, color: s.color || '#e0864a', category: s.category || '' };
         }) })
       });
     }).then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { return { ok: r.ok, d: d }; }); })
