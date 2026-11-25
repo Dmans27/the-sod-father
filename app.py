@@ -31,6 +31,7 @@ from footprints import footprints_bp
 from friends import friends_bp
 import profiles  # noqa: F401 -- adds the walk history and cities routes to friends_bp (see profiles.py)
 from group_maps import group_bp
+from pulses import pulses_bp
 import city_feed
 from city_feed import city_bp
 from onboarding import onboarding_bp
@@ -53,6 +54,7 @@ app.register_blueprint(city_bp)  # the city search bar on the stories page (see 
 app.register_blueprint(footprints_bp)  # walkers rate places 1-5 footprints: worth the walk? (see footprints.py)
 app.register_blueprint(friends_bp)  # @handles, friend requests, invite links (see friends.py)
 app.register_blueprint(group_bp)  # maps friends plan together (see group_maps.py)
+app.register_blueprint(pulses_bp)  # 8-hour videos pulsing on the walk map (see pulses.py)
 app.register_blueprint(seo_bp)  # robots.txt, sitemap.xml, feed.xml, share images (see seo.py)
 register_seo(app)  # canonical addresses + optional analytics for every page
 # Interactive map blocks (see content.py): templates use these two to check

@@ -116,6 +116,8 @@ def delete_reader(reader_id, email=None, remove_newsletter=False):
         friends.delete_reader_data(reader_id)
         import profiles   # their walk history, cities and profile setting (profiles.py)
         profiles.delete_reader_data(reader_id)
+        import pulses   # their map videos, here and on Cloudinary (pulses.py)
+        pulses.delete_reader_posts(reader_id)
     except Exception as exc:  # noqa: BLE001
         print("delete_reader: friends cleanup failed:", exc)
     mine = "(SELECT id FROM comments WHERE reader_id = :r)"

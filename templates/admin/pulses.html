@@ -1,0 +1,45 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Pulses{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <h1>Pulses</h1>
+</div>
+<p class="admin-hint">
+  Short videos on the walk map (pulses.py). Each post lives for 8 hours, then it and its videos are deleted.
+  Two reports hide a post from everyone until you look: <strong>Put back</strong> shows it again, <strong>Delete</strong> takes it down now.
+  {% if not enabled %}<br><strong>Off:</strong> set CLOUDINARY_URL in Render to switch video posting on.{% endif %}
+</p>
+{% if not posts %}<p class="admin-hint">No live pulses right now.</p>{% endif %}
+{% for p in posts %}
+  <div class="admin-card admin-report">
+    <div class="admin-report__head">
+      <strong>{{ p.district }}</strong>
+      <span class="admin-report__meta">by {{ p.display_name }} ({{ p.email }}) &middot; {{ p.ago }} &middot; {{ p.left }}</span>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      {% for c in p.clips %}
+      <a href="{{ c.video }}" target="_blank" rel="noopener" title="{{ c.place or 'No place tagged' }}" style="text-align:center;font-size:12px;">
+        <img src="{{ c.poster }}" alt="" style="width:96px;height:96px;object-fit:cover;border-radius:10px;display:block;">
+        {{ c.place or '' }}
+      </a>
+      {% endfor %}
+    </div>
+    {% if p.reports %}
+    <p class="admin-report__why">
+      <span class="admin-row__badge" style="margin-left:0;{% if p.hidden %}color:#7d2432;background:rgba(164,48,63,0.12);{% endif %}">{{ p.reports }} report{{ '' if p.reports == 1 else 's' }} &middot; {{ 'hidden' if p.hidden else 'still visible' }}</span>
+    </p>
+    {% endif %}
+    <div class="admin-report__actions">
+      {% if p.hidden %}
+      <form method="post" action="{{ url_for('pulses.admin_act', post_id=p.id, action='clear') }}">
+        <input type="hidden" name="csrf" value="{{ csrf }}"><button type="submit" class="admin-btn">Put back</button>
+      </form>
+      {% endif %}
+      <form method="post" action="{{ url_for('pulses.admin_act', post_id=p.id, action='delete') }}" onsubmit="return confirm('Delete this post and its videos now?');">
+        <input type="hidden" name="csrf" value="{{ csrf }}"><button type="submit" class="admin-btn admin-btn--danger">Delete</button>
+      </form>
+    </div>
+  </div>
+{% endfor %}
+{% endblock %}
