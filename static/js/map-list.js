@@ -23,7 +23,7 @@
   var HOSTS = (window.MAP_HOSTS || []).map(function (h) { return String(h).toLowerCase(); });
   var SLUG = /^[A-Za-z0-9][A-Za-z0-9_-]{0,200}$/;
   var COLORS = { food: '#E2574C', coffee: '#C6935A', bars: '#B368F7', wine: '#B4436C', rooftops: '#5AC8E8', shops: '#F5B301',
-                 hotels: '#5B7CFA', sights: '#E8833A', other: '#e0864a' };
+                 hotels: '#5B7CFA', sights: '#E8833A', other: '#2f5e3a' };
 
   // Same groups as the map's pins, so a card without a picture gets its pin colour.
   function categoryColor(category) {
@@ -307,7 +307,7 @@
         route.stops.forEach(function (s, i) {
           var p = places.filter(function (x) { return s.listing && x.listing === s.listing; })[0] ||
                   places.filter(function (x) { return (x.name || '').toLowerCase() === String(s.name || '').toLowerCase(); })[0];
-          if (p) stops.push({ place: p, stop: { n: i + 1, of: route.stops.length, leg: i ? legText((route.legs || [])[i - 1], (route.durations || [])[i - 1]) : 'Start', color: s.color || '#e0864a' } });
+          if (p) stops.push({ place: p, stop: { n: i + 1, of: route.stops.length, leg: i ? legText((route.legs || [])[i - 1], (route.durations || [])[i - 1]) : 'Start', color: s.color || '#2f5e3a' } });
         });
         if (stops.length) {
           titleEl.textContent = 'Walking route';

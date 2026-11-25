@@ -286,7 +286,7 @@
               wanted.filter(function (x) { return x.name && x.name.toLowerCase() === String(s.name || '').toLowerCase(); })[0];
       if (!w || list.some(function (x) { return x.listing === w.listing; })) return;
       list.push({ listing: w.listing, name: String(s.name || w.name), category: String(s.category || ''),
-                  color: /^#[0-9a-f]{3,8}$/i.test(s.color || '') ? s.color : '#e0864a',
+                  color: /^#[0-9a-f]{3,8}$/i.test(s.color || '') ? s.color : '#2f5e3a',
                   lat: Number(s.lat), lng: Number(s.lng), link: w.link, card: !!w.card,
                   section: w.card ? w.link : (w.link.closest('p, li, h2, h3, blockquote, figure') || w.link) });
     });

@@ -184,6 +184,11 @@
   // (or it's refused), the list opens instead with Record and Choose videos.
   var camEl = null, camVideo, camStream = null, camFacing = 'environment', camWhereEl, camTray, camNext, camHint, camShutter, camRing;
   var recorder = null, recChunks = [], recStart = 0, recTimer = null, recRaf = 0, recMime = '', recDiscard = false;
+  // Zoom: pinch the picture, or tap .5 / 1× / 2×. ".5" switches to the iPhone's ultra-wide camera when the
+  // phone offers it; zooming in crops the picture. Recordings are drawn through a canvas, so the clip is
+  // framed exactly as you zoomed it (if the canvas can't record, the plain camera is recorded instead).
+  var camZoom = 1, camLens = 'main', camUltraId = '', camZoomEl, camZoomBtns = {}, camCanvas = null, camDraw = 0;
+  var MAX_ZOOM = 5, OUT_W = 720, OUT_H = 1280;
   function camSupported() {
     return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
   }
@@ -213,6 +218,20 @@
     camNext.addEventListener('click', showReview);
     row.appendChild(camTray); row.appendChild(camNext);
     bottom.appendChild(row);
+    camZoomEl = el('div', 'pc__zoom');
+    [['ultra', '.5'], ['1', '1×'], ['2', '2×']].forEach(function (z) {
+      var b = el('button', 'pc__zbtn', z[1]);
+      b.type = 'button';
+      b.setAttribute('aria-label', z[0] === 'ultra' ? 'Zoom out (wide)' : 'Zoom ' + z[0] + '×');
+      b.addEventListener('click', function () {
+        if (z[0] === 'ultra') { if (camLens !== 'ultra' && !recorder) { camLens = 'ultra'; setZoom(1); startStream(); } return; }
+        if (camLens === 'ultra' && !recorder) { camLens = 'main'; setZoom(Number(z[0])); startStream(); return; }
+        setZoom(Number(z[0]));
+      });
+      camZoomBtns[z[0]] = b;
+      camZoomEl.appendChild(b);
+    });
+    bottom.appendChild(camZoomEl);
     camHint = el('p', 'pc__hint', 'Hold to record · up to 8 seconds');
     bottom.appendChild(camHint);
     var controls = el('div', 'pc__controls');
@@ -230,7 +249,13 @@
     flip.type = 'button';
     flip.setAttribute('aria-label', 'Switch camera');
     flip.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9a8 8 0 0 1 14.3-3.3L20 8M20 4v4h-4"/><path d="M20 15a8 8 0 0 1-14.3 3.3L4 16M4 20v-4h4"/></svg>';
-    flip.addEventListener('click', function () { if (recorder) return; camFacing = camFacing === 'environment' ? 'user' : 'environment'; startStream(); });
+    flip.addEventListener('click', function () {
+      if (recorder) return;
+      camFacing = camFacing === 'environment' ? 'user' : 'environment';
+      camLens = 'main';
+      setZoom(1);
+      startStream();
+    });
     controls.appendChild(roll); controls.appendChild(camShutter); controls.appendChild(flip);
     bottom.appendChild(controls);
     camEl.appendChild(bottom);
@@ -238,9 +263,54 @@
     camShutter.addEventListener('pointerdown', function (e) { e.preventDefault(); startRecording(); });
     ['pointerup', 'pointercancel', 'pointerleave'].forEach(function (t) { camShutter.addEventListener(t, function () { stopRecording(false); }); });
     camShutter.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    // Pinch anywhere on the picture to zoom (1× to 5×).
+    var pts = {}, pinch0 = 0, zoom0 = 1;
+    function spread() { var k = Object.keys(pts); if (k.length < 2) return 0; var a = pts[k[0]], b = pts[k[1]]; return Math.hypot(a.x - b.x, a.y - b.y); }
+    camEl.addEventListener('pointerdown', function (e) {
+      if (e.target.closest('button')) return;
+      pts[e.pointerId] = { x: e.clientX, y: e.clientY };
+      if (Object.keys(pts).length === 2) { pinch0 = spread(); zoom0 = camZoom; }
+    });
+    camEl.addEventListener('pointermove', function (e) {
+      if (!pts[e.pointerId]) return;
+      pts[e.pointerId] = { x: e.clientX, y: e.clientY };
+      if (Object.keys(pts).length === 2 && pinch0 > 0) { e.preventDefault(); setZoom(zoom0 * spread() / pinch0); }
+    });
+    ['pointerup', 'pointercancel'].forEach(function (t) {
+      camEl.addEventListener(t, function (e) { delete pts[e.pointerId]; if (Object.keys(pts).length < 2) pinch0 = 0; });
+    });
     box.appendChild(camEl);
   }
+  function setZoom(z) {
+    camZoom = Math.max(1, Math.min(MAX_ZOOM, Number(z) || 1));
+    if (camVideo) {
+      var sx = camFacing === 'user' ? -camZoom : camZoom;
+      camVideo.style.transform = 'scale(' + sx + ', ' + camZoom + ')';
+    }
+    paintZoom();
+  }
+  function paintZoom() {
+    if (!camZoomEl) return;
+    camZoomBtns.ultra.hidden = !(camUltraId && camFacing === 'environment');
+    camZoomBtns.ultra.classList.toggle('is-on', camLens === 'ultra');
+    var main = camLens !== 'ultra';
+    var on2 = main && camZoom >= 1.95;
+    camZoomBtns['1'].classList.toggle('is-on', main && !on2);
+    camZoomBtns['2'].classList.toggle('is-on', on2);
+    // The lit button shows the exact zoom while pinching (1.4×, 3.2× ...).
+    var z = Math.round(camZoom * 10) / 10;
+    camZoomBtns['1'].textContent = main && !on2 && z > 1 ? z + '×' : '1×';
+    camZoomBtns['2'].textContent = on2 && z !== 2 ? z + '×' : '2×';
+  }
+  function findUltraWide() {      // the iPhone's 0.5× camera, once the camera is allowed (labels are hidden before that)
+    if (camUltraId || !navigator.mediaDevices.enumerateDevices) return;
+    navigator.mediaDevices.enumerateDevices().then(function (list) {
+      list.forEach(function (d) { if (d.kind === 'videoinput' && /ultra ?wide/i.test(d.label || '')) camUltraId = d.deviceId; });
+      paintZoom();
+    }).catch(function () {});
+  }
   function stopStream() {
+    stopDrawing();
     if (camStream) camStream.getTracks().forEach(function (t) { t.stop(); });
     camStream = null;
     if (camVideo) camVideo.srcObject = null;
@@ -248,15 +318,24 @@
   function startStream() {
     stopStream();
     camEl.classList.toggle('is-front', camFacing === 'user');
-    var want = { video: { facingMode: camFacing, width: { ideal: 1080 }, height: { ideal: 1920 } }, audio: true };
-    return navigator.mediaDevices.getUserMedia(want)
-      .catch(function () { return navigator.mediaDevices.getUserMedia({ video: { facingMode: camFacing }, audio: false }); })   // no microphone: video only
+    var video = camLens === 'ultra' && camUltraId && camFacing === 'environment'
+      ? { deviceId: { exact: camUltraId }, width: { ideal: 1920 }, height: { ideal: 1080 } }
+      : { facingMode: camFacing, width: { ideal: 1920 }, height: { ideal: 1080 } };   // the full 16:9 picture (the phone turns it upright)
+    return navigator.mediaDevices.getUserMedia({ video: video, audio: true })
+      .catch(function () { return navigator.mediaDevices.getUserMedia({ video: video, audio: false }); })   // no microphone: video only
+      .catch(function (err) {
+        if (camLens !== 'ultra') throw err;
+        camLens = 'main'; camUltraId = '';                                                                   // no wide camera after all
+        return navigator.mediaDevices.getUserMedia({ video: { facingMode: camFacing }, audio: true });
+      })
       .then(function (s) {
         if (camEl.hidden) { s.getTracks().forEach(function (t) { t.stop(); }); return; }   // closed while asking
         camStream = s;
         camVideo.srcObject = s;
         var p = camVideo.play();
         if (p && p.catch) p.catch(function () {});
+        setZoom(camZoom);
+        findUltraWide();
       })
       .catch(function () {
         toast('The camera isn’t available. Choose videos from your camera roll instead.');
@@ -267,6 +346,8 @@
     if (!camSupported()) { showReview(); return; }
     if (!camEl) buildCamera();
     camEl.hidden = false;
+    camLens = 'main';
+    setZoom(1);
     paintTray();
     startStream();
   }
@@ -295,11 +376,39 @@
     for (var i = 0; i < types.length; i++) { if (window.MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(types[i])) return types[i]; }
     return '';
   }
+  // The clip as framed on screen: an upright 9:16 picture, cropped further by the zoom.
+  function framedStream() {
+    if (!camCanvas) camCanvas = document.createElement('canvas');
+    if (!camCanvas.captureStream || !camVideo.videoWidth) return null;
+    camCanvas.width = OUT_W; camCanvas.height = OUT_H;
+    var ctx = camCanvas.getContext('2d');
+    function draw() {
+      var vw = camVideo.videoWidth, vh = camVideo.videoHeight;
+      if (vw && vh) {
+        var a = OUT_W / OUT_H, cw = vw / vh > a ? vh * a : vw, ch = vw / vh > a ? vh : vw / a;
+        cw /= camZoom; ch /= camZoom;
+        ctx.drawImage(camVideo, (vw - cw) / 2, (vh - ch) / 2, cw, ch, 0, 0, OUT_W, OUT_H);
+      }
+      camDraw = requestAnimationFrame(draw);
+    }
+    draw();
+    var out = camCanvas.captureStream(30);
+    camStream.getAudioTracks().forEach(function (t) { out.addTrack(t); });
+    return out;
+  }
+  function stopDrawing() { cancelAnimationFrame(camDraw); camDraw = 0; }
   function startRecording() {
     if (recorder || !camStream || clips.length >= MAX_CLIPS) return;
     recMime = pickMime();
-    try { recorder = recMime ? new MediaRecorder(camStream, { mimeType: recMime }) : new MediaRecorder(camStream); }
-    catch (e) { recorder = null; toast('Recording isn’t available here. Choose a video instead.'); return; }
+    var src = null;
+    try { src = framedStream(); } catch (e) { src = null; }
+    function make(stream) { return recMime ? new MediaRecorder(stream, { mimeType: recMime }) : new MediaRecorder(stream); }
+    try { recorder = make(src || camStream); }
+    catch (e) {
+      stopDrawing();
+      try { recorder = make(camStream); }      // the canvas couldn't record here: record the camera as it is
+      catch (e2) { recorder = null; toast('Recording isn’t available here. Choose a video instead.'); return; }
+    }
     recChunks = []; recDiscard = false;
     recorder.ondataavailable = function (e) { if (e.data && e.data.size) recChunks.push(e.data); };
     recorder.onstop = finishRecording;
@@ -325,6 +434,7 @@
   function finishRecording() {
     var secs = (Date.now() - recStart) / 1000, type = (recorder && recorder.mimeType) || recMime || 'video/webm';
     recorder = null;
+    stopDrawing();
     if (camShutter) camShutter.classList.remove('is-rec');
     if (camRing) camRing.style.strokeDashoffset = '289';
     if (recDiscard) return;

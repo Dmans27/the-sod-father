@@ -14,9 +14,9 @@
   .wpop.is-open .wpop__panel { transform: translateY(var(--drag, 0px)); }
   .wpop.is-dragging .wpop__panel { transition: none; }
   .wpop__scroll { flex: 1 1 auto; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
-  .wpop__map { position: relative; height: clamp(220px, 38vh, 340px); background: #211e1b; overflow: hidden; }
+  .wpop__map { position: relative; height: clamp(220px, 38vh, 340px); background: #1b211e; overflow: hidden; }
   .wpop__map::before { content: ""; position: absolute; inset: 0;
-    background: linear-gradient(100deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.07) 50%, rgba(255, 255, 255, 0) 70%) #26221f;
+    background: linear-gradient(100deg, rgba(255, 255, 255, 0) 30%, rgba(255, 255, 255, 0.07) 50%, rgba(255, 255, 255, 0) 70%) #1f2622;
     background-size: 200% 100%; animation: wpop-shine 1.2s linear infinite; }
   @keyframes wpop-shine { to { background-position: -200% 0; } }
   /* The map's own route bar (with its Start button) sits in the top 64px: keep it out of sight, this is only a preview */
@@ -27,14 +27,14 @@
   .wpop__close { position: absolute; z-index: 3; top: 12px; right: 12px; width: 34px; height: 34px; border: 0; border-radius: 50%;
     background: rgba(20, 22, 24, 0.72); color: #fff; font-size: 20px; line-height: 1; cursor: pointer; -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
   .wpop__body { padding: 18px 20px 8px; }
-  .wpop__tag { display: inline-block; padding: 2px 8px; border-radius: 6px; background: rgba(121, 69, 30, 0.12); color: var(--fairway-deep);
+  .wpop__tag { display: inline-block; padding: 2px 8px; border-radius: 6px; background: rgba(47, 94, 58, 0.12); color: var(--fairway-deep);
     font-size: 11px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase; }
   .wpop__title { margin: 8px 0 6px; font: 700 26px/1.2 var(--font-serif); color: var(--fairway-deep); }
   .wpop__where { display: flex; align-items: center; gap: 6px; margin: 0 0 14px; font-size: 14.5px; font-weight: 600; color: var(--ink-soft); }
   .wpop__where[hidden] { display: none; }
   .wpop__where svg, .wpop__stat svg { flex: none; width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
   .wpop__stats { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; margin: 0 0 16px; }
-  .wpop__stat { display: flex; flex-direction: column; gap: 3px; padding: 11px 12px; border-radius: 12px; background: rgba(77, 43, 17, 0.07); }
+  .wpop__stat { display: flex; flex-direction: column; gap: 3px; padding: 11px 12px; border-radius: 12px; background: rgba(31, 65, 40, 0.07); }
   .wpop__stat b { display: flex; align-items: center; gap: 6px; font-size: 17px; font-weight: 800; color: var(--ink); white-space: nowrap; }
   .wpop__stat b svg { color: var(--fairway); }
   .wpop__stat span { font-size: 12px; color: var(--ink-faint); }
@@ -55,8 +55,8 @@
   .wpop__cta:active { filter: brightness(1.15); }
   .wpop__cta-note { margin: 8px 0 0; text-align: center; font-size: 12.5px; color: var(--ink-faint); }
   html.wpop-open, html.wpop-open body { overflow: hidden; }
-  .wpop { --fp-on: #a94900; }
-  html.is-dark .wpop { --fp-on: #ffb37a; }
+  .wpop { --fp-on: #377248; }
+  html.is-dark .wpop { --fp-on: #9cc77f; }
   .wpop__stop .fpbadge { text-transform: none; }
   /* Community walks (community.py): their photo, a like button next to "Map this walk", and the ⋯ menu */
   .wpop__more { position: absolute; z-index: 3; top: 12px; left: 12px; height: 34px; padding: 0 12px; border: 0; border-radius: 999px;
@@ -71,7 +71,7 @@
   .wpop__like.is-on { color: #e5344f; border-color: rgba(229, 52, 79, 0.35); }
   .wpop__like.is-on svg { fill: currentColor; }
   .wpop__blurb.is-note { white-space: pre-line; }
-  html.is-dark .wpop__like { color: #e9e6e4; border-color: rgba(255, 255, 255, 0.18); }
+  html.is-dark .wpop__like { color: #e4e9e5; border-color: rgba(255, 255, 255, 0.18); }
   html.is-dark .wpop__like.is-on { color: #ff5a6e; }
   @media (min-width: 700px) {
     .wpop__panel { bottom: auto; top: 50%; border-radius: 22px; max-height: min(88vh, 860px); transform: translateY(calc(-50% + 40px)); opacity: 0;
@@ -81,17 +81,17 @@
     .wpop__map { height: 320px; }
     .wpop__foot { padding-bottom: 16px; }
   }
-  html.is-dark .wpop__panel { background: #1d1a17; color: #e9e6e4; }
-  html.is-dark .wpop__tag { background: rgba(255, 179, 122, 0.16); color: #ffcfa8; }
-  html.is-dark .wpop__title { color: #e9e6e4; }
-  html.is-dark .wpop__where, html.is-dark .wpop__blurb { color: rgba(233, 230, 228, 0.8); }
+  html.is-dark .wpop__panel { background: #131a15; color: #e4e9e5; }
+  html.is-dark .wpop__tag { background: rgba(156, 199, 127, 0.16); color: #c4e0ae; }
+  html.is-dark .wpop__title { color: #e4e9e5; }
+  html.is-dark .wpop__where, html.is-dark .wpop__blurb { color: rgba(228, 233, 229, 0.8); }
   html.is-dark .wpop__stat { background: rgba(255, 255, 255, 0.06); }
-  html.is-dark .wpop__stat b, html.is-dark .wpop__stop b { color: #e9e6e4; }
-  html.is-dark .wpop__stat b svg, html.is-dark .wpop__kicker { color: #ffb37a; }
-  html.is-dark .wpop__stat span, html.is-dark .wpop__stop span, html.is-dark .wpop__cta-note { color: rgba(233, 230, 228, 0.6); }
+  html.is-dark .wpop__stat b, html.is-dark .wpop__stop b { color: #e4e9e5; }
+  html.is-dark .wpop__stat b svg, html.is-dark .wpop__kicker { color: #9cc77f; }
+  html.is-dark .wpop__stat span, html.is-dark .wpop__stop span, html.is-dark .wpop__cta-note { color: rgba(228, 233, 229, 0.6); }
   html.is-dark .wpop__stops li, html.is-dark .wpop__foot { border-color: rgba(255, 255, 255, 0.1); }
-  html.is-dark .wpop__num { border-color: #1d1a17; }
-  html.is-dark .wpop__cta { background: #ffb37a; color: #2b1708; }
+  html.is-dark .wpop__num { border-color: #131a15; }
+  html.is-dark .wpop__cta { background: #9cc77f; color: #131a15; }
 </style>
 
 <div class="wpop" id="wpop" aria-hidden="true">

@@ -37,7 +37,7 @@
     // reader never sees a white flash on load (the menu toggle sets this).
     try { if (localStorage.getItem('sf-theme') === 'dark') document.documentElement.classList.add('is-dark'); } catch (e) {}
   </script>
-  <link rel="stylesheet" href="/static/css/style.css?v=23">
+  <link rel="stylesheet" href="/static/css/style.css?v=24">
   <link rel="alternate" type="application/rss+xml" title="\\Mansfield" href="/feed.xml">
   {# Link previews + search results. Pages override the `seo` block (stories do);
      everything else gets these site-wide defaults. #}
@@ -237,10 +237,10 @@
     // Hosts the story maps may come from -- places.js only listens to those.
     window.MAP_HOSTS = {{ map_embed_hosts()|tojson }};
   </script>
-  <script src="/static/js/actions.js?v=10"></script>
+  <script src="/static/js/actions.js?v=11"></script>
   <script src="/static/js/native.js?v=3" defer></script>
-  <script src="/static/js/map-list.js?v=5" defer></script>
-  <script src="/static/js/map-story.js?v=13" defer></script>
+  <script src="/static/js/map-list.js?v=6" defer></script>
+  <script src="/static/js/map-story.js?v=14" defer></script>
   <script src="/static/js/places.js?v=2" defer></script>
   <script src="/static/js/newsletter.js?v=1" defer></script>
   <script src="/static/js/ask.js?v=3" defer></script>

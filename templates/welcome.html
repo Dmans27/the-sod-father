@@ -15,7 +15,7 @@
   .wel__back, .wel__skip { border: 0; background: none; color: var(--ink-faint); font: 700 15px var(--font-sans); cursor: pointer; padding: 8px 4px; }
   .wel__back[hidden], .wel__skip[hidden], .wel__dots[hidden] { visibility: hidden; display: inline-block; }
   .wel__dots { display: flex; gap: 6px; }
-  .wel__dot { width: 8px; height: 8px; border-radius: 999px; background: rgba(39, 34, 30, 0.15); transition: width 0.2s, background 0.2s; }
+  .wel__dot { width: 8px; height: 8px; border-radius: 999px; background: rgba(27, 42, 31, 0.15); transition: width 0.2s, background 0.2s; }
   .wel__dot.is-on { width: 22px; background: var(--fairway); }
   .wel__step { flex: 1; display: none; flex-direction: column; padding-top: 18px; animation: wel-in 0.25s ease; }
   .wel__step.is-on { display: flex; }
@@ -23,30 +23,30 @@
   .wel__kicker { margin: 0 0 6px; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fairway); }
   .wel__h { margin: 0 0 8px; font: 800 30px/1.15 var(--font-serif); color: var(--fairway-deep); }
   .wel__sub { margin: 0 0 22px; font-size: 16px; line-height: 1.5; color: var(--ink-soft); }
-  .wel__code { width: 100%; box-sizing: border-box; padding: 16px; border: 1px solid rgba(39, 34, 30, 0.16); border-radius: 16px; background: #f3f4f3;
+  .wel__code { width: 100%; box-sizing: border-box; padding: 16px; border: 1px solid rgba(27, 42, 31, 0.16); border-radius: 16px; background: #f3f4f3;
     font: 800 32px var(--font-sans); letter-spacing: 0.5em; text-align: center; color: var(--ink); }
-  .wel__code:focus { outline: none; border-color: var(--fairway-deep); background: #fff; box-shadow: 0 0 0 3px rgba(77, 43, 17, 0.14); }
+  .wel__code:focus { outline: none; border-color: var(--fairway-deep); background: #fff; box-shadow: 0 0 0 3px rgba(31, 65, 40, 0.14); }
   .wel__msg { min-height: 20px; margin: 10px 2px 0; font-size: 14.5px; color: var(--ink-soft); }
   .wel__msg.is-error { color: #a4303f; }
   .wel__links { display: flex; justify-content: space-between; gap: 10px; margin-top: 14px; }
   .wel__link { border: 0; background: none; padding: 6px 0; color: var(--fairway-deep); font: 700 14.5px var(--font-sans); cursor: pointer; }
   .wel__link:disabled { color: var(--ink-faint); cursor: default; }
   .wel__cards { display: grid; gap: 10px; }
-  .wel__card { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 16px 18px; border: 1.5px solid rgba(39, 34, 30, 0.12);
+  .wel__card { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 16px 18px; border: 1.5px solid rgba(27, 42, 31, 0.12);
     border-radius: 16px; background: #fff; text-align: left; cursor: pointer; font-family: var(--font-sans); color: var(--ink); }
   .wel__card b { font-size: 17px; }
   .wel__card span { font-size: 14px; color: var(--ink-faint); }
-  .wel__card[aria-pressed="true"] { border-color: var(--fairway-deep); background: rgba(121, 69, 30, 0.08); box-shadow: inset 0 0 0 1px var(--fairway-deep); }
+  .wel__card[aria-pressed="true"] { border-color: var(--fairway-deep); background: rgba(47, 94, 58, 0.08); box-shadow: inset 0 0 0 1px var(--fairway-deep); }
   .wel__chips { display: flex; flex-wrap: wrap; gap: 8px; }
-  .wel__chip { padding: 11px 16px; border: 1.5px solid rgba(39, 34, 30, 0.14); border-radius: 999px; background: #fff; color: var(--ink);
+  .wel__chip { padding: 11px 16px; border: 1.5px solid rgba(27, 42, 31, 0.14); border-radius: 999px; background: #fff; color: var(--ink);
     font: 700 15px var(--font-sans); cursor: pointer; }
   .wel__chip[aria-pressed="true"] { border-color: var(--fairway-deep); background: var(--fairway-deep); color: #fff; }
   .wel__label { margin: 22px 0 10px; font-size: 13px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase; color: var(--ink-faint); }
   .wel__find { position: relative; }
-  .wel__input { width: 100%; box-sizing: border-box; padding: 15px 16px; border: 1px solid rgba(39, 34, 30, 0.16); border-radius: 14px; background: #f3f4f3;
+  .wel__input { width: 100%; box-sizing: border-box; padding: 15px 16px; border: 1px solid rgba(27, 42, 31, 0.16); border-radius: 14px; background: #f3f4f3;
     font: 500 17px var(--font-sans); color: var(--ink); -webkit-appearance: none; }
   .wel__input:focus { outline: none; border-color: var(--fairway-deep); background: #fff; }
-  .wel__handle { display: flex; align-items: center; gap: 2px; padding: 0 16px; border: 1px solid rgba(39, 34, 30, 0.16); border-radius: 14px; background: #f3f4f3; }
+  .wel__handle { display: flex; align-items: center; gap: 2px; padding: 0 16px; border: 1px solid rgba(27, 42, 31, 0.16); border-radius: 14px; background: #f3f4f3; }
   .wel__handle span { font: 700 19px var(--font-sans); color: var(--ink-faint); }
   .wel__handle input { flex: 1; min-width: 0; padding: 15px 0; border: 0; background: none; color: var(--ink); font: 700 19px var(--font-sans); outline: none; }
   .wel__handle:focus-within { border-color: var(--fairway-deep); background: #fff; }
@@ -59,7 +59,7 @@
   .wel__list button span { font-size: 13px; color: var(--ink-faint); }
   .wel__list button:hover { background: #f0f2f0; }
   .wel__picked { display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; padding: 8px 14px; border-radius: 999px;
-    background: rgba(121, 69, 30, 0.12); color: var(--fairway-deep); font-weight: 700; }
+    background: rgba(47, 94, 58, 0.12); color: var(--fairway-deep); font-weight: 700; }
   .wel__picked[hidden] { display: none; }
   .wel__picked svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 2.2; }
   .wel__here { margin-top: 12px; }
@@ -71,40 +71,40 @@
   .wel__tour::-webkit-scrollbar { display: none; }
   .wel__tcard { flex: 0 0 100%; box-sizing: border-box; padding: 0 22px; scroll-snap-align: start; scroll-snap-stop: always; }
   .wel__art { height: 190px; border-radius: 22px; margin-bottom: 18px; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden;
-    background: linear-gradient(160deg, #28231f, #362f29); color: #fff; }
+    background: linear-gradient(160deg, #1d2a22, #26392e); color: #fff; }
   .wel__art svg { width: 100%; height: 100%; }
   .wel__phone { width: min(62vw, 250px); margin: 0 auto 16px; padding: 7px; border-radius: 34px; background: #15171a;
     box-shadow: 0 14px 36px rgba(0, 0, 0, 0.28); }
-  .wel__video { display: block; width: 100%; max-height: 48vh; aspect-ratio: 9 / 19.5; object-fit: cover; border-radius: 27px; background: #28231f; }
+  .wel__video { display: block; width: 100%; max-height: 48vh; aspect-ratio: 9 / 19.5; object-fit: cover; border-radius: 27px; background: #1d2a22; }
   .wel__th { margin: 0 0 6px; font: 800 23px/1.2 var(--font-serif); color: var(--fairway-deep); }
   .wel__tp { margin: 0; font-size: 15.5px; line-height: 1.55; color: var(--ink-soft); }
   .wel__tp b { color: var(--ink); }
   .wel__tdots { display: flex; justify-content: center; gap: 6px; margin-top: 18px; }
-  .wel__tdot { width: 8px; height: 8px; border-radius: 999px; background: rgba(39, 34, 30, 0.15); border: 0; padding: 0; cursor: pointer; transition: width 0.2s; }
+  .wel__tdot { width: 8px; height: 8px; border-radius: 999px; background: rgba(27, 42, 31, 0.15); border: 0; padding: 0; cursor: pointer; transition: width 0.2s; }
   .wel__tdot.is-on { width: 22px; background: var(--fairway); }
-  html.is-dark .wel__th { color: #e9e6e4; }
-  html.is-dark .wel__tp { color: rgba(233, 230, 228, 0.72); }
+  html.is-dark .wel__th { color: #e4e9e5; }
+  html.is-dark .wel__tp { color: rgba(228, 233, 229, 0.72); }
   html.is-dark .wel__tp b { color: #fff; }
   html.is-dark .wel__tdot { background: rgba(255, 255, 255, 0.18); }
-  html.is-dark .wel__tdot.is-on { background: #ffb37a; }
+  html.is-dark .wel__tdot.is-on { background: #9cc77f; }
   .wel__done { margin: 0 0 6px; font-size: 15.5px; color: var(--ink-soft); }
   .wel__done b { color: var(--ink); }
   html.is-dark body.welcome-page { background: #141618; }
-  html.is-dark .wel__h { color: #e9e6e4; }
-  html.is-dark .wel__kicker { color: #ffb37a; }
-  html.is-dark .wel__sub, html.is-dark .wel__msg, html.is-dark .wel__done { color: rgba(233, 230, 228, 0.7); }
+  html.is-dark .wel__h { color: #e4e9e5; }
+  html.is-dark .wel__kicker { color: #9cc77f; }
+  html.is-dark .wel__sub, html.is-dark .wel__msg, html.is-dark .wel__done { color: rgba(228, 233, 229, 0.7); }
   html.is-dark .wel__done b { color: #fff; }
   html.is-dark .wel__code, html.is-dark .wel__input { background: #22272a; border-color: rgba(255, 255, 255, 0.12); color: #fff; }
-  html.is-dark .wel__card, html.is-dark .wel__chip, html.is-dark .wel__list { background: #1c2023; border-color: rgba(255, 255, 255, 0.14); color: #e9e6e4; }
-  html.is-dark .wel__card span, html.is-dark .wel__list button span { color: rgba(233, 230, 228, 0.55); }
-  html.is-dark .wel__list button { color: #e9e6e4; }
-  html.is-dark .wel__card[aria-pressed="true"] { border-color: #ffb37a; background: rgba(255, 179, 122, 0.1); box-shadow: inset 0 0 0 1px #ffb37a; }
-  html.is-dark .wel__chip[aria-pressed="true"] { border-color: #ffb37a; background: #ffb37a; color: #1e1a16; }
-  html.is-dark .wel__btn { background: #ffb37a; color: #2b1708; }
-  html.is-dark .wel__link { color: #ffb37a; }
+  html.is-dark .wel__card, html.is-dark .wel__chip, html.is-dark .wel__list { background: #1c2023; border-color: rgba(255, 255, 255, 0.14); color: #e4e9e5; }
+  html.is-dark .wel__card span, html.is-dark .wel__list button span { color: rgba(228, 233, 229, 0.55); }
+  html.is-dark .wel__list button { color: #e4e9e5; }
+  html.is-dark .wel__card[aria-pressed="true"] { border-color: #9cc77f; background: rgba(156, 199, 127, 0.1); box-shadow: inset 0 0 0 1px #9cc77f; }
+  html.is-dark .wel__chip[aria-pressed="true"] { border-color: #9cc77f; background: #9cc77f; color: #10241a; }
+  html.is-dark .wel__btn { background: #9cc77f; color: #131a15; }
+  html.is-dark .wel__link { color: #9cc77f; }
   html.is-dark .wel__dot { background: rgba(255, 255, 255, 0.18); }
-  html.is-dark .wel__dot.is-on { background: #ffb37a; }
-  html.is-dark .wel__picked { background: rgba(255, 179, 122, 0.16); color: #ffcfa8; }
+  html.is-dark .wel__dot.is-on { background: #9cc77f; }
+  html.is-dark .wel__picked { background: rgba(156, 199, 127, 0.16); color: #c4e0ae; }
 </style>
 {% endblock %}
 
@@ -224,38 +224,38 @@
       {% endif %}
       <div class="wel__tcard">
         <div class="wel__art" aria-hidden="true">
-          <svg viewBox="0 0 320 190"><g stroke="#3a342e" stroke-width="3"><path d="M0 40h320M0 95h320M0 150h320M60 0v190M150 0v190M245 0v190"/></g>
-            <ellipse cx="160" cy="95" rx="105" ry="62" fill="rgba(255, 123, 22,.08)" stroke="#ffb37a" stroke-width="3" stroke-dasharray="3 9" stroke-linecap="round"/>
-            <path d="M88 118h62v-45h95" fill="none" stroke="#ffb37a" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
+          <svg viewBox="0 0 320 190"><g stroke="#2e3a33" stroke-width="3"><path d="M0 40h320M0 95h320M0 150h320M60 0v190M150 0v190M245 0v190"/></g>
+            <ellipse cx="160" cy="95" rx="105" ry="62" fill="rgba(156, 199, 127,.08)" stroke="#9cc77f" stroke-width="3" stroke-dasharray="3 9" stroke-linecap="round"/>
+            <path d="M88 118h62v-45h95" fill="none" stroke="#9cc77f" stroke-width="6" stroke-linejoin="round" stroke-linecap="round"/>
             <circle cx="88" cy="118" r="9" fill="#4aa3ff" stroke="#fff" stroke-width="3"/>
             <g font-family="-apple-system,Helvetica,Arial" font-weight="800" font-size="13" text-anchor="middle" fill="#fff">
               <circle cx="150" cy="118" r="12" fill="#e5534b" stroke="#fff" stroke-width="3"/><text x="150" y="123">1</text>
               <circle cx="150" cy="73" r="12" fill="#e5534b" stroke="#fff" stroke-width="3"/><text x="150" y="78">2</text>
               <circle cx="245" cy="73" r="12" fill="#e5534b" stroke="#fff" stroke-width="3"/><text x="245" y="78">3</text></g>
-            <rect x="40" y="152" width="240" height="28" rx="14" fill="#fff"/><text x="58" y="171" font-family="-apple-system,Helvetica,Arial" font-size="12.5" fill="#605a55">“3 coffee shops near me”</text></svg>
+            <rect x="40" y="152" width="240" height="28" rx="14" fill="#fff"/><text x="58" y="171" font-family="-apple-system,Helvetica,Arial" font-size="12.5" fill="#55605a">“3 coffee shops near me”</text></svg>
         </div>
         <h2 class="wel__th">Plan a walk in seconds</h2>
         <p class="wel__tp">On <b>Walk</b>, ask for what you're in the mood for, or tap <b>Draw area</b> and circle a part of the map. The AI picks the stops, and <b>Start</b> gives you turn-by-turn directions.</p>
       </div>
       <div class="wel__tcard">
         <div class="wel__art" aria-hidden="true">
-          <svg viewBox="0 0 320 190"><rect x="24" y="18" width="272" height="30" rx="15" fill="#fff"/><circle cx="44" cy="33" r="6" fill="none" stroke="#605a55" stroke-width="2.2"/><text x="58" y="38" font-family="-apple-system,Helvetica,Arial" font-size="12.5" fill="#605a55">Search any city</text>
-            <rect x="24" y="58" width="96" height="22" rx="11" fill="rgba(255, 179, 122,.22)"/><text x="38" y="73" font-family="-apple-system,Helvetica,Arial" font-weight="700" font-size="11.5" fill="#ffcfa8">Vienna, Austria</text>
-            <rect x="24" y="92" width="130" height="80" rx="12" fill="#463c34"/><rect x="34" y="102" width="56" height="12" rx="6" fill="#ffb37a"/><rect x="34" y="122" width="100" height="9" rx="4" fill="#d8d3cf"/><rect x="34" y="138" width="80" height="9" rx="4" fill="#9a938c"/>
-            <rect x="166" y="92" width="130" height="80" rx="12" fill="#463c34"/><rect x="176" y="102" width="70" height="12" rx="6" fill="#ffb37a"/><rect x="176" y="122" width="100" height="9" rx="4" fill="#d8d3cf"/><rect x="176" y="138" width="60" height="9" rx="4" fill="#9a938c"/></svg>
+          <svg viewBox="0 0 320 190"><rect x="24" y="18" width="272" height="30" rx="15" fill="#fff"/><circle cx="44" cy="33" r="6" fill="none" stroke="#55605a" stroke-width="2.2"/><text x="58" y="38" font-family="-apple-system,Helvetica,Arial" font-size="12.5" fill="#55605a">Search any city</text>
+            <rect x="24" y="58" width="96" height="22" rx="11" fill="rgba(156, 199, 127,.22)"/><text x="38" y="73" font-family="-apple-system,Helvetica,Arial" font-weight="700" font-size="11.5" fill="#c4e0ae">Vienna, Austria</text>
+            <rect x="24" y="92" width="130" height="80" rx="12" fill="#33473b"/><rect x="34" y="102" width="56" height="12" rx="6" fill="#9cc77f"/><rect x="34" y="122" width="100" height="9" rx="4" fill="#cfd8d2"/><rect x="34" y="138" width="80" height="9" rx="4" fill="#8c9a91"/>
+            <rect x="166" y="92" width="130" height="80" rx="12" fill="#33473b"/><rect x="176" y="102" width="70" height="12" rx="6" fill="#9cc77f"/><rect x="176" y="122" width="100" height="9" rx="4" fill="#cfd8d2"/><rect x="176" y="138" width="60" height="9" rx="4" fill="#8c9a91"/></svg>
         </div>
         <h2 class="wel__th">Your city's feed</h2>
         <p class="wel__tp"><b>Stories</b> shows what's good in your city: stories, <b>Walks this week</b> and walks other walkers shared. Tap a walk to preview it, or search any city at the top to see its feed.</p>
       </div>
       <div class="wel__tcard">
         <div class="wel__art" aria-hidden="true">
-          <svg viewBox="0 0 320 190"><rect x="40" y="26" width="240" height="138" rx="16" fill="#463c34"/>
+          <svg viewBox="0 0 320 190"><rect x="40" y="26" width="240" height="138" rx="16" fill="#33473b"/>
             <g font-family="-apple-system,Helvetica,Arial" font-weight="700" font-size="13" fill="#fff"><text x="60" y="58">Date night in the 1st</text></g>
-            <rect x="60" y="72" width="150" height="9" rx="4" fill="#9a938c"/>
+            <rect x="60" y="72" width="150" height="9" rx="4" fill="#8c9a91"/>
             <g font-family="-apple-system,Helvetica,Arial" font-weight="800" font-size="12">
               <rect x="60" y="104" width="62" height="30" rx="15" fill="#fff"/><text x="74" y="123" fill="#15171a">Save</text>
-              <rect x="130" y="104" width="68" height="30" rx="15" fill="none" stroke="#d8d3cf" stroke-width="1.5"/><text x="144" y="123" fill="#fff">Share</text>
-              <rect x="206" y="104" width="58" height="30" rx="15" fill="#ffb37a"/><text x="218" y="123" fill="#2b1708">Post</text></g></svg>
+              <rect x="130" y="104" width="68" height="30" rx="15" fill="none" stroke="#cfd8d2" stroke-width="1.5"/><text x="144" y="123" fill="#fff">Share</text>
+              <rect x="206" y="104" width="58" height="30" rx="15" fill="#9cc77f"/><text x="218" y="123" fill="#131a15">Post</text></g></svg>
         </div>
         <h2 class="wel__th">Save, build and share</h2>
         <p class="wel__tp">Save places you love to <b>My places</b> (the tab on the right of the map) and build your own routes: a date night, a coffee loop, a tour for friends. <b>Share</b> sends a link; <b>Post to feed</b> shows it to walkers in your city.</p>
@@ -263,12 +263,12 @@
       <div class="wel__tcard">
         <div class="wel__art" aria-hidden="true">
           <svg viewBox="0 0 320 190"><rect x="40" y="40" width="240" height="110" rx="16" fill="#fff"/>
-            <text x="60" y="68" font-family="-apple-system,Helvetica,Arial" font-weight="800" font-size="10" letter-spacing="1" fill="#e0864a">YOU'RE AT STOP 2 OF 3</text>
+            <text x="60" y="68" font-family="-apple-system,Helvetica,Arial" font-weight="800" font-size="10" letter-spacing="1" fill="#2f5e3a">YOU'RE AT STOP 2 OF 3</text>
             <text x="60" y="90" font-family="-apple-system,Helvetica,Arial" font-weight="800" font-size="15" fill="#15171a">Café Sperl</text>
-            <text x="60" y="122" font-family="-apple-system,Helvetica,Arial" font-weight="700" font-size="11.5" fill="#524e4a">Worth the walk?</text>
-            <g fill="#e0864a" transform="translate(150 104)">
+            <text x="60" y="122" font-family="-apple-system,Helvetica,Arial" font-weight="700" font-size="11.5" fill="#4a524e">Worth the walk?</text>
+            <g fill="#2f5e3a" transform="translate(150 104)">
               <g id="fp"><ellipse cx="5" cy="7" rx="3" ry="4.3"/><ellipse cx="5.6" cy="15" rx="2.2" ry="2.6"/><ellipse cx="14" cy="3" rx="3" ry="4.3"/><ellipse cx="13.4" cy="11" rx="2.2" ry="2.6"/></g>
-              <use href="#fp" x="24"/><use href="#fp" x="48"/><use href="#fp" x="72"/><use href="#fp" x="96" fill="#d8d5d3"/></g></svg>
+              <use href="#fp" x="24"/><use href="#fp" x="48"/><use href="#fp" x="72"/><use href="#fp" x="96" fill="#d3d8d5"/></g></svg>
         </div>
         <h2 class="wel__th">Rate with footprints</h2>
         <p class="wel__tp">When you reach a stop, give it 1 to 5 <b>footprints</b>: how worth the walk it was. Your ratings help everyone, and the AI plans better walks from them.</p>

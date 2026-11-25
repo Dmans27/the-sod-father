@@ -14,13 +14,13 @@
   .vprompt__card { width: min(100%, 420px); padding: 22px 20px calc(env(safe-area-inset-bottom, 0px) + 16px); border-radius: 22px; background: #fff; color: #15171a;
     font-family: var(--font-sans, -apple-system, Helvetica, Arial, sans-serif); box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3); }
   .vprompt__title { margin: 0 0 6px; font: 800 21px/1.2 var(--font-serif, Georgia, serif); }
-  .vprompt__text { margin: 0 0 18px; font-size: 15px; line-height: 1.5; color: #524e4a; }
-  .vprompt__go { display: block; padding: 15px; border-radius: 14px; background: #4d2b11; color: #fff; font-weight: 800; font-size: 16px; text-align: center; text-decoration: none; }
-  .vprompt__later { display: block; width: 100%; margin-top: 8px; padding: 12px; border: 0; background: none; color: #746f6b; font: 700 15px inherit; cursor: pointer; }
+  .vprompt__text { margin: 0 0 18px; font-size: 15px; line-height: 1.5; color: #4a524e; }
+  .vprompt__go { display: block; padding: 15px; border-radius: 14px; background: #1f4128; color: #fff; font-weight: 800; font-size: 16px; text-align: center; text-decoration: none; }
+  .vprompt__later { display: block; width: 100%; margin-top: 8px; padding: 12px; border: 0; background: none; color: #6b746f; font: 700 15px inherit; cursor: pointer; }
   @media (min-width: 700px) { .vprompt { align-items: center; } }
-  html.is-dark .vprompt__card { background: #1d1a17; color: #e9e6e4; }
-  html.is-dark .vprompt__text { color: rgba(233, 230, 228, 0.72); }
-  html.is-dark .vprompt__go { background: #ffb37a; color: #2b1708; }
+  html.is-dark .vprompt__card { background: #131a15; color: #e4e9e5; }
+  html.is-dark .vprompt__text { color: rgba(228, 233, 229, 0.72); }
+  html.is-dark .vprompt__go { background: #9cc77f; color: #131a15; }
 </style>
 <script>
   // Any request that answers 403 {verify: true} brings up the card (the walk page, the stories feed, comments...).

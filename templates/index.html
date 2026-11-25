@@ -27,7 +27,7 @@
   .popbar .citybar { padding: 8px 12px; }
   .citybar__form { display: flex; align-items: center; gap: 8px; height: 46px; padding: 0 6px 0 14px; border-radius: 999px;
     background: #f0f2f0; border: 1px solid transparent; box-sizing: border-box; }
-  .citybar__form:focus-within { background: #fff; border-color: var(--fairway, #79451e); box-shadow: 0 0 0 3px rgba(121, 69, 30, 0.14); }
+  .citybar__form:focus-within { background: #fff; border-color: var(--fairway, #2f5e3a); box-shadow: 0 0 0 3px rgba(47, 94, 58, 0.14); }
   .citybar__icon { flex: none; width: 19px; height: 19px; fill: none; stroke: var(--ink-faint); stroke-width: 2; stroke-linecap: round; }
   .citybar__input { flex: 1; min-width: 0; height: 100%; border: 0; background: none; color: var(--ink); font: 500 16px var(--font-sans); outline: none; -webkit-appearance: none; }
   .citybar__input::placeholder { color: var(--ink-faint); }
@@ -38,7 +38,7 @@
   .citybar__here.is-busy { animation: citybar-pulse 0.9s ease-in-out infinite; }
   @keyframes citybar-pulse { 50% { opacity: 0.45; } }
   .citybar__list { position: absolute; z-index: 40; left: 16px; right: 16px; top: calc(100% - 6px); margin: 0; padding: 6px; list-style: none;
-    background: #fff; border-radius: 16px; box-shadow: 0 12px 32px rgba(39, 34, 30, 0.18); border: 1px solid var(--line); }
+    background: #fff; border-radius: 16px; box-shadow: 0 12px 32px rgba(27, 42, 31, 0.18); border: 1px solid var(--line); }
   .popbar .citybar__list { left: 12px; right: 12px; top: calc(100% - 2px); }
   .citybar__hit { display: flex; flex-direction: column; align-items: flex-start; gap: 1px; width: 100%; padding: 10px 12px; border: 0; border-radius: 10px;
     background: none; color: var(--ink); text-align: left; cursor: pointer; font-family: var(--font-sans); }
@@ -46,21 +46,21 @@
   .citybar__hit b { font-size: 15.5px; }
   .citybar__hit span { font-size: 13px; color: var(--ink-faint); }
   .citybar__none { padding: 12px; font-size: 14px; color: var(--ink-faint); }
-  html.is-dark .citybar__form { background: #2a2521; }
-  html.is-dark .citybar__form:focus-within { background: #1d1a17; border-color: #ffb37a; box-shadow: 0 0 0 3px rgba(255, 179, 122, 0.16); }
-  html.is-dark .citybar__input { color: #e9e6e4; }
-  html.is-dark .citybar__here { background: #ffb37a; color: #1e1a16; }
-  html.is-dark .citybar__list { background: #1d1a17; border-color: rgba(255, 255, 255, 0.12); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5); }
-  html.is-dark .citybar__hit { color: #e9e6e4; }
-  html.is-dark .citybar__hit:hover, html.is-dark .citybar__hit:focus { background: #2a2521; }
-  html.is-dark .citybar__hit span, html.is-dark .citybar__none { color: rgba(233, 230, 228, 0.6); }
+  html.is-dark .citybar__form { background: #1d2820; }
+  html.is-dark .citybar__form:focus-within { background: #131a15; border-color: #9cc77f; box-shadow: 0 0 0 3px rgba(156, 199, 127, 0.16); }
+  html.is-dark .citybar__input { color: #e4e9e5; }
+  html.is-dark .citybar__here { background: #9cc77f; color: #10241a; }
+  html.is-dark .citybar__list { background: #131a15; border-color: rgba(255, 255, 255, 0.12); box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5); }
+  html.is-dark .citybar__hit { color: #e4e9e5; }
+  html.is-dark .citybar__hit:hover, html.is-dark .citybar__hit:focus { background: #1d2820; }
+  html.is-dark .citybar__hit span, html.is-dark .citybar__none { color: rgba(228, 233, 229, 0.6); }
 
   /* The city the feed is showing: a small light-green pill */
   .cityhead { max-width: 720px; margin: 0 auto 14px; }
   .citypill { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px 5px 9px; border: 0; border-radius: 999px;
-    background: rgba(121, 69, 30, 0.12); color: var(--fairway-deep); font: 700 13px var(--font-sans); cursor: pointer; }
+    background: rgba(47, 94, 58, 0.12); color: var(--fairway-deep); font: 700 13px var(--font-sans); cursor: pointer; }
   .citypill svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linejoin: round; }
-  html.is-dark .citypill { background: rgba(255, 179, 122, 0.16); color: #ffcfa8; }
+  html.is-dark .citypill { background: rgba(156, 199, 127, 0.16); color: #c4e0ae; }
   /* "Plan a walk in <city>" when the city has no walks yet */
   .cityplan { display: flex; align-items: center; gap: 14px; max-width: 720px; margin: 0 auto 28px; padding: 16px 18px; box-sizing: border-box;
     border-radius: 16px; background: var(--fairway-deep); color: #fff; text-decoration: none; }
@@ -68,9 +68,9 @@
   .cityplan b { font: 700 19px/1.25 var(--font-serif); }
   .cityplan span { font-size: 14px; color: rgba(255, 255, 255, 0.78); }
   .cityplan svg { flex: none; width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  html.is-dark .cityplan { background: #2a2521; border: 1px solid rgba(255, 179, 122, 0.35); }
+  html.is-dark .cityplan { background: #1d2820; border: 1px solid rgba(156, 199, 127, 0.35); }
   .more-head { max-width: 720px; margin: 30px auto 6px; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fairway); }
-  html.is-dark .more-head { color: #ffb37a; }
+  html.is-dark .more-head { color: #9cc77f; }
 
   /* "Walks this week" strip (templates/_walk_strip.html) */
   .walk-strip { max-width: 720px; margin: 0 auto 28px; padding-bottom: 28px; border-bottom: 1px solid var(--line); }
@@ -84,19 +84,19 @@
     padding: 14px 15px; border-radius: 14px; background: var(--cream); border: 1px solid var(--line); color: inherit; text-decoration: none; }
   .walk-strip__card:only-child { flex-basis: 100%; }
   .walk-strip__card:hover .walk-strip__title { color: var(--fairway); }
-  .walk-strip__tag { align-self: flex-start; padding: 2px 8px; border-radius: 6px; background: rgba(121, 69, 30, 0.12); color: var(--fairway-deep);
+  .walk-strip__tag { align-self: flex-start; padding: 2px 8px; border-radius: 6px; background: rgba(47, 94, 58, 0.12); color: var(--fairway-deep);
     font-size: 10.5px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase; }
   .walk-strip__title { font-family: var(--font-serif); font-size: 19px; font-weight: 700; line-height: 1.25; color: var(--fairway-deep); }
   .walk-strip__blurb { font-size: 14px; line-height: 1.45; color: var(--ink-soft);
     display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .walk-strip__stops { margin-top: auto; padding-top: 2px; font-size: 12.5px; color: var(--ink-faint); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   html.is-dark .walk-strip { border-color: rgba(255, 255, 255, 0.12); }
-  html.is-dark .walk-strip__kicker { color: #ffb37a; }
-  html.is-dark .walk-strip__more, html.is-dark .walk-strip__title { color: #e9e6e4; }
+  html.is-dark .walk-strip__kicker { color: #9cc77f; }
+  html.is-dark .walk-strip__more, html.is-dark .walk-strip__title { color: #e4e9e5; }
   html.is-dark .walk-strip__card { background: rgba(255, 255, 255, 0.05); border-color: rgba(255, 255, 255, 0.12); }
-  html.is-dark .walk-strip__tag { background: rgba(255, 179, 122, 0.16); color: #ffcfa8; }
-  html.is-dark .walk-strip__blurb { color: rgba(233, 230, 228, 0.8); }
-  html.is-dark .walk-strip__stops { color: rgba(233, 230, 228, 0.6); }
+  html.is-dark .walk-strip__tag { background: rgba(156, 199, 127, 0.16); color: #c4e0ae; }
+  html.is-dark .walk-strip__blurb { color: rgba(228, 233, 229, 0.8); }
+  html.is-dark .walk-strip__stops { color: rgba(228, 233, 229, 0.6); }
 </style>
 {% endblock %}
 
