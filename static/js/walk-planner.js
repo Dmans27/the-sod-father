@@ -322,6 +322,7 @@
   var minePull = document.getElementById('walkplan-mine-pull');
   var mine = document.getElementById('walkplan-mine');
   var mineList = document.getElementById('walkplan-mine-list');
+  var mineStops = document.getElementById('walkplan-mine-stops');   // a route's or group map's stops, under its little map
   var mineNote = document.getElementById('walkplan-mine-note');
   var mineFoot = document.getElementById('walkplan-mine-foot');
   var mineTitle = document.getElementById('walkplan-mine-title');
@@ -356,6 +357,8 @@
       });
     }
     stopGroupPoll();
+    if (mineStops) mineStops.innerHTML = '';
+    if (!building && !group) miniHide();
     if (building) paintBuilder();
     else if (groupNew) paintGroupNew();
     else if (group) paintGroup();
@@ -587,6 +590,53 @@
     return findLi;
   }
 
+  // ── The little map in the route builder and group maps ──────────────
+  // A blank map where you are (or where the big map is) that fills in as stops are added: each new
+  // place drops in as a numbered pin, joined in walking order (the map's mansfield:pins). It stays
+  // loaded while you switch between routes and maps, so it never flickers.
+  var miniBox = document.getElementById('walkplan-mine-map'), miniFrame = null, miniReady = false, miniStops = [], miniHint = null;
+  var miniCoords = {};   // slug -> {lat, lng} or null, from /api/places-at
+  function miniSend() {
+    if (!miniFrame || !miniReady) return;
+    var pins = miniStops.map(function (st) {
+      var c = miniCoords[st.slug];
+      return c ? { lat: c.lat, lng: c.lng, name: st.name || c.name } : null;
+    }).filter(Boolean);
+    try { miniFrame.contentWindow.postMessage({ type: 'mansfield:pins', pins: pins }, origin); } catch (e) {}
+    if (miniHint) miniHint.hidden = pins.length > 0;
+  }
+  function miniShow(stops) {
+    if (!miniBox || !origin) return;
+    miniStops = (stops || []).filter(function (st) { return st && st.slug; });
+    miniBox.hidden = false;
+    if (!miniFrame) {
+      var c = here ? [here.lng, here.lat] : ((view && view.center) || START.center);
+      miniFrame = el('iframe', 'walkplan__mine-frame');
+      miniFrame.title = 'Map of the stops';
+      miniFrame.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+      miniFrame.setAttribute('sandbox', 'allow-scripts allow-same-origin');
+      miniFrame.addEventListener('load', function () { miniReady = true; miniSend(); setTimeout(miniSend, 900); setTimeout(miniSend, 2500); });
+      miniFrame.src = directory + '/embed/explore?' + new URLSearchParams({ lng: c[0].toFixed(5), lat: c[1].toFixed(5), z: '14',
+        style: 'mansfield', mode: 'story', t: 'Your map' }).toString();
+      miniBox.appendChild(miniFrame);
+      miniHint = el('p', 'walkplan__mine-hint', 'Add a place and it drops onto the map');
+      miniBox.appendChild(miniHint);
+    }
+    var need = miniStops.map(function (st) { return st.slug; }).filter(function (sl) { return !(sl in miniCoords); });
+    if (need.length) {
+      fetch('/api/places-at?s=' + encodeURIComponent(need.join(',')), { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          var got = (d && d.places) || {};
+          need.forEach(function (sl) { miniCoords[sl] = got[sl] || null; });
+          miniSend();
+        })
+        .catch(function () {});
+    }
+    miniSend();
+  }
+  function miniHide() { if (miniBox) miniBox.hidden = true; }
+
   // ── The route builder: name it, tap places in the order to visit them ──
   function paintBuilder() {
     var places = routablePlaces();
@@ -598,6 +648,8 @@
     mineTitle.textContent = building.id ? 'Edit route' : 'Build a route';
     mineNote.innerHTML = 'Tap places <b>in the order you want to visit them</b>, or search for any place, anywhere. Tap again to take one out.';
     mineList.innerHTML = '';
+    mineStops.innerHTML = '';
+    miniShow(building.picks);   // the little map: pins drop in as you pick
     mineFoot.innerHTML = '';
     var name = el('input', 'walkplan__build-name');
     name.type = 'text';
@@ -643,7 +695,7 @@
       }
       li.addEventListener('click', toggle);
       li.addEventListener('keydown', function (e) { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); } });
-      mineList.appendChild(li);
+      mineStops.appendChild(li);
     });
 
     save.addEventListener('click', function () {
@@ -883,6 +935,8 @@
     var g = group;
     mineTitle.textContent = 'With friends';
     mineList.innerHTML = '';
+    mineStops.innerHTML = '';
+    miniShow(g.stops);   // the little map: everyone's stops, pinned as they're added
     mineFoot.innerHTML = '';
     mineNote.innerHTML = 'Everyone on this map can add, remove and reorder stops. <b>Changes save for everyone.</b>';
     // Name: saves when you leave the box
@@ -953,7 +1007,7 @@
       add: function (place) { return groupChange('POST', '/stops', place); }
     }));
     // The stops, in order
-    if (!g.stops.length) mineList.appendChild(el('li', 'walkplan__mine-empty', 'No stops yet. Search above to add the first place.'));
+    if (!g.stops.length) mineStops.appendChild(el('li', 'walkplan__mine-empty walkplan__mine-empty--map', 'No stops yet. Search above and each place drops onto the map.'));
     g.stops.forEach(function (st, i) {
       var li = el('li', 'walkplan__mine-item');
       li.appendChild(el('span', 'walkplan__mine-rank', String(i + 1)));
@@ -984,7 +1038,7 @@
       rm.setAttribute('aria-label', 'Take ' + st.name + ' out');
       rm.addEventListener('click', function () { rm.disabled = true; groupChange('DELETE', '/stops/' + encodeURIComponent(st.slug)); });
       li.appendChild(rm);
-      mineList.appendChild(li);
+      mineStops.appendChild(li);
     });
     // Actions
     if (g.stops.length >= 2) {

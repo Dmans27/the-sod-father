@@ -14,6 +14,7 @@ while a map is open, so you see each other's changes.
   POST   /api/group-maps/<id>/members            {handles: [...]}                 add your friends
   DELETE /api/group-maps/<id>/members/<handle>   the owner removes someone; your own handle = leave
   DELETE /api/group-maps/<id>                    the owner deletes it
+  GET    /api/places-at?s=slug,slug              where those places are (the little map that fills in as you add stops)
 
 Stops are directory listing slugs, like My routes (readers.py); a place found on Google is
 imported first by the page (/api/place-import), then added like any other.
@@ -365,6 +366,34 @@ def api_delete(map_id):
         return jsonify(error="Only the person who started the map can delete it. You can leave it instead."), 403
     _delete(map_id)
     return jsonify(ok=True, deleted=True)
+
+
+_coords = {}   # slug -> {lat, lng, name} from the directory, for this process
+
+
+@group_bp.get("/api/places-at")
+def api_places_at():
+    """Where some directory places are, for the little map that fills in as a group map or a route is built:
+    ?s=slug,slug -> {places: {slug: {lat, lng, name}}}. Remembered while the server runs."""
+    slugs = [x for x in dict.fromkeys(str(request.args.get("s") or "").split(",")) if _SLUG_RE.match(x)][:30]
+    need = [x for x in slugs if x not in _coords]
+    if need:
+        try:
+            from community import _directory_places
+            found = _directory_places(need)
+        except Exception as exc:  # noqa: BLE001 -- the directory is down: no pins this time
+            print("group maps: could not look up places:", exc)
+            found = None
+        if found is not None:
+            if len(_coords) > 5000:
+                _coords.clear()
+            for x in need:
+                p = found.get(x)
+                try:
+                    _coords[x] = {"lat": float(p["lat"]), "lng": float(p["lng"]), "name": p.get("name") or x} if p else None
+                except (TypeError, ValueError, KeyError):
+                    _coords[x] = None
+    return jsonify(places={x: _coords.get(x) for x in slugs if _coords.get(x)})
 
 
 def delete_reader_data(reader_id):

@@ -456,6 +456,17 @@
   .walkplan__bar .walkplan__me-btn.is-in { background: #7fd1a6; color: #0f2219; }
   .walkplan__bar .walkplan__me-dot { top: -2px; right: -2px; box-shadow: 0 0 0 2px #1c231f; }
   .walkplan__vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* The little map in the route builder and group maps */
+  .walkplan__mine-map { position: relative; flex: none; height: 240px; margin: 4px 0 12px; border-radius: 16px; overflow: hidden;
+    background: #15191a; border: 1px solid rgba(255, 255, 255, 0.12); }
+  .walkplan__mine-map[hidden] { display: none; }
+  @media (min-width: 641px) { .walkplan__mine-map { height: 300px; } }
+  .walkplan__mine-frame { display: block; width: 100%; height: 100%; border: 0; }
+  .walkplan__mine-hint { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); margin: 0; padding: 8px 14px; border-radius: 999px; white-space: nowrap;
+    background: rgba(20, 22, 21, 0.6); border: 0.5px solid rgba(255, 255, 255, 0.16); color: #e4e9e5; font: 700 13px var(--font-sans); pointer-events: none;
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .walkplan__mine-hint[hidden] { display: none; }
+  .walkplan__mine-empty--map { margin: 10px 0; font-size: 14px; }
 </style>
 {% endblock %}
 
@@ -487,6 +498,9 @@
     </div>
     <p class="walkplan__mine-note" id="walkplan-mine-note"></p>
     <ol class="walkplan__mine-list" id="walkplan-mine-list"></ol>
+    {# The route builder and group maps: a little map that fills in as stops are added, then the stops. #}
+    <div class="walkplan__mine-map" id="walkplan-mine-map" hidden></div>
+    <ol class="walkplan__mine-list" id="walkplan-mine-stops"></ol>
     <div class="walkplan__mine-foot" id="walkplan-mine-foot"></div>
   </aside>
 
@@ -726,6 +740,6 @@
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
 {% include "_community_ui.html" %}
 {% include "_footprints_ui.html" %}
-<script src="/static/js/walk-planner.js?v=31" defer></script>
+<script src="/static/js/walk-planner.js?v=32" defer></script>
 <script src="/static/js/pulses.js?v=3" defer></script>
 {% endblock %}
