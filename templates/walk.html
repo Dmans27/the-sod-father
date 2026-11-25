@@ -181,6 +181,10 @@
   .walkplan__pull svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
   .walkplan.map-used .walkplan__pull, .walkplan.is-walking .walkplan__pull,
   .walkplan.has-panel .walkplan__pull { opacity: 0; transform: translate(-100%, -50%); pointer-events: none; }
+  /* Tucked away until a tap on the map (walk-planner.js adds .tabs-on); hidden ones can't be tabbed to either. */
+  .walkplan:not(.tabs-on) .walkplan__pull { opacity: 0; transform: translate(-100%, -50%); pointer-events: none; visibility: hidden;
+    transition: opacity 0.2s, transform 0.2s, visibility 0s 0.2s; }
+  .walkplan:not(.tabs-on) .walkplan__pull.walkplan__pull--right { transform: translate(100%, -50%); }
   /* Phones: a bit above the middle, clear of the welcome card and the stop cards along the bottom.
      iPad: the middle of the left edge (the map moves its stop list over to make room, see sendInsets). */
   /* Phones: both tabs start just below the phone's side buttons, and stay out of the way while the welcome card shows. */
@@ -604,7 +608,7 @@
     <ol class="walkplan__steps">
       <li><b>Ask</b> for a walk below, typed or spoken: “3 cozy cafés near me”.</li>
       <li><b>Draw area</b> to circle the exact part of town you want.</li>
-      <li>Open <b>News</b> on the left for ideas, walks to try and good reads, and <b>Saved</b> on the right for your places.</li>
+      <li>Tap the map once to show <b>News</b> on the left (ideas, walks to try, good reads) and <b>Saved</b> on the right (your places).</li>
       <li>Tap your account button (top right) for <b>Stories</b>, saved walks and settings.</li>
     </ol>
     <button type="button" class="walkplan__got-it">Got it</button>
@@ -794,6 +798,6 @@
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
 {% include "_community_ui.html" %}
 {% include "_footprints_ui.html" %}
-<script src="/static/js/walk-planner.js?v=38" defer></script>
+<script src="/static/js/walk-planner.js?v=39" defer></script>
 <script src="/static/js/pulses.js?v=7" defer></script>
 {% endblock %}

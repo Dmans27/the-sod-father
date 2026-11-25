@@ -1285,6 +1285,13 @@
     sendInsets();
   }
   function showTab() { root.classList.remove('map-used'); sendInsets(); }
+  // News and Saved stay tucked away until you tap the map once; they then stay until you
+  // move the map yourself (they go when the map comes to rest), so the map is clear while you look around.
+  function setTabsOn(on) {
+    if (on === root.classList.contains('tabs-on')) return;
+    root.classList.toggle('tabs-on', on);
+    sendInsets();
+  }
   if (drawer) {
     var pullX = null;
     pull.addEventListener('click', function () { setDrawer(true); });
@@ -1395,7 +1402,7 @@
       // left: on iPad the This week tab sits in the middle of the left edge; while it's
       // showing, the map moves its stop list over so the tab doesn't cover it.
       var tab = document.getElementById('walkplan-pull');
-      var tabOn = !!tab && window.innerWidth > 640 && !root.classList.contains('map-used') && !root.classList.contains('is-walking');
+      var tabOn = !!tab && window.innerWidth > 640 && root.classList.contains('tabs-on') && !root.classList.contains('map-used') && !root.classList.contains('is-walking');
       // side: 0 -- the account button now lives in the top pill, not the map's top-right corner.
       post({ type: 'mansfield:insets', top: shown ? Math.round(toolsEl.getBoundingClientRect().bottom + 6) : 0,
              side: 0, left: tabOn ? 34 : 0 });
@@ -1457,12 +1464,14 @@
     if (e.source !== frame.contentWindow || e.origin !== origin || !e.data) return;
     var t = e.data.type;
     if (t === 'mansfield:compass') { if (e.data.on && !compassAsked) compassAsked = 'map'; return; }   // the map has the compass
+    if (t === 'mansfield:tap') { setTabsOn(true); return; }   // one tap on the map: show News and Saved
     if (t === 'mansfield:view') {
       var c = e.data.center, r = Number(e.data.radius), z = Number(e.data.zoom);
       if (Array.isArray(c) && c.length === 2 && isFinite(c[0]) && isFinite(c[1]) && r > 0) {
         view = { center: [Number(c[0]), Number(c[1])], radius: Math.round(r), zoom: isFinite(z) ? z : START.zoom };
       }
       if (e.data.byUser && !plan) intro.hidden = true;   // they're looking around: get the welcome out of the way
+      if (e.data.byUser) setTabsOn(false);                // moved the map and let go: tuck News and Saved away again
       return;
     }
     if (t === 'mansfield:area' || t === 'mansfield:circle') {
