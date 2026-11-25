@@ -190,6 +190,7 @@
     if (compassOn || document.hidden || !meWanted) return;
     compassOn = true;
     window.addEventListener(compassEvent(), onCompass);
+    post({ type: 'mansfield:compass', on: true });   // so the map doesn't ask as well
   }
   function compassOff() {
     if (!compassOn) return;
@@ -208,7 +209,7 @@
       if (e && e.target && e.target.closest && e.target.closest('input, textarea, [contenteditable]')) return;
       document.removeEventListener('touchend', ask, true);
       document.removeEventListener('click', ask, true);
-      if (compassAsked) return;
+      if (compassAsked) return;   // (also set when the map asked on its own first tap)
       compassAsked = true;
       DeviceOrientationEvent.requestPermission().then(function (r) {
         if (r === 'granted') compassOnNow(); else compassAsked = 'no';
@@ -1368,6 +1369,7 @@
       post({ type: 'mansfield:watch-view' });              // tell us what's on screen as the reader moves
       sendInsets();
       sendMe(); setTimeout(sendMe, 1500);                   // your dot, on the new map too
+      if (compassOn) post({ type: 'mansfield:compass', on: true });
       if (circle && circle.polygon) post({ type: 'mansfield:area-set', polygon: circle.polygon });
       else if (circle) post({ type: 'mansfield:circle-set', center: circle.center, radius: circle.radius });
       if (kind !== 'walk' || !plan) return;
@@ -1454,6 +1456,7 @@
   window.addEventListener('message', function (e) {
     if (e.source !== frame.contentWindow || e.origin !== origin || !e.data) return;
     var t = e.data.type;
+    if (t === 'mansfield:compass') { if (e.data.on && !compassAsked) compassAsked = 'map'; return; }   // the map has the compass
     if (t === 'mansfield:view') {
       var c = e.data.center, r = Number(e.data.radius), z = Number(e.data.zoom);
       if (Array.isArray(c) && c.length === 2 && isFinite(c[0]) && isFinite(c[1]) && r > 0) {

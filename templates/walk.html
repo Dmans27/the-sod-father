@@ -519,7 +519,7 @@
    static/js/walk-planner.js does the work; walk_planner.py plans the walk. #}
 <div class="walkplan is-idle" id="walkplan" data-directory="{{ directory }}">
   <iframe class="walkplan__map" id="walkplan-map" title="Map of your walk" hidden
-          referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen; geolocation"
+          referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen; geolocation; accelerometer; gyroscope; magnetometer"
           sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
 
 
@@ -784,6 +784,6 @@
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
 {% include "_community_ui.html" %}
 {% include "_footprints_ui.html" %}
-<script src="/static/js/walk-planner.js?v=35" defer></script>
+<script src="/static/js/walk-planner.js?v=36" defer></script>
 <script src="/static/js/pulses.js?v=5" defer></script>
 {% endblock %}
