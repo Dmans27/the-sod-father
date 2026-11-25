@@ -1240,17 +1240,23 @@
       // showing, the map moves its stop list over so the tab doesn't cover it.
       var tab = document.getElementById('walkplan-pull');
       var tabOn = !!tab && window.innerWidth > 640 && !root.classList.contains('map-used') && !root.classList.contains('is-walking');
+      // side: 0 -- the account button now lives in the top pill, not the map's top-right corner.
       post({ type: 'mansfield:insets', top: shown ? Math.round(toolsEl.getBoundingClientRect().bottom + 6) : 0,
-             side: window.innerWidth <= 640 ? 52 : 0, left: tabOn ? 34 : 0 });
+             side: 0, left: tabOn ? 34 : 0 });
     });
   }
   window.addEventListener('resize', function () { if (typeof paintArea === 'function') paintArea(); else sendInsets(); });
 
   // ── The search area (map view or a drawn circle) ──────────────────────
   function setDrawBtn(on) {
+    // The This week / My places tabs step aside only while you're drawing, and come back when you lift
+    // your finger (they used to stay hidden until the next walk, which looked like they'd gone).
+    if (on !== root.classList.contains('map-used')) { if (on) hideTab(); else showTab(); }
     drawBtn.classList.toggle('is-on', on);
     drawBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    drawBtn.querySelector('span').textContent = on ? 'Drag on the map' : (circle ? (narrow() ? 'Redraw' : 'Redraw area') : 'Draw area');
+    var label = on ? 'Drawing: drag on the map' : (circle ? 'Redraw the area' : 'Draw an area');   // the pencil in the top pill: an icon, so the label is for screen readers
+    drawBtn.querySelector('span').textContent = label;
+    drawBtn.title = label;
   }
   // Phones: shorter labels so the buttons and the area chip fit on one row.
   function narrow() { return window.innerWidth < 700; }

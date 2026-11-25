@@ -25,8 +25,6 @@
   .walkplan__msg-row > .walkplan__msg-close { margin-left: auto; }
   @media (max-width: 400px) { .walkplan__msg-act { padding: 8px 10px; } .walkplan__msg-stops { padding: 8px 12px; } }
   /* Account button and menu, top right (iPad: left of the map's zoom buttons) */
-  .walkplan__me { position: absolute; z-index: 8; top: calc(env(safe-area-inset-top, 0px) + 12px); right: 12px; }
-  @media (min-width: 641px) { .walkplan__me { right: 60px; } }
   .walkplan__me-btn { width: 42px; height: 42px; border-radius: 50%; display: flex; align-items: center; justify-content: center; padding: 0; cursor: pointer;
     color: #fff; background: rgba(16, 18, 20, 0.7); border: 0.5px solid rgba(255, 255, 255, 0.2); font: 800 17px var(--font-sans);
     -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25); }
@@ -34,7 +32,6 @@
   .walkplan__me-dot { position: absolute; top: -1px; right: -1px; width: 12px; height: 12px; border-radius: 50%; background: #e5484d; box-shadow: 0 0 0 2px #15171a; }
   .walkplan__me-btn.is-in { background: #2BEA6B; color: #0b2414; border-color: #2BEA6B; }
   .walkplan__me-btn svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
-  .walkplan.is-walking .walkplan__me, .walkplan.has-panel .walkplan__me { display: none; }
   /* Account panel: slides in from the right; the whole screen on phones, half of it on iPad */
   .walkplan__acct-back { position: fixed; z-index: 19; inset: 0; background: rgba(0, 0, 0, 0.4); opacity: 0; pointer-events: none; transition: opacity 0.3s ease; }
   .walkplan__acct { position: fixed; z-index: 20; top: 0; right: 0; bottom: 0; width: 100%; box-sizing: border-box; display: flex; flex-direction: column;
@@ -356,14 +353,6 @@
   .walkplan__pull { background: rgba(28, 35, 31, 0.92); border-color: rgba(255, 255, 255, 0.14); color: #e4e9e5; }
   .walkplan__pull-label { color: #7fd1a6; }
   /* ── Pulses: post short videos to the map (static/js/pulses.js) ── */
-  .walkplan__cam { position: absolute; z-index: 8; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 12px; width: 42px; height: 42px; padding: 0;
-    display: flex; align-items: center; justify-content: center; border-radius: 50%; border: 0.5px solid rgba(255, 255, 255, 0.2); cursor: pointer;
-    background: rgba(28, 35, 31, 0.85); color: #e4e9e5; -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25); }
-  .walkplan__cam[hidden] { display: none; }
-  .walkplan__cam svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linejoin: round; }
-  .walkplan__cam-dot { position: absolute; top: 9px; right: 8px; width: 7px; height: 7px; border-radius: 50%; background: #ff5a6e; box-shadow: 0 0 0 2px rgba(28, 35, 31, 0.85); }
-  @media (min-width: 641px) { .walkplan__cam { left: 60px; } }
-  .walkplan.is-walking .walkplan__cam, .walkplan.has-panel .walkplan__cam { display: none; }
   body.pz-open, body.pp-open { overflow: hidden; }
   .pz { position: fixed; z-index: 40; inset: 0; display: flex; flex-direction: column; box-sizing: border-box; overflow-y: auto; overscroll-behavior: contain;
     padding: calc(env(safe-area-inset-top, 0px) + 18px) 18px calc(env(safe-area-inset-bottom, 0px) + 18px); background: #1c231f; color: #e4e9e5; }
@@ -441,6 +430,24 @@
   .pp__menu button { padding: 14px; border: 0; border-radius: 12px; background: rgba(255, 255, 255, 0.06); color: #e4e9e5; font: 800 15px var(--font-sans); cursor: pointer; }
   .pp__menu button.is-danger { color: #ff8a80; }
   .pp__menu button.is-ghost { background: none; }
+  /* ── The top pill: pencil (draw an area) · + (post a video) · account ── */
+  .walkplan__bar { display: inline-flex; align-items: center; gap: 6px; padding: 4px; border-radius: 999px; flex: 0 0 auto;
+    background: rgba(28, 35, 31, 0.88); border: 0.5px solid rgba(255, 255, 255, 0.16); box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .walkplan__bar-btn, .walkplan__bar .walkplan__me-btn { position: relative; width: 40px; height: 40px; padding: 0; border: 0; border-radius: 50%; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; background: none; color: #e4e9e5; box-shadow: none; -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .walkplan__bar-btn svg { width: 21px; height: 21px; fill: none; stroke: currentColor; stroke-width: 1.9; stroke-linecap: round; stroke-linejoin: round; }
+  .walkplan__bar-btn:active { background: rgba(255, 255, 255, 0.08); }
+  .walkplan__bar-btn.is-on { background: #7fd1a6; color: #0f2219; }
+  .walkplan__bar-plus { width: 48px; height: 48px; padding: 0; border: 0; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    background: #7fd1a6; color: #0f2219; box-shadow: 0 4px 12px rgba(127, 209, 166, 0.3); }
+  .walkplan__bar-plus[hidden] { display: none; }
+  .walkplan__bar-plus svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; }
+  .walkplan__bar-plus:active { transform: scale(0.94); }
+  .walkplan__bar .walkplan__me-btn { width: 36px; height: 36px; margin: 0 2px; font: 800 15px var(--font-sans); border: 0; background: rgba(255, 255, 255, 0.1); }
+  .walkplan__bar .walkplan__me-btn.is-in { background: #7fd1a6; color: #0f2219; }
+  .walkplan__bar .walkplan__me-dot { top: -2px; right: -2px; box-shadow: 0 0 0 2px #1c231f; }
+  .walkplan__vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 </style>
 {% endblock %}
 
@@ -453,20 +460,6 @@
           sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
 
 
-  {# Pulses, top left: post short videos that pulse on the map for 8 hours (static/js/pulses.js, pulses.py). #}
-  <button type="button" class="walkplan__cam" id="walkplan-cam" aria-label="Post a video to the map">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="6" width="13.5" height="12" rx="3"/><path d="M16 10.5l5.5-3.2v9.4L16 13.5"/></svg>
-    <span class="walkplan__cam-dot" aria-hidden="true"></span>
-  </button>
-
-  {# Account, top right: the reader's initial (or a person icon when signed out) opens a small menu. #}
-  <div class="walkplan__me" id="walkplan-me">
-    <button type="button" class="walkplan__me-btn{% if reader %} is-in{% endif %}" aria-controls="walkplan-acct" aria-expanded="false"
-            aria-label="{{ 'Account: ' ~ reader.display_name if reader else 'Sign in' }}">
-      {% if reader %}{{ (reader.display_name or '?')[:1] | upper }}{% else %}<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"/></svg>{% endif %}
-      {% if friend_requests %}<span class="walkplan__me-dot" aria-hidden="true"></span>{% endif %}
-    </button>
-  </div>
 
   {# "My places" tab on the right edge: the reader's saved places in this city, ranked once there are 3.
      static/js/walk-planner.js fills it from /api/my-places each time it opens. #}
@@ -646,9 +639,21 @@
   </aside>
 
   <div class="walkplan__tools">
-    <button type="button" class="walkplan__tool" id="walkplan-draw" aria-pressed="false">
-      <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5" stroke-dasharray="3 2.5"/><circle cx="12" cy="12" r="1.6"/></svg><span>Draw area</span>
-    </button>
+    {# One pill at the top: draw an area (pencil), post a video to the map (+, static/js/pulses.js), your account.
+       On a fresh map it sits centred at the very top; with a walk or a drawn area it rides in this row below the map's label. #}
+    <div class="walkplan__bar" id="walkplan-me">
+      <button type="button" class="walkplan__bar-btn" id="walkplan-draw" aria-pressed="false" title="Draw an area">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.2-4.6L15.8 4.8a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L8.6 18.8z"/><path d="M13.8 6.8l3.4 3.4"/><path d="M4 20l4.6-1.2"/></svg><span class="walkplan__vh">Draw area</span>
+      </button>
+      <button type="button" class="walkplan__bar-plus" id="walkplan-cam" aria-label="Post a video to the map" title="Post a video">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+      </button>
+      <button type="button" class="walkplan__me-btn{% if reader %} is-in{% endif %}" aria-controls="walkplan-acct" aria-expanded="false"
+              aria-label="{{ 'Account: ' ~ reader.display_name if reader else 'Sign in' }}">
+        {% if reader %}{{ (reader.display_name or '?')[:1] | upper }}{% else %}<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"/></svg>{% endif %}
+        {% if friend_requests %}<span class="walkplan__me-dot" aria-hidden="true"></span>{% endif %}
+      </button>
+    </div>
     <button type="button" class="walkplan__tool" id="walkplan-clear" hidden>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg><span>New walk</span>
     </button>
@@ -713,6 +718,6 @@
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
 {% include "_community_ui.html" %}
 {% include "_footprints_ui.html" %}
-<script src="/static/js/walk-planner.js?v=30" defer></script>
-<script src="/static/js/pulses.js?v=1" defer></script>
+<script src="/static/js/walk-planner.js?v=31" defer></script>
+<script src="/static/js/pulses.js?v=2" defer></script>
 {% endblock %}
