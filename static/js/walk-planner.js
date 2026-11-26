@@ -157,6 +157,17 @@
   // it to the map, which draws a blue "you are here" dot. The map itself never asks.
   var meWatch = null, meLast = null, meWanted = false;
   function sendMe() { if (meLast) post(meLast); }
+  // When the walk page opens, the map starts where you are: once, on the first location fix -- unless a
+  // walk or a drawn area is showing, or you've already moved the map yourself.
+  var meCentered = false, movedByHand = false, mapLoaded = false;
+  function centerOnMe() {
+    // mapLoaded: the map page has finished loading (a message sent before that is lost).
+    if (meCentered || !meLast || !mapLoaded || plan || circle || movedByHand || !root.classList.contains('is-exploring')) return;
+    meCentered = true;
+    var at = { type: 'mansfield:center', lng: meLast.lng, lat: meLast.lat };
+    post(at);
+    setTimeout(function () { if (!movedByHand && !plan && !circle) post(at); }, 900);   // once more, in case the map was still starting
+  }
   function stopMe() {
     if (meWatch !== null && 'geolocation' in navigator) navigator.geolocation.clearWatch(meWatch);
     meWatch = null;
@@ -229,6 +240,7 @@
                  heading: hd === null ? null : Math.round(hd) };
       here = { lat: c.latitude, lng: c.longitude };
       sendMe();
+      centerOnMe();
     }, function (err) {
       if (err && err.code === 1) { meWanted = false; stopMe(); meLast = null; post({ type: 'mansfield:me', off: true }); }
     }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
@@ -1370,12 +1382,15 @@
     root.classList.toggle('is-exploring', kind === 'explore');
     root.classList.remove('has-panel');
     setDrawBtn(false);
+    mapLoaded = false;
     frame.onload = function () {
+      mapLoaded = true;
       if (asking) clearInterval(asking);
       asking = null;
       post({ type: 'mansfield:watch-view' });              // tell us what's on screen as the reader moves
       sendInsets();
       sendMe(); setTimeout(sendMe, 1500);                   // your dot, on the new map too
+      centerOnMe();
       if (compassOn) post({ type: 'mansfield:compass', on: true });
       if (circle && circle.polygon) post({ type: 'mansfield:area-set', polygon: circle.polygon });
       else if (circle) post({ type: 'mansfield:circle-set', center: circle.center, radius: circle.radius });
@@ -1471,7 +1486,7 @@
         view = { center: [Number(c[0]), Number(c[1])], radius: Math.round(r), zoom: isFinite(z) ? z : START.zoom };
       }
       if (e.data.byUser && !plan) intro.hidden = true;   // they're looking around: get the welcome out of the way
-      if (e.data.byUser) setTabsOn(false);                // moved the map and let go: tuck News and Saved away again
+      if (e.data.byUser) { setTabsOn(false); movedByHand = true; }   // moved the map and let go: tuck News and Saved away again
       return;
     }
     if (t === 'mansfield:area' || t === 'mansfield:circle') {
