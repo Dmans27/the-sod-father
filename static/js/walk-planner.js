@@ -379,6 +379,7 @@
     intro.hidden = true;
     listBtn.hidden = false;
     clearBtn.hidden = false;
+    clearBtn.querySelector('span').textContent = 'New walk';
     input.placeholder = 'Change it: "make it 5 stops", "swap stop 2"…';
     loadMap(plan.map, 'walk');
     renderSheet();
@@ -439,6 +440,7 @@
     intro.hidden = true;
     listBtn.hidden = false;
     clearBtn.hidden = false;
+    clearBtn.querySelector('span').textContent = 'New walk';
     input.placeholder = 'Change it: "make it 5 stops", "swap stop 2"…';
     loadMap(plan.map, 'walk');
     return true;
@@ -447,6 +449,7 @@
   // ── Clearing the walk ─────────────────────────────────────────────────
   // Back to the explore map, at the same spot, ready for a new question.
   function clearWalk() {
+    var hadWalk = !!plan;
     showTab();   // a fresh start: the "This week" tab is back
     plan = null;
     syncIdle();
@@ -467,7 +470,7 @@
     post({ type: 'mansfield:pins', pins: [] });
     paintArea();
     loadMap(exploreUrl(), 'explore');
-    say('Walk cleared. Ask for a new walk below.', false);
+    say(hadWalk ? 'Walk cleared. Ask for a new walk below.' : 'Area cleared. Draw a new one, or just ask below.', false);
   }
   clearBtn.addEventListener('click', clearWalk);
   intro.querySelector('.walkplan__intro-close').addEventListener('click', function () { intro.hidden = true; });
@@ -1495,12 +1498,12 @@
   // Phones: shorter labels so the buttons and the area chip fit on one row.
   function narrow() { return window.innerWidth < 700; }
   function paintArea() {
-    areaChip.hidden = !circle;
-    if (circle) {
-      var across = 2 * circle.radius;
-      areaText.textContent = (narrow() ? '' : 'Your area · ') + (across >= 1000 ? (across / 1000).toFixed(1) + ' km' : across + ' m');
-      areaChip.title = 'The walk only uses places inside the area you drew';
-    }
+    // The drawn area's size chip ("2.2 km ×") is no longer shown: "New walk" clears the area with the walk,
+    // and with an area but no walk yet, the same button reads "Clear area".
+    areaChip.hidden = true;
+    if (!plan) clearBtn.hidden = !circle;
+    var clearLabel = clearBtn.querySelector('span');
+    if (clearLabel) clearLabel.textContent = plan ? 'New walk' : 'Clear area';
     setDrawBtn(drawBtn.classList.contains('is-on'));
     syncIdle();
     sendInsets();
