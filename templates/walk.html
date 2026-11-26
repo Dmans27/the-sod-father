@@ -223,6 +223,19 @@
   .walkplan__read-pill { font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #c4e0ae; }
   .walkplan__read-title { font-weight: 700; font-size: 14.5px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .walkplan__read-min { font-size: 12px; color: rgba(255, 255, 255, 0.6); }
+  /* Good reads: the newest featured story leads like a newspaper front page (headline, subheading,
+     read time, then a wide picture); the rest are the usual rows below, split by hairlines. */
+  .walkplan__top { display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; padding: 4px 0 18px; margin-bottom: 4px;
+    border-bottom: 0.5px solid rgba(255, 255, 255, 0.14); color: #f2ead9; text-decoration: none; }
+  .walkplan__top-kicker { font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #c4e0ae; }
+  .walkplan__top-title { font-family: var(--font-serif); font-weight: 700; font-size: 25px; line-height: 1.14; letter-spacing: -0.01em; color: #f2ead9; }
+  .walkplan__top-dek { font-family: var(--font-serif); font-size: 16px; line-height: 1.42; color: rgba(242, 234, 217, 0.72);
+    display: -webkit-box; -webkit-line-clamp: 4; -webkit-box-orient: vertical; overflow: hidden; }
+  .walkplan__top-min { font-size: 11.5px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: rgba(242, 234, 217, 0.5); margin-top: 2px; }
+  .walkplan__top-img { display: block; width: 100%; aspect-ratio: 4 / 3; margin-top: 8px; border-radius: 12px;
+    background: rgba(255, 255, 255, 0.06) center / cover no-repeat; }
+  .walkplan__top:active .walkplan__top-title { opacity: 0.8; }
+  .walkplan__top + .walkplan__read { border-top: 0; }
   /* Walks to try / Good reads: two slides you swipe between, with dots centred on the heading line */
   .walkplan__slides { position: relative; margin-top: 18px; }
   .walkplan__slides-track { display: flex; align-items: flex-start; overflow-x: auto; overflow-y: hidden; scroll-snap-type: x mandatory; scrollbar-width: none;
@@ -276,6 +289,10 @@
     .walkplan__week-blurb { font-size: 16px; line-height: 1.5; }
     .walkplan__week-stops { font-size: 14px; margin-top: auto; padding-top: 4px; }
     .walkplan__reads { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+    .walkplan__reads .walkplan__top { grid-column: 1 / -1; }
+    .walkplan__top-title { font-size: 32px; }
+    .walkplan__top-dek { font-size: 18px; }
+    .walkplan__top-img { aspect-ratio: 16 / 9; }
     .walkplan__cwalks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
     .walkplan__cwalk { border-radius: 18px; }
     .walkplan__cwalk-photo { height: 200px; }
@@ -669,6 +686,16 @@
     <p class="walkplan__drawer-sub">Good reads</p>
     <div class="walkplan__reads">
     {% for r in reads %}
+    {% if r.lead %}
+    {# The newest featured story leads, newspaper style: headline, subheading, read time, then the picture. #}
+    <a class="walkplan__top" href="/article/{{ r.slug }}" data-slug="{{ r.slug }}" data-sheet>
+      {% if r.pill %}<span class="walkplan__top-kicker">{{ r.pill }}</span>{% endif %}
+      <span class="walkplan__top-title">{{ r.title }}</span>
+      {% if r.dek %}<span class="walkplan__top-dek">{{ r.dek }}</span>{% endif %}
+      {% if r.minutes %}<span class="walkplan__top-min">{{ r.minutes }} min read</span>{% endif %}
+      {% if r.image %}<span class="walkplan__top-img" style="background-image: url('{{ r.image }}')"></span>{% endif %}
+    </a>
+    {% else %}
     <a class="walkplan__read" href="/article/{{ r.slug }}" data-slug="{{ r.slug }}" data-sheet>
       <span class="walkplan__read-thumb"{% if r.image %} style="background-image: url('{{ r.image }}')"{% endif %}></span>
       <span class="walkplan__read-body">
@@ -677,6 +704,7 @@
         {% if r.minutes %}<span class="walkplan__read-min">{{ r.minutes }} min read</span>{% endif %}
       </span>
     </a>
+    {% endif %}
     {% endfor %}
     </div>
     </section>

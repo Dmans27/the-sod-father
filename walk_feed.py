@@ -111,29 +111,38 @@ def feed_cards():
 
 def related_articles(limit=5):
     """Stories for the walk page's "This week" drawer, as full articles (so they can open
-    in the article pop-up right there): travel stories, the ones about FEED_CITY first,
+    in the article pop-up right there). The newest featured story (the admin's "Feature
+    this story" box) leads; after it, travel stories, the ones about FEED_CITY first,
     newest first among equals. Never breaks the page."""
     try:
-        from content import get_articles
+        from content import get_articles, get_featured
         city = _city().lower()
+        everything = get_articles()
+        lead = (get_featured(everything) or [None])[0]   # newest first, so this is the most recent featured story
         scored = []
-        for i, a in enumerate(get_articles()):
+        for i, a in enumerate(everything):
+            if lead is not None and a.get("slug") == lead.get("slug"):
+                continue
             text = " ".join(str(a.get(k) or "") for k in ("title", "dek", "subcategory")).lower()
             score = (2 if a.get("category") == "travel" else 0) + (3 if city in text else 0)
             if score:
                 scored.append((-score, i, a))
         scored.sort(key=lambda x: (x[0], x[1]))
-        return [a for _, _, a in scored[:limit]]
+        rest = [a for _, _, a in scored]
+        return ([lead] + rest[:limit - 1]) if lead is not None else rest[:limit]
     except Exception as exc:
         print("feed: could not pick related reads:", exc)
         return []
 
 
 def related_reads(limit=5, articles=None):
-    """The drawer's "Good reads" cards: just what a card shows."""
+    """The drawer's "Good reads" cards: just what a card shows. A featured story is marked
+    `lead` (it shows big, with its subheading); only the first one in the list can lead."""
+    items = related_articles(limit) if articles is None else articles
     return [{"slug": a["slug"], "title": a.get("title") or "", "pill": a.get("pill") or "",
+             "dek": a.get("dek") or "", "lead": i == 0 and bool(a.get("featured")),
              "image": a.get("cover_image") or "", "minutes": a.get("read_minutes") or 0}
-            for a in (related_articles(limit) if articles is None else articles)]
+            for i, a in enumerate(items)]
 
 
 # ── 1 + 2: what goes into the prompt ──────────────────────────────────────
