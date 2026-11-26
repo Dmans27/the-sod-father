@@ -413,8 +413,13 @@
     input.value = '';
     input.placeholder = 'e.g. food in this area';
     try { history.replaceState(null, '', '/walk'); } catch (e) {}
+    // A completely fresh start: the drawn area goes too, and the new map comes up with no pins or outline.
+    if (circle) { circle = null; post({ type: 'mansfield:circle-clear' }); }
+    if (drawBtn.classList.contains('is-on')) post({ type: 'mansfield:draw-circle', on: false });
+    post({ type: 'mansfield:pins', pins: [] });
+    paintArea();
     loadMap(exploreUrl(), 'explore');
-    say(circle ? 'Walk cleared. Your circle is still there: ask for a new walk inside it.' : 'Walk cleared. Ask for a new walk below.', false);
+    say('Walk cleared. Ask for a new walk below.', false);
   }
   clearBtn.addEventListener('click', clearWalk);
   intro.querySelector('.walkplan__intro-close').addEventListener('click', function () { intro.hidden = true; });
