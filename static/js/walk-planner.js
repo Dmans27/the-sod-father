@@ -58,6 +58,51 @@
   var mainBar = sheet ? sheet.querySelector('.wsheet__actions:not(.wsheet__actions--edit)') : null;
   var drawBtn = document.getElementById('walkplan-draw');
   var clearBtn = document.getElementById('walkplan-clear');
+  // With a walk on the map, Draw / Post / Account tuck behind one "more" button (a small pop-out).
+  var moreBtn = document.getElementById('walkplan-more');
+  function setTools(open) {
+    root.classList.toggle('tools-open', !!open);
+    if (moreBtn) moreBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  }
+  if (moreBtn) {
+    // The pull bar: tap it, or pull it out (and push it back) sideways; the drawer follows the finger.
+    var dock = moreBtn.parentNode, pullX = null, pullW = 0, pulled = false, pullStart = 0;
+    moreBtn.addEventListener('pointerdown', function (e) {
+      pullX = e.clientX; pulled = false;
+      pullW = dock.getBoundingClientRect().width - moreBtn.getBoundingClientRect().width;
+      pullStart = root.classList.contains('tools-open') ? 0 : -pullW;
+      try { moreBtn.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+    moreBtn.addEventListener('pointermove', function (e) {
+      if (pullX === null) return;
+      var dx = e.clientX - pullX;
+      if (!pulled && Math.abs(dx) < 6) return;
+      pulled = true;
+      dock.classList.add('is-dragging');
+      if (!root.classList.contains('tools-open')) root.classList.add('tools-open');   // show the buttons while pulling
+      dock.style.transform = 'translateX(' + Math.max(-pullW, Math.min(0, pullStart + dx)) + 'px)';
+    });
+    function pullEnd(e) {
+      if (pullX === null) return;
+      var dx = e.clientX - pullX;
+      pullX = null;
+      dock.classList.remove('is-dragging');
+      dock.style.transform = '';
+      if (pulled) setTools(pullStart + dx > -pullW / 2);   // past halfway: it opens, otherwise it tucks back
+    }
+    moreBtn.addEventListener('pointerup', pullEnd);
+    moreBtn.addEventListener('pointercancel', pullEnd);
+    moreBtn.addEventListener('click', function () {
+      if (pulled) { pulled = false; return; }               // that was a pull, not a tap
+      setTools(!root.classList.contains('tools-open'));
+    });
+    document.addEventListener('click', function (e) {
+      if (!root.classList.contains('tools-open') || e.target.closest('#walkplan-more')) return;
+      if (e.target.closest('#walkplan-draw')) return;                 // drawing: it closes once the area is drawn
+      if (e.target.closest('#walkplan-me')) { setTimeout(function () { setTools(false); }, 0); return; }   // after the tap does its job
+      setTools(false);                                                 // a tap anywhere else on the page
+    }, true);
+  }
   var areaChip = document.getElementById('walkplan-area');
   var areaText = areaChip.querySelector('.walkplan__area-text');
 
@@ -328,6 +373,7 @@
     saved = false;
     try { history.replaceState(null, '', plan.open || '/walk'); } catch (e) {}
     root.classList.add('has-walk');
+    setTools(false);
     showTab();   // a new walk: the This week tab comes back
     syncIdle();
     intro.hidden = true;
@@ -387,6 +433,7 @@
              map: directory + '/embed/route-map?' + new URLSearchParams({ s: s.join(','), t: title, style: 'mansfield', mode: 'story' }).toString() };
     if (shared) say(title + ' · ' + s.length + ' stops. Ask to change it, or plan your own.', true);
     root.classList.add('has-walk');
+    setTools(false);
     showTab();   // a new walk: the This week tab comes back
     syncIdle();
     intro.hidden = true;
@@ -408,6 +455,7 @@
     saved = false;
     closeSheet();
     root.classList.remove('has-walk', 'is-walking', 'has-panel');
+    setTools(false);
     listBtn.hidden = true;
     clearBtn.hidden = true;
     input.value = '';
@@ -1487,14 +1535,14 @@
     if (e.source !== frame.contentWindow || e.origin !== origin || !e.data) return;
     var t = e.data.type;
     if (t === 'mansfield:compass') { if (e.data.on && !compassAsked) compassAsked = 'map'; return; }   // the map has the compass
-    if (t === 'mansfield:tap') { setTabsOn(true); return; }   // one tap on the map: show News and Saved
+    if (t === 'mansfield:tap') { setTools(false); setTabsOn(true); return; }   // one tap on the map: show News and Saved (and close the pop-out)
     if (t === 'mansfield:view') {
       var c = e.data.center, r = Number(e.data.radius), z = Number(e.data.zoom);
       if (Array.isArray(c) && c.length === 2 && isFinite(c[0]) && isFinite(c[1]) && r > 0) {
         view = { center: [Number(c[0]), Number(c[1])], radius: Math.round(r), zoom: isFinite(z) ? z : START.zoom };
       }
       if (e.data.byUser && !plan) intro.hidden = true;   // they're looking around: get the welcome out of the way
-      if (e.data.byUser) { setTabsOn(false); movedByHand = true; }   // moved the map and let go: tuck News and Saved away again
+      if (e.data.byUser) { setTabsOn(false); setTools(false); movedByHand = true; }   // moved the map and let go: tuck News and Saved away again
       return;
     }
     if (t === 'mansfield:area' || t === 'mansfield:circle') {
@@ -1504,6 +1552,7 @@
       circle = (Array.isArray(cc) && cc.length === 2 && cr > 0) ? { center: [Number(cc[0]), Number(cc[1])], radius: Math.round(cr) } : null;
       if (circle && poly && poly.length >= 4 && poly.length <= 400) circle.polygon = poly.map(function (p) { return [Number(p[0]), Number(p[1])]; });
       if (t === 'mansfield:area') areaAt = Date.now();
+      setTools(false);
       paintArea();
       if (circle) { say('Area set. Now ask, e.g. “Search this area for food”. The walk stays inside what you drew.', false); input.focus(); }
       return;
@@ -1549,6 +1598,7 @@
       if (plan.stops[at]) track('place', [plan.stops[at]]);
     } else if (t === 'mansfield:walk') {
       root.classList.toggle('is-walking', !!e.data.on);
+      if (e.data.on) setTools(false);
       if (e.data.on) track('start');
       sendInsets();   // Start walk is on: the map's walk banner takes the top
       if (e.data.on) msg.hidden = true;

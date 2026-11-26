@@ -496,6 +496,30 @@
   .walkplan__bar .walkplan__me-btn.is-in { background: #9cc77f; color: #131a15; }
   .walkplan__bar .walkplan__me-dot { top: -2px; right: -2px; box-shadow: 0 0 0 2px #131a15; }
   .walkplan__vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  /* With a walk on the map: the pill tucks into the left edge as a drawer. A small tab with an arrow
+     sits on the edge; tapping it slides the vertical pill (draw, post, account) out with it.
+     "New walk" and the area chip sit centred under the route pill. Without a walk the dock is
+     invisible to layout and the pill sits at the top as before. */
+  .walkplan__dock { display: contents; }
+  .walkplan__more { display: none; }
+  .walkplan.has-walk .walkplan__tools { left: 12px; right: 12px; justify-content: center; }
+  .walkplan.has-walk .walkplan__dock { display: flex; align-items: center; position: absolute; z-index: 6; top: 64px; left: -12px;
+    transform: translateX(calc(-100% + 22px)); transition: transform 0.24s cubic-bezier(0.2, 0.8, 0.2, 1); }
+  .walkplan.has-walk .walkplan__dock.is-dragging { transition: none; }
+  .walkplan.has-walk.tools-open .walkplan__dock { transform: translateX(0); }
+  .walkplan.has-walk .walkplan__bar { flex-direction: column; gap: 8px; padding: 8px 6px 8px 8px; border-radius: 0 28px 28px 0; border-left: 0;
+    visibility: hidden; transition: visibility 0s 0.24s; }
+  .walkplan.has-walk.tools-open .walkplan__bar { visibility: visible; transition: visibility 0s; }
+  .walkplan.has-walk .walkplan__bar .walkplan__me-btn { margin: 2px 0; }
+  /* The pull bar: a slim handle on the screen edge with a grab line; tap it or pull it out sideways. */
+  .walkplan.has-walk .walkplan__more { display: flex; position: relative; flex: 0 0 auto; width: 22px; height: 64px; padding: 0; cursor: grab; touch-action: none;
+    align-items: center; justify-content: center; background: rgba(19, 26, 21, 0.88); border: 0.5px solid rgba(255, 255, 255, 0.16); border-left: 0;
+    border-radius: 0 12px 12px 0; box-shadow: 4px 4px 14px rgba(0, 0, 0, 0.28); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .walkplan.has-walk.tools-open .walkplan__more { margin-left: -1px; }
+  .walkplan__grab { display: block; width: 4px; height: 26px; border-radius: 2px; background: rgba(228, 233, 229, 0.55); transition: background 0.15s, height 0.15s; }
+  .walkplan.has-walk .walkplan__more:active .walkplan__grab, .walkplan.has-walk.tools-open .walkplan__grab { background: #9cc77f; height: 30px; }
+  .walkplan__more .walkplan__me-dot { top: 6px; right: 3px; box-shadow: 0 0 0 2px #131a15; }
+  .walkplan.has-walk.tools-open .walkplan__more .walkplan__me-dot { display: none; }
   /* The little map in the route builder and group maps */
   .walkplan__mine-map { position: relative; flex: none; height: 240px; margin: 4px 0 12px; border-radius: 16px; overflow: hidden;
     background: #15191a; border: 1px solid rgba(255, 255, 255, 0.12); }
@@ -768,6 +792,10 @@
   <div class="walkplan__tools">
     {# One pill at the top: draw an area (pencil), post a video to the map (+, static/js/pulses.js), your account.
        On a fresh map it sits centred at the very top; with a walk or a drawn area it rides in this row below the map's label. #}
+    {# With a walk on the map, the pill tucks into the left edge: a small tab with an arrow pulls it out
+       as a vertical drawer (draw, post, account). On a fresh map it shows as usual.
+       walk-planner.js opens and closes it (.tools-open). #}
+    <div class="walkplan__dock">
     <div class="walkplan__bar" id="walkplan-me">
       <button type="button" class="walkplan__bar-btn" id="walkplan-draw" aria-pressed="false" title="Draw an area">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20l1.2-4.6L15.8 4.8a2 2 0 0 1 2.8 0l.6.6a2 2 0 0 1 0 2.8L8.6 18.8z"/><path d="M13.8 6.8l3.4 3.4"/><path d="M4 20l4.6-1.2"/></svg><span class="walkplan__vh">Draw area</span>
@@ -780,6 +808,11 @@
         {% if reader %}{{ (reader.display_name or '?')[:1] | upper }}{% else %}<svg viewBox="0 0 24 24" aria-hidden="true"><use href="#i-user"/></svg>{% endif %}
         {% if friend_requests %}<span class="walkplan__me-dot" aria-hidden="true"></span>{% endif %}
       </button>
+    </div>
+    <button type="button" class="walkplan__more" id="walkplan-more" aria-controls="walkplan-me" aria-expanded="false" aria-label="Show draw, post a video and account">
+      <span class="walkplan__grab" aria-hidden="true"></span>
+      {% if friend_requests %}<span class="walkplan__me-dot" aria-hidden="true"></span>{% endif %}
+    </button>
     </div>
     <button type="button" class="walkplan__tool" id="walkplan-clear" hidden>
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg><span>New walk</span>
@@ -852,6 +885,6 @@
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
 {% include "_community_ui.html" %}
 {% include "_footprints_ui.html" %}
-<script src="/static/js/walk-planner.js?v=43" defer></script>
+<script src="/static/js/walk-planner.js?v=46" defer></script>
 <script src="/static/js/pulses.js?v=7" defer></script>
 {% endblock %}
