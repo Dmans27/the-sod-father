@@ -1665,6 +1665,8 @@
   var ICON_UP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>';
   var ICON_DOWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
   var ICON_GRIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14M5 12h14M5 16h14"/></svg>';
+  var ICON_REMOVE = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7l10 10M17 7L7 17"/></svg>';
+  var MIN_STOPS = 2;   // a walk keeps at least two stops
   function moveStop(from, to, focusDir) {
     if (to < 0 || to >= editing.length || to === from) return;
     var st = editing.splice(from, 1)[0];
@@ -1682,7 +1684,9 @@
   }
   function renderEdit() {
     sheetTitle.textContent = plan.title;
-    sheetSub.textContent = 'Drag the stops into the order you want, then tap Update route.';
+    sheetSub.textContent = editing.length > MIN_STOPS
+      ? 'Drag to change the order, or tap × to take a stop out. Then tap Update route.'
+      : 'Drag to change the order, then tap Update route. A walk needs at least ' + MIN_STOPS + ' stops.';
     if (editBtn) editBtn.hidden = true;
     if (mainBar) mainBar.hidden = true;
     if (editBar) editBar.hidden = false;
@@ -1708,7 +1712,16 @@
       grip.innerHTML = ICON_GRIP;
       grip.setAttribute('aria-hidden', 'true');
       dragWith(grip, li);
-      move.appendChild(up); move.appendChild(down); move.appendChild(grip);
+      var rm = el('button', 'wsheet__remove');
+      rm.type = 'button'; rm.innerHTML = ICON_REMOVE;
+      rm.setAttribute('aria-label', 'Take ' + (st.name || 'this stop') + ' out of the walk');
+      rm.disabled = editing.length <= MIN_STOPS;
+      rm.addEventListener('click', function () {
+        if (editing.length <= MIN_STOPS) return;
+        editing.splice(editing.indexOf(st), 1);
+        renderEdit();
+      });
+      move.appendChild(up); move.appendChild(down); move.appendChild(grip); move.appendChild(rm);
       li.appendChild(move);
       sheetList.appendChild(li);
     });
@@ -1756,7 +1769,7 @@
   }
   function applyReorder() {
     if (!editing) return;
-    var next = editing, same = next.every(function (st, i) { return st === plan.stops[i]; });
+    var next = editing, same = next.length === plan.stops.length && next.every(function (st, i) { return st === plan.stops[i]; });
     editing = null;
     if (same) { renderSheet(); return; }
     var slugs = next.map(function (st) { return st.slug; });
@@ -1772,7 +1785,7 @@
     loadMap(plan.map, 'walk');
     renderSheet();
     checkSaved();
-    say('Route updated: ' + next.map(function (st) { return st.name || 'a stop'; }).join(' → ') + '. Tap Save to keep this order.', true);
+    say('Route updated: ' + next.map(function (st) { return st.name || 'a stop'; }).join(' → ') + '. Tap Save to keep it.', true);
   }
   if (editBtn) editBtn.addEventListener('click', startReorder);
   var cancelBtn = document.getElementById('wsheet-cancel'), applyBtn = document.getElementById('wsheet-apply');

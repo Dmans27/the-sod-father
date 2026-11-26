@@ -237,6 +237,10 @@
   .wsheet__arrow:disabled { opacity: 0.25; cursor: default; }
   .wsheet__arrow svg, .wsheet__grip svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
   .wsheet__grip { cursor: grab; touch-action: none; }
+  .wsheet__remove { width: 36px; height: 36px; margin-left: 2px; padding: 0; border: 0; border-radius: 50%; background: rgba(224, 122, 95, 0.16);
+    color: #f0a48f; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .wsheet__remove svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+  .wsheet__remove:disabled { opacity: 0.3; cursor: default; }
   .wsheet__apply { background: #9cc77f !important; color: #131a15 !important; }
   /* Good reads: the newest featured story leads like a newspaper front page (headline, subheading,
      read time, then a wide picture); the rest are the usual rows below, split by hairlines. */
@@ -817,7 +821,7 @@
     <div class="wsheet__panel" role="dialog" aria-modal="true" aria-labelledby="wsheet-title">
       <div class="wsheet__head">
         <h2 class="wsheet__title" id="wsheet-title">Your walk</h2>
-        <button type="button" class="wsheet__edit" id="wsheet-edit" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M7 4L4 7M7 4l3 3M17 20V4M17 20l-3-3M17 20l3-3"/></svg><span>Reorder</span></button>
+        <button type="button" class="wsheet__edit" id="wsheet-edit" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M7 4L4 7M7 4l3 3M17 20V4M17 20l-3-3M17 20l3-3"/></svg><span>Edit stops</span></button>
         <button type="button" class="wsheet__close" data-wsheet-close aria-label="Close">&times;</button>
       </div>
       <p class="wsheet__sub" id="wsheet-sub"></p>
@@ -827,7 +831,8 @@
         <a class="wsheet__maps" id="wsheet-maps" target="_blank" rel="noopener">Google Maps</a>
         <button type="button" class="wsheet__share" id="wsheet-share">Share</button>
       </div>
-      {# Reordering (walk-planner.js): drag the handles or use the arrows, then Update route re-draws the walk. #}
+      {# Editing stops (walk-planner.js): drag the handles or use the arrows to reorder, × to take a stop out,
+         then Update route re-draws the walk. #}
       <div class="wsheet__actions wsheet__actions--edit" id="wsheet-edit-actions" hidden>
         <button type="button" class="wsheet__cancel" id="wsheet-cancel">Cancel</button>
         <button type="button" class="wsheet__apply" id="wsheet-apply">Update route</button>
@@ -847,6 +852,6 @@
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
 {% include "_community_ui.html" %}
 {% include "_footprints_ui.html" %}
-<script src="/static/js/walk-planner.js?v=42" defer></script>
+<script src="/static/js/walk-planner.js?v=43" defer></script>
 <script src="/static/js/pulses.js?v=7" defer></script>
 {% endblock %}
