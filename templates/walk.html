@@ -223,6 +223,21 @@
   .walkplan__read-pill { font-size: 10.5px; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; color: #c4e0ae; }
   .walkplan__read-title { font-weight: 700; font-size: 14.5px; line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .walkplan__read-min { font-size: 12px; color: rgba(255, 255, 255, 0.6); }
+  /* Reordering a walk's stops in the list sheet */
+  .wsheet__edit { flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; height: 34px; padding: 0 13px; border: 0; border-radius: 999px;
+    background: rgba(255, 255, 255, 0.12); color: #f2ead9; font: 800 13px var(--font-sans); cursor: pointer; }
+  .wsheet__edit[hidden], .wsheet__actions[hidden] { display: none; }
+  .wsheet__edit svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+  .wsheet__stop.is-edit { align-items: center; padding: 10px 8px 10px 12px; touch-action: pan-y; transition: box-shadow 0.15s, background 0.15s; }
+  .wsheet__stop.is-edit .wsheet__name { font-size: 15px; }
+  .wsheet__stop.is-dragging { position: relative; z-index: 2; background: #26352a; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45); transition: none; }
+  .wsheet__move { display: flex; align-items: center; gap: 2px; flex: 0 0 auto; }
+  .wsheet__arrow, .wsheet__grip { width: 36px; height: 36px; padding: 0; border: 0; border-radius: 50%; background: none; color: rgba(242, 234, 217, 0.75);
+    display: flex; align-items: center; justify-content: center; cursor: pointer; }
+  .wsheet__arrow:disabled { opacity: 0.25; cursor: default; }
+  .wsheet__arrow svg, .wsheet__grip svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+  .wsheet__grip { cursor: grab; touch-action: none; }
+  .wsheet__apply { background: #9cc77f !important; color: #131a15 !important; }
   /* Good reads: the newest featured story leads like a newspaper front page (headline, subheading,
      read time, then a wide picture); the rest are the usual rows below, split by hairlines. */
   .walkplan__top { display: flex; flex-direction: column; gap: 8px; box-sizing: border-box; padding: 4px 0 18px; margin-bottom: 4px;
@@ -802,6 +817,7 @@
     <div class="wsheet__panel" role="dialog" aria-modal="true" aria-labelledby="wsheet-title">
       <div class="wsheet__head">
         <h2 class="wsheet__title" id="wsheet-title">Your walk</h2>
+        <button type="button" class="wsheet__edit" id="wsheet-edit" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4v16M7 4L4 7M7 4l3 3M17 20V4M17 20l-3-3M17 20l3-3"/></svg><span>Reorder</span></button>
         <button type="button" class="wsheet__close" data-wsheet-close aria-label="Close">&times;</button>
       </div>
       <p class="wsheet__sub" id="wsheet-sub"></p>
@@ -810,6 +826,11 @@
         <button type="button" class="wsheet__save" id="wsheet-save" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h11v17l-5.5-4-5.5 4z"/></svg><span>Save route</span></button>
         <a class="wsheet__maps" id="wsheet-maps" target="_blank" rel="noopener">Google Maps</a>
         <button type="button" class="wsheet__share" id="wsheet-share">Share</button>
+      </div>
+      {# Reordering (walk-planner.js): drag the handles or use the arrows, then Update route re-draws the walk. #}
+      <div class="wsheet__actions wsheet__actions--edit" id="wsheet-edit-actions" hidden>
+        <button type="button" class="wsheet__cancel" id="wsheet-cancel">Cancel</button>
+        <button type="button" class="wsheet__apply" id="wsheet-apply">Update route</button>
       </div>
     </div>
   </div>
@@ -826,6 +847,6 @@
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
 {% include "_community_ui.html" %}
 {% include "_footprints_ui.html" %}
-<script src="/static/js/walk-planner.js?v=40" defer></script>
+<script src="/static/js/walk-planner.js?v=41" defer></script>
 <script src="/static/js/pulses.js?v=7" defer></script>
 {% endblock %}

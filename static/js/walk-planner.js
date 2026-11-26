@@ -53,6 +53,9 @@
   var saveBtn = document.getElementById('wsheet-save');
   var mapsLink = document.getElementById('wsheet-maps');
   var shareBtn = document.getElementById('wsheet-share');
+  var editBtn = document.getElementById('wsheet-edit');
+  var editBar = document.getElementById('wsheet-edit-actions');
+  var mainBar = sheet ? sheet.querySelector('.wsheet__actions:not(.wsheet__actions--edit)') : null;
   var drawBtn = document.getElementById('walkplan-draw');
   var clearBtn = document.getElementById('walkplan-clear');
   var areaChip = document.getElementById('walkplan-area');
@@ -1585,6 +1588,10 @@
   }
   function renderSheet() {
     if (!plan) return;
+    if (editing) { renderEdit(); return; }
+    if (editBtn) editBtn.hidden = !canReorder();
+    if (editBar) editBar.hidden = true;
+    if (mainBar) mainBar.hidden = false;
     sheetTitle.textContent = plan.title;
     sheetSub.textContent = plan.intro || (plan.stops.length + ' stops');
     sheetList.innerHTML = '';
@@ -1636,10 +1643,136 @@
     if (highlight >= 0 && items[highlight]) setTimeout(function () { items[highlight].scrollIntoView({ block: 'center' }); }, 250);
   }
   function closeSheet() {
+    editing = null;    // closing drops an unfinished reorder
     sheet.classList.remove('is-open');
     sheet.setAttribute('aria-hidden', 'true');
   }
   sheet.addEventListener('click', function (e) { if (e.target.closest('[data-wsheet-close]')) closeSheet(); });
+
+  // ── Reordering the stops ──────────────────────────────────────────────
+  // "Reorder" in the list: drag a stop by its handle (or use the arrows), then "Update route" re-draws the
+  // walk in that order. The reordered walk is a new walk: Save keeps it in your Routes, Share shares it.
+  var editing = null;   // the stops in their new order while reordering, or null
+  function canReorder() {
+    return !!plan && plan.stops.length >= 2 && !plan.navigate && !root.classList.contains('is-walking') &&
+      plan.stops.every(function (st) { return st.slug; });
+  }
+  var ICON_UP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>';
+  var ICON_DOWN = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+  var ICON_GRIP = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 8h14M5 12h14M5 16h14"/></svg>';
+  function moveStop(from, to, focusDir) {
+    if (to < 0 || to >= editing.length || to === from) return;
+    var st = editing.splice(from, 1)[0];
+    editing.splice(to, 0, st);
+    renderEdit();
+    var btn = sheetList.children[to] && sheetList.children[to].querySelector(focusDir < 0 ? '.wsheet__arrow--up' : '.wsheet__arrow--down');
+    if (btn && !btn.disabled) btn.focus();
+  }
+  function renumber() {
+    Array.prototype.forEach.call(sheetList.children, function (li, i) {
+      li.querySelector('.wsheet__num').textContent = String(i + 1);
+      li.querySelector('.wsheet__arrow--up').disabled = i === 0;
+      li.querySelector('.wsheet__arrow--down').disabled = i === sheetList.children.length - 1;
+    });
+  }
+  function renderEdit() {
+    sheetTitle.textContent = plan.title;
+    sheetSub.textContent = 'Drag the stops into the order you want, then tap Update route.';
+    if (editBtn) editBtn.hidden = true;
+    if (mainBar) mainBar.hidden = true;
+    if (editBar) editBar.hidden = false;
+    sheetList.innerHTML = '';
+    editing.forEach(function (st, i) {
+      var li = el('li', 'wsheet__stop is-edit');
+      li._stop = st;
+      var num = el('span', 'route-num wsheet__num', String(i + 1));
+      num.style.setProperty('--c', st.color || '#2f5e3a');
+      li.appendChild(num);
+      var body = el('div', 'wsheet__body');
+      body.appendChild(el('b', 'wsheet__name', st.name || 'Stop ' + (i + 1)));
+      if (st.category) body.appendChild(el('div', 'wsheet__meta', st.category));
+      li.appendChild(body);
+      var move = el('div', 'wsheet__move');
+      var up = el('button', 'wsheet__arrow wsheet__arrow--up');
+      up.type = 'button'; up.innerHTML = ICON_UP; up.setAttribute('aria-label', 'Move ' + (st.name || 'this stop') + ' earlier');
+      up.addEventListener('click', function () { moveStop(editing.indexOf(st), editing.indexOf(st) - 1, -1); });
+      var down = el('button', 'wsheet__arrow wsheet__arrow--down');
+      down.type = 'button'; down.innerHTML = ICON_DOWN; down.setAttribute('aria-label', 'Move ' + (st.name || 'this stop') + ' later');
+      down.addEventListener('click', function () { moveStop(editing.indexOf(st), editing.indexOf(st) + 1, 1); });
+      var grip = el('span', 'wsheet__grip');
+      grip.innerHTML = ICON_GRIP;
+      grip.setAttribute('aria-hidden', 'true');
+      dragWith(grip, li);
+      move.appendChild(up); move.appendChild(down); move.appendChild(grip);
+      li.appendChild(move);
+      sheetList.appendChild(li);
+    });
+    renumber();
+  }
+  // Drag by the handle: the stop follows your finger and the others make room as it passes their middle.
+  function dragWith(grip, li) {
+    var startY = 0, base = 0, id = null;
+    grip.addEventListener('pointerdown', function (e) {
+      e.preventDefault();
+      id = e.pointerId; startY = e.clientY; base = 0;
+      try { grip.setPointerCapture(id); } catch (err) {}
+      li.classList.add('is-dragging');
+    });
+    grip.addEventListener('pointermove', function (e) {
+      if (e.pointerId !== id) return;
+      var dy = e.clientY - startY;
+      li.style.transform = 'translateY(' + (dy - base) + 'px)';
+      var prev = li.previousElementSibling, next = li.nextElementSibling;
+      var r = li.getBoundingClientRect(), mid = r.top + r.height / 2;
+      if (next) {
+        var nr = next.getBoundingClientRect();
+        if (mid > nr.top + nr.height / 2) { var t0 = li.offsetTop; sheetList.insertBefore(next, li); base += li.offsetTop - t0; li.style.transform = 'translateY(' + (dy - base) + 'px)'; renumber(); return; }
+      }
+      if (prev) {
+        var pr = prev.getBoundingClientRect();
+        if (mid < pr.top + pr.height / 2) { var t1 = li.offsetTop; sheetList.insertBefore(li, prev); base += li.offsetTop - t1; li.style.transform = 'translateY(' + (dy - base) + 'px)'; renumber(); }
+      }
+    });
+    function end(e) {
+      if (e.pointerId !== id) return;
+      id = null;
+      li.classList.remove('is-dragging');
+      li.style.transform = '';
+      editing = Array.prototype.map.call(sheetList.children, function (x) { return x._stop; });
+      renumber();
+    }
+    grip.addEventListener('pointerup', end);
+    grip.addEventListener('pointercancel', end);
+  }
+  function startReorder() {
+    if (!canReorder()) return;
+    editing = plan.stops.slice();
+    renderEdit();
+  }
+  function applyReorder() {
+    if (!editing) return;
+    var next = editing, same = next.every(function (st, i) { return st === plan.stops[i]; });
+    editing = null;
+    if (same) { renderSheet(); return; }
+    var slugs = next.map(function (st) { return st.slug; });
+    plan.stops = next;
+    plan.key = ''; plan.share = ''; plan.sharing = null;
+    legs = durations = null;
+    saved = false;
+    var q = { s: slugs.join(','), t: plan.title };
+    plan.open = '/walk?' + new URLSearchParams(q).toString();
+    plan.map = directory + '/embed/route-map?' + new URLSearchParams({ s: q.s, t: q.t, style: 'mansfield', mode: 'story' }).toString();
+    try { history.replaceState(null, '', plan.open); } catch (e) {}
+    closeSheet();
+    loadMap(plan.map, 'walk');
+    renderSheet();
+    checkSaved();
+    say('Route updated: ' + next.map(function (st) { return st.name || 'a stop'; }).join(' → ') + '. Tap Save to keep this order.', true);
+  }
+  if (editBtn) editBtn.addEventListener('click', startReorder);
+  var cancelBtn = document.getElementById('wsheet-cancel'), applyBtn = document.getElementById('wsheet-apply');
+  if (cancelBtn) cancelBtn.addEventListener('click', function () { editing = null; renderSheet(); });
+  if (applyBtn) applyBtn.addEventListener('click', applyReorder);
   document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeSheet(); });
   listBtn.addEventListener('click', function () { openSheet(-1); });
 
