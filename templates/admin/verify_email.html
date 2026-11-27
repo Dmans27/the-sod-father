@@ -1,0 +1,45 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Email codes{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <h1>Email codes</h1>
+</div>
+<p class="admin-hint">
+  New readers get a 6-digit code by email after signing up (onboarding.py). Codes only reach everyone once Resend
+  sends from your own domain; with Resend's test sender (<code>@resend.dev</code>) they only reach your own Resend
+  account email, so verification stays off until then.
+</p>
+
+<div class="admin-card">
+  <h2 style="margin-top:0;">Status</h2>
+  <ul style="margin:0;padding-left:18px;line-height:1.9;">
+    <li>Resend key (<code>RESEND_API_KEY</code>): <strong>{{ 'set' if status.api_key else 'not set' }}</strong></li>
+    <li>Sending from (<code>NEWSLETTER_FROM</code>): <strong>{{ status.sender }}</strong>
+      {% if status.test_sender %}<span class="admin-row__badge" style="color:#7d2432;background:rgba(164,48,63,0.12);">Resend's test sender</span>{% endif %}</li>
+    <li>Codes can reach people: <strong>{{ 'yes' if status.can_send else 'no' }}</strong></li>
+    <li>Verified email required to post, rate and comment: <strong>{{ 'yes' if status.required else 'no' }}</strong>
+      {% if status.override %}(set by <code>REQUIRE_VERIFIED_EMAIL={{ status.override }}</code>){% endif %}</li>
+  </ul>
+  {% if not status.can_send %}
+  <p class="admin-hint" style="margin-bottom:0;"><strong>To switch it on:</strong> add your domain in Resend (Domains → Add domain),
+    put the records it shows into your domain's DNS, wait for "Verified", then set <code>NEWSLETTER_FROM</code> on Render to e.g.
+    <code>\\Mansfield &lt;hello@yourdomain.com&gt;</code>. This page will then say yes.</p>
+  {% endif %}
+</div>
+
+<div class="admin-card">
+  <h2 style="margin-top:0;">Send yourself a test</h2>
+  <form method="post" action="{{ url_for('onboarding.admin_verify_email_test') }}" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <label class="admin-field" style="flex:1;min-width:220px;margin:0;"><span>Email address</span>
+      <input type="email" name="to" required placeholder="you@example.com"></label>
+    <button type="submit" class="admin-btn admin-btn--primary">Send test email</button>
+  </form>
+</div>
+
+<div class="admin-card">
+  <h2 style="margin-top:0;">What the email looks like</h2>
+  <iframe title="Email preview" srcdoc="{{ preview }}" style="width:100%;max-width:520px;height:620px;border:1px solid #e3ded4;border-radius:14px;background:#f6f3ec;"></iframe>
+</div>
+{% endblock %}

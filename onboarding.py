@@ -32,7 +32,7 @@ import time
 from datetime import datetime, timezone
 from urllib.parse import quote
 
-from flask import Blueprint, jsonify, redirect, render_template, request, url_for
+from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 
 import db
 from content import CATEGORIES
@@ -143,17 +143,43 @@ def verify_block(reader, what="do that"):
     return jsonify(error=f"Please verify your email to {what}.", verify=True), 403
 
 
+def email_parts(code):
+    """(subject, html, text) for the code email: Matcha House colours, the code big and easy to copy.
+    Table layout and inline styles so it looks the same in Gmail, Outlook and Apple Mail."""
+    subject = f"{code} is your \\\\Mansfield code"
+    text = (f"Your \\\\Mansfield code is {code}\n\nEnter it in the app to confirm this is your email. "
+            f"It works for {VERIFY_MINUTES} minutes.\n\nIf you didn't create an account, you can ignore this email.")
+    digits = "".join(
+        f'<td style="width:44px;height:56px;padding:0 3px;">'
+        f'<div style="width:42px;height:54px;line-height:54px;border-radius:12px;background:#eef5e8;border:1px solid #d6e6c8;'
+        f'text-align:center;font:800 28px/54px -apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#1f4128;">{d}</div></td>'
+        for d in str(code))
+    html = f"""<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width">
+<meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><title>{subject}</title></head>
+<body style="margin:0;padding:0;background:#f6f3ec;">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;">Your code is {code}. It works for {VERIFY_MINUTES} minutes.</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f3ec;">
+<tr><td align="center" style="padding:32px 16px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:460px;">
+    <tr><td style="padding:0 6px 18px;font:700 22px Georgia,'Times New Roman',serif;color:#2f5e3a;">\\\\Mansfield</td></tr>
+    <tr><td style="background:#ffffff;border-radius:20px;padding:30px 26px;border:1px solid #ebe6dc;">
+      <p style="margin:0 0 6px;font:800 12px -apple-system,Segoe UI,Helvetica,Arial,sans-serif;letter-spacing:1.2px;text-transform:uppercase;color:#2f5e3a;">Confirm your email</p>
+      <h1 style="margin:0 0 14px;font:700 26px/1.2 Georgia,'Times New Roman',serif;color:#1f2522;">Here's your code</h1>
+      <p style="margin:0 0 22px;font:400 16px/1.5 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#4a524c;">Enter it in the app to confirm this is your email.</p>
+      <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 22px;"><tr>{digits}</tr></table>
+      <p style="margin:0;font:400 14px/1.5 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#6b736d;">It works for {VERIFY_MINUTES} minutes. If it runs out, tap <b style="color:#1f2522;">Send a new code</b> in the app.</p>
+    </td></tr>
+    <tr><td style="padding:18px 8px 0;font:400 12.5px/1.5 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#8a8f87;">
+      If you didn't create a \\\\Mansfield account, you can ignore this email. Nobody can sign in with this code alone.
+    </td></tr>
+  </table>
+</td></tr></table></body></html>"""
+    return subject, html, text
+
+
 def _email(to, code):
     import newsletter_send
-    subject = f"{code} is your \\\\Mansfield code"
-    text = (f"Your code is {code}\n\nEnter it in the app to confirm this is your email. "
-            f"It works for {VERIFY_MINUTES} minutes.\n\nIf you didn't create an account, you can ignore this email.")
-    html = (f"<div style=\"font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;max-width:440px;margin:0 auto;padding:24px;color:#1d2a22\">"
-            f"<p style=\"font-size:15px;margin:0 0 8px\">Your \\\\Mansfield code</p>"
-            f"<p style=\"font-size:38px;font-weight:800;letter-spacing:8px;margin:0 0 16px\">{code}</p>"
-            f"<p style=\"font-size:15px;line-height:1.5;margin:0 0 8px\">Enter it in the app to confirm this is your email. "
-            f"It works for {VERIFY_MINUTES} minutes.</p>"
-            f"<p style=\"font-size:13px;color:#6b746f;margin:16px 0 0\">If you didn't create an account, you can ignore this email.</p></div>")
+    subject, html, text = email_parts(code)
     if not newsletter_send.api_key():
         print(f"verify: (no RESEND_API_KEY) code for {to}: {code}", flush=True)
         return True
@@ -337,3 +363,45 @@ def welcome():
                            profile=get_profile(reader["id"]), email=reader["email"], name=reader["display_name"],
                            purposes=PURPOSES, interests=INTERESTS, walk_lengths=WALK_LENGTHS, avoid=AVOID,
                            categories=CATEGORIES, active_category=None)
+
+
+# ── Admin: is verification live, and what does the email look like ──────
+
+@onboarding_bp.get("/admin/verify-email")
+def admin_verify_email():
+    """The owner's check: whether codes can reach people, the sender, a preview of the email, and a test send."""
+    from admin import is_owner
+    if not is_owner():
+        return redirect(url_for("admin.login"))
+    import newsletter_send
+    from readers import csrf_token
+    status = {"api_key": bool(newsletter_send.api_key()), "sender": newsletter_send.from_address(),
+              "test_sender": newsletter_send.is_test_sender(), "can_send": can_send(), "required": required(),
+              "override": (os.environ.get("REQUIRE_VERIFIED_EMAIL") or "").strip()}
+    _subject, html, _text = email_parts("482913")
+    return render_template("admin/verify_email.html", status=status, preview=html, csrf=csrf_token())
+
+
+@onboarding_bp.post("/admin/verify-email/test")
+def admin_verify_email_test():
+    from admin import is_owner
+    from readers import _csrf_ok
+    if not is_owner() or not _csrf_ok():
+        abort(403)
+    import newsletter_send
+    to = (request.form.get("to") or "").strip()
+    if not re.match(r"^[^@\s]+@[^@\s]+\.[^@\s]+$", to):
+        flash("Enter the email address to send the test to.", "warning")
+        return redirect(url_for("onboarding.admin_verify_email"))
+    if not newsletter_send.api_key():
+        flash("RESEND_API_KEY isn't set on Render, so nothing can be sent yet.", "warning")
+        return redirect(url_for("onboarding.admin_verify_email"))
+    subject, html, text = email_parts("".join(secrets.choice("0123456789") for _ in range(CODE_DIGITS)))
+    try:
+        ok, err = newsletter_send.send_email(to, "Test: " + subject, html, text)
+    except Exception as exc:  # noqa: BLE001
+        ok, err = False, str(exc)
+    flash(f"Test email sent to {to}. Check the inbox (and the spam folder)." if ok else f"Resend said: {err}",
+          "success" if ok else "warning")
+    return redirect(url_for("onboarding.admin_verify_email"))
+

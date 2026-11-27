@@ -26,6 +26,42 @@
   .wel__code { width: 100%; box-sizing: border-box; padding: 16px; border: 1px solid rgba(27, 42, 31, 0.16); border-radius: 16px; background: #f3f4f3;
     font: 800 32px var(--font-sans); letter-spacing: 0.5em; text-align: center; color: var(--ink); }
   .wel__code:focus { outline: none; border-color: var(--fairway-deep); background: #fff; box-shadow: 0 0 0 3px rgba(31, 65, 40, 0.14); }
+  /* The code screen: an envelope, six boxes for the digits, and "Open Mail" on iPhone */
+  .wel__mail { position: relative; width: 64px; height: 64px; margin: 6px 0 16px; border-radius: 20px; background: rgba(47, 94, 58, 0.1);
+    display: flex; align-items: center; justify-content: center; }
+  .wel__mail svg { width: 36px; height: 36px; fill: none; stroke: var(--fairway); stroke-width: 2.6; stroke-linejoin: round; stroke-linecap: round; }
+  .wel__mail-dot { position: absolute; top: 10px; right: 10px; width: 12px; height: 12px; border-radius: 50%; background: #9cc77f; box-shadow: 0 0 0 3px #f6f3ec;
+    animation: wel-ping 1.8s ease-in-out infinite; }
+  @keyframes wel-ping { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.25); } }
+  .wel__otp { position: relative; display: flex; gap: 8px; justify-content: space-between; }
+  .wel__otp-box { flex: 1; max-width: 54px; height: 64px; box-sizing: border-box; display: flex; align-items: center; justify-content: center;
+    border: 1.5px solid rgba(27, 42, 31, 0.14); border-radius: 14px; background: #fff; font: 800 28px var(--font-sans); color: var(--ink);
+    transition: border-color 0.15s, box-shadow 0.15s, background 0.15s; }
+  .wel__otp-box.is-filled { background: #f1f6ec; border-color: rgba(47, 94, 58, 0.35); }
+  .wel__otp-box.is-active { border-color: var(--fairway); box-shadow: 0 0 0 3px rgba(47, 94, 58, 0.15); }
+  .wel__otp-box.is-active:empty::after { content: ""; width: 2px; height: 28px; background: var(--fairway); animation: wel-caret 1s steps(1) infinite; }
+  @keyframes wel-caret { 50% { opacity: 0; } }
+  .wel__otp.is-bad .wel__otp-box { border-color: #c2453a; background: #fdf1ef; }
+  .wel__otp.is-bad { animation: wel-shake 0.35s ease; }
+  @keyframes wel-shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+  .wel__otp.is-good .wel__otp-box { border-color: var(--fairway); background: var(--fairway); color: #f6f3ec; }
+  .wel__otp .wel__code { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: transparent; box-shadow: none;
+    color: transparent; caret-color: transparent; font-size: 16px; letter-spacing: 0; text-align: left; -webkit-text-fill-color: transparent; }
+  .wel__otp .wel__code::selection { background: transparent; }
+  .wel__otp .wel__code:focus { box-shadow: none; background: transparent; }
+  .wel__openmail { display: inline-flex; align-items: center; gap: 8px; align-self: flex-start; margin-top: 14px; padding: 9px 14px; border-radius: 999px;
+    background: rgba(47, 94, 58, 0.1); color: var(--fairway-deep); font: 800 14.5px var(--font-sans); text-decoration: none; }
+  .wel__openmail[hidden] { display: none; }
+  .wel__openmail svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linejoin: round; }
+  html.is-dark .wel__otp-box { background: #1c2023; border-color: rgba(255, 255, 255, 0.14); color: #e4e9e5; }
+  html.is-dark .wel__otp-box.is-filled { background: rgba(156, 199, 127, 0.1); border-color: rgba(156, 199, 127, 0.4); }
+  html.is-dark .wel__otp-box.is-active { border-color: #9cc77f; box-shadow: 0 0 0 3px rgba(156, 199, 127, 0.18); }
+  html.is-dark .wel__otp-box.is-active:empty::after { background: #9cc77f; }
+  html.is-dark .wel__otp.is-good .wel__otp-box { background: #9cc77f; border-color: #9cc77f; color: #131a15; }
+  html.is-dark .wel__mail { background: rgba(156, 199, 127, 0.12); }
+  html.is-dark .wel__mail svg { stroke: #9cc77f; }
+  html.is-dark .wel__mail-dot { box-shadow: 0 0 0 3px #141618; }
+  html.is-dark .wel__openmail { background: rgba(156, 199, 127, 0.14); color: #c4e0ae; }
   .wel__msg { min-height: 20px; margin: 10px 2px 0; font-size: 14.5px; color: var(--ink-soft); }
   .wel__msg.is-error { color: #a4303f; }
   .wel__links { display: flex; justify-content: space-between; gap: 10px; margin-top: 14px; }
@@ -118,10 +154,21 @@
 
   {# 1. Email code #}
   <section class="wel__step" data-step="verify">
+    <div class="wel__mail" aria-hidden="true">
+      <svg viewBox="0 0 48 48"><rect x="6" y="11" width="36" height="26" rx="5"/><path d="M8 14l16 12 16-12"/></svg>
+      <span class="wel__mail-dot"></span>
+    </div>
     <p class="wel__kicker">Welcome, {{ name }}</p>
     <h1 class="wel__h">Check your email</h1>
-    <p class="wel__sub">We sent a 6-digit code to <b>{{ email }}</b>. Enter it here to confirm it's you.</p>
-    <input class="wel__code" id="wel-code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="6" placeholder="······" aria-label="6-digit code">
+    <p class="wel__sub">We sent a 6-digit code to <b>{{ email }}</b>. Enter it below to confirm it's you.</p>
+    {# Six boxes; one real input sits on top of them (so paste and the phone's "from Mail" code suggestion work). #}
+    <div class="wel__otp" id="wel-otp">
+      {% for i in range(6) %}<span class="wel__otp-box"></span>{% endfor %}
+      <input class="wel__code" id="wel-code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="6" aria-label="6-digit code">
+    </div>
+    <a class="wel__openmail" id="wel-openmail" href="message://" hidden>
+      <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="3"/><path d="M4 7l8 6 8-6"/></svg>Open Mail
+    </a>
     <p class="wel__msg" id="wel-code-msg" role="status" aria-live="polite">{% if sent and 'sent' not in sent %}{{ sent }}{% endif %}</p>
     <div class="wel__links">
       <button type="button" class="wel__link" id="wel-resend">Send a new code</button>
@@ -336,7 +383,26 @@
     // ---- 1. Email code ----
     var code = document.getElementById('wel-code'), codeMsg = document.getElementById('wel-code-msg');
     var verifyBtn = document.getElementById('wel-verify'), resend = document.getElementById('wel-resend');
-    function say(text, bad) { codeMsg.textContent = text || ''; codeMsg.classList.toggle('is-error', !!bad); }
+    var otp = document.getElementById('wel-otp'), boxes = otp.querySelectorAll('.wel__otp-box');
+    function paint() {
+      var v = code.value, focused = document.activeElement === code;
+      Array.prototype.forEach.call(boxes, function (b, i) {
+        b.textContent = v[i] || '';
+        b.classList.toggle('is-filled', !!v[i]);
+        b.classList.toggle('is-active', focused && i === Math.min(v.length, 5));
+      });
+    }
+    function say(text, bad) {
+      codeMsg.textContent = text || ''; codeMsg.classList.toggle('is-error', !!bad);
+      if (bad) { otp.classList.remove('is-bad'); void otp.offsetWidth; otp.classList.add('is-bad'); }
+    }
+    code.addEventListener('focus', paint);
+    code.addEventListener('blur', paint);
+    otp.addEventListener('click', function () { code.focus(); });
+    // iPhone: a button that opens the Mail app, to fetch the code.
+    if (/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) {
+      document.getElementById('wel-openmail').hidden = false;
+    }
     function check() {
       var v = code.value.replace(/\D/g, '');
       if (v.length !== 6) { say('Enter the 6 digits from the email.', true); return; }
@@ -345,14 +411,17 @@
         verifyBtn.disabled = false;
         if (d.ok) {
           if (window.READER) window.READER.verified = true;
+          otp.classList.add('is-good'); code.blur();
           say('Email confirmed.');
           if (order.length === 1) { location.href = NEXT; return; }
           setTimeout(nextStep, 350);
-        } else { say(d.error || 'That didn’t work. Try again.', true); code.select(); }
+        } else { say(d.error || 'That didn’t work. Try again.', true); code.value = ''; paint(); code.focus(); }
       });
     }
     code.addEventListener('input', function () {
       code.value = code.value.replace(/\D/g, '').slice(0, 6);
+      otp.classList.remove('is-bad');
+      paint();
       if (code.value.length === 6) check();
     });
     verifyBtn.addEventListener('click', check);
@@ -370,7 +439,7 @@
       say('Sending…');
       post('/api/verify/send').then(function (d) {
         say(d.message || d.error || '', !d.ok);
-        if (d.ok) { code.value = ''; cooldown(45); }
+        if (d.ok) { code.value = ''; paint(); cooldown(45); }
       });
     });
     if (!VERIFIED) cooldown(45);
