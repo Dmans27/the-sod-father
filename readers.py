@@ -263,6 +263,9 @@ def login_submit():
 def logout():
     if _csrf_ok():
         session.pop("reader_id", None)
+        if request.form.get("push_token"):   # the app sends its token so this phone stops getting pings
+            import push
+            push.forget(request.form.get("push_token"))
     nxt = request.form.get("next") or "/"   # e.g. the walk map's account menu sends /walk
     return redirect(nxt if nxt.startswith("/") and not nxt.startswith("//") else "/")
 

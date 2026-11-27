@@ -1,6 +1,6 @@
 #!/bin/sh
 # Xcode Cloud runs this right after it clones the repo, before it resolves Swift packages.
-# The Capacitor plugins (haptics, preferences, share, splash-screen) are Swift packages that live in
+# The Capacitor plugins (haptics, preferences, share, splash-screen, geolocation, push-notifications) are Swift packages that live in
 # capacitor-app/node_modules, and the app's capacitor.config.json and public/ folder are made by
 # `cap sync` -- none of that is in git, so build them here: install Node, the npm packages, then sync.
 set -e

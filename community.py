@@ -402,6 +402,16 @@ def _live(walk_id):
     return db.query_one("SELECT id, reader_id FROM community_walks WHERE id = :id AND status = 'live'", id=walk_id)
 
 
+def _owner_page(reader_id):
+    """Their own profile page, where the walk they posted is listed."""
+    try:
+        import friends
+        h = friends.handle_of(reader_id)
+        return "/u/" + h if h else "/walk"
+    except Exception:  # noqa: BLE001
+        return "/walk"
+
+
 @community_bp.post("/api/community/walks/<walk_id>/like")
 @reader_required_json
 def like_walk(walk_id):
@@ -419,6 +429,12 @@ def like_walk(walk_id):
                        w=walk_id, r=reader["id"], t=db.now_iso())
         except IntegrityError:
             pass
+        else:
+            import push
+            w = db.query_one("SELECT title FROM community_walks WHERE id = :w", w=walk_id) or {}
+            push.notify(row["reader_id"], "Someone liked your walk",
+                        f"{reader['display_name']} liked “{w.get('title') or 'your walk'}”.",
+                        _owner_page(row["reader_id"]), key=f"like:{walk_id}:{reader['id']}")
     n = db.query_one("SELECT COUNT(*) AS n FROM community_likes WHERE walk_id = :w", w=walk_id)
     return jsonify(ok=True, liked=liked, likes=int((n or {}).get("n") or 0))
 

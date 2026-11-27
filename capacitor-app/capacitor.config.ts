@@ -18,6 +18,10 @@ const config: CapacitorConfig = {
     errorPath: 'offline.html'
   },
   plugins: {
+    // Notifications that arrive while the app is open still show as a banner (with sound).
+    PushNotifications: {
+      presentationOptions: ['badge', 'sound', 'alert']
+    },
     SplashScreen: {
       // launchAutoHide is OFF on purpose: Render's free tier can take 50s+
       // to wake up from a cold start, so a fixed timer would either hide

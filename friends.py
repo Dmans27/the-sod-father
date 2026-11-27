@@ -31,6 +31,7 @@ from flask import Blueprint, abort, jsonify, redirect, render_template, request,
 from sqlalchemy.exc import IntegrityError
 
 import db
+import push
 from content import CATEGORIES
 from readers import current_reader, reader_required_json
 
@@ -437,6 +438,8 @@ def api_request():
     now = db.now_iso()
     if state == "received":   # they asked first: this accepts it
         db.execute("UPDATE friendships SET status = 'accepted', updated_at = :t WHERE a_id = :a AND b_id = :b", t=now, a=a, b=b)
+        push.notify(t["id"], "You’re friends now", f"{reader['display_name']} accepted your friend request. Plan a walk together?",
+                    "/account/friends", key="friends:" + me)
         return jsonify(ok=True, state="friends")
     pending = db.query_one("SELECT COUNT(*) AS n FROM friendships WHERE status = 'pending' AND requested_by = :me", me=me)
     if int((pending or {}).get("n", 0)) >= MAX_PENDING_OUT:
@@ -446,6 +449,9 @@ def api_request():
                    "VALUES (:a, :b, 'pending', :me, :t, :t)", a=a, b=b, me=me, t=now)
     except IntegrityError:
         pass   # sent twice at once
+    else:
+        push.notify(t["id"], "New friend request", f"{reader['display_name']} wants to be friends on LocalLane.",
+                    "/account/friends", key="request:" + me)
     return jsonify(ok=True, state=state_with(me, t["id"]))
 
 
@@ -465,6 +471,8 @@ def api_respond():
             return blocked
         db.execute("UPDATE friendships SET status = 'accepted', updated_at = :t WHERE a_id = :a AND b_id = :b",
                    t=db.now_iso(), a=a, b=b)
+        push.notify(t["id"], "You’re friends now", f"{reader['display_name']} accepted your friend request. Plan a walk together?",
+                    "/account/friends", key="friends:" + me)
         return jsonify(ok=True, state="friends")
     db.execute("DELETE FROM friendships WHERE a_id = :a AND b_id = :b", a=a, b=b)
     return jsonify(ok=True, state="none")

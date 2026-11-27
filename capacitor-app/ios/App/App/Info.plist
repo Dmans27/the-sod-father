@@ -29,7 +29,7 @@
 	<key>NSCameraUsageDescription</key>
 	<string>LocalLane uses the camera when you record a short video to post to the map</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>LocalLane uses your location only while you follow a walking route, to show where you are and the way to the next stop.</string>
+	<string>LocalLane uses your location while you use the app to show where you are on the map, plan walks near you and guide you to the next stop.</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>LocalLane uses the microphone when you describe a walk you want to plan, and to record sound in videos you post to the map</string>
 	<key>NSPhotoLibraryUsageDescription</key>

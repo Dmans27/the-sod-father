@@ -26,6 +26,7 @@ from flask import Blueprint, jsonify, request
 from sqlalchemy.exc import IntegrityError
 
 import db
+import push
 import friends as fr
 from readers import current_reader, reader_required_json
 
@@ -147,6 +148,8 @@ def _add_members(map_id, adder, handles):
     """Adds the adder's friends from `handles`. Returns (added names, error or None)."""
     count = int((db.query_one("SELECT COUNT(*) AS n FROM group_map_members WHERE map_id = :m", m=map_id) or {}).get("n") or 0)
     added = []
+    info = db.query_one("SELECT g.title, r.display_name FROM group_maps g, readers r WHERE g.id = :m AND r.id = :b",
+                        m=map_id, b=adder) or {}
     for h in list(dict.fromkeys(handles or []))[:MAX_MEMBERS]:
         t = fr.reader_by_handle(h)
         if not t or t["id"] == adder or _member(map_id, t["id"]):
@@ -160,6 +163,9 @@ def _add_members(map_id, adder, handles):
                        m=map_id, r=t["id"], b=adder, t=db.now_iso())
             count += 1
             added.append(t["display_name"])
+            push.notify(t["id"], "You’re on a new map",
+                        f"{info.get('display_name') or 'A friend'} added you to “{info.get('title') or 'a group map'}”.",
+                        "/walk?group=" + map_id, key="group:" + map_id)
         except IntegrityError:
             pass
     return added, None

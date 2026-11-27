@@ -37,7 +37,8 @@
     // reader never sees a white flash on load (the menu toggle sets this).
     try { if (localStorage.getItem('sf-theme') === 'dark') document.documentElement.classList.add('is-dark'); } catch (e) {}
   </script>
-  <link rel="stylesheet" href="/static/css/style.css?v=25">
+  <link rel="stylesheet" href="/static/css/style.css?v=26">
+  <script src="/static/js/native-geo.js?v=1"></script>{# the app: location from iOS itself (no defer: before the map scripts run) #}
   <link rel="alternate" type="application/rss+xml" title="LocalLane" href="/feed.xml">
   {# Link previews + search results. Pages override the `seo` block (stories do);
      everything else gets these site-wide defaults. #}
@@ -238,7 +239,7 @@
     window.MAP_HOSTS = {{ map_embed_hosts()|tojson }};
   </script>
   <script src="/static/js/actions.js?v=11"></script>
-  <script src="/static/js/native.js?v=3" defer></script>
+  <script src="/static/js/native.js?v=4" defer></script>
   <script src="/static/js/map-list.js?v=6" defer></script>
   <script src="/static/js/map-story.js?v=14" defer></script>
   <script src="/static/js/places.js?v=2" defer></script>

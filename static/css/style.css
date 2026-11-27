@@ -3076,3 +3076,18 @@ html .article-sheet .article-sheet__hero--top + .article-sheet__header { padding
   input[type="text"], input[type="search"], input[type="email"], input[type="password"], input[type="url"],
   input[type="tel"], input[type="number"], input:not([type]), textarea, select { font-size: 16px !important; }
 }
+
+/* ── Notifications in the iOS app (static/js/native.js) ── */
+.account-details__row[hidden] { display: none; }
+.push-row__on { margin-right: 10px; color: #1b7f55; font-weight: 700; }
+.push-row__btn { padding: 0; border: 0; background: none; color: var(--fairway-deep); font: 700 16px var(--font-sans); cursor: pointer; }
+.push-card { position: fixed; z-index: 60; left: 12px; right: 12px; bottom: calc(env(safe-area-inset-bottom, 0px) + 84px);
+  max-width: 440px; margin: 0 auto; padding: 18px 18px 14px; border-radius: 20px; background: #fff; color: #1f2522;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.22); animation: push-card-in 0.25s ease-out; }
+.push-card__t { margin: 0 0 4px; font: 800 18px/1.25 var(--font-serif); }
+.push-card__s { margin: 0 0 14px; font-size: 14.5px; line-height: 1.45; color: rgba(31, 37, 34, 0.7); }
+.push-card__row { display: flex; gap: 10px; }
+.push-card__row button { flex: 1; padding: 12px; border-radius: 12px; font: 700 15px var(--font-sans); cursor: pointer; }
+.push-card__no { border: 1px solid rgba(47, 94, 58, 0.25); background: #fff; color: #2f5e3a; }
+.push-card__yes { border: 0; background: #2f5e3a; color: #fff; }
+@keyframes push-card-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
