@@ -85,7 +85,7 @@ STYLES = {
         "'!takeaways' box"),
 }
 
-DRAFT_SYSTEM = """You turn a transcript or rough notes into a story draft for \\\\Mansfield, a site written by Daniel Mansfield (an IT helpdesk specialist who writes about IT, cooking, travel, golf and life).
+DRAFT_SYSTEM = """You turn a transcript or rough notes into a story draft for LocalLane, a site written by Daniel Mansfield (an IT helpdesk specialist who writes about IT, cooking, travel, golf and life).
 
 Write {style}.
 
@@ -138,7 +138,7 @@ def draft_from_transcript(transcript, style="study"):
 
 # ── Title, summary and category suggestions ──────────────────────────────
 
-SUGGEST_SYSTEM = """You help Daniel Mansfield title his stories for \\\\Mansfield (IT, cooking, travel, golf and life).
+SUGGEST_SYSTEM = """You help Daniel Mansfield title his stories for LocalLane (IT, cooking, travel, golf and life).
 
 From the story text, reply with a JSON object with exactly these keys:
   "titles": three different titles, each under 70 characters. Specific and honest about what is in the story. No clickbait, no ALL CAPS, no emoji, no colon-heavy formulas for all three.

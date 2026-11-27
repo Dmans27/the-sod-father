@@ -226,7 +226,7 @@
     menu.querySelector('.share-menu__title').textContent = title;
     menu.querySelector('#share-email').href =
       'mailto:?subject=' + encodeURIComponent(title) +
-      '&body=' + encodeURIComponent('I thought you’d like this ' + what + ' from \\\\Mansfield:\n\n' + title + '\n' + url);
+      '&body=' + encodeURIComponent('I thought you’d like this ' + what + ' from LocalLane:\n\n' + title + '\n' + url);
 
     var copy = menu.querySelector('#share-copy');
     copy.querySelector('span').textContent = 'Copy link';
@@ -646,7 +646,7 @@
     var story = btn.closest('.article-sheet__inner, .article');
     var h = story && story.querySelector('h1');
     var name = h ? h.textContent.replace(/\s+/g, ' ').trim() : '';
-    return name ? 'Map from \u201C' + name + '\u201D' : 'A map from \\\\Mansfield';
+    return name ? 'Map from \u201C' + name + '\u201D' : 'A map from LocalLane';
   }
 
   // The map's own full-screen button is missing where the device has no full

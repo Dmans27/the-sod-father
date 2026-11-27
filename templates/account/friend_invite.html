@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}{% if target %}{{ target.name }}{% else %}Not found{% endif %} — \\Mansfield{% endblock %}
+{% block title %}{% if target %}{{ target.name }}{% else %}Not found{% endif %} — LocalLane{% endblock %}
 
 {# /u/<handle> (friends.py): someone's profile -- a map of the cities they've been to, their recent walks
    and favourite places (profiles.py) -- for their friends, for themselves (with the controls to hide a walk,
@@ -20,7 +20,7 @@
 
   <div class="up__acts">
     {% if not reader %}
-      <p class="up__sub">{{ first }} wants to plan walks with you on \\Mansfield.</p>
+      <p class="up__sub">{{ first }} wants to plan walks with you on LocalLane.</p>
       <a class="account-btn up__btn" href="/account/signup?next=/u/{{ target.handle }}">Create an account to add {{ first }}</a>
       <a class="account-btn account-btn--ghost up__btn" href="/account/login?next=/u/{{ target.handle }}">I have an account</a>
     {% elif state == 'self' %}

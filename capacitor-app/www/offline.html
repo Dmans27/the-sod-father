@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Mansfield — offline</title>
+<title>LocalLane — offline</title>
 <style>
   :root { --bg:#faf6ec; --ink:#2b362f; --soft:rgba(43,54,47,.72); --faint:rgba(43,54,47,.55); --line:rgba(27,42,31,.14); --green:#1b4332; --gold:#b8860b; --card:#fff; }
   @media (prefers-color-scheme: dark) {
@@ -15,7 +15,7 @@
          padding: calc(env(safe-area-inset-top) + 20px) 20px calc(env(safe-area-inset-bottom) + 40px); }
   main { max-width: 680px; margin: 0 auto; }
   .brand { font-weight:700; font-size:30px; letter-spacing:-.015em; color:var(--green); margin:0 0 4px; }
-  .brand span { color:var(--gold); }
+  .brand span { color:#5e9a4c; }
   h1 { font-size:22px; margin:26px 0 6px; line-height:1.25; }
   .sub { margin:0 0 20px; color:var(--soft); font:15px/1.5 -apple-system, "IBM Plex Sans", sans-serif; }
   button { font:700 15px -apple-system, "IBM Plex Sans", sans-serif; border-radius:10px; padding:12px 18px; cursor:pointer; border:1px solid var(--green); }
@@ -74,7 +74,7 @@
   function add(parent) { for (var i = 1; i < arguments.length; i++) if (arguments[i]) parent.appendChild(arguments[i]); return parent; }
 
   function brand() {
-    var b = el('p', 'brand'); b.appendChild(el('span', '', '\\\\')); b.appendChild(document.createTextNode('Mansfield')); return b;
+    var b = el('p', 'brand'); b.appendChild(document.createTextNode('Local')); b.appendChild(el('span', '', 'Lane')); return b;
   }
   function retryButton(label, primary) {
     var b = el('button', primary ? 'primary' : 'ghost', label);
@@ -97,7 +97,7 @@
   function showHome() {
     app.textContent = '';
     add(app, brand(), el('h1', '', 'You’re offline'),
-      el('p', 'sub', 'We can’t reach \\\\Mansfield right now. Check your connection and try again.'),
+      el('p', 'sub', 'We can’t reach LocalLane right now. Check your connection and try again.'),
       retryButton('Try again', true));
     getIndex().then(function (idx) {
       if (!idx.length) {

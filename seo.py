@@ -34,7 +34,7 @@ from content import CATEGORIES, get_article, get_articles
 
 seo_bp = Blueprint("seo", __name__)
 
-SITE_NAME = "\\\\Mansfield"
+SITE_NAME = "LocalLane"
 TAGLINE = "Stories on IT, cooking, travel, golf and everyday life, by Daniel Mansfield."
 FEED_LIMIT = 30
 
@@ -236,8 +236,8 @@ def _card(title, kicker):
     d.rectangle([0, 0, w, 14], fill="#1b4332")
     d.rectangle([0, h - 14, w, h], fill="#1b4332")
     brand = _font(64)
-    d.text((72, 56), "\\\\", font=brand, fill="#b8860b")
-    d.text((72 + d.textlength("\\\\", font=brand), 56), "Mansfield", font=brand, fill="#111111")
+    d.text((72, 56), "Local", font=brand, fill="#111111")
+    d.text((72 + d.textlength("Local", font=brand), 56), "Lane", font=brand, fill="#5e9a4c")
     if kicker:
         d.text((72, 190), kicker.upper(), font=_font(28), fill="#2d6a4f")
     size = 78 if len(title) < 50 else 62

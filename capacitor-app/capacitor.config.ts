@@ -6,7 +6,7 @@ import type { CapacitorConfig } from '@capacitor/cli';
 // requires one to be configured -- it's never actually shown.
 const config: CapacitorConfig = {
   appId: 'com.mansfield.app',
-  appName: 'Mansfield',
+  appName: 'LocalLane',
   webDir: 'www',
   server: {
     url: 'https://the-sod-father.onrender.com',

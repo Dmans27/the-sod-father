@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>Mansfield</string>
+	<string>LocalLane</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -27,13 +27,13 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>Mansfield uses the camera when you record a short video to post to the map</string>
+	<string>LocalLane uses the camera when you record a short video to post to the map</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Mansfield uses your location only while you follow a walking route, to show where you are and the way to the next stop.</string>
+	<string>LocalLane uses your location only while you follow a walking route, to show where you are and the way to the next stop.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Mansfield uses the microphone when you describe a walk you want to plan, and to record sound in videos you post to the map</string>
+	<string>LocalLane uses the microphone when you describe a walk you want to plan, and to record sound in videos you post to the map</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Mansfield opens your photo library when you choose videos to post to the map.</string>
+	<string>LocalLane opens your photo library when you choose videos to post to the map.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

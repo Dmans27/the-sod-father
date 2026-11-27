@@ -1,12 +1,12 @@
 {% extends "base.html" %}
-{% block title %}{% if shared %}{{ shared.title }} — \\Mansfield{% else %}Plan a walk — \\Mansfield{% endif %}{% endblock %}
+{% block title %}{% if shared %}{{ shared.title }} — LocalLane{% else %}Plan a walk — LocalLane{% endif %}{% endblock %}
 {% block body_class %}walk-page{% endblock %}
 {# A shared walk (/w/<code>): the link preview says what the walk is. #}
 {% block seo %}{% if shared %}
   <meta name="description" content="{{ shared.description }}">
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="\\Mansfield">
-  <meta property="og:title" content="{{ shared.title }} · a walk on \\Mansfield">
+  <meta property="og:site_name" content="LocalLane">
+  <meta property="og:title" content="{{ shared.title }} · a walk on LocalLane">
   <meta property="og:description" content="{{ shared.description }}">
   <meta property="og:url" content="{{ site_base() }}/w/{{ shared.code }}">
   <meta property="og:image" content="{{ site_base() }}/og/default.png">

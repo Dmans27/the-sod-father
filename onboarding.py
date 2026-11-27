@@ -146,8 +146,8 @@ def verify_block(reader, what="do that"):
 def email_parts(code):
     """(subject, html, text) for the code email: Matcha House colours, the code big and easy to copy.
     Table layout and inline styles so it looks the same in Gmail, Outlook and Apple Mail."""
-    subject = f"{code} is your \\\\Mansfield code"
-    text = (f"Your \\\\Mansfield code is {code}\n\nEnter it in the app to confirm this is your email. "
+    subject = f"{code} is your LocalLane code"
+    text = (f"Your LocalLane code is {code}\n\nEnter it in the app to confirm this is your email. "
             f"It works for {VERIFY_MINUTES} minutes.\n\nIf you didn't create an account, you can ignore this email.")
     digits = "".join(
         f'<td style="width:44px;height:56px;padding:0 3px;">'
@@ -161,7 +161,7 @@ def email_parts(code):
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f6f3ec;">
 <tr><td align="center" style="padding:32px 16px;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:460px;">
-    <tr><td style="padding:0 6px 18px;font:700 22px Georgia,'Times New Roman',serif;color:#2f5e3a;">\\\\Mansfield</td></tr>
+    <tr><td style="padding:0 6px 18px;font:700 22px Georgia,'Times New Roman',serif;color:#2f5e3a;">Local<span style="color:#5e9a4c;">Lane</span></td></tr>
     <tr><td style="background:#ffffff;border-radius:20px;padding:30px 26px;border:1px solid #ebe6dc;">
       <p style="margin:0 0 6px;font:800 12px -apple-system,Segoe UI,Helvetica,Arial,sans-serif;letter-spacing:1.2px;text-transform:uppercase;color:#2f5e3a;">Confirm your email</p>
       <h1 style="margin:0 0 14px;font:700 26px/1.2 Georgia,'Times New Roman',serif;color:#1f2522;">Here's your code</h1>
@@ -170,7 +170,7 @@ def email_parts(code):
       <p style="margin:0;font:400 14px/1.5 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#6b736d;">It works for {VERIFY_MINUTES} minutes. If it runs out, tap <b style="color:#1f2522;">Send a new code</b> in the app.</p>
     </td></tr>
     <tr><td style="padding:18px 8px 0;font:400 12.5px/1.5 -apple-system,Segoe UI,Helvetica,Arial,sans-serif;color:#8a8f87;">
-      If you didn't create a \\\\Mansfield account, you can ignore this email. Nobody can sign in with this code alone.
+      If you didn't create a LocalLane account, you can ignore this email. Nobody can sign in with this code alone.
     </td></tr>
   </table>
 </td></tr></table></body></html>"""

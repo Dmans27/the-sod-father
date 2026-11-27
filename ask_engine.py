@@ -1,5 +1,5 @@
 """
-Ask \\\\Mansfield -- answers a reader's question from the published articles.
+Ask LocalLane -- answers a reader's question from the published articles.
 
 Ported from the IT-KB app's RAG engine (rag_engine.py), with the same recipe:
 
@@ -400,7 +400,7 @@ def _latest(limit=3):
 
 
 SYSTEM_PROMPT = (
-    "You answer questions for readers of \\\\Mansfield, a publication about IT, cooking, travel, "
+    "You answer questions for readers of LocalLane, a publication about IT, cooking, travel, "
     "golf and life, written by Daniel Mansfield. "
     "Answer using ONLY the article excerpts below. If the excerpts do not clearly answer the "
     "question, reply with exactly NO_ANSWER and nothing else. "

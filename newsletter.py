@@ -1,5 +1,5 @@
 """
-Newsletter signup for \\\\Mansfield.
+Newsletter signup for LocalLane.
 
 Collects a name, profession and email from the footer form, the /newsletter
 page and the timed pop-up, and stores them in the same database as reader

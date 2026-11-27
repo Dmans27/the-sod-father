@@ -1332,7 +1332,7 @@
     acct.querySelector('[data-invite]').addEventListener('click', function () {
       var handle = this.getAttribute('data-invite') || '';
       var url = window.location.origin + (handle ? '/u/' + encodeURIComponent(handle) : '/walk');
-      var text = handle ? 'Add me on \\\\Mansfield and let’s plan a walk together' : 'Plan walks around Vienna with me on \\\\Mansfield';
+      var text = handle ? 'Add me on LocalLane and let’s plan a walk together' : 'Plan walks around Vienna with me on LocalLane';
       if (window.MansfieldNative && window.MansfieldNative.share && window.MansfieldNative.share(url, text)) return;
       if (navigator.share) { navigator.share({ title: text, text: text, url: url }).catch(function () {}); return; }
       try {

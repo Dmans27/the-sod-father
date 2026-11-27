@@ -22,7 +22,7 @@
       } catch (e) {}
     })();
   </script>
-  <title>{% block title %}\\Mansfield{% endblock %}</title>
+  <title>{% block title %}LocalLane{% endblock %}</title>
   <!-- Source Serif 4 for headlines (an editorial serif with real warmth,
        standing in for Georgia, also used for article body text), IBM Plex Sans
        for UI and bylines, and IBM Plex Mono for the small uppercase labels --
@@ -37,15 +37,15 @@
     // reader never sees a white flash on load (the menu toggle sets this).
     try { if (localStorage.getItem('sf-theme') === 'dark') document.documentElement.classList.add('is-dark'); } catch (e) {}
   </script>
-  <link rel="stylesheet" href="/static/css/style.css?v=24">
-  <link rel="alternate" type="application/rss+xml" title="\\Mansfield" href="/feed.xml">
+  <link rel="stylesheet" href="/static/css/style.css?v=25">
+  <link rel="alternate" type="application/rss+xml" title="LocalLane" href="/feed.xml">
   {# Link previews + search results. Pages override the `seo` block (stories do);
      everything else gets these site-wide defaults. #}
   {% block seo %}
   <meta name="description" content="{{ site_tagline }}">
   <link rel="canonical" href="{{ site_base() }}{{ request.path }}">
   <meta property="og:type" content="website">
-  <meta property="og:site_name" content="\\Mansfield">
+  <meta property="og:site_name" content="LocalLane">
   <meta property="og:title" content="{{ self.title() }}">
   <meta property="og:description" content="{{ site_tagline }}">
   <meta property="og:url" content="{{ site_base() }}{{ request.path }}">
@@ -92,12 +92,12 @@
     </defs>
   </svg>
 
-  {# Pages with their own top bar (the stories page's city search) drop the \\Mansfield wordmark:
+  {# Pages with their own top bar (the stories page's city search) drop the LocalLane wordmark:
      on phones the brand row goes entirely and the search bar sits at the top. #}
   <header class="site-header{% if self.header_bar() | trim %} has-bar{% endif %}">
     <div class="site-header__inner">
       <a href="/" class="site-brand">
-        <span class="site-brand__text"><span class="site-brand__slashes">\\</span>Mansfield</span>
+        <span class="site-brand__text">Local<span class="brand-lane">Lane</span></span>
       </a>
       {# Avatar at the right of the bar. Signed in: your photo (or initial).
          Signed out: a default silhouette that opens Sign in / Create account. #}
@@ -187,7 +187,7 @@
       <p class="footer-newsletter__more"><a href="/newsletter">Tell us a bit about you &rarr;</a></p>
     </form>
     {% endif %}
-    <p>\\Mansfield &mdash; a fun side project, not a real publication (yet).</p>
+    <p>LocalLane &mdash; a fun side project, not a real publication (yet).</p>
     <nav class="footer-legal" aria-label="About and legal">
       <a href="/privacy">Privacy</a>
       <a href="/terms">Terms</a>
@@ -434,7 +434,7 @@
         if (block.type === 'link') {
           var external = block.kind === 'web';
           return '<a class="link-card" href="' + esc(block.href) + '"' + (external ? ' target="_blank" rel="noopener noreferrer"' : '') + '>' +
-            '<div class="link-card__body"><span class="link-card__kicker">' + esc(block.host || 'More from \\\\Mansfield') + '</span>' +
+            '<div class="link-card__body"><span class="link-card__kicker">' + esc(block.host || 'More from LocalLane') + '</span>' +
             '<h3 class="link-card__title">' + esc(block.title) + '</h3>' +
             (block.description ? '<p class="link-card__desc">' + esc(block.description) + '</p>' : '') +
             '<span class="link-card__cta">' + esc(block.label || 'Read the story') + ' &rarr;</span></div>' +
@@ -516,7 +516,7 @@
             '</div>' +
             authorCardAvatar +
             '<div class="article__author-card-masthead">' +
-              '<span class="article__author-card-masthead-brand">\\\\Mansfield</span>' +
+              '<span class="article__author-card-masthead-brand">Local<span class="brand-lane">Lane</span></span>' +
               authorCardPosition +
             '</div>' +
           '</div>';

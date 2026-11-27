@@ -86,6 +86,9 @@ a { color: inherit; }
 @media (min-width: 700px) { .site-brand { font-size: 44px; } }
 .site-brand__mark { font-size: 20px; flex-shrink: 0; }
 .site-brand__slashes { color: var(--gold, #b8860b); margin-right: 0.02em; }
+/* LocalLane wordmark: "Lane" in matcha (deeper on light, true matcha on dark) */
+.brand-lane { color: #5e9a4c; }
+.is-dark .brand-lane, .admin-header .brand-lane { color: #9cc77f; }
 .site-brand__text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 /* Pages with their own top bar (the stories page's city search, base.html adds .has-bar):
    no wordmark. On phones the whole brand row goes (the ask button and avatar are hidden

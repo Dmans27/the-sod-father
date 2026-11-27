@@ -1,4 +1,4 @@
-# Mansfield — iOS wrapper
+# LocalLane — iOS wrapper
 
 A thin Capacitor shell that loads the live site (https://the-sod-father.onrender.com)
 directly -- no local web assets are bundled, same pattern as the Dony and
@@ -17,7 +17,7 @@ open the `.xcodeproj` directly and Xcode resolves the Capacitor packages
 automatically the first time it builds.
 
 - **Bundle ID:** com.mansfield.app
-- **Display name:** Mansfield
+- **Display name:** LocalLane
 
 ## After changing the Render URL or app config
 

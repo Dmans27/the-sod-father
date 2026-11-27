@@ -1,5 +1,5 @@
 {% extends "base.html" %}
-{% block title %}Friends — \\Mansfield{% endblock %}
+{% block title %}Friends — LocalLane{% endblock %}
 
 {# Friends (friends.py): your @handle and invite link/QR, search, requests, your friends,
    and the group maps you plan with them (group_maps.py, opened on the walk page). #}
@@ -270,7 +270,7 @@
     // ---- Invite link + QR ----
     var smsg = document.getElementById('fr-share-msg');
     document.getElementById('fr-share').addEventListener('click', function () {
-      var title = 'Add me on \\Mansfield';
+      var title = 'Add me on LocalLane';
       if (window.MansfieldNative && window.MansfieldNative.share && window.MansfieldNative.share(INVITE, title)) return;
       if (navigator.share) { navigator.share({ title: title, url: INVITE }).catch(function () {}); return; }
       try { navigator.clipboard.writeText(INVITE).then(function () { smsg.textContent = 'Link copied. Paste it in a message to a friend.'; }, function () { smsg.textContent = INVITE; }); }

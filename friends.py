@@ -37,7 +37,7 @@ from readers import current_reader, reader_required_json
 friends_bp = Blueprint("friends", __name__)
 
 HANDLE_RE = re.compile(r"^[a-z0-9][a-z0-9_.]{1,18}[a-z0-9_]$")   # 3-20 characters
-RESERVED = {"admin", "administrator", "mansfield", "support", "help", "root", "me", "api", "walk", "walks", "account",
+RESERVED = {"admin", "administrator", "mansfield", "locallane", "support", "help", "root", "me", "api", "walk", "walks", "account",
             "settings", "friends", "staff", "official", "team", "null", "undefined", "owner", "mod", "moderator"}
 MAX_PENDING_OUT = 100
 SEARCH_LIMIT = int(os.environ.get("FRIEND_SEARCH_LIMIT", "300"))   # per reader per day

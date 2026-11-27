@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "_actions.html" import story_actions %}
-{% block title %}\\Mansfield{% if active_category %} — {{ categories[active_category].label }}{% if active_sub %} · {{ categories[active_category].subcategories[active_sub] }}{% endif %}{% endif %}{% endblock %}
+{% block title %}LocalLane{% if active_category %} — {{ categories[active_category].label }}{% if active_sub %} · {{ categories[active_category].subcategories[active_sub] }}{% endif %}{% endif %}{% endblock %}
 
 {% block body_class %}feed-page{% endblock %}
 {% block header_bar %}{% include "_citybar.html" %}{% endblock %}

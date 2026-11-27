@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% from "_actions.html" import story_actions %}
-{% block title %}{{ article.title }} — \\Mansfield{% endblock %}
+{% block title %}{{ article.title }} — LocalLane{% endblock %}
 
 {# Link previews: when someone shares this page by email or text, these
    tags are what the preview card (title, blurb, picture) is built from. #}
@@ -9,7 +9,7 @@
   <meta name="description" content="{{ article.dek }}">
   <link rel="canonical" href="{{ url }}">
   <meta property="og:type" content="article">
-  <meta property="og:site_name" content="\\Mansfield">
+  <meta property="og:site_name" content="LocalLane">
   <meta property="og:title" content="{{ article.title }}">
   <meta property="og:description" content="{{ article.dek }}">
   <meta property="og:url" content="{{ url }}">
@@ -26,7 +26,7 @@
     "image": [share_image(article)],
     "datePublished": article.published_at,
     "author": {"@type": "Person", "name": article.author},
-    "publisher": {"@type": "Organization", "name": "\\\\Mansfield"},
+    "publisher": {"@type": "Organization", "name": "LocalLane"},
     "mainEntityOfPage": url
   }|tojson }}</script>
 {% endblock %}
@@ -87,7 +87,7 @@
       </div>
       {% if article.author_photo %}<img class="article__author-card-avatar" src="{{ article.author_photo }}" alt="">{% endif %}
       <div class="article__author-card-masthead">
-        <span class="article__author-card-masthead-brand">\\Mansfield</span>
+        <span class="article__author-card-masthead-brand">Local<span class="brand-lane">Lane</span></span>
         {% if article.author_position %}<span class="article__author-card-masthead-position">{{ article.author_position }}</span>{% endif %}
       </div>
     </div>
@@ -234,7 +234,7 @@
           {% elif block.type == 'link' %}
             <a class="link-card" href="{{ block.href }}"{% if block.kind == 'web' %} target="_blank" rel="noopener noreferrer"{% endif %}>
               <div class="link-card__body">
-                <span class="link-card__kicker">{{ block.host or 'More from \\\\Mansfield' }}</span>
+                <span class="link-card__kicker">{{ block.host or 'More from LocalLane' }}</span>
                 <h3 class="link-card__title">{{ block.title }}</h3>
                 {% if block.description %}<p class="link-card__desc">{{ block.description }}</p>{% endif %}
                 <span class="link-card__cta">{{ block.label or 'Read the story' }} &rarr;</span>
@@ -267,7 +267,7 @@
       </div>
       {% if article.author_photo %}<img class="article__author-card-avatar" src="{{ article.author_photo }}" alt="">{% endif %}
       <div class="article__author-card-masthead">
-        <span class="article__author-card-masthead-brand">\\Mansfield</span>
+        <span class="article__author-card-masthead-brand">Local<span class="brand-lane">Lane</span></span>
         {% if article.author_position %}<span class="article__author-card-masthead-position">{{ article.author_position }}</span>{% endif %}
       </div>
     </div>
