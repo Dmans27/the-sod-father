@@ -113,7 +113,13 @@
   var saved = false;
   var view = null;          // what the map shows: {center: [lng, lat], radius, zoom}
   var circle = null;        // the area the reader drew: {center: [lng, lat], radius, polygon: [[lng, lat], ...]}
-  var START = { center: [16.3713, 48.2082], zoom: 13.5 };   // Vienna, until the reader moves the map
+  // A hotel's guest guide (/h/<slug>, hotels.py): the map starts at the hotel, links stay on the hotel's
+  // address, and guests can plan walks without an account (saving and sharing still need one).
+  var HOTEL = window.HOTEL || null;
+  var HOME = HOTEL ? HOTEL.home : '/walk';
+  function homePath(path) { return String(path || '').replace(/^\/walk(?=[?#]|$)/, HOME); }
+  var START = HOTEL ? { center: [Number(HOTEL.lng), Number(HOTEL.lat)], zoom: 15 }
+                    : { center: [16.3713, 48.2082], zoom: 13.5 };   // Vienna, until the reader moves the map
 
   function el(tag, cls, text) {
     var n = document.createElement(tag);
@@ -210,7 +216,7 @@
   var meCentered = false, movedByHand = false, mapLoaded = false;
   function centerOnMe() {
     // mapLoaded: the map page has finished loading (a message sent before that is lost).
-    if (meCentered || !meLast || !mapLoaded || plan || circle || movedByHand || !root.classList.contains('is-exploring')) return;
+    if (HOTEL || meCentered || !meLast || !mapLoaded || plan || circle || movedByHand || !root.classList.contains('is-exploring')) return;   // a hotel guide stays at the hotel
     meCentered = true;
     var at = { type: 'mansfield:center', lng: meLast.lng, lat: meLast.lat };
     post(at);
@@ -313,6 +319,7 @@
 
   function needsSignIn(btn) {
     if (READER.signedIn) return false;
+    if (HOTEL && btn !== saveBtn) return false;   // hotel guests can plan and speak walks without an account
     if (window.MansfieldSignIn) window.MansfieldSignIn(btn, { title: 'Sign in to plan a walk', sub: 'Planning walks with AI is for readers with an account.' });
     else location.href = '/account/login?next=/walk';
     return true;
@@ -371,7 +378,7 @@
              stops: d.stops || [], key: d.key || '', map: d.map || '', open: d.open || '' };
     legs = durations = null;
     saved = false;
-    try { history.replaceState(null, '', plan.open || '/walk'); } catch (e) {}
+    try { history.replaceState(null, '', homePath(plan.open) || HOME); } catch (e) {}
     root.classList.add('has-walk');
     setTools(false);
     showTab();   // a new walk: the This week tab comes back
@@ -428,7 +435,7 @@
       paintArea();
     }
     plan = { query: title, title: title, intro: '', note: '', key: '', navigate: !!go,
-             open: qOverride ? '/walk?' + q.toString() : location.pathname + location.search,
+             open: qOverride ? HOME + '?' + q.toString() : location.pathname + location.search,
              share: shared ? '/w/' + shared.code : '',
              stops: s.map(function (slug) { return { slug: slug, name: names[slug] || '', category: '', group: 'other', lat: null, lng: null, why: '' }; }),
              map: directory + '/embed/route-map?' + new URLSearchParams({ s: s.join(','), t: title, style: 'mansfield', mode: 'story' }).toString() };
@@ -463,7 +470,7 @@
     clearBtn.hidden = true;
     input.value = '';
     input.placeholder = 'e.g. food in this area';
-    try { history.replaceState(null, '', '/walk'); } catch (e) {}
+    try { history.replaceState(null, '', HOME); } catch (e) {}
     // A completely fresh start: the drawn area goes too, and the new map comes up with no pins or outline.
     if (circle) { circle = null; post({ type: 'mansfield:circle-clear' }); }
     if (drawBtn.classList.contains('is-on')) post({ type: 'mansfield:draw-circle', on: false });
@@ -477,7 +484,7 @@
   intro.querySelector('.walkplan__got-it').addEventListener('click', function () { intro.hidden = true; input.focus(); });
   // The welcome card shows once, on someone's very first visit (remembered on this device).
   function welcome() {
-    var KEY = 'mf-walk-welcomed';
+    var KEY = HOTEL ? 'mf-hotel-welcomed-' + HOTEL.slug : 'mf-walk-welcomed';
     try {
       if (localStorage.getItem(KEY)) return;
       localStorage.setItem(KEY, '1');
@@ -580,7 +587,7 @@
       var meta = el('span', 'walkplan__mine-meta', (p.category ? p.category + ' · ' : ''));
       if (p.slug) {   // our own walking navigation, from where you are to this place
         var dir = el('a', '', 'Directions');
-        dir.href = '/walk?' + new URLSearchParams({ go: p.slug, t: p.name }).toString();
+        dir.href = HOME + '?' + new URLSearchParams({ go: p.slug, t: p.name }).toString();
         dir.addEventListener('click', function (e) { e.preventDefault(); walkTo(p); });
         meta.appendChild(dir);
       }
@@ -685,7 +692,7 @@
     msg.hidden = true;
     var q = new URLSearchParams({ s: rt.stops.map(function (x) { return x.slug; }).join(','), t: rt.title });
     if (showLinked(q)) {
-      try { history.replaceState(null, '', '/walk?' + q.toString()); } catch (e) {}
+      try { history.replaceState(null, '', HOME + '?' + q.toString()); } catch (e) {}
       say(rt.title + ' · ' + rt.stops.length + ' stops. Tap Start to walk it.', true);
     }
   }
@@ -1249,7 +1256,7 @@
     setMine(false);
     msg.hidden = true;
     var q = new URLSearchParams({ go: p.slug, t: p.name });
-    if (showLinked(q)) { try { history.replaceState(null, '', '/walk?' + q.toString()); } catch (e) {} }
+    if (showLinked(q)) { try { history.replaceState(null, '', HOME + '?' + q.toString()); } catch (e) {} }
   }
   function moveMine(i, step) {
     var places = mineData.places, j = i + step;
@@ -1831,7 +1838,7 @@
     legs = durations = null;
     saved = false;
     var q = { s: slugs.join(','), t: plan.title };
-    plan.open = '/walk?' + new URLSearchParams(q).toString();
+    plan.open = HOME + '?' + new URLSearchParams(q).toString();
     plan.map = directory + '/embed/route-map?' + new URLSearchParams({ s: q.s, t: q.t, style: 'mansfield', mode: 'story' }).toString();
     try { history.replaceState(null, '', plan.open); } catch (e) {}
     closeSheet();
@@ -1957,7 +1964,7 @@
     if (!plan) return;
     track('share');
     if (plan.share) { shareUrl(window.location.origin + plan.share); return; }
-    makeShare().then(function (u) { shareUrl(window.location.origin + (u || plan.open || '/walk')); });
+    makeShare().then(function (u) { shareUrl(window.location.origin + (u || homePath(plan.open) || HOME)); });
   });
 
   // ── Speaking ──────────────────────────────────────────────────────────
@@ -2028,7 +2035,7 @@
     var g = (new URLSearchParams(location.search || '').get('group') || '').trim();
     var withWho = (new URLSearchParams(location.search || '').get('with') || '').toLowerCase();   // "Plan a map together" on a profile
     if (!g || !mine || !/^(new|[0-9a-f]{16})$/.test(g)) return;
-    try { history.replaceState(null, '', '/walk'); } catch (e) {}
+    try { history.replaceState(null, '', HOME); } catch (e) {}
     mineView = 'groups';
     groupLink = true;
     if (g === 'new') groupNew = { title: '', picks: /^[a-z0-9_.]{3,20}$/.test(withWho) ? [withWho] : [], stops: [] }; else openGroup(g);
@@ -2040,7 +2047,7 @@
   (function () {
     var asked = (new URLSearchParams(location.search || '').get('ask') || '').trim().slice(0, 200);
     if (!asked || plan) return;
-    try { history.replaceState(null, '', '/walk'); } catch (e) {}
+    try { history.replaceState(null, '', HOME); } catch (e) {}
     input.value = asked;
     setTimeout(function () { ask(asked); }, 700);
   })();

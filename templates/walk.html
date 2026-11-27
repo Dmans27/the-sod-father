@@ -585,13 +585,142 @@
   .pc__shutter.is-rec::before { border-color: rgba(255, 255, 255, 0.3); }
   .pc__dot { position: absolute; inset: 10px; border-radius: 50%; background: #f2ead9; box-shadow: 0 0 18px rgba(242, 234, 217, 0.5); transition: transform 0.15s ease; }
   .pc__shutter.is-rec .pc__dot { transform: scale(0.82); background: #e2d6bd; }
+
+  /* ══ Light surfaces (Nov 2026): panels, cards and the map's pills are light paper with soft-black text;
+     the map stays dark. Overrides the dark colours above (same shapes and sizes). ══
+     paper #f6f3ec · card #ffffff · soft black #1f2522 · quiet text rgba(31,37,34,.62) · forest #2f5e3a for
+     labels and buttons on light · matcha #9cc77f stays the bright + and send button on the map. */
+  .walkplan { --paper: #f6f3ec; --card: #ffffff; --ink-soft: #1f2522; --ink-quiet: rgba(31, 37, 34, 0.62); --ink-faint: rgba(31, 37, 34, 0.42);
+    --line: rgba(31, 37, 34, 0.09); --forest: #2f5e3a; --forest-tint: rgba(47, 94, 58, 0.1);
+    --fp-label: rgba(31, 37, 34, 0.62); --fp-off: rgba(31, 37, 34, 0.2); --fp-on: #2f5e3a; }
+  /* Side panels: News, Saved, the account panel */
+  .walkplan .walkplan__drawer, .walkplan .walkplan__mine, .walkplan .walkplan__acct { background: var(--paper); color: var(--ink-soft); }
+  .walkplan .walkplan__drawer-head h2, .walkplan .walkplan__mine h2, .walkplan .walkplan__acct-name { color: var(--ink-soft); }
+  .walkplan .walkplan__drawer-close, .walkplan .walkplan__acct-close { background: rgba(31, 37, 34, 0.07); color: var(--ink-soft); }
+  .walkplan .walkplan__drawer-sub { color: var(--forest); }
+  .walkplan .walkplan__drawer .walkplan__idea { background: var(--card); border: 1px solid var(--line); color: var(--ink-soft); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04); }
+  .walkplan .walkplan__drawer .walkplan__idea:active { background: #eeeae1; }
+  .walkplan .walkplan__week-card, .walkplan .walkplan__cwalk { background: var(--card); border: 1px solid var(--line); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
+  .walkplan .walkplan__week-card:active, .walkplan .walkplan__cwalk-link:active { background: #f1eee7; }
+  .walkplan .walkplan__week-card, .walkplan .walkplan__cwalk-link, .walkplan .walkplan__read, .walkplan .walkplan__week-title { color: var(--ink-soft); }
+  .walkplan .walkplan__week-tag { background: var(--forest-tint); color: var(--forest); }
+  .walkplan .walkplan__week-blurb { color: var(--ink-quiet); }
+  .walkplan .walkplan__week-stops, .walkplan .walkplan__cwalk-by, .walkplan .walkplan__read-min { color: var(--ink-faint); }
+  .walkplan .walkplan__cwalk-like, .walkplan .walkplan__cwalk-more { color: var(--ink-quiet); }
+  .walkplan .walkplan__read { border-top-color: var(--line); }
+  .walkplan .walkplan__read-pill { color: var(--forest); }
+  .walkplan .walkplan__read-thumb, .walkplan .walkplan__cwalk-photo, .walkplan .walkplan__mine-thumb { background-color: #e9e5dc; }
+  .walkplan .walkplan__top { color: var(--ink-soft); border-bottom-color: var(--line); }
+  .walkplan .walkplan__top-kicker { color: var(--forest); }
+  .walkplan .walkplan__top-title { color: var(--ink-soft); }
+  .walkplan .walkplan__top-dek { color: var(--ink-quiet); }
+  .walkplan .walkplan__top-min { color: var(--ink-faint); }
+  .walkplan .walkplan__dot::before { background: rgba(31, 37, 34, 0.2); }
+  .walkplan .walkplan__dot.is-on::before { background: var(--forest); }
+  .walkplan .walkplan__cwalk-invite { border-color: rgba(47, 94, 58, 0.3); color: var(--ink-quiet); }
+  .walkplan .walkplan__cwalk-invite > b { color: var(--ink-soft); }
+  .walkplan .walkplan__drawer-all { color: var(--forest); }
+  /* Buttons in the panels: forest with cream text (matcha is too pale on paper) */
+  .walkplan .walkplan__cwalk-cta, .walkplan .walkplan__drawer-plan, .walkplan .walkplan__acct-btn,
+  .walkplan .walkplan__route-actions button.is-primary, .walkplan .walkplan__build-hit button, .walkplan .walkplan__gm-chip[aria-pressed="true"] {
+    background: var(--forest); border-color: var(--forest); color: #f6f3ec; }
+  .walkplan .walkplan__acct-btn--ghost { background: none; color: var(--ink-soft); border: 1px solid rgba(31, 37, 34, 0.22); }
+  .walkplan .walkplan__acct-btn--out { background: rgba(200, 60, 45, 0.08); color: #b4412f; border: 0; }
+  .walkplan .walkplan__build-hit button:disabled { background: rgba(31, 37, 34, 0.08); color: var(--ink-faint); }
+  .walkplan .walkplan__route-actions button { border-color: rgba(31, 37, 34, 0.2); color: var(--ink-soft); }
+  .walkplan .walkplan__route-actions button.is-post, .walkplan .walkplan__gm-chip.is-add { border-color: rgba(47, 94, 58, 0.45); color: var(--forest); }
+  .walkplan .walkplan__route-stops { color: var(--ink-faint); }
+  /* Saved (My places) */
+  .walkplan .walkplan__mine-note { color: var(--ink-quiet); }
+  .walkplan .walkplan__mine-note b, .walkplan .walkplan__mine-item.is-picked .walkplan__mine-name, .walkplan .walkplan__build-hint a { color: var(--forest); }
+  .walkplan .walkplan__mine-item, .walkplan .walkplan__route { border-top-color: var(--line); }
+  .walkplan .walkplan__mine-name { color: var(--ink-soft); }
+  .walkplan .walkplan__mine-rank { background: #9cc77f; color: #131a15; }
+  .walkplan .walkplan__mine-rank.is-dot { background: rgba(31, 37, 34, 0.07); color: var(--ink-quiet); }
+  .walkplan .walkplan__mine-meta { color: var(--ink-faint); }
+  .walkplan .walkplan__mine-meta a { color: var(--forest); }
+  .walkplan .walkplan__mine-tabs { background: rgba(31, 37, 34, 0.06); }
+  .walkplan .walkplan__mine-tabs button { color: var(--ink-quiet); }
+  .walkplan .walkplan__mine-tabs button[aria-selected="true"] { background: var(--card); color: var(--forest); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); }
+  .walkplan .walkplan__mine-move button { background: rgba(31, 37, 34, 0.07); color: var(--ink-soft); }
+  .walkplan .walkplan__build-name, .walkplan .walkplan__build-search { background-color: var(--card); border-color: rgba(31, 37, 34, 0.14); color: var(--ink-soft); }
+  .walkplan .walkplan__build-name:focus, .walkplan .walkplan__build-search:focus { border-color: var(--forest); }
+  .walkplan .walkplan__build-hit { background: var(--card); }
+  .walkplan .walkplan__build-new { background: var(--forest-tint); color: var(--forest); }
+  .walkplan .walkplan__gm-stack .walkplan__gm-av { box-shadow: 0 0 0 2px var(--paper); }
+  .walkplan .walkplan__gm-chip { border-color: rgba(31, 37, 34, 0.18); color: var(--ink-soft); }
+  .walkplan .walkplan__gm-label { color: var(--ink-faint); }
+  /* Account panel */
+  .walkplan .walkplan__acct-head { border-bottom-color: var(--line); }
+  .walkplan .walkplan__acct-sub { color: var(--ink-quiet); }
+  .walkplan .walkplan__acct-list a, .walkplan .walkplan__acct-list button { color: var(--ink-soft); border-bottom-color: var(--line); }
+  .walkplan .walkplan__acct-list svg { stroke: var(--forest); }
+  .walkplan .walkplan__acct-list a::after, .walkplan .walkplan__acct-list button::after { color: var(--ink-faint); }
+  /* On the map: the top pill, the tools row, the edge tabs and the bottom search bar */
+  .walkplan .walkplan__bar, .walkplan .walkplan__ask, .walkplan .walkplan__tool, .walkplan .walkplan__pull, .walkplan.has-walk .walkplan__more {
+    background: rgba(250, 248, 243, 0.94); border-color: rgba(31, 37, 34, 0.08); color: var(--ink-soft); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28); }
+  .walkplan .walkplan__bar-btn { color: var(--ink-soft); }
+  .walkplan .walkplan__bar-btn:active { background: rgba(31, 37, 34, 0.07); }
+  .walkplan .walkplan__bar-btn.is-on { background: var(--forest); color: #f6f3ec; }
+  .walkplan .walkplan__bar .walkplan__me-btn, .walkplan .walkplan__bar .walkplan__me-btn.is-in { background: none; color: var(--ink-soft); box-shadow: inset 0 0 0 1.5px rgba(31, 37, 34, 0.32); }
+  .walkplan .walkplan__bar .walkplan__me-dot, .walkplan .walkplan__more .walkplan__me-dot { box-shadow: 0 0 0 2px #faf8f3; }
+  .walkplan .walkplan__bar-plus { box-shadow: 0 4px 12px rgba(47, 94, 58, 0.25); }
+  .walkplan .walkplan__grab { background: rgba(31, 37, 34, 0.35); }
+  .walkplan.has-walk .walkplan__more:active .walkplan__grab, .walkplan.has-walk.tools-open .walkplan__grab { background: var(--forest); }
+  .walkplan .walkplan__pull-label { color: var(--forest); }
+  .walkplan .walkplan__input { color: var(--ink-soft); }
+  .walkplan .walkplan__input::placeholder { color: rgba(31, 37, 34, 0.45); }
+  .walkplan .walkplan__list, .walkplan .walkplan__mic { background: rgba(31, 37, 34, 0.07); color: var(--ink-soft); }
+  /* The message bubble and the welcome card over the map */
+  .walkplan .walkplan__msg, .walkplan .walkplan__intro { background: rgba(250, 248, 243, 0.97); color: var(--ink-soft); border-color: rgba(31, 37, 34, 0.08); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); }
+  .walkplan .walkplan__intro .walkplan__idea { background: var(--card); border: 1px solid var(--line); color: var(--ink-soft); }
+  .walkplan .walkplan__welcome, .walkplan .walkplan__h { color: var(--ink-soft); }
+  .walkplan .walkplan__steps, .walkplan .walkplan__sub, .walkplan .walkplan__lead { color: var(--ink-quiet); }
+  .walkplan .walkplan__steps b, .walkplan .walkplan__intro b, .walkplan .walkplan__lead b { color: var(--forest); }
+  .walkplan .walkplan__fine { color: var(--ink-faint); }
+  .walkplan .walkplan__intro-close, .walkplan .walkplan__msg-close { background: rgba(31, 37, 34, 0.07); color: var(--ink-soft); }
+  .walkplan .walkplan__msg-stops { background: var(--forest); color: #f6f3ec; }
+  .walkplan .walkplan__msg-act { border-color: rgba(31, 37, 34, 0.2); color: var(--ink-soft); }
+  .walkplan .walkplan__msg-act.is-saved { background: #9cc77f; border-color: #9cc77f; color: #131a15; }
+  .walkplan .walkplan__got-it { background: var(--forest); color: #f6f3ec; }
+  /* The stop list sheet */
+  .walkplan .wsheet__panel { background: var(--paper); color: var(--ink-soft); }
+  .walkplan .wsheet__title { color: var(--ink-soft); }
+  .walkplan .wsheet__close, .walkplan .wsheet__edit { background: rgba(31, 37, 34, 0.07); color: var(--ink-soft); }
+  .walkplan .wsheet__sub { color: var(--ink-quiet); }
+  .walkplan .wsheet__stop { background: var(--card); border-color: var(--line); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); }
+  .walkplan .wsheet__stop.is-hl { border-color: var(--forest); background: #f1f6ec; }
+  .walkplan .wsheet__stop.is-dragging { background: var(--card); box-shadow: 0 12px 30px rgba(0, 0, 0, 0.22); }
+  .walkplan .wsheet__leg, .walkplan .wsheet__meta { color: var(--ink-faint); }
+  .walkplan .wsheet__why { color: var(--ink-soft); }
+  .walkplan .wsheet__show { background: rgba(31, 37, 34, 0.07); color: var(--ink-soft); }
+  .walkplan .wsheet__arrow, .walkplan .wsheet__grip { color: var(--ink-quiet); }
+  .walkplan .wsheet__actions > * { background: rgba(31, 37, 34, 0.07); color: var(--ink-soft); }
+  .walkplan .wsheet__save { background: var(--forest) !important; color: #f6f3ec !important; }
+  .walkplan .wsheet__save.is-saved { background: #9cc77f !important; color: #131a15 !important; }
+  .walkplan .wsheet__apply { background: var(--forest) !important; color: #f6f3ec !important; }
+
+  /* ── Hotel guest guide (/h/<slug>, hotels.py) ── */
+  .walkplan__hotel-kicker { margin: 0 0 2px; font-size: 11px; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; color: var(--forest); }
+  .walkplan.is-hotel .walkplan__welcome { font-family: var(--font-serif); font-size: 24px; }
+  .walkplan__hotel-welcome { margin: 6px 0 10px; font-family: var(--font-serif); font-size: 15.5px; line-height: 1.45; color: var(--ink-quiet); }
+  .walkplan__hotel-sub { display: block; margin-top: 2px; font-family: var(--font-sans); font-size: 13px; font-weight: 700; letter-spacing: 0.02em; color: var(--ink-quiet); }
+  .walkplan__hpicks { display: flex; flex-direction: column; gap: 8px; }
+  .walkplan__hpick { display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 14px; border-radius: 14px; text-decoration: none;
+    background: var(--card); border: 1px solid var(--line); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05); color: var(--ink-soft); }
+  .walkplan__hpick:active { background: #f1eee7; }
+  .walkplan__hpick-body { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+  .walkplan__hpick-name { font-family: var(--font-serif); font-weight: 700; font-size: 16.5px; line-height: 1.25; }
+  .walkplan__hpick-meta { font-size: 12.5px; color: var(--ink-faint); }
+  .walkplan__hpick-note { margin-top: 3px; font-size: 13.5px; line-height: 1.4; color: var(--ink-quiet); }
+  .walkplan__hpick-go { flex: 0 0 auto; padding: 8px 12px; border-radius: 999px; background: var(--forest); color: #f6f3ec; font-size: 12.5px; font-weight: 800; }
 </style>
 {% endblock %}
 
 {% block content %}
 {# "Plan a walk": ask (typed or spoken) and get a walking route from the directory.
    static/js/walk-planner.js does the work; walk_planner.py plans the walk. #}
-<div class="walkplan is-idle" id="walkplan" data-directory="{{ directory }}">
+<div class="walkplan is-idle{% if hotel %} is-hotel{% endif %}" id="walkplan" data-directory="{{ directory }}">
   <iframe class="walkplan__map" id="walkplan-map" title="Map of your walk" hidden
           referrerpolicy="strict-origin-when-cross-origin" allow="fullscreen; geolocation; accelerometer; gyroscope; magnetometer"
           sandbox="allow-scripts allow-same-origin allow-popups allow-popups-to-escape-sandbox"></iframe>
@@ -664,6 +793,17 @@
   {# Welcome card: only on someone's very first visit (static/js/walk-planner.js remembers it on this device). #}
   <section class="walkplan__intro" id="walkplan-intro" aria-labelledby="walkplan-welcome" hidden>
     <button type="button" class="walkplan__intro-close" aria-label="Close">&times;</button>
+    {% if hotel %}
+    {# A hotel's guest guide (hotels.py): its own welcome, no account needed. #}
+    <p class="walkplan__hotel-kicker">Your guide from</p>
+    <h2 class="walkplan__welcome" id="walkplan-welcome">{{ hotel.name }}</h2>
+    {% if hotel.welcome %}<p class="walkplan__hotel-welcome">{{ hotel.welcome }}</p>{% endif %}
+    <ol class="walkplan__steps">
+      <li><b>Ask</b> below, typed or spoken, in any language: “breakfast near the hotel”, “a walk to the old town”.</li>
+      <li>Tap the map once and open <b>Guide</b> on the left for our favourite places and walks from our door.</li>
+      <li>Tap a place to <b>walk there</b>: the map shows you the way. No app or account needed.</li>
+    </ol>
+    {% else %}
     <h2 class="walkplan__welcome" id="walkplan-welcome">Welcome! Here's how it works</h2>
     <ol class="walkplan__steps">
       <li><b>Ask</b> for a walk below, typed or spoken: “3 cozy cafés near me”.</li>
@@ -671,6 +811,7 @@
       <li>Tap the map once to show <b>News</b> on the left (ideas, walks to try, good reads) and <b>Saved</b> on the right (your places).</li>
       <li>Tap your account button (top right) for <b>Stories</b>, saved walks and settings.</li>
     </ol>
+    {% endif %}
     <button type="button" class="walkplan__got-it">Got it</button>
     <p class="walkplan__fine">Your location shows where you are on the map and powers "Near me" searches. It's never stored.</p>
   </section>
@@ -679,13 +820,14 @@
      static/js/walk-planner.js opens it and hides the tab once the map is in use. #}
   <button type="button" class="walkplan__pull" id="walkplan-pull" aria-controls="walkplan-drawer" aria-expanded="false">
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
-    <span class="walkplan__pull-label">News</span>
+    <span class="walkplan__pull-label">{{ 'Guide' if hotel else 'News' }}</span>
   </button>
   <div class="walkplan__drawer-back" id="walkplan-drawer-back"></div>
   <aside class="walkplan__drawer" id="walkplan-drawer" aria-label="News" aria-hidden="true">
    <div class="walkplan__drawer-inner">
     <div class="walkplan__drawer-head">
-      <h2>This week in {{ feed_city or 'Vienna' }}</h2>
+      {% if hotel %}<h2>{{ hotel.name }}<span class="walkplan__hotel-sub">Your {{ hotel.city or feed_city or 'Vienna' }} guide</span></h2>
+      {% else %}<h2>This week in {{ feed_city or 'Vienna' }}</h2>{% endif %}
       <button type="button" class="walkplan__drawer-close" aria-label="Close">&times;</button>
     </div>
     <p class="walkplan__drawer-sub">Try asking</p>
@@ -697,6 +839,8 @@
     </div>
     {# Walks to try, Good reads and From walkers sit side by side: swipe left and right (or tap the dots) to switch. #}
     {% set slides = [] %}
+    {% if hotel and hotel.picks %}{% set _ = slides.append('Our favourites') %}{% endif %}
+    {% if hotel and hotel.walks %}{% set _ = slides.append('From our door') %}{% endif %}
     {% if feed %}{% set _ = slides.append('Walks to try') %}{% endif %}
     {% if reads %}{% set _ = slides.append('Good reads') %}{% endif %}
     {% set _ = slides.append('From walkers') %}
@@ -709,12 +853,44 @@
     </div>
     {% endif %}
     <div class="walkplan__slides-track">
+    {% if hotel and hotel.picks %}
+    {# The hotel's favourite places (hotels.py), with minutes on foot from the door. Tap: walk there. #}
+    <section class="walkplan__slide" aria-label="Our favourites">
+    <p class="walkplan__drawer-sub">Our favourites</p>
+    <div class="walkplan__hpicks">
+    {% for p in hotel.picks %}
+    <a class="walkplan__hpick" href="{{ p.link }}">
+      <span class="walkplan__hpick-body">
+        <span class="walkplan__hpick-name">{{ p.name }}</span>
+        <span class="walkplan__hpick-meta">{% if p.category %}{{ p.category | replace('_', ' ') | capitalize }} · {% endif %}{{ p.mins }} min on foot</span>
+        {% if p.note %}<span class="walkplan__hpick-note">{{ p.note }}</span>{% endif %}
+      </span>
+      <span class="walkplan__hpick-go">Walk there</span>
+    </a>
+    {% endfor %}
+    </div>
+    </section>
+    {% endif %}
+    {% if hotel and hotel.walks %}
+    <section class="walkplan__slide" aria-label="From our door">
+    <p class="walkplan__drawer-sub">From our door</p>
+    <div class="walkplan__walks">
+    {% for w in hotel.walks %}
+    <a class="walkplan__week-card" href="{{ w.link }}">
+      <span class="walkplan__week-tag">From the hotel</span>
+      <span class="walkplan__week-title">{{ w.title }}</span>
+      <span class="walkplan__week-stops">{{ w.stops | length }} stops · {{ w.stops | map(attribute='name') | join(', ') }}</span>
+    </a>
+    {% endfor %}
+    </div>
+    </section>
+    {% endif %}
     {% if feed %}
     <section class="walkplan__slide" aria-label="Walks to try">
     <p class="walkplan__drawer-sub">Walks to try</p>
     <div class="walkplan__walks">
     {% for it in feed %}
-    <a class="walkplan__week-card" href="{{ it.link }}">
+    <a class="walkplan__week-card" href="{{ it.link | replace('/walk?', hotel.home ~ '?') if hotel else it.link }}">
       <span class="walkplan__week-tag">{{ it.tag }}</span>
       <span class="walkplan__week-title">{{ it.title }}</span>
       {% if it.blurb %}<span class="walkplan__week-blurb">{{ it.blurb }}</span>{% endif %}
@@ -885,6 +1061,7 @@
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
 {% include "_community_ui.html" %}
 {% include "_footprints_ui.html" %}
-<script src="/static/js/walk-planner.js?v=47" defer></script>
+{% if hotel %}<script>window.HOTEL = {{ {"slug": hotel.slug, "name": hotel.name, "lat": hotel.lat, "lng": hotel.lng, "home": hotel.home} | tojson }};</script>{% endif %}
+<script src="/static/js/walk-planner.js?v=48" defer></script>
 <script src="/static/js/pulses.js?v=7" defer></script>
 {% endblock %}

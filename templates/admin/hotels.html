@@ -1,0 +1,81 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Hotels{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <h1>Hotels</h1>
+</div>
+<p class="admin-hint">
+  Each hotel gets its own guest guide at <code>/h/&lt;link name&gt;</code> (hotels.py): the walk map opens at the hotel,
+  the <strong>Guide</strong> tab leads with the hotel's favourite places and walks from its door, and guests can ask
+  the walk planner without an account ({{ guest_limit }} walks a day per phone). Print the QR code for rooms or reception.
+</p>
+
+{% if not hotels %}
+<div class="admin-card">
+  <p class="admin-hint" style="margin-top:0;">No hotels yet. Start with a made-up demo hotel to show managers: it's filled
+    with the best-rated places around it from your directory, and three walks from its door.</p>
+  <form method="post" action="{{ url_for('hotels.admin_demo') }}">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    <button type="submit" class="admin-btn admin-btn--primary">Create the demo hotel</button>
+  </form>
+</div>
+{% endif %}
+
+{% for h in hotels %}
+<div class="admin-card" style="display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start;">
+  {% if h.qr %}<div style="width:132px;flex:none;line-height:0;" title="Scan to open {{ h.name }}'s guide">{{ h.qr | safe }}</div>{% endif %}
+  <div style="flex:1;min-width:240px;">
+    <div class="admin-report__head">
+      <strong>{{ h.name }}</strong>
+      {% if not h.active %}<span class="admin-row__badge" style="color:#7d2432;background:rgba(164,48,63,0.12);">Paused</span>{% endif %}
+    </div>
+    <p style="margin:4px 0;"><a href="{{ h.url }}" target="_blank" rel="noopener">{{ h.url }}</a></p>
+    <p class="admin-hint" style="margin:4px 0;">{{ h.address }}</p>
+    <p style="margin:8px 0;">Last 30 days: <strong>{{ h.stats.guest }}</strong> guests ·
+      <strong>{{ h.stats.open }}</strong> opens · <strong>{{ h.stats.plan }}</strong> walks planned</p>
+    <p class="admin-hint" style="margin:4px 0;">{{ h.picks | length }} favourites ·
+      {{ h.walks | length }} walk{{ '' if h.walks | length == 1 else 's' }} from the door</p>
+    <div class="admin-report__actions" style="margin-top:10px;">
+      <a class="admin-btn" href="{{ url_for('hotels.admin_list', edit=h.id) }}#edit">Edit</a>
+      <form method="post" action="{{ url_for('hotels.admin_fill', hid=h.id) }}" onsubmit="return confirm('Replace this hotel\'s favourites and walks with the best-rated places around it?');">
+        <input type="hidden" name="csrf" value="{{ csrf }}"><button type="submit" class="admin-btn">Fill from the directory</button>
+      </form>
+      <form method="post" action="{{ url_for('hotels.admin_toggle', hid=h.id) }}">
+        <input type="hidden" name="csrf" value="{{ csrf }}"><button type="submit" class="admin-btn">{{ 'Pause link' if h.active else 'Switch link on' }}</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<div class="admin-card" id="edit">
+  <h2 style="margin-top:0;">{{ 'Edit ' ~ edit.name if edit else 'Add a hotel' }}</h2>
+  <form method="post" action="{{ url_for('hotels.admin_save') }}">
+    <input type="hidden" name="csrf" value="{{ csrf }}">
+    {% if edit %}<input type="hidden" name="id" value="{{ edit.id }}">{% endif %}
+    <label class="admin-field"><span>Hotel name</span>
+      <input type="text" name="name" value="{{ edit.name if edit else '' }}" maxlength="120" required></label>
+    <label class="admin-field"><span>Link name <em>the end of the guest link: /h/<b>this</b> (lowercase letters, numbers, dashes)</em></span>
+      <input type="text" name="slug" value="{{ edit.slug if edit else '' }}" maxlength="60" pattern="[a-z0-9][a-z0-9-]{1,60}" required></label>
+    <label class="admin-field"><span>Address</span>
+      <input type="text" name="address" value="{{ edit.address if edit else '' }}" maxlength="200"></label>
+    <label class="admin-field"><span>City</span>
+      <input type="text" name="city" value="{{ edit.city if edit else 'Vienna' }}" maxlength="80"></label>
+    <div style="display:flex;gap:12px;flex-wrap:wrap;">
+      <label class="admin-field" style="flex:1;min-width:140px;"><span>Latitude <em>long-press the hotel in Google or Apple Maps to copy it</em></span>
+        <input type="text" name="lat" value="{{ edit.lat if edit else '' }}" inputmode="decimal" required></label>
+      <label class="admin-field" style="flex:1;min-width:140px;"><span>Longitude</span>
+        <input type="text" name="lng" value="{{ edit.lng if edit else '' }}" inputmode="decimal" required></label>
+    </div>
+    <label class="admin-field"><span>Welcome line <em>shown under the hotel's name when a guest opens the guide</em></span>
+      <textarea name="welcome" rows="2" maxlength="400">{{ edit.welcome if edit else '' }}</textarea></label>
+    <label class="admin-field"><span>Favourite places <em>one directory listing per line; add a note after a | if you like, e.g. <code>chasen-brew | Best matcha nearby</code></em></span>
+      <textarea name="picks" rows="6">{{ edit.picks_text if edit else '' }}</textarea></label>
+    <label class="admin-field"><span>Walks from the door <em>one per line: <code>Title: listing, listing, listing</code> (2 to 6 stops, in walking order)</em></span>
+      <textarea name="walks" rows="4">{{ edit.walks_text if edit else '' }}</textarea></label>
+    <button type="submit" class="admin-btn admin-btn--primary">{{ 'Save changes' if edit else 'Add hotel' }}</button>
+    {% if edit %}<a class="admin-btn" href="{{ url_for('hotels.admin_list') }}">Cancel</a>{% endif %}
+  </form>
+</div>
+{% endblock %}

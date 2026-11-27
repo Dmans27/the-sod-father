@@ -109,13 +109,25 @@ def _text(value, limit):
 # ── Limits ───────────────────────────────────────────────────────────────
 
 def _who():
-    """(usage key, daily limit) for the signed-in reader, or (None, 0)."""
+    """(usage key, daily limit) for the signed-in reader, a hotel guest (hotels.py), or (None, 0)."""
     if session.get("is_admin"):
         return "walk:admin", _int_env("WALK_LIMIT_ADMIN", 200)
     reader = current_reader()
-    if not reader:
-        return None, 0
-    return "walk:r:" + reader["id"], _int_env("WALK_LIMIT_READER", 15)
+    if reader:
+        return "walk:r:" + reader["id"], _int_env("WALK_LIMIT_READER", 15)
+    hotel = _guest_hotel()
+    if hotel:
+        import hotels
+        return "walk:h:" + hotel["slug"] + ":" + hotels.guest_key(), _int_env("HOTEL_GUEST_LIMIT", 10)
+    return None, 0
+
+
+def _guest_hotel():
+    """The hotel a phone without an account came in through (/h/<slug>), or None."""
+    if not session.get("hotel_guest"):
+        return None
+    import hotels
+    return hotels.guest_hotel()
 
 
 def _check_and_count(kind=""):
@@ -126,6 +138,13 @@ def _check_and_count(kind=""):
     try:
         if ask_limits._used(key + kind) >= limit:
             raise WalkError(f"You've planned {limit} walks today. Try again tomorrow.")
+        if key.startswith("walk:h:"):   # hotel guests: also a cap per hotel and per network address
+            import hotels
+            hotel_all, ip = "walk:h:" + key.split(":")[2] + ":all", "walk:hip:" + hotels.ip_key()
+            if ask_limits._used(hotel_all) >= _int_env("HOTEL_DAILY_CAP", 300) or ask_limits._used(ip) >= _int_env("HOTEL_IP_LIMIT", 30):
+                raise WalkError("The guest guide has had a busy day. Please try again tomorrow.")
+            ask_limits._count(hotel_all)
+            ask_limits._count(ip)
         if ask_limits._used("walk:all") >= _int_env("WALK_DAILY_CAP", 400):
             raise WalkError("The walk planner has had a busy day. Please try again tomorrow.")
         ask_limits._count(key + kind)
@@ -661,6 +680,11 @@ def transcribe(audio_bytes, mimetype):
 
 @walk_bp.get("/walk")
 def walk_page():
+    return render_walk()
+
+
+def render_walk(hotel=None):
+    """The walk page; `hotel` (hotels.guide()) turns it into that hotel's guest guide (/h/<slug>)."""
     # "This week" drawer (walk_feed.py): the owner's published weekly walks and related stories
     from walk_feed import _city, published_feed, related_articles, related_reads
     import readers
@@ -672,11 +696,12 @@ def walk_page():
     from community import community_feed   # "From walkers": walks readers posted for this city (community.py)
     return render_template("walk.html", directory=directory_url(), categories=CATEGORIES, active_category=None,
                            feed=published_feed(), reads=related_reads(articles=articles), reads_data=articles,
-                           comment_counts=counts, feed_city=_city(), community=community_feed(current_reader(), _city()))
+                           comment_counts=counts, feed_city=_city(), community=community_feed(current_reader(), _city()),
+                           hotel=hotel)
 
 
 def _guard():
-    if not current_reader() and not session.get("is_admin"):
+    if not current_reader() and not session.get("is_admin") and not _guest_hotel():
         return jsonify(ok=False, error="sign_in"), 401
     if not _csrf_ok():
         return jsonify(ok=False, error="Your session expired. Reload the page and try again."), 403
@@ -704,6 +729,9 @@ def api_walk_plan():
     lat, lng = coord("lat", -90, 90), coord("lng", -180, 180)
     if lat is None or lng is None:
         lat = lng = None
+    guest_hotel = None if current_reader() else _guest_hotel()
+    if guest_hotel and lat is None:
+        lat, lng = guest_hotel["lat"], guest_hotel["lng"]   # a hotel guest without location: "near me" is the hotel
     previous = body.get("previous") if isinstance(body.get("previous"), dict) else None
 
     def area(name):
@@ -757,6 +785,9 @@ def api_walk_plan():
     else:
         log_event("change" if previous else "plan", query=query, area=result.get("area"),
                   walk=result.get("key"), places=result.get("stops"))
+        if guest_hotel:
+            import hotels
+            hotels.bump(guest_hotel["id"], "plan")
     return jsonify(ok=True, query=query, **result)
 
 
