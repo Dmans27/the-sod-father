@@ -58,15 +58,21 @@
       padding: calc(env(safe-area-inset-top, 0px) + 40px) 44px calc(env(safe-area-inset-bottom, 0px) + 40px); }
     .auth__inner { width: 100%; }
   }
-  html.is-dark .auth__sheet { background: #141618; color: #eef1ef; }
-  html.is-dark .auth__note, html.is-dark .auth__help, html.is-dark .auth__legal { color: rgba(238, 241, 239, 0.62); }
-  html.is-dark .auth__field input { background: #22272a; border-color: rgba(255, 255, 255, 0.1); color: #fff; }
-  html.is-dark .auth__field input::placeholder { color: rgba(255, 255, 255, 0.45); }
-  html.is-dark .auth__field input:focus { border-color: #9cc77f; background: #22272a; box-shadow: 0 0 0 3px rgba(156, 199, 127, 0.16); }
-  html.is-dark .auth__field input:-webkit-autofill { -webkit-text-fill-color: #fff; box-shadow: 0 0 0 100px #22272a inset; }
-  html.is-dark .auth__eye { color: rgba(255, 255, 255, 0.6); }
-  html.is-dark .auth__btn { background: #9cc77f; color: #131a15; }
-  html.is-dark .auth__btn--line { background: transparent; color: #fff; border-color: rgba(255, 255, 255, 0.25); }
-  html.is-dark .auth__rule { border-top-color: rgba(255, 255, 255, 0.12); }
-  html.is-dark .auth__legal a { color: #c4e0ae; }
+  /* Light sheet in both light and dark mode (Matcha House light surfaces): cream paper, white fields,
+     soft-black text, forest button. The map hero above stays dark. */
+  .auth__sheet { background: #f6f3ec; color: #1f2522; box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.25); }
+  .auth__note, .auth__help { color: rgba(31, 37, 34, 0.68); }
+  .auth__legal { color: rgba(31, 37, 34, 0.55); }
+  .auth__legal a { color: #2f5e3a; }
+  .auth__field input { background: #fff; border-color: rgba(31, 37, 34, 0.12); color: #1f2522; }
+  .auth__field input::placeholder { color: rgba(31, 37, 34, 0.45); }
+  .auth__field input:focus { border-color: #2f5e3a; background: #fff; box-shadow: 0 0 0 3px rgba(47, 94, 58, 0.15); }
+  .auth__field input:-webkit-autofill { -webkit-text-fill-color: #1f2522; box-shadow: 0 0 0 100px #fff inset; }
+  .auth__eye { color: rgba(31, 37, 34, 0.55); }
+  .auth__btn { background: #2f5e3a; color: #fff; }
+  .auth__btn--line { background: #fff; color: #2f5e3a; border: 1px solid rgba(47, 94, 58, 0.28); }
+  .auth__rule { border-top-color: rgba(31, 37, 34, 0.1); }
+  html.is-dark .auth__sheet { color-scheme: light; }
+  /* The page behind the sheet: dark at the top (map), cream at the bottom so overscroll matches the sheet */
+  body.auth-page { background: linear-gradient(180deg, #1b211e 0 50%, #f6f3ec 50% 100%); }
 </style>
