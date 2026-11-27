@@ -28,6 +28,7 @@
       </label>
       <button type="submit" class="auth__btn">Sign in</button>
     </form>
+    <a class="auth__guest" href="/account/guest?next={{ next|urlencode }}" data-auth-skip>Sign in as guest</a>
 
     <hr class="auth__rule">
     <a class="auth__btn auth__btn--line" href="/account/signup?next={{ next|urlencode }}{% if then %}&then={{ then|urlencode }}{% endif %}">Create account</a>

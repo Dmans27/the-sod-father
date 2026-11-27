@@ -116,6 +116,7 @@
   // A hotel's guest guide (/h/<slug>, hotels.py): the map starts at the hotel, links stay on the hotel's
   // address, and guests can plan walks without an account (saving and sharing still need one).
   var HOTEL = window.HOTEL || null;
+  var GUEST = window.GUEST || null;   // a guest account (guests.py): {left, allowed} free walk plans
   var HOME = HOTEL ? HOTEL.home : '/walk';
   function homePath(path) { return String(path || '').replace(/^\/walk(?=[?#]|$)/, HOME); }
   var START = HOTEL ? { center: [Number(HOTEL.lng), Number(HOTEL.lat)], zoom: 15 }
@@ -320,9 +321,57 @@
   function needsSignIn(btn) {
     if (READER.signedIn) return false;
     if (HOTEL && btn !== saveBtn) return false;   // hotel guests can plan and speak walks without an account
+    if (GUEST && btn !== saveBtn) {   // guest accounts: free plans until they run out
+      if (GUEST.left > 0) return false;
+      guestOut();
+      return true;
+    }
     if (window.MansfieldSignIn) window.MansfieldSignIn(btn, { title: 'Sign in to plan a walk', sub: 'Planning walks with AI is for readers with an account.' });
     else location.href = '/account/login?next=/walk';
     return true;
+  }
+
+  // ── Guest accounts: "N free walks left" after each plan, and the sign-up card when they're used up ──
+  function signupUrl(why) { return '/account/signup?next=' + encodeURIComponent(location.pathname + location.search) + (why ? '&guest=' + why : ''); }
+  var guestToastTimer = null;
+  function guestNote(left) {
+    var old = document.querySelector('.walkplan__gnote');
+    if (old) old.remove();
+    clearTimeout(guestToastTimer);
+    var n = document.createElement('div');
+    n.className = 'walkplan__gnote';
+    n.setAttribute('role', 'status');
+    var words = left > 0 ? (left === 1 ? '1 free walk left as a guest' : left + ' free walks left as a guest')
+                         : 'That was your last free walk';
+    n.innerHTML = '<span></span><a></a>';
+    n.querySelector('span').textContent = words;
+    var a = n.querySelector('a');
+    a.textContent = 'Create account';
+    a.href = signupUrl(left > 0 ? '' : 'out');
+    document.body.appendChild(n);
+    requestAnimationFrame(function () { n.classList.add('is-in'); });
+    guestToastTimer = setTimeout(function () { n.classList.remove('is-in'); setTimeout(function () { n.remove(); }, 300); }, 6000);
+  }
+  function guestOut() {
+    if (document.querySelector('.walkplan__gout')) return;
+    var allowed = (GUEST && GUEST.allowed) || 4;
+    var wrap = document.createElement('div');
+    wrap.className = 'walkplan__gout';
+    wrap.setAttribute('role', 'dialog');
+    wrap.setAttribute('aria-modal', 'true');
+    wrap.setAttribute('aria-label', 'Create a free account');
+    wrap.innerHTML = '<div class="walkplan__gout-card">' +
+      '<p class="walkplan__gout-k">Guest walks used</p>' +
+      '<h2 class="walkplan__gout-h">You’ve planned your ' + allowed + ' free walks</h2>' +
+      '<p class="walkplan__gout-s">Create a free account to keep planning, and to save walks, rate places and plan with friends.</p>' +
+      '<a class="walkplan__gout-yes" href="' + signupUrl('out') + '">Create free account</a>' +
+      '<a class="walkplan__gout-in" href="/account/login?next=' + encodeURIComponent(location.pathname + location.search) + '">I have an account</a>' +
+      '<button type="button" class="walkplan__gout-no">Keep browsing</button></div>';
+    document.body.appendChild(wrap);
+    requestAnimationFrame(function () { wrap.classList.add('is-in'); });
+    function close() { wrap.classList.remove('is-in'); setTimeout(function () { wrap.remove(); }, 250); }
+    wrap.querySelector('.walkplan__gout-no').addEventListener('click', close);
+    wrap.addEventListener('click', function (e) { if (e.target === wrap) close(); });
   }
 
   // ── Asking ────────────────────────────────────────────────────────────
@@ -355,11 +404,13 @@
       busy = false;
       form.classList.remove('is-busy');
       var d = res.d || {};
+      if (d.error === 'guest_out') { msg.hidden = true; if (GUEST) GUEST.left = 0; guestOut(); return; }
       if (res.status === 401 || d.error === 'sign_in') { msg.hidden = true; READER.signedIn = false; needsSignIn(goBtn); return; }
       if (!d.ok) { say(d.error || 'Something went wrong. Please try again.', false, true); return; }
       if (d.clarify) { say(d.clarify, false, true); input.focus(); return; }
       input.value = '';
       showPlan(d);
+      if (GUEST && typeof d.guest_left === 'number') { GUEST.left = d.guest_left; guestNote(d.guest_left); }
     }).catch(function () {
       busy = false;
       form.classList.remove('is-busy');
@@ -2018,6 +2069,7 @@
       .then(function (res) {
         busy = false;
         form.classList.remove('is-busy');
+        if (res.d.error === 'guest_out') { if (GUEST) GUEST.left = 0; guestOut(); return; }
         if (!res.d.ok) { say(res.d.error || 'Couldn’t understand that. Please try again.', false, true); return; }
         input.value = res.d.text;
         ask(res.d.text);

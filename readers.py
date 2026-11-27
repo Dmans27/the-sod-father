@@ -157,6 +157,11 @@ def _finish_auth(reader_id, welcome=False):
     """Sign the reader in, apply any pending action, and go back where they were
     (new accounts first go through the welcome screens: email code + a few questions)."""
     session.pop("reader_id", None)
+    try:   # a guest account (guests.py) ends once they have a real one
+        import guests
+        guests.end()
+    except Exception as exc:  # noqa: BLE001
+        print("guests: end failed:", exc)
     session["reader_id"] = reader_id
     session.permanent = True  # stay signed in (see PERMANENT_SESSION_LIFETIME below)
     csrf_token()

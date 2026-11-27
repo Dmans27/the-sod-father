@@ -115,6 +115,10 @@ def _who():
     reader = current_reader()
     if reader:
         return "walk:r:" + reader["id"], _int_env("WALK_LIMIT_READER", 15)
+    import guests
+    g = guests.current()
+    if g:   # a guest account (guests.py): its free builds are checked in _check_and_count
+        return "walk:g:" + g["id"], _int_env("GUEST_VOICE_LIMIT", 12)
     hotel = _guest_hotel()
     if hotel:
         import hotels
@@ -135,6 +139,14 @@ def _check_and_count(kind=""):
     key, limit = _who()
     if not key:
         raise WalkError("sign_in")
+    if key.startswith("walk:g:"):   # guest accounts: only while free builds are left (counted after a finished plan)
+        import guests
+        ok, why = guests.can_build()
+        if not ok:
+            raise WalkError("guest_out" if why == "guest_out" else
+                            "Lots of guests are planning walks from here today. Create a free account to keep going.")
+        if kind != ":voice":
+            return
     try:
         if ask_limits._used(key + kind) >= limit:
             raise WalkError(f"You've planned {limit} walks today. Try again tomorrow.")
@@ -694,14 +706,16 @@ def render_walk(hotel=None):
     except Exception:
         counts = {}
     from community import community_feed   # "From walkers": walks readers posted for this city (community.py)
+    import guests   # a guest account's free walks left (guests.py)
     return render_template("walk.html", directory=directory_url(), categories=CATEGORIES, active_category=None,
                            feed=published_feed(), reads=related_reads(articles=articles), reads_data=articles,
                            comment_counts=counts, feed_city=_city(), community=community_feed(current_reader(), _city()),
-                           hotel=hotel)
+                           hotel=hotel, guest=None if hotel else guests.current(), guest_allowed=guests.builds_allowed())
 
 
 def _guard():
-    if not current_reader() and not session.get("is_admin") and not _guest_hotel():
+    import guests
+    if not current_reader() and not session.get("is_admin") and not _guest_hotel() and not guests.current():
         return jsonify(ok=False, error="sign_in"), 401
     if not _csrf_ok():
         return jsonify(ok=False, error="Your session expired. Reload the page and try again."), 403
@@ -772,6 +786,9 @@ def api_walk_plan():
         result = plan_walk(query, lat, lng, previous, view=area("view"), circle=circle, about=planner_note(current_reader()))
     except WalkError as exc:
         msg = str(exc)
+        if msg == "guest_out":
+            import guests
+            return jsonify(ok=False, error="guest_out", allowed=guests.builds_allowed()), 403
         return jsonify(ok=False, error=msg), (401 if msg == "sign_in" else 429 if "today" in msg else 502)
     except ask_engine.AskError as exc:
         return jsonify(ok=False, error=str(exc).replace("Search isn't", "The walk planner isn't")), 502
@@ -788,6 +805,10 @@ def api_walk_plan():
         if guest_hotel:
             import hotels
             hotels.bump(guest_hotel["id"], "plan")
+        if not current_reader() and not session.get("is_admin") and not guest_hotel:
+            import guests
+            if guests.current():   # a guest account: this finished plan uses one free build
+                result["guest_left"] = guests.use_build()
     return jsonify(ok=True, query=query, **result)
 
 
@@ -895,6 +916,8 @@ def api_walk_voice():
         text = transcribe(audio, f.mimetype or "audio/webm")
     except WalkError as exc:
         msg = str(exc)
+        if msg == "guest_out":
+            return jsonify(ok=False, error="guest_out"), 403
         return jsonify(ok=False, error=msg), (401 if msg == "sign_in" else 429 if "today" in msg else 502)
     if not text:
         return jsonify(ok=False, error="I didn't catch that. Please try again."), 400

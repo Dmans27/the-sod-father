@@ -714,6 +714,27 @@
   .walkplan__hpick-meta { font-size: 12.5px; color: var(--ink-faint); }
   .walkplan__hpick-note { margin-top: 3px; font-size: 13.5px; line-height: 1.4; color: var(--ink-quiet); }
   .walkplan__hpick-go { flex: 0 0 auto; padding: 8px 12px; border-radius: 999px; background: var(--forest); color: #f6f3ec; font-size: 12.5px; font-weight: 800; }
+
+  /* Guest accounts (guests.py): the "N free walks left" note and the sign-up card when they're used up */
+  .walkplan__gnote { position: fixed; z-index: 70; left: 50%; top: calc(env(safe-area-inset-top, 0px) + 64px);
+    transform: translate(-50%, -8px); opacity: 0; transition: opacity 0.25s ease, transform 0.25s ease;
+    display: flex; align-items: center; gap: 12px; padding: 10px 14px 10px 16px; border-radius: 999px; white-space: nowrap;
+    background: #fff; color: #1f2522; font: 600 14px var(--font-sans); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18); }
+  .walkplan__gnote.is-in { opacity: 1; transform: translate(-50%, 0); }
+  .walkplan__gnote a { color: #2f5e3a; font-weight: 800; text-decoration: none; }
+  .walkplan__gout { position: fixed; inset: 0; z-index: 80; display: flex; align-items: flex-end; justify-content: center;
+    background: rgba(10, 14, 12, 0); transition: background 0.25s ease; padding: 0 12px calc(env(safe-area-inset-bottom, 0px) + 12px); }
+  .walkplan__gout.is-in { background: rgba(10, 14, 12, 0.45); }
+  .walkplan__gout-card { width: 100%; max-width: 440px; box-sizing: border-box; padding: 24px 22px 14px; border-radius: 24px; background: #f6f3ec; color: #1f2522;
+    transform: translateY(30px); opacity: 0; transition: transform 0.32s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.25s ease; text-align: center; }
+  .walkplan__gout.is-in .walkplan__gout-card { transform: none; opacity: 1; }
+  .walkplan__gout-k { margin: 0 0 6px; font: 800 12px var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: #2f5e3a; }
+  .walkplan__gout-h { margin: 0 0 8px; font: 800 24px/1.2 var(--font-serif); color: #1f2522; }
+  .walkplan__gout-s { margin: 0 0 18px; font-size: 15px; line-height: 1.5; color: rgba(31, 37, 34, 0.7); }
+  .walkplan__gout-yes, .walkplan__gout-in { display: block; padding: 15px; border-radius: 14px; font: 800 16px var(--font-sans); text-decoration: none; margin-bottom: 8px; }
+  .walkplan__gout-yes { background: #2f5e3a; color: #fff; }
+  .walkplan__gout-in { background: #fff; color: #2f5e3a; border: 1px solid rgba(47, 94, 58, 0.25); }
+  .walkplan__gout-no { border: 0; background: none; padding: 10px; color: rgba(31, 37, 34, 0.6); font: 700 15px var(--font-sans); cursor: pointer; }
 </style>
 {% endblock %}
 
@@ -1061,7 +1082,8 @@
 {% if shared %}<script>window.SHARED_WALK = {{ shared | tojson }};</script>{% endif %}
 {% include "_community_ui.html" %}
 {% include "_footprints_ui.html" %}
+{% if guest %}<script>window.GUEST = {{ {"left": guest.left, "allowed": guest_allowed} | tojson }};</script>{% endif %}
 {% if hotel %}<script>window.HOTEL = {{ {"slug": hotel.slug, "name": hotel.name, "lat": hotel.lat, "lng": hotel.lng, "home": hotel.home} | tojson }};</script>{% endif %}
-<script src="/static/js/walk-planner.js?v=48" defer></script>
+<script src="/static/js/walk-planner.js?v=49" defer></script>
 <script src="/static/js/pulses.js?v=7" defer></script>
 {% endblock %}

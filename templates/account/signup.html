@@ -9,6 +9,8 @@
   <section class="auth__sheet" aria-label="Create account">
    <div class="auth__inner">
     <h1 style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);">Create your account</h1>
+    {% if request.args.get('guest') == 'full' %}<p class="auth__note">Lots of guests are using LocalLane from your network today. Create a free account to keep going.</p>
+    {% elif request.args.get('guest') == 'out' %}<p class="auth__note">You've used your free walks as a guest. Create a free account to keep planning &mdash; it takes a few seconds.</p>{% endif %}
     {% if error %}<p class="account-error" role="alert">{{ error }}</p>{% endif %}
 
     <form method="post" action="/account/signup">
@@ -31,6 +33,7 @@
       <p class="auth__help">Your display name shows next to your comments. Your email is never shown.</p>
       <button type="submit" class="auth__btn">Create account</button>
     </form>
+    <a class="auth__guest" href="/account/guest?next={{ next|urlencode }}" data-auth-skip>Sign in as guest</a>
 
     <hr class="auth__rule">
     <a class="auth__btn auth__btn--line" href="/account/login?next={{ next|urlencode }}{% if then %}&then={{ then|urlencode }}{% endif %}">I already have an account</a>

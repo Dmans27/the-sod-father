@@ -15,11 +15,60 @@
   .wel__back, .wel__skip { border: 0; background: none; color: var(--ink-faint); font: 700 15px var(--font-sans); cursor: pointer; padding: 8px 4px; }
   .wel__back[hidden], .wel__skip[hidden], .wel__dots[hidden] { visibility: hidden; display: inline-block; }
   .wel__dots { display: flex; gap: 6px; }
-  .wel__dot { width: 8px; height: 8px; border-radius: 999px; background: rgba(27, 42, 31, 0.15); transition: width 0.2s, background 0.2s; }
+  .wel__dot { width: 8px; height: 8px; border-radius: 999px; background: rgba(27, 42, 31, 0.15); transition: width 0.35s cubic-bezier(0.22, 1, 0.36, 1), background 0.25s; }
   .wel__dot.is-on { width: 22px; background: var(--fairway); }
-  .wel__step { flex: 1; display: none; flex-direction: column; padding-top: 18px; animation: wel-in 0.25s ease; }
+  .wel__step { flex: 1; display: none; flex-direction: column; padding-top: 18px; }
   .wel__step.is-on { display: flex; }
-  @keyframes wel-in { from { opacity: 0; transform: translateX(14px); } to { opacity: 1; transform: none; } }
+  /* Moving between steps, like a stack of cards: going forward, the next question slides in from the
+     right over the old one, which sinks back and fades. Going back, the top card slides off to the
+     right and the previous one rises from underneath. Both move at the same time. */
+  .wel { position: relative; }
+  body.welcome-page { overflow-x: hidden; }
+  .wel__step.is-on, .wel__step.is-leaving { will-change: transform, opacity; }
+  .wel__step.is-leaving { display: flex; position: absolute; pointer-events: none; z-index: 0; }
+  .wel__step.is-on { position: relative; z-index: 1; }
+  /* each step is an opaque "card" (same colour as the page) so the one on top hides the one below;
+     the top card gets a soft shadow on its leading edge while it moves */
+  .wel__step { background: #fff; }
+  html.is-dark .wel__step { background: var(--wel-dark-bg, #131a15); }
+  .wel.is-moving .wel__step.is-on { box-shadow: -18px 0 32px -18px rgba(0, 0, 0, 0.28); }
+  .wel.is-moving.is-back .wel__step.is-on { box-shadow: none; }
+  .wel.is-moving.is-back .wel__step.is-leaving { box-shadow: -18px 0 32px -18px rgba(0, 0, 0, 0.28); }
+  .wel.is-moving .wel__step.is-on { animation: wel-card-in 0.5s cubic-bezier(0.32, 0.72, 0, 1) both; }
+  .wel.is-moving .wel__step.is-leaving { animation: wel-card-under 0.5s cubic-bezier(0.32, 0.72, 0, 1) both; }
+  .wel.is-moving.is-back .wel__step.is-on { animation-name: wel-card-rise; z-index: 0; }
+  .wel.is-moving.is-back .wel__step.is-leaving { animation-name: wel-card-away; z-index: 1; }
+  @keyframes wel-card-in { from { transform: translateX(105%); } to { transform: none; } }
+  @keyframes wel-card-under { to { transform: translateX(-28%) scale(0.92); opacity: 0; } }
+  @keyframes wel-card-rise { from { transform: translateX(-28%) scale(0.92); opacity: 0; } to { transform: none; opacity: 1; } }
+  @keyframes wel-card-away { to { transform: translateX(105%); } }
+  /* the answers on the new card settle in just after it lands */
+  .wel.is-moving .wel__step.is-on .wel__cards > *, .wel.is-moving .wel__step.is-on .wel__chips > * {
+    animation: wel-up 0.4s 0.16s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  .wel.is-moving .wel__step.is-on .wel__cards > :nth-child(2), .wel.is-moving .wel__step.is-on .wel__chips > :nth-child(n+5) { animation-delay: 0.2s; }
+  .wel.is-moving .wel__step.is-on .wel__cards > :nth-child(3), .wel.is-moving .wel__step.is-on .wel__chips > :nth-child(n+9) { animation-delay: 0.24s; }
+  .wel.is-moving .wel__step.is-on .wel__cards > :nth-child(n+4), .wel.is-moving .wel__step.is-on .wel__chips > :nth-child(n+13) { animation-delay: 0.28s; }
+  @keyframes wel-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+  /* first screen: a gentle fade-up instead of a slide */
+  .wel.is-opening .wel__step.is-on { animation: wel-up 0.4s cubic-bezier(0.22, 1, 0.36, 1) both; }
+  /* Picking an answer: a small press, then a pop when it's chosen */
+  .wel__card, .wel__chip, .wel__btn { transition: transform 0.12s ease, opacity 0.2s ease, background 0.18s ease, border-color 0.18s ease, color 0.18s ease; }
+  .wel__card:active, .wel__chip:active, .wel__btn:not(:disabled):active { transform: scale(0.97); }
+  .wel__step.is-on .wel__card.is-picked, .wel__step.is-on .wel__chip.is-picked { animation: wel-pop 0.28s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+  @keyframes wel-pop { 0% { transform: scale(0.96); } 60% { transform: scale(1.03); } 100% { transform: scale(1); } }
+  /* The finish: a tick that draws itself */
+  .wel__tick { width: 64px; height: 64px; margin: 6px 0 16px; border-radius: 50%; background: rgba(47, 94, 58, 0.12); display: flex; align-items: center; justify-content: center; }
+  .wel__tick svg { width: 34px; height: 34px; fill: none; stroke: var(--fairway); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; }
+  .wel__step.is-on .wel__tick { animation: wel-pop 0.45s 0.05s cubic-bezier(0.34, 1.56, 0.64, 1) both; }
+  .wel__step.is-on .wel__tick path { stroke-dasharray: 30; stroke-dashoffset: 30; animation: wel-draw 0.4s 0.3s ease-out forwards; }
+  @keyframes wel-draw { to { stroke-dashoffset: 0; } }
+  html.is-dark .wel__tick { background: rgba(156, 199, 127, 0.14); }
+  html.is-dark .wel__tick svg { stroke: #9cc77f; }
+  @media (prefers-reduced-motion: reduce) {
+    .wel__step.is-on, .wel__step.is-on *, .wel__step.is-leaving { animation: none !important; }
+    .wel__step.is-leaving { display: none; }
+    .wel__step.is-on .wel__tick path { stroke-dashoffset: 0; }
+  }
   .wel__kicker { margin: 0 0 6px; font-size: 12px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fairway); }
   .wel__h { margin: 0 0 8px; font: 800 30px/1.15 var(--font-serif); color: var(--fairway-deep); }
   .wel__sub { margin: 0 0 22px; font-size: 16px; line-height: 1.5; color: var(--ink-soft); }
@@ -43,8 +92,14 @@
   @keyframes wel-caret { 50% { opacity: 0; } }
   .wel__otp.is-bad .wel__otp-box { border-color: #c2453a; background: #fdf1ef; }
   .wel__otp.is-bad { animation: wel-shake 0.35s ease; }
+  .wel__step.is-on .wel__otp.is-bad { animation: wel-shake 0.35s ease; }
   @keyframes wel-shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
   .wel__otp.is-good .wel__otp-box { border-color: var(--fairway); background: var(--fairway); color: #f6f3ec; }
+  .wel__otp.is-good .wel__otp-box:nth-child(2) { transition-delay: 0.05s; }
+  .wel__otp.is-good .wel__otp-box:nth-child(3) { transition-delay: 0.1s; }
+  .wel__otp.is-good .wel__otp-box:nth-child(4) { transition-delay: 0.15s; }
+  .wel__otp.is-good .wel__otp-box:nth-child(5) { transition-delay: 0.2s; }
+  .wel__otp.is-good .wel__otp-box:nth-child(6) { transition-delay: 0.25s; }
   .wel__otp .wel__code { position: absolute; inset: 0; width: 100%; height: 100%; padding: 0; border: 0; background: transparent; box-shadow: none;
     color: transparent; caret-color: transparent; font-size: 16px; letter-spacing: 0; text-align: left; -webkit-text-fill-color: transparent; }
   .wel__otp .wel__code::selection { background: transparent; }
@@ -327,6 +382,7 @@
 
   {# 8. Done #}
   <section class="wel__step" data-step="done">
+    <div class="wel__tick" aria-hidden="true"><svg viewBox="0 0 34 34"><path d="M9 17.5l5.5 5.5L25 12"/></svg></div>
     <p class="wel__kicker">All set</p>
     <h1 class="wel__h">You're ready to explore, {{ name }}</h1>
     <p class="wel__done" id="wel-summary"></p>
@@ -359,8 +415,38 @@
         .then(function (r) { return r.json().catch(function () { return {}; }).then(function (d) { d.httpOk = r.ok; return d; }); })
         .catch(function () { return { error: 'Couldn’t reach the server. Check your connection.' }; });
     }
+    var CALM = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var moveTimer = null, initial = true;
     function show(i) {
-      at = Math.max(0, Math.min(order.length - 1, i));
+      var to = Math.max(0, Math.min(order.length - 1, i));
+      var leaving = root.querySelector('.wel__step.is-on');
+      clearTimeout(moveTimer);
+      steps.forEach(function (s) { s.classList.remove('is-leaving'); s.style.top = s.style.left = s.style.width = s.style.height = ''; });
+      root.classList.remove('is-moving', 'is-opening');
+      void root.offsetWidth;   // restart the animations if someone taps fast
+      if (initial || CALM || !leaving || leaving.getAttribute('data-step') === order[to]) {
+        if (initial && !CALM) root.classList.add('is-opening');
+        initial = false;
+        place(to);
+        return;
+      }
+      // pin the old card where it is, so the new one can slide in over (or out from under) it
+      leaving.style.top = leaving.offsetTop + 'px';
+      leaving.style.left = leaving.offsetLeft + 'px';
+      leaving.style.width = leaving.offsetWidth + 'px';
+      leaving.style.height = leaving.offsetHeight + 'px';
+      leaving.classList.add('is-leaving');
+      root.classList.toggle('is-back', to < at);
+      root.classList.add('is-moving');
+      place(to);
+      moveTimer = setTimeout(function () {
+        leaving.classList.remove('is-leaving');
+        leaving.style.top = leaving.style.left = leaving.style.width = leaving.style.height = '';
+        root.classList.remove('is-moving');
+      }, 560);
+    }
+    function place(i) {
+      at = i;
       var name = order[at];
       steps.forEach(function (s) { s.classList.toggle('is-on', s.getAttribute('data-step') === name); });
       var q = QUESTIONS.indexOf(name);
@@ -463,6 +549,12 @@
     });
 
     // ---- Choices ----
+    function pop(el) {   // the little bounce when an answer is picked (restarts if tapped again)
+      el.classList.remove('is-picked');
+      void el.offsetWidth;
+      el.classList.add('is-picked');
+      if (window.MansfieldNative) window.MansfieldNative.haptic('light');
+    }
     Array.prototype.forEach.call(root.querySelectorAll('[data-one]'), function (group) {
       var key = group.getAttribute('data-one');
       group.addEventListener('click', function (e) {
@@ -470,7 +562,8 @@
         if (!b) return;
         answers[key] = b.getAttribute('data-value');
         Array.prototype.forEach.call(group.querySelectorAll('[data-value]'), function (x) { x.setAttribute('aria-pressed', x === b ? 'true' : 'false'); });
-        if (key === 'purpose') setTimeout(nextStep, 250);   // one tap is enough here
+        pop(b);
+        if (key === 'purpose') setTimeout(nextStep, 320);   // one tap is enough here (after the pop)
       });
     });
     Array.prototype.forEach.call(root.querySelectorAll('[data-many]'), function (group) {
@@ -480,6 +573,7 @@
         if (!b) return;
         var v = b.getAttribute('data-value'), on = b.getAttribute('aria-pressed') !== 'true';
         b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        if (on) pop(b);
         answers[key] = answers[key].filter(function (x) { return x !== v; });
         if (on) answers[key].push(v);
       });
