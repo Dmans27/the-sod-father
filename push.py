@@ -12,6 +12,8 @@ Tapping the notification opens `url` inside the app.
 
   POST /api/push/register    {token, test?}   save this phone's token for the signed-in reader
   POST /api/push/unregister  {token}          forget it (Notifications switched off in the app)
+  GET  /admin/push                            owner only: is it set up, which phones are registered, what
+                                              Apple said lately, and a "Send test" button per phone
   Signing out (readers.py) and deleting the account (moderation.py) forget the reader's tokens too.
 
 Render settings (from developer.apple.com -> Certificates, IDs & Profiles -> Keys -> an APNs key):
@@ -29,8 +31,10 @@ import base64
 import os
 import threading
 import time
+from collections import deque
+from datetime import datetime, timezone
 
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, abort, flash, jsonify, redirect, render_template, request, url_for
 
 import db
 from readers import current_reader, reader_required_json
@@ -45,6 +49,14 @@ _ready = False
 _jwt = {"token": None, "at": 0}
 _recent = {}
 _lock = threading.Lock()
+_log = deque(maxlen=40)   # what happened lately, for /admin/push
+_warned = {"config": False}
+
+
+def _note(what, token="", detail=""):
+    _log.appendleft({"at": datetime.now(timezone.utc).strftime("%H:%M:%S"), "what": what,
+                     "token": (token or "")[-6:], "detail": str(detail)[:200]})
+    print("push:", what, (token or "")[-6:], detail)
 
 
 def _tables():
@@ -137,11 +149,12 @@ def _send_one(client, row, payload):
                 "authorization": "bearer " + _auth(), "apns-topic": _topic(),
                 "apns-push-type": "alert", "apns-priority": "10"})
         except Exception as exc:  # noqa: BLE001
-            print("push: send failed:", exc)
+            _note("send failed", row["token"], exc)
             return None
         if r.status_code == 200:
             if row.get("env") != env:
                 db.execute("UPDATE push_tokens SET env = :e WHERE token = :t", e=env, t=row["token"])
+            _note("delivered", row["token"], env)
             return env
         reason = ""
         try:
@@ -150,12 +163,14 @@ def _send_one(client, row, payload):
             pass
         if r.status_code == 410 or reason in ("Unregistered", "DeviceTokenNotForTopic"):
             db.execute("DELETE FROM push_tokens WHERE token = :t", t=row["token"])
+            _note("dropped token", row["token"], reason or "410 Unregistered")
             return None
         if reason == "BadDeviceToken" and env != envs[-1]:
             continue   # maybe a sandbox (Xcode) token: try there
         if reason == "BadDeviceToken":
             db.execute("DELETE FROM push_tokens WHERE token = :t", t=row["token"])
-        print("push: apple said", r.status_code, reason)
+            _note("dropped token", row["token"], "BadDeviceToken on both servers: check APNS_TOPIC is the app's bundle ID")
+        _note(f"apple said {r.status_code}", row["token"], f"{reason} ({env})")
         return None
     return None
 
@@ -167,13 +182,18 @@ def _deliver(rows, payload):
             for row in rows:
                 _send_one(client, row, payload)
     except Exception as exc:  # noqa: BLE001
-        print("push: delivery failed:", exc)
+        _note("delivery failed", "", exc)
 
 
 def notify(reader_id, title, body, url="/walk", key=None):
     """Ping every phone the reader has the app on. Never raises; returns at once."""
     try:
-        if not reader_id or not configured():
+        if not reader_id:
+            return
+        if not configured():
+            if not _warned["config"]:
+                _warned["config"] = True
+                _note("not set up", "", "APNS_KEY / APNS_KEY_ID / APNS_TEAM_ID missing on Render, so nothing is sent")
             return
         if key:
             k, now = (reader_id, key), time.time()
@@ -187,6 +207,7 @@ def notify(reader_id, title, body, url="/walk", key=None):
         _tables()
         rows = db.query("SELECT token, env FROM push_tokens WHERE reader_id = :r", r=reader_id)
         if not rows:
+            _note("no phone registered", "", f"reader {reader_id[-6:]} has no token, so nothing to send")
             return
         payload = {"aps": {"alert": {"title": str(title)[:120], "body": str(body)[:240]}, "sound": "default"},
                    "url": url if str(url).startswith("/") and not str(url).startswith("//") else "/walk"}
@@ -206,6 +227,7 @@ def api_register():
     if not token:
         return jsonify(error="bad_token"), 400
     save_token(reader["id"], token, "ios")
+    _note("token saved", token, f"{reader['display_name']}{' (test asked)' if data.get('test') else ''}")
     if data.get("test"):
         notify(reader["id"], "Notifications are on", "We’ll let you know when friends add you or share a map.",
                "/account/profile")
@@ -217,3 +239,74 @@ def api_register():
 def api_unregister():
     forget((request.get_json(silent=True) or {}).get("token"))
     return jsonify(ok=True)
+
+
+# ── Admin: is it working? ────────────────────────────────────────────────
+
+def _check():
+    """Settings and libraries, each with ok/problem text."""
+    out = []
+    for name in ("APNS_KEY_ID", "APNS_TEAM_ID"):
+        v = (os.environ.get(name) or "").strip()
+        out.append((name, bool(v) and len(v) == 10, v or "not set", "should be 10 letters/numbers"))
+    k = _key()
+    out.append(("APNS_KEY", "BEGIN PRIVATE KEY" in k, "set" if k else "not set",
+                "paste the whole .p8, including the BEGIN/END lines"))
+    out.append(("APNS_TOPIC", True, _topic(), ""))
+    try:
+        import httpx, h2  # noqa: F401
+        out.append(("httpx + h2 installed", True, "yes", ""))
+    except Exception as exc:  # noqa: BLE001
+        out.append(("httpx + h2 installed", False, str(exc), "requirements.txt needs httpx[http2]"))
+    if configured():
+        try:
+            _jwt.update(token=None, at=0)
+            _auth()
+            out.append(("Key signs a token", True, "yes", ""))
+        except Exception as exc:  # noqa: BLE001
+            out.append(("Key signs a token", False, str(exc)[:160], "the .p8 text or PyJWT[crypto] is wrong"))
+    return out
+
+
+@push_bp.get("/admin/push")
+def admin_push():
+    from admin import is_owner
+    if not is_owner():
+        return redirect(url_for("admin.login"))
+    from readers import csrf_token
+    _tables()
+    phones = db.query("SELECT p.token, p.env, p.created_at, p.updated_at, r.display_name, r.email FROM push_tokens p "
+                      "LEFT JOIN readers r ON r.id = p.reader_id ORDER BY p.updated_at DESC LIMIT 100")
+    for ph in phones:
+        ph["tail"] = ph["token"][-6:]
+    return render_template("admin/push.html", checks=_check(), phones=phones, log=list(_log), csrf=csrf_token())
+
+
+@push_bp.post("/admin/push/test")
+def admin_push_test():
+    """Sends right now (not on a thread) and shows exactly what Apple answered."""
+    from admin import is_owner
+    from readers import _csrf_ok
+    if not is_owner() or not _csrf_ok():
+        abort(403)
+    tail = (request.form.get("tail") or "").strip().lower()
+    _tables()
+    row = next((r for r in db.query("SELECT token, env FROM push_tokens") if r["token"].endswith(tail)), None) if tail else None
+    if not row:
+        flash("That phone isn't registered any more.", "warning")
+    elif not configured():
+        flash("APNS_KEY, APNS_KEY_ID and APNS_TEAM_ID need to be set on Render first.", "warning")
+    else:
+        payload = {"aps": {"alert": {"title": "Test from LocalLane", "body": "If you can read this, notifications work."},
+                           "sound": "default"}, "url": "/account/profile"}
+        try:
+            import httpx
+            with httpx.Client(http2=True, timeout=10) as client:
+                env = _send_one(client, row, payload)
+        except Exception as exc:  # noqa: BLE001
+            env = None
+            _note("send failed", row["token"], exc)
+        last = _log[0] if _log else {}
+        flash(f"Apple accepted it ({env}). It should be on the phone now." if env else
+              f"Not delivered: {last.get('what', '')} {last.get('detail', '')}", "success" if env else "warning")
+    return redirect(url_for("push.admin_push"))

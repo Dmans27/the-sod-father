@@ -1,0 +1,53 @@
+{% extends "admin/_layout.html" %}
+{% block title %}Notifications{% endblock %}
+
+{% block admin_content %}
+<div class="admin-page-head">
+  <h1>Notifications</h1>
+</div>
+<p class="admin-hint">
+  Push notifications to the iOS app (push.py). A phone shows up below once someone signed in turns on
+  Account &rarr; Notifications in the app. "Send test" sends straight away and shows what Apple answered.
+</p>
+
+<div class="admin-card">
+  <h2 style="margin-top:0;">Setup</h2>
+  <ul style="margin:0;padding-left:18px;line-height:1.9;">
+    {% for name, ok, value, fix in checks %}
+    <li><code>{{ name }}</code>: <strong style="color:{{ '#1b7f55' if ok else '#a4303f' }};">{{ value }}</strong>
+      {% if not ok and fix %}<span class="admin-hint"> &mdash; {{ fix }}</span>{% endif %}</li>
+    {% endfor %}
+  </ul>
+</div>
+
+<div class="admin-card">
+  <h2 style="margin-top:0;">Phones ({{ phones|length }})</h2>
+  {% if not phones %}
+  <p class="admin-hint" style="margin:0;">No phone has registered yet. In the app: sign in, then Account &rarr; Notifications &rarr; Turn on.
+    If it says On but nothing appears here, the app never sent its token (check the log below, and that the TestFlight build is new).</p>
+  {% else %}
+  {% for ph in phones %}
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 0;border-top:1px solid rgba(0,0,0,0.08);">
+    <div style="flex:1;min-width:200px;">
+      <strong>{{ ph.display_name or '(deleted reader)' }}</strong> &middot; phone <code>…{{ ph.tail }}</code><br>
+      <span class="admin-hint">Server: {{ ph.env or 'not tried yet' }} &middot; last seen {{ ph.updated_at }} UTC</span>
+    </div>
+    <form method="post" action="{{ url_for('push.admin_push_test') }}" style="margin:0;">
+      <input type="hidden" name="csrf" value="{{ csrf }}">
+      <input type="hidden" name="tail" value="{{ ph.tail }}">
+      <button type="submit" class="admin-btn">Send test</button>
+    </form>
+  </div>
+  {% endfor %}
+  {% endif %}
+</div>
+
+<div class="admin-card">
+  <h2 style="margin-top:0;">Lately</h2>
+  {% if not log %}<p class="admin-hint" style="margin:0;">Nothing since the server last started.</p>{% else %}
+  <ul style="margin:0;padding-left:18px;line-height:1.8;font-size:14px;">
+    {% for e in log %}<li><code>{{ e.at }}</code> <strong>{{ e.what }}</strong>{% if e.token %} <code>…{{ e.token }}</code>{% endif %} {{ e.detail }}</li>{% endfor %}
+  </ul>
+  {% endif %}
+</div>
+{% endblock %}
