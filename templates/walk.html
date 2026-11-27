@@ -1089,6 +1089,6 @@
 {% include "_footprints_ui.html" %}
 {% if guest %}<script>window.GUEST = {{ {"left": guest.left, "allowed": guest_allowed} | tojson }};</script>{% endif %}
 {% if hotel %}<script>window.HOTEL = {{ {"slug": hotel.slug, "name": hotel.name, "lat": hotel.lat, "lng": hotel.lng, "home": hotel.home} | tojson }};</script>{% endif %}
-<script src="/static/js/walk-planner.js?v=49" defer></script>
+<script src="/static/js/walk-planner.js?v=50" defer></script>
 <script src="/static/js/pulses.js?v=7" defer></script>
 {% endblock %}

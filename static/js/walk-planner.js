@@ -120,7 +120,7 @@
   var HOME = HOTEL ? HOTEL.home : '/walk';
   function homePath(path) { return String(path || '').replace(/^\/walk(?=[?#]|$)/, HOME); }
   var START = HOTEL ? { center: [Number(HOTEL.lng), Number(HOTEL.lat)], zoom: 15 }
-                    : { center: [16.3713, 48.2082], zoom: 13.5 };   // Vienna, until the reader moves the map
+                    : { center: [16.3713, 48.2082], zoom: 12.6 };   // Vienna, until the reader moves the map
 
   function el(tag, cls, text) {
     var n = document.createElement(tag);
