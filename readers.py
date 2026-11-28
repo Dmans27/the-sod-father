@@ -542,8 +542,10 @@ def api_places():
     which pins are already saved). Signed-out readers just get none."""
     reader = current_reader()
     if not reader:
-        return jsonify(signedIn=False, keys=[])
-    return jsonify(signedIn=True, keys=saved_place_keys(reader["id"]))
+        return jsonify(signedIn=False, keys=[], slugs=[])
+    rows = db.query("SELECT place_key, listing_url FROM saved_places WHERE reader_id = :r", r=reader["id"])
+    return jsonify(signedIn=True, keys=[r["place_key"] for r in rows],
+                   slugs=[s for s in (_listing_slug(r["listing_url"]) for r in rows) if s])
 
 
 @readers_bp.post("/api/places")
@@ -560,16 +562,25 @@ def api_places_save():
     if slug and not get_article(slug):
         slug = ""
 
+    want, error = _save_place(reader["id"], place, slug, payload.get("saved"))
+    if error:
+        return jsonify(error=error), 400
+    return jsonify(saved=want, keys=saved_place_keys(reader["id"]))
+
+
+def _save_place(reader_id, place, article_slug, want):
+    """Save (want True), unsave (False) or toggle (None) a cleaned place. Returns (saved, error or None)."""
     exists = db.query_one(
         "SELECT 1 AS x FROM saved_places WHERE reader_id = :r AND place_key = :k",
-        r=reader["id"], k=place["key"])
-    want = payload.get("saved")
+        r=reader_id, k=place["key"])
     want = (not exists) if not isinstance(want, bool) else want
+    slug = article_slug
+    reader = {"id": reader_id}
 
     if want and not exists:
         count = db.query_one("SELECT COUNT(*) AS n FROM saved_places WHERE reader_id = :r", r=reader["id"])
         if int((count or {}).get("n", 0)) >= MAX_SAVED_PLACES:
-            return jsonify(error="too_many"), 400
+            return want, "too_many"
         try:
             db.execute(
                 "INSERT INTO saved_places (id, reader_id, place_key, name, category, address, lat, lng, "
@@ -583,7 +594,40 @@ def api_places_save():
     elif not want and exists:
         db.execute("DELETE FROM saved_places WHERE reader_id = :r AND place_key = :k",
                    r=reader["id"], k=place["key"])
-    return jsonify(saved=want, keys=saved_place_keys(reader["id"]))
+    return want, None
+
+
+@readers_bp.post("/api/places/stop")
+@reader_required_json
+def api_places_stop():
+    """Save or unsave a walk's stop from its card in the stop list. Body: {slug, saved: true|false}.
+    The stop is a directory listing: its id, name and position come from the directory, and it is
+    stored exactly like a map pin's "+ Save" ("<host>:L<id>"), so it shows in My places."""
+    reader = current_reader()
+    payload = request.get_json(silent=True) or {}
+    slug = str(payload.get("slug") or "").strip()
+    if not re.match(r"^[A-Za-z0-9][A-Za-z0-9_-]{0,200}$", slug):
+        return jsonify(error="bad_place"), 400
+    try:
+        from community import _directory_places
+        got = _directory_places([slug]).get(slug)
+    except Exception:  # noqa: BLE001 -- the directory is down or not connected
+        got = None
+    if not got or got.get("id") in (None, ""):
+        return jsonify(error="Couldn't find that place right now. Try again in a minute."), 502
+    host = map_embed_hosts()[0]
+    scheme = "http" if host.split(":")[0] in ("localhost", "127.0.0.1") else "https"
+    place = clean_place({
+        "key": f"{host}:L{got['id']}", "name": got.get("name"), "category": got.get("category"),
+        "address": got.get("address"), "lat": got.get("lat"), "lng": got.get("lng"),
+        "photo": f"{scheme}://{host}/embed/listing-photo/{slug}", "listing": f"{scheme}://{host}/listing/{slug}",
+    })
+    if not place:
+        return jsonify(error="bad_place"), 400
+    want, error = _save_place(reader["id"], place, "", payload.get("saved"))
+    if error:
+        return jsonify(error="You've saved a lot of places. Remove some first." if error == "too_many" else error), 400
+    return jsonify(saved=want, slug=slug)
 
 
 # ── "My places": the reader's saved places in one city, ranked ──────────

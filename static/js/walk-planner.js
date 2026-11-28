@@ -1708,6 +1708,54 @@
     if (part.length > 2) u += '&waypoints=' + encodeURIComponent(part.slice(1, -1).map(ll).join('|'));
     return u + '&travelmode=walking';
   }
+  // ── Saving a stop to My places (the Saved panel), from its card ──
+  // /api/places tells us which directory places (by slug) are saved; /api/places/stop saves or unsaves one.
+  var savedSlugs = null, savedLoading = null;
+  var BOOKMARK = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6.5 3.5h11a1 1 0 0 1 1 1v16l-6.5-4.2-6.5 4.2v-16a1 1 0 0 1 1-1z"/></svg>';
+  function loadSavedSlugs() {
+    if (!READER.signedIn) { savedSlugs = {}; return Promise.resolve(savedSlugs); }
+    if (savedLoading) return savedLoading;
+    savedLoading = fetch('/api/places', { credentials: 'same-origin', headers: { 'Accept': 'application/json' } })
+      .then(function (r) { return r.json(); })
+      .then(function (d) { savedSlugs = {}; (d.slugs || []).forEach(function (x) { savedSlugs[x] = true; }); return savedSlugs; })
+      .catch(function () { savedSlugs = savedSlugs || {}; return savedSlugs; })
+      .then(function (v) { savedLoading = null; return v; });
+    return savedLoading;
+  }
+  function paintStopSave(btn, on) {
+    btn.classList.toggle('is-saved', !!on);
+    btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.setAttribute('aria-label', on ? 'Saved to My places. Tap to remove' : 'Save to My places');
+    btn.querySelector('span').textContent = on ? 'Saved' : 'Save';
+  }
+  function stopSaveButton(s) {
+    var btn = el('button', 'wsheet__keep');
+    btn.type = 'button';
+    btn.innerHTML = BOOKMARK + '<span></span>';
+    paintStopSave(btn, savedSlugs && savedSlugs[s.slug]);
+    if (savedSlugs === null) loadSavedSlugs().then(function () { paintStopSave(btn, savedSlugs[s.slug]); });
+    btn.addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (!READER.signedIn) {
+        if (window.MansfieldSignIn) window.MansfieldSignIn(btn, { title: 'Sign in to save places', sub: 'Saved places show up in Saved on the map.' });
+        else location.href = '/account/login?next=' + encodeURIComponent(location.pathname + location.search);
+        return;
+      }
+      if (btn.disabled) return;
+      var want = !btn.classList.contains('is-saved');
+      paintStopSave(btn, want);   // answer straight away; put it back if the server says no
+      btn.disabled = true;
+      if (window.MansfieldNative) window.MansfieldNative.haptic(want ? 'success' : 'light');
+      routeApi('POST', '/api/places/stop', { slug: s.slug, saved: want }).then(function (res) {
+        btn.disabled = false;
+        if (res.status === 401) { paintStopSave(btn, !want); READER.signedIn = false; return; }
+        if (!res.ok) { paintStopSave(btn, !want); say((res.d && res.d.error) || 'Couldn’t save that place. Try again.', false, true); return; }
+        if (savedSlugs) { if (res.d.saved) savedSlugs[s.slug] = true; else delete savedSlugs[s.slug]; }
+        paintStopSave(btn, res.d.saved);
+      }).catch(function () { btn.disabled = false; paintStopSave(btn, !want); });
+    });
+    return btn;
+  }
   function renderSheet() {
     if (!plan) return;
     if (editing) { renderEdit(); return; }
@@ -1722,6 +1770,7 @@
       // stars · kind of place, the walkers' footprint score and why it's on the walk; underneath, one slim row
       // with "Worth it?" footprints and Show on map.
       var li = el('li', 'wsheet__stop wsheet__stop--card');
+      if (s.slug) li.appendChild(stopSaveButton(s));   // bookmark in the corner: save this stop to My places
       var main = el('div', 'wsheet__main');
       var pic = el('div', 'wsheet__pic');
       if (directory && s.slug) {
@@ -1792,6 +1841,7 @@
   }
   function openSheet(highlight) {
     if (!plan) return;
+    savedSlugs = null;   // fresh each time: they may have saved or removed places elsewhere
     renderSheet();
     sheet.classList.add('is-open');
     sheet.setAttribute('aria-hidden', 'false');
