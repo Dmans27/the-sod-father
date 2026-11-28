@@ -703,27 +703,27 @@
   .walkplan .wsheet__why { color: var(--ink-soft); }
   .walkplan .wsheet__show { background: rgba(31, 37, 34, 0.07); color: var(--ink-soft); }
   .walkplan .wsheet__arrow, .walkplan .wsheet__grip { color: var(--ink-quiet); }
-  /* Stop list: dark cards in the style of the old map cards -- picture on the left with the stop number, details on the right */
-  .walkplan .wsheet__stop--card { gap: 0; padding: 0; overflow: hidden; align-items: stretch; background: #121316; border: 0.5px solid rgba(255, 255, 255, 0.1);
-    border-radius: 18px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16); color: #fff;
-    --fp-label: rgba(255, 255, 255, 0.7); --fp-off: rgba(255, 255, 255, 0.22); --fp-on: #9cc77f; }
-  .walkplan .wsheet__stop--card.is-hl { border-color: #9cc77f; background: #121316; box-shadow: 0 0 0 1.5px #9cc77f, 0 6px 18px rgba(0, 0, 0, 0.16); }
-  .wsheet__pic { position: relative; flex: 0 0 108px; width: 108px; min-height: 120px; background: #23262b; }
+  /* Stop list: cards in the style of the old map cards -- picture on the left with the stop number, details on the right --
+     in the app's light colours: white card, soft matcha border, soft-black text */
+  .walkplan .wsheet__stop--card { flex-shrink: 0; gap: 0; padding: 0; overflow: hidden; align-items: stretch; background: #fff;
+    border: 1px solid #c4e0ae; border-radius: 18px; box-shadow: 0 2px 10px rgba(47, 94, 58, 0.08); color: #1f2522;
+    --fp-label: rgba(31, 37, 34, 0.62); --fp-off: rgba(31, 37, 34, 0.2); --fp-on: #2f5e3a; }
+  .walkplan .wsheet__stop--card.is-hl { border-color: #2f5e3a; background: #fff; box-shadow: 0 0 0 1.5px #2f5e3a, 0 2px 10px rgba(47, 94, 58, 0.12); }
+  .wsheet__pic { position: relative; flex: 0 0 108px; width: 108px; min-height: 120px; background: #eef4e6; }
   .wsheet__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
-  .wsheet__pic.is-empty { background: linear-gradient(160deg, #26352a, #1b211e); }
-  .wsheet__pic .wsheet__num { position: absolute; z-index: 1; top: 8px; left: 8px; width: 28px; height: 28px; box-shadow: 0 0 0 2px #fff, 0 2px 6px rgba(0, 0, 0, 0.35); }
+  .wsheet__pic.is-empty { background: linear-gradient(160deg, #e4eedb, #f2ead9); }
+  .wsheet__pic .wsheet__num { position: absolute; z-index: 1; top: 8px; left: 8px; width: 28px; height: 28px; box-shadow: 0 0 0 2px #fff, 0 2px 6px rgba(0, 0, 0, 0.25); }
   .walkplan .wsheet__stop--card .wsheet__body { padding: 12px 14px 14px; }
-  .wsheet__kicker { margin: 0 0 4px; font: 800 11.5px/1.2 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: #d9b886; }
-  .walkplan .wsheet__stop--card .wsheet__name { display: block; font-size: 17px; line-height: 1.25; color: #fff; }
-  .wsheet__rate { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 14px; color: #fff; }
+  .wsheet__kicker { margin: 0 0 4px; font: 800 11.5px/1.2 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: #8a6a3c; }
+  .walkplan .wsheet__stop--card .wsheet__name { display: block; font-size: 17px; line-height: 1.25; color: #1f2522; }
+  .wsheet__rate { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 14px; color: #1f2522; }
   .wsheet__stars { font-size: 14px; letter-spacing: 1px; line-height: 1; color: transparent;
-    background: linear-gradient(90deg, #f5b301 var(--r, 0%), rgba(255, 255, 255, 0.22) var(--r, 0%)); -webkit-background-clip: text; background-clip: text; }
-  .walkplan .wsheet__stop--card .wsheet__meta { margin-top: 3px; color: rgba(255, 255, 255, 0.62); }
-  .walkplan .wsheet__stop--card .wsheet__why { color: rgba(255, 255, 255, 0.88); font-size: 14px; }
-  .walkplan .wsheet__stop--card { flex-shrink: 0; }   /* the list scrolls; a card never gets squashed */
+    background: linear-gradient(90deg, #e6a800 var(--r, 0%), rgba(31, 37, 34, 0.15) var(--r, 0%)); -webkit-background-clip: text; background-clip: text; }
+  .walkplan .wsheet__stop--card .wsheet__meta { margin-top: 3px; color: rgba(31, 37, 34, 0.55); }
+  .walkplan .wsheet__stop--card .wsheet__why { color: rgba(31, 37, 34, 0.85); font-size: 14px; }
   .walkplan .wsheet__stop--card .fprow { margin-top: 10px; flex-wrap: wrap; row-gap: 2px; }
   .walkplan .wsheet__stop--card .fprow__label { flex: 0 0 100%; }
-  .walkplan .wsheet__stop--card .wsheet__show { margin-top: 10px; padding: 8px 14px; background: #fff; color: #15171a; font-size: 13px; }
+  .walkplan .wsheet__stop--card .wsheet__show { margin-top: 10px; padding: 8px 14px; background: #eef4e6; color: #2f5e3a; font-size: 13px; }
   .walkplan .wsheet__actions > * { background: rgba(31, 37, 34, 0.07); color: var(--ink-soft); }
   .walkplan .wsheet__save { background: var(--forest) !important; color: #f6f3ec !important; }
   .walkplan .wsheet__save.is-saved { background: #9cc77f !important; color: #131a15 !important; }
