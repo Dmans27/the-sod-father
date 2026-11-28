@@ -1718,9 +1718,11 @@
     sheetSub.textContent = plan.intro || (plan.stops.length + ' stops');
     sheetList.innerHTML = '';
     plan.stops.forEach(function (s, i) {
-      // A dark card like the old map cards: the place's picture on the left (with the stop number on it),
-      // then "STOP 1 OF 3 · 6 MIN WALK", the name, stars, why it's on the walk, footprints and Show on map.
+      // Compact card: a square picture (stop number on its corner) beside "STOP 1 OF 3 · 6 MIN WALK", the name,
+      // stars · kind of place, the walkers' footprint score and why it's on the walk; underneath, one slim row
+      // with "Worth it?" footprints and Show on map.
       var li = el('li', 'wsheet__stop wsheet__stop--card');
+      var main = el('div', 'wsheet__main');
       var pic = el('div', 'wsheet__pic');
       if (directory && s.slug) {
         var img = document.createElement('img');
@@ -1736,39 +1738,51 @@
       var num = el('span', 'route-num wsheet__num', String(i + 1));
       num.style.setProperty('--c', s.color || '#2f5e3a');
       pic.appendChild(num);
-      li.appendChild(pic);
+      main.appendChild(pic);
       var body = el('div', 'wsheet__body');
       var leg = i ? legText(i) : 'Start here';
       body.appendChild(el('p', 'wsheet__kicker', 'Stop ' + (i + 1) + ' of ' + plan.stops.length + (leg ? ' · ' + leg : '')));
       body.appendChild(el('b', 'wsheet__name', s.name || 'Stop ' + (i + 1)));
-      if (s.rating) {
+      if (s.rating || s.category) {
         var rate = el('div', 'wsheet__rate');
-        rate.appendChild(el('b', '', Number(s.rating).toFixed(1)));
-        var stars = el('span', 'wsheet__stars', '★★★★★');
-        stars.style.setProperty('--r', Math.max(0, Math.min(100, Number(s.rating) / 5 * 100)) + '%');
-        stars.setAttribute('aria-label', Number(s.rating).toFixed(1) + ' out of 5');
-        rate.appendChild(stars);
+        if (s.rating) {
+          var stars = el('span', 'wsheet__stars', '★★★★★');
+          stars.style.setProperty('--r', Math.max(0, Math.min(100, Number(s.rating) / 5 * 100)) + '%');
+          stars.setAttribute('aria-label', Number(s.rating).toFixed(1) + ' out of 5');
+          rate.appendChild(stars);
+          rate.appendChild(el('span', 'wsheet__score', Number(s.rating).toFixed(1)));
+        }
+        if (s.category) {
+          if (s.rating) rate.appendChild(el('span', 'wsheet__dot', '·'));
+          rate.appendChild(el('span', 'wsheet__cat', s.category));
+        }
         body.appendChild(rate);
       }
-      var meta = [];
-      if (s.category) meta.push(s.category);
       var fp = window.MansfieldFootprints;
       var walkers = fp && s.slug ? fp.badgeEl(s.slug) : null;   // "4.6 · 3 walkers" found it worth the walk
-      if (meta.length || walkers) {
-        var metaEl = el('div', 'wsheet__meta', meta.join(' · '));
-        if (walkers) { if (meta.length) metaEl.appendChild(document.createTextNode(' · ')); metaEl.appendChild(walkers); }
-        body.appendChild(metaEl);
+      if (walkers) {
+        var wl = el('div', 'wsheet__walkers');
+        wl.appendChild(walkers);
+        body.appendChild(wl);
       }
       if (s.why) body.appendChild(el('p', 'wsheet__why', s.why));
-      if (fp && s.slug) body.appendChild(fp.row(s.slug, s.name, { walk: plan.key, onRated: function () { sendFootprints(false); } }));
+      main.appendChild(body);
+      li.appendChild(main);
+      var foot = el('div', 'wsheet__foot');
+      if (fp && s.slug) {
+        var fpRow = fp.row(s.slug, s.name, { walk: plan.key, onRated: function () { sendFootprints(false); } });
+        var lab = fpRow.querySelector('.fprow__label');
+        if (lab) lab.textContent = 'Worth it?';
+        foot.appendChild(fpRow);
+      }
       var show = el('button', 'wsheet__show', 'Show on map');
       show.type = 'button';
       show.addEventListener('click', function () {
         closeSheet();
         post({ type: 'mansfield:focus-place', listing: s.slug, name: s.name });
       });
-      body.appendChild(show);
-      li.appendChild(body);
+      foot.appendChild(show);
+      li.appendChild(foot);
       sheetList.appendChild(li);
     });
     var gm = mapsLinks();
