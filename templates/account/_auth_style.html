@@ -79,4 +79,15 @@
   html.is-dark .auth__sheet { color-scheme: light; }
   /* The page behind the sheet: dark at the top (map), cream at the bottom so overscroll matches the sheet */
   body.auth-page { background: linear-gradient(180deg, #1b211e 0 50%, #f6f3ec 50% 100%); }
+  /* Light hero (Nov 2026): the example walk on a light map (route-hero-light.svg), soft-black words over a paper fade,
+     a white stats pill -- the same look as the app's light map and panels. */
+  body.auth-page, .auth { background: #f6f3ec; }
+  .auth__hero::after { background: linear-gradient(180deg, rgba(246, 243, 236, 0.55) 0%, rgba(246, 243, 236, 0) 18%,
+    rgba(246, 243, 236, 0) 40%, rgba(246, 243, 236, 0.92) 78%, #f6f3ec 100%); }
+  .auth__pill { background: rgba(255, 255, 255, 0.95); color: #1f2522; box-shadow: 0 6px 20px rgba(47, 94, 58, 0.16); }
+  .auth__pill svg { fill: #2f5e3a; }
+  .auth__brand { color: #1f2522; }
+  .auth__logo .brand-lane { color: #5e9a4c; }
+  .auth__tag { color: #1f2522; text-shadow: none; }
+  .auth__sheet { box-shadow: 0 -8px 26px rgba(47, 94, 58, 0.08); }
 </style>
