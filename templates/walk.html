@@ -703,6 +703,27 @@
   .walkplan .wsheet__why { color: var(--ink-soft); }
   .walkplan .wsheet__show { background: rgba(31, 37, 34, 0.07); color: var(--ink-soft); }
   .walkplan .wsheet__arrow, .walkplan .wsheet__grip { color: var(--ink-quiet); }
+  /* Stop list: dark cards in the style of the old map cards -- picture on the left with the stop number, details on the right */
+  .walkplan .wsheet__stop--card { gap: 0; padding: 0; overflow: hidden; align-items: stretch; background: #121316; border: 0.5px solid rgba(255, 255, 255, 0.1);
+    border-radius: 18px; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.16); color: #fff;
+    --fp-label: rgba(255, 255, 255, 0.7); --fp-off: rgba(255, 255, 255, 0.22); --fp-on: #9cc77f; }
+  .walkplan .wsheet__stop--card.is-hl { border-color: #9cc77f; background: #121316; box-shadow: 0 0 0 1.5px #9cc77f, 0 6px 18px rgba(0, 0, 0, 0.16); }
+  .wsheet__pic { position: relative; flex: 0 0 108px; width: 108px; min-height: 120px; background: #23262b; }
+  .wsheet__img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
+  .wsheet__pic.is-empty { background: linear-gradient(160deg, #26352a, #1b211e); }
+  .wsheet__pic .wsheet__num { position: absolute; z-index: 1; top: 8px; left: 8px; width: 28px; height: 28px; box-shadow: 0 0 0 2px #fff, 0 2px 6px rgba(0, 0, 0, 0.35); }
+  .walkplan .wsheet__stop--card .wsheet__body { padding: 12px 14px 14px; }
+  .wsheet__kicker { margin: 0 0 4px; font: 800 11.5px/1.2 var(--font-sans); letter-spacing: 0.08em; text-transform: uppercase; color: #d9b886; }
+  .walkplan .wsheet__stop--card .wsheet__name { display: block; font-size: 17px; line-height: 1.25; color: #fff; }
+  .wsheet__rate { display: flex; align-items: center; gap: 6px; margin-top: 4px; font-size: 14px; color: #fff; }
+  .wsheet__stars { font-size: 14px; letter-spacing: 1px; line-height: 1; color: transparent;
+    background: linear-gradient(90deg, #f5b301 var(--r, 0%), rgba(255, 255, 255, 0.22) var(--r, 0%)); -webkit-background-clip: text; background-clip: text; }
+  .walkplan .wsheet__stop--card .wsheet__meta { margin-top: 3px; color: rgba(255, 255, 255, 0.62); }
+  .walkplan .wsheet__stop--card .wsheet__why { color: rgba(255, 255, 255, 0.88); font-size: 14px; }
+  .walkplan .wsheet__stop--card { flex-shrink: 0; }   /* the list scrolls; a card never gets squashed */
+  .walkplan .wsheet__stop--card .fprow { margin-top: 10px; flex-wrap: wrap; row-gap: 2px; }
+  .walkplan .wsheet__stop--card .fprow__label { flex: 0 0 100%; }
+  .walkplan .wsheet__stop--card .wsheet__show { margin-top: 10px; padding: 8px 14px; background: #fff; color: #15171a; font-size: 13px; }
   .walkplan .wsheet__actions > * { background: rgba(31, 37, 34, 0.07); color: var(--ink-soft); }
   .walkplan .wsheet__save { background: var(--forest) !important; color: #f6f3ec !important; }
   .walkplan .wsheet__save.is-saved { background: #9cc77f !important; color: #131a15 !important; }
@@ -1092,6 +1113,6 @@
 {% include "_footprints_ui.html" %}
 {% if guest %}<script>window.GUEST = {{ {"left": guest.left, "allowed": guest_allowed} | tojson }};</script>{% endif %}
 {% if hotel %}<script>window.HOTEL = {{ {"slug": hotel.slug, "name": hotel.name, "lat": hotel.lat, "lng": hotel.lng, "home": hotel.home} | tojson }};</script>{% endif %}
-<script src="/static/js/walk-planner.js?v=51" defer></script>
+<script src="/static/js/walk-planner.js?v=52" defer></script>
 <script src="/static/js/pulses.js?v=7" defer></script>
 {% endblock %}

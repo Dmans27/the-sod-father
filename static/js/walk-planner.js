@@ -1718,18 +1718,39 @@
     sheetSub.textContent = plan.intro || (plan.stops.length + ' stops');
     sheetList.innerHTML = '';
     plan.stops.forEach(function (s, i) {
-      var li = el('li', 'wsheet__stop');
+      // A dark card like the old map cards: the place's picture on the left (with the stop number on it),
+      // then "STOP 1 OF 3 · 6 MIN WALK", the name, stars, why it's on the walk, footprints and Show on map.
+      var li = el('li', 'wsheet__stop wsheet__stop--card');
+      var pic = el('div', 'wsheet__pic');
+      if (directory && s.slug) {
+        var img = document.createElement('img');
+        img.className = 'wsheet__img';
+        img.alt = '';
+        img.loading = 'lazy';
+        img.src = directory + '/embed/listing-photo/' + encodeURIComponent(s.slug);
+        img.addEventListener('error', function () { img.remove(); pic.classList.add('is-empty'); });
+        pic.appendChild(img);
+      } else {
+        pic.classList.add('is-empty');
+      }
       var num = el('span', 'route-num wsheet__num', String(i + 1));
       num.style.setProperty('--c', s.color || '#2f5e3a');
-      li.appendChild(num);
+      pic.appendChild(num);
+      li.appendChild(pic);
       var body = el('div', 'wsheet__body');
-      var top = el('div', 'wsheet__top');
-      top.appendChild(el('b', 'wsheet__name', s.name || 'Stop ' + (i + 1)));
-      var leg = i ? legText(i) : 'Start';
-      if (leg) top.appendChild(el('span', 'wsheet__leg', leg));
-      body.appendChild(top);
+      var leg = i ? legText(i) : 'Start here';
+      body.appendChild(el('p', 'wsheet__kicker', 'Stop ' + (i + 1) + ' of ' + plan.stops.length + (leg ? ' · ' + leg : '')));
+      body.appendChild(el('b', 'wsheet__name', s.name || 'Stop ' + (i + 1)));
+      if (s.rating) {
+        var rate = el('div', 'wsheet__rate');
+        rate.appendChild(el('b', '', Number(s.rating).toFixed(1)));
+        var stars = el('span', 'wsheet__stars', '★★★★★');
+        stars.style.setProperty('--r', Math.max(0, Math.min(100, Number(s.rating) / 5 * 100)) + '%');
+        stars.setAttribute('aria-label', Number(s.rating).toFixed(1) + ' out of 5');
+        rate.appendChild(stars);
+        body.appendChild(rate);
+      }
       var meta = [];
-      if (s.rating) meta.push('★ ' + Number(s.rating).toFixed(1));
       if (s.category) meta.push(s.category);
       var fp = window.MansfieldFootprints;
       var walkers = fp && s.slug ? fp.badgeEl(s.slug) : null;   // "4.6 · 3 walkers" found it worth the walk
