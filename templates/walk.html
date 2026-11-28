@@ -80,6 +80,7 @@
   .walkplan .walkplan__pull.walkplan__pull--right { left: auto; right: 0; border-left: 0.5px solid rgba(255, 255, 255, 0.2); border-right: 0; border-radius: 14px 0 0 14px; }
   .walkplan .walkplan__pull--right .walkplan__pull-label { transform: none; }
   .walkplan.map-used .walkplan__pull.walkplan__pull--right, .walkplan.is-walking .walkplan__pull.walkplan__pull--right,
+  .walkplan.has-walk .walkplan__pull.walkplan__pull--right,
   .walkplan.has-panel .walkplan__pull.walkplan__pull--right { transform: translate(100%, -50%); }
   .walkplan__mine { position: absolute; z-index: 10; right: 0; top: 0; bottom: 0; width: 100%; box-sizing: border-box; overflow-y: auto; overscroll-behavior: contain;
     padding: calc(env(safe-area-inset-top, 0px) + 18px) 16px calc(env(safe-area-inset-bottom, 0px) + 24px); background: #141618; color: #fff;
@@ -179,8 +180,10 @@
     -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3); transition: opacity 0.2s, transform 0.2s; }
   .walkplan__pull-label { writing-mode: vertical-rl; transform: rotate(180deg); font: 800 11px/1 var(--font-sans); letter-spacing: 0.1em; text-transform: uppercase; color: #9cc77f; }
   .walkplan__pull svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-  .walkplan.map-used .walkplan__pull, .walkplan.is-walking .walkplan__pull,
-  .walkplan.has-panel .walkplan__pull { opacity: 0; transform: translate(-100%, -50%); pointer-events: none; }
+  /* News and Saved stay out of the way while a walk is on the map (has-walk), being walked, or a panel is open */
+  .walkplan.map-used .walkplan__pull, .walkplan.is-walking .walkplan__pull, .walkplan.has-walk .walkplan__pull,
+  .walkplan.has-panel .walkplan__pull { opacity: 0; transform: translate(-100%, -50%); pointer-events: none; visibility: hidden;
+    transition: opacity 0.2s, transform 0.2s, visibility 0s 0.2s; }
   /* Tucked away until a tap on the map (walk-planner.js adds .tabs-on); hidden ones can't be tabbed to either. */
   .walkplan:not(.tabs-on) .walkplan__pull { opacity: 0; transform: translate(-100%, -50%); pointer-events: none; visibility: hidden;
     transition: opacity 0.2s, transform 0.2s, visibility 0s 0.2s; }
@@ -1089,6 +1092,6 @@
 {% include "_footprints_ui.html" %}
 {% if guest %}<script>window.GUEST = {{ {"left": guest.left, "allowed": guest_allowed} | tojson }};</script>{% endif %}
 {% if hotel %}<script>window.HOTEL = {{ {"slug": hotel.slug, "name": hotel.name, "lat": hotel.lat, "lng": hotel.lng, "home": hotel.home} | tojson }};</script>{% endif %}
-<script src="/static/js/walk-planner.js?v=50" defer></script>
+<script src="/static/js/walk-planner.js?v=51" defer></script>
 <script src="/static/js/pulses.js?v=7" defer></script>
 {% endblock %}

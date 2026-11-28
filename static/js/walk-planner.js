@@ -431,6 +431,7 @@
     saved = false;
     try { history.replaceState(null, '', homePath(plan.open) || HOME); } catch (e) {}
     root.classList.add('has-walk');
+    setTabsOn(false);   // a walk on the map: News and Saved tuck away
     setTools(false);
     showTab();   // a new walk: the This week tab comes back
     syncIdle();
@@ -492,6 +493,7 @@
              map: directory + '/embed/route-map?' + new URLSearchParams({ s: s.join(','), t: title, style: 'mansfield', mode: 'story' }).toString() };
     if (shared) say(title + ' · ' + s.length + ' stops. Ask to change it, or plan your own.', true);
     root.classList.add('has-walk');
+    setTabsOn(false);   // a walk on the map: News and Saved tuck away
     setTools(false);
     showTab();   // a new walk: the This week tab comes back
     syncIdle();
@@ -1596,7 +1598,11 @@
     if (e.source !== frame.contentWindow || e.origin !== origin || !e.data) return;
     var t = e.data.type;
     if (t === 'mansfield:compass') { if (e.data.on && !compassAsked) compassAsked = 'map'; return; }   // the map has the compass
-    if (t === 'mansfield:tap') { setTools(false); setTabsOn(true); return; }   // one tap on the map: show News and Saved (and close the pop-out)
+    if (t === 'mansfield:tap') {   // one tap on the map: show News and Saved (and close the pop-out) -- not while a walk is on the map
+      setTools(false);
+      if (!root.classList.contains('has-walk')) setTabsOn(true);
+      return;
+    }
     if (t === 'mansfield:view') {
       var c = e.data.center, r = Number(e.data.radius), z = Number(e.data.zoom);
       if (Array.isArray(c) && c.length === 2 && isFinite(c[0]) && isFinite(c[1]) && r > 0) {
