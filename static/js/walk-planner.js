@@ -1726,12 +1726,11 @@
     btn.classList.toggle('is-saved', !!on);
     btn.setAttribute('aria-pressed', on ? 'true' : 'false');
     btn.setAttribute('aria-label', on ? 'Saved to My places. Tap to remove' : 'Save to My places');
-    btn.querySelector('span').textContent = on ? 'Saved' : 'Save';
   }
   function stopSaveButton(s) {
     var btn = el('button', 'wsheet__keep');
     btn.type = 'button';
-    btn.innerHTML = BOOKMARK + '<span></span>';
+    btn.innerHTML = BOOKMARK;   // icon only; the label is for screen readers (aria-label)
     paintStopSave(btn, savedSlugs && savedSlugs[s.slug]);
     if (savedSlugs === null) loadSavedSlugs().then(function () { paintStopSave(btn, savedSlugs[s.slug]); });
     btn.addEventListener('click', function (e) {
